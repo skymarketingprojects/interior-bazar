@@ -1,0 +1,2 @@
+class PLAN_QUATES_VALIDATORS:
+    pass;
