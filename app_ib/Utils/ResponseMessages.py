@@ -191,6 +191,22 @@ class RESPONSE_MESSAGES:
     plan_verify_errror= 'Unable to verify plan'
     plan_verify_success= 'plan verify successfully'
 
+
+    ############################################
+    # Contact
+    ############################################
+    contact_generate_error= 'Unable to generate contact'
+    contact_generate_success= 'Contact generated successfully'
+
+    ############################################
+    # Pages
+    ############################################
+    page_fetch_success= 'Page fetched successfully'
+    page_fetch_error= 'Unable to fetch page'
+
+    qna_fetch_success= 'QnA fetched successfully'
+    qna_fetch_error= 'Unable to fetch QnA'
+
 class VALIDATION_MESSAGES:
     password_length= 'Password must be at least 8 characters long'
     password_must_contain_digit= 'Password must contain at least one digit'

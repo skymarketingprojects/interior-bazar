@@ -15,6 +15,8 @@ from app_ib.Views import PlanView
 from app_ib.Views import AdsQueryView
 from app_ib.Views.Client import ClientLocationView, ClientsView
 
+from app_ib.Views import ContactView
+
 
 app_name = 'interior_bazzar'
 urlpatterns = [
@@ -117,4 +119,9 @@ urlpatterns = [
     # Serachview: 
     #########################################################
     path('v-1/get-business/<int:index>', SearchView.GetBusinessByPaginationView, name='GetBusinessByPaginationView'),
+
+    #########################################################
+    # Contact: 
+    #########################################################
+    path('v-1/create-contact', ContactView.CreateContactView, name='CreateContactView'),
 ]
