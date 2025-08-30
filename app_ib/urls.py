@@ -16,6 +16,7 @@ from app_ib.Views import AdsQueryView
 from app_ib.Views.Client import ClientLocationView, ClientsView
 
 from app_ib.Views import ContactView
+from app_ib.Views import PageView
 
 
 app_name = 'interior_bazzar'
@@ -124,4 +125,10 @@ urlpatterns = [
     # Contact: 
     #########################################################
     path('v-1/create-contact', ContactView.CreateContactView, name='CreateContactView'),
+
+    #########################################################
+    # Pages: 
+    #########################################################
+    path('v-1/page/<str:page_name>', PageView.GetPagesView, name='PageView'),
+    path('v-1/qna', PageView.GetQnAView, name='qna'),
 ]

@@ -19,4 +19,6 @@ admin.site.register(models.Blog)
 admin.site.register(models.Constants)
 admin.site.register(models.Banners)
 admin.site.register(models.OfferHeading)
+admin.site.register(models.Pages)
+admin.site.register(models.QNA)
 

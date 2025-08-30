@@ -33,7 +33,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-+v0qbypjz*^(5^!7@uosljz@9phfii&=13u3*)0oz802oulfzu'
 
 # Set the environment
-ENV =  APPMODE.DEV
+ENV =  APPMODE.LOC
 
 print(f'ENV: {ENV}')
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -283,7 +283,22 @@ if(ENV == APPMODE.PROD):
     AWS_S3_FILE_OVERWRITE = True
     AWS_DEFAULT_ACL = None
 
-
+if(ENV == APPMODE.LOC):
+    ALLOWED_HOSTS = ["*"]
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+    AWS_ACCESS_KEY_ID = env('AWS_KEY')
+    AWS_SECRET_ACCESS_KEY = env('AWS_SECRETE_KEY')
+    AWS_STORAGE_BUCKET_NAME = env('S3_BUCKET_NAME')
+    AWS_S3_REGION_NAME = env('S3_REGION')
+    DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
+    STATICFILES_STORAGE = "storages.backends.s3.S3Storage"
+    AWS_S3_FILE_OVERWRITE = True
+    AWS_DEFAULT_ACL = None
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
