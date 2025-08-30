@@ -7,7 +7,7 @@ from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.models import Feedback
-from interior_bazzar_api.app_ib.Controllers.Contact.Tasks.ContactTasks import CONTACT_TASKS
+from app_ib.Controllers.Contact.Tasks.ContactTasks import CONTACT_TASKS
 
 class CONTACT_CONTROLLER:
 
