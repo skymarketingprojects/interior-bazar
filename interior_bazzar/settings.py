@@ -33,7 +33,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-+v0qbypjz*^(5^!7@uosljz@9phfii&=13u3*)0oz802oulfzu'
 
 # Set the environment
-ENV =  APPMODE.LOC
+ENV =  APPMODE.DEV
 
 print(f'ENV: {ENV}')
 # SECURITY WARNING: don't run with debug turned on in production!
