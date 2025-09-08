@@ -10,6 +10,7 @@ class PROFILE_TASKS:
             user_profile_ins.name = data.name
             user_profile_ins.email = data.email
             user_profile_ins.phone = data.phone
+            user_profile_ins.profile_image_url = data.profile_image_url
             await sync_to_async(user_profile_ins.save)()
             return True
             
@@ -23,6 +24,7 @@ class PROFILE_TASKS:
             user_profile_ins.name = data.name
             user_profile_ins.email = data.email
             user_profile_ins.phone = data.phone
+            user_profile_ins.profile_image_url = data.profile_image_url
             await sync_to_async(user_profile_ins.save)()
             return True
             
@@ -35,7 +37,7 @@ class PROFILE_TASKS:
         try:
             user_profile_ins = UserProfile()
             user_profile_ins.user = user_ins
-            user_profile_ins.profile_image = profile_image
+            user_profile_ins.profile_image_url = profile_image
             await sync_to_async(user_profile_ins.save)()
             return True
             
@@ -59,6 +61,7 @@ class PROFILE_TASKS:
     async def GetProfileDataTask(self, user_profile_ins):
         try:
             user_profile_data = {
+                "profile_image_url":user_profile_ins.profile_image_url,
                 'name': user_profile_ins.name,
                 'email': user_profile_ins.email,
                 'phone': user_profile_ins.phone,

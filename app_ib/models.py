@@ -3,7 +3,9 @@ from django.db import models
 from django_quill.fields import QuillField
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 import uuid
-
+from django.db import models,transaction
+from .Utils.ModelHelper import indexShifting
+from app_ib.Utils.MyMethods import MY_METHODS
 # Custom User Manager
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, password=None, **extra_fields):
@@ -41,34 +43,39 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         return f'date: {self.timestamp} username: {self.username}'
 
 class UserProfile(models.Model):
-    user= models.ForeignKey(CustomUser,on_delete=models.CASCADE, null=True, blank=True)
+    user= models.OneToOneField(CustomUser,on_delete=models.CASCADE, null=True, blank=True,related_name='user_profile')
     name= models.CharField(max_length=250,default='',null=True, blank=True)
     phone= models.CharField(max_length=100,default='',null=True, blank=True)
     email= models.CharField(max_length=250,default='',null=True, blank=True)
     profile_image= models.FileField(null=True, blank=True, upload_to='user/profile_image')
+    profile_image_url = models.TextField(default='',null=True, blank=True)
     timestamp= models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f'profile{self.user.pk}'
 
 class Business(models.Model):
-    user= models.ForeignKey(CustomUser,on_delete=models.CASCADE, null=True, blank=True)
+    user= models.OneToOneField(CustomUser,on_delete=models.CASCADE, null=True, blank=True,related_name='user_business')
     business_name= models.CharField(max_length=250)
     whatsapp= models.CharField(max_length=100,default='',null=True, blank=True)
+    cover_image_url = models.TextField(default='',null=True, blank=True)
     gst= models.CharField(max_length=250)
     since= models.CharField(max_length=250)
     segment= models.TextField() # "manufraturer"
     catigory= models.TextField() # ["interior", "exterior","office"]
     badge= models.TextField()
+    bio = models.TextField( null=True, blank=True)
     timestamp= models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f'business name{self.business_name} : pk: {self.pk}'
 
 class BusinessProfile(models.Model):
-    business= models.ForeignKey(Business,on_delete=models.CASCADE, null=True, blank=True)
+    business= models.OneToOneField(Business,on_delete=models.CASCADE, null=True, blank=True,related_name='business_profile')
     primary_image= models.FileField(null=True, blank=True , upload_to='business/primary_image')
     secondary_images= models.FileField(null=True, blank=True, upload_to='business/secondary_images')
+    primary_image_url = models.TextField(default='',null=True, blank=True)
+    secondary_images_url = models.TextField(default='',null=True, blank=True)
     about= models.TextField()
     youtube_link= models.TextField()
 
@@ -76,8 +83,8 @@ class BusinessProfile(models.Model):
         return f'business profile{self.business.pk}'
     
 class Location(models.Model):
-    user= models.ForeignKey(CustomUser,on_delete=models.CASCADE, null=True, blank=True)
-    business= models.ForeignKey(Business,on_delete=models.CASCADE, null=True, blank=True)
+    user= models.OneToOneField(CustomUser,on_delete=models.CASCADE, null=True, blank=True)
+    business= models.OneToOneField(Business,on_delete=models.CASCADE, null=True, blank=True, related_name='business_location')
     pin_code= models.CharField(max_length=500)
     city= models.CharField(max_length=500)
     state= models.CharField(max_length=500)
@@ -190,13 +197,20 @@ class Subscription(models.Model):
 class Blog(models.Model):
     user= models.ForeignKey(CustomUser,on_delete=models.CASCADE, null=True, blank=True)
     title= models.TextField() 
+    slug = models.CharField(max_length=800, unique=True, null=True, blank=True)
     cover= models.FileField(null=True, blank=True,upload_to='blog/cover')
+    cover_image_url = models.TextField(default='',null=True, blank=True)
     description=QuillField(null=True, blank=True)
     author= models.TextField()
     timestamp= models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f'author {self.author} title:{self.title} timestamp:{self.timestamp}'
+    
+    def save(self, *args, **kwargs):
+        if not self.slug and self.title:
+            self.slug = MY_METHODS.generate_slug(self.title)
+        super().save(*args, **kwargs)
 
 class Contact(models.Model):
     tag= models.TextField()
@@ -235,7 +249,6 @@ class OfferHeading(models.Model):
         return f' pk {self.pk} title:{self.title}'
 
 
-
 class Pages(models.Model):
     page_name = models.CharField(max_length=500, unique=True)
     title = models.CharField(max_length=500)
@@ -249,3 +262,31 @@ class QNA(models.Model):
     is_active = models.BooleanField(default=False)
     def __str__(self):
         return f' pk {self.pk} question:{self.question}'
+    
+
+
+# Create your models here.
+class Page(models.Model):
+    name = models.CharField(max_length=255)
+
+
+    def __str__(self):
+        return f"Page {self.name}"
+    
+class Section(models.Model):
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"Section {self.name}"
+
+class StockMedia(models.Model):
+    image = models.URLField(max_length=2250, null=True, blank=True)
+    video = models.URLField(max_length=2250, null=True, blank=True)
+    page = models.ForeignKey(Page, on_delete=models.CASCADE)
+    section = models.ForeignKey(Section, on_delete=models.CASCADE, null=True, blank=True)
+    index = models.IntegerField(default=1)
+
+    def save(self, *args, **kwargs):
+        with transaction.atomic():
+            indexShifting(self)
+            super().save(*args, **kwargs)

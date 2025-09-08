@@ -54,7 +54,6 @@ class LEAD_QUERY_CONTROLLER:
     @classmethod
     async def UpdateLeadQuery(self, data):
         try:
-
             lead_query_ins= None
             is_query_exist = await sync_to_async(LeadQuery.objects.filter(id=data.id).exists)()
             print(f'is_query_exist {is_query_exist}')
@@ -88,45 +87,6 @@ class LEAD_QUERY_CONTROLLER:
                 data={
                     'error': str(e)
                 })
-
-
-    @classmethod
-    async def UpdateLeadQuery(self, data):
-        try:
-            lead_query_ins= None
-            is_query_exist = await sync_to_async(LeadQuery.objects.filter(id=data.id).exists)()
-            print(f'is_query_exist {is_query_exist}')
-
-            if(is_query_exist):
-                lead_query_ins = await sync_to_async(LeadQuery.objects.get)(id=data.id)
-                print(f'lead_query_ins {lead_query_ins}')   
-                
-                create_query_resp = await  LEAD_QUERY_TASK.UpdateLeadQueryTask(lead_query_ins=lead_query_ins,data=data)
-                print(f'update query resp {create_query_resp}')
-
-                if create_query_resp:
-                    return LocalResponse(
-                        response=RESPONSE_MESSAGES.success,
-                        message=RESPONSE_MESSAGES.query_update_success,
-                        code=RESPONSE_CODES.success,
-                        data=create_query_resp)
-
-                else:
-                    return LocalResponse(
-                        response=RESPONSE_MESSAGES.error,
-                        message=RESPONSE_MESSAGES.query_update_error,
-                        code=RESPONSE_CODES.error,
-                        data={})
-
-        except Exception as e:
-            return LocalResponse(
-                response=RESPONSE_MESSAGES.error,
-                message=RESPONSE_MESSAGES.query_update_error,
-                code=RESPONSE_CODES.error,
-                data={
-                    'error': str(e)
-                })
-
 
 
     @classmethod

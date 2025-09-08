@@ -7,7 +7,6 @@ from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.Controllers.Business.Tasks.BusinessTasks import BUSS_TASK
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
-from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.models import Business
 
 
@@ -52,29 +51,31 @@ class BUSS_CONTROLLER:
         try:
             # Check if business already exist
             is_business_exist = await sync_to_async(Business.objects.filter(user=user_ins).exists)()
+            business_data = None
 
             if is_business_exist:
-                business_ins = await sync_to_async(Business.objects.get)(user=user_ins)
-                print(f'business instance {business_ins}')
+                business_instance = await sync_to_async(Business.objects.get)(user=user_ins)
+                print(f'business instance {business_instance}')
                 
-                business_ins = await BUSS_TASK.UpdateBusinessTask(business_ins=business_ins, data=data)
+                business_ins = await BUSS_TASK.UpdateBusinessTask(business_ins=business_instance, data=data)
                 if business_ins is None:
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.error,
                         message=RESPONSE_MESSAGES.business_update_error,
                         code=RESPONSE_CODES.error,
                         data={})
+                business_data = await BUSS_TASK.GetBusinessInfo(id=business_instance.id)
                 return LocalResponse(
                     code=RESPONSE_CODES.success,
                     response=RESPONSE_MESSAGES.success,
                     message=RESPONSE_MESSAGES.business_update_success,
-                    data={})
+                    data=business_data)
 
             return LocalResponse(
                 code=RESPONSE_CODES.success,
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.business_register_success,
-                data={})
+                data=business_data)
 
         except Exception as e:
             return LocalResponse(

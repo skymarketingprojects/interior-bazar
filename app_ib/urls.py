@@ -1,4 +1,3 @@
-
 from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
@@ -15,120 +14,139 @@ from app_ib.Views import PlanView
 from app_ib.Views import AdsQueryView
 from app_ib.Views.Client import ClientLocationView, ClientsView
 
+from app_ib.Views import StockMediaView
+from app_ib.Views import BlogView
+
 from app_ib.Views import ContactView
 from app_ib.Views import PageView
-
+from .views import generateUploadUrlView
 
 app_name = 'interior_bazzar'
 urlpatterns = [
     #########################################################
     # Test: 
     #########################################################
-    path('test', views.TestView, name='TestView'),
-    path('test-mail', views.TestMailView, name='TestMailView'),
+    path('test/', views.TestView, name='TestView'),
+    path('test-mail/', views.TestMailView, name='TestMailView'),
     #########################################################
     # Authentication: 
     #########################################################
-    path('v-1/signup', AuthView.SignupView, name='SignupView'),
-    path('v-1/login', AuthView.LoginView, name='LoginView'),
-    path('v-1/logout', AuthView.LogoutView, name='LogoutView'),
-    path('v-1/delete-account', AuthView.DeleteAccountView, name='DeleteAccountView'),  
-    path('v-1/forgot_password_request', AuthView.ForgotPasswordRequestView, name='ForgotPasswordRequestView'),
-    path('v-1/forgot-password/<str:hash>', AuthView.ForgotPasswordView, name='ForgotPasswordView'),
-    path('v-1/change-password', AuthView.ChnagePasswordView, name='ChnagePasswordView'),
-    path('v-1/reset-password', AuthView.ResetPasswordView, name='ResetPasswordView'),
+    path('v1/auth/signup/', AuthView.SignupView, name='SignupView'),
+    path('v1/auth/signin/', AuthView.LoginView, name='LoginView'),
+    path('v1/auth/signout/', AuthView.LogoutView, name='LogoutView'),
+    path('v1/auth/delete-account/', AuthView.DeleteAccountView, name='DeleteAccountView'),  
+    path('v1/auth/forgot_password_request/', AuthView.ForgotPasswordRequestView, name='ForgotPasswordRequestView'),
+    path('v1/auth/forgot-password/<str:hash>/', AuthView.ForgotPasswordView, name='ForgotPasswordView'),
+    path('v1/auth/change-password/', AuthView.ChnagePasswordView, name='ChnagePasswordView'),
+    path('v1/auth/reset-password/', AuthView.ResetPasswordView, name='ResetPasswordView'),
     
     #########################################################
     # Token: 
     #########################################################
-    path('v-1/get-refresh-token', TokenRefreshView.as_view(), name='token-refresh'),
+    path('v1/auth/refresh-token/', TokenRefreshView.as_view(), name='token-refresh'),
 
     #########################################################
     # User Profile: 
     #########################################################
-    path('v-1/create-profile', ProfileView.CreateProfileView, name='CreateProfileView'),
-    path('v-1/create-update-profile-image', ProfileView.CreateOrUpdateProfileImageView, name='CreateOrUpdateProfileImageView'),
-    path('v-1/get-profile', ProfileView.GetProfileView, name='GetProfileView'),
+    path('v1/user/profile/create/', ProfileView.CreateProfileView, name='CreateProfileView'),
+    path('v1/user/profile-image/update/', ProfileView.CreateOrUpdateProfileImageView, name='CreateOrUpdateProfileImageView'),
+    path('v1/user/profile/', ProfileView.GetProfileView, name='GetProfileView'),
 
     #########################################################
     # Client Location: 
     #########################################################
-    path('v-1/create-update-client-location', ClientLocationView.CreateOrUpdateClientLocationView, name='CreateOrUpdateClientLocationView'),
-    path('v-1/get-client-location-by-id/<int:id>', ClientLocationView.GetClientLocationByIDView, name='GetClientLocationByIDView'),
+    path('v1/user/client-location/create-update/', ClientLocationView.CreateOrUpdateClientLocationView, name='CreateOrUpdateClientLocationView'),
+    path('v1/user/client-location/<int:id>/', ClientLocationView.GetClientLocationByIDView, name='GetClientLocationByIDView'),
 
     #########################################################
     # Business: 
     #########################################################
-    path('v-1/create-business', BusinessView.CreateBusinessView, name='CreateBusinessView'),
-    path('v-1/update-business', BusinessView.UpdateBusinessView, name='UpdateBusinessView'),
-    path('v-1/get-business-by-id/<int:id>', BusinessView.GetBusinessByIdView, name='GetBusinessByIdView'),
+    path('v1/business/create/', BusinessView.CreateBusinessView, name='CreateBusinessView'),
+    path('v1/business/update/', BusinessView.UpdateBusinessView, name='UpdateBusinessView'),
+    path('v1/business/<int:id>/', BusinessView.GetBusinessByIdView, name='GetBusinessByIdView'),
+    path('v1/business/', BusinessView.GetBusinessByUser, name='GetBusinessByUser'),
     
     #########################################################
     # Business Location: 
     #########################################################
-    path('v-1/create-update-business-location', BusinessLocationView.CreateOrUpdateBusinessLocationView, name='CreateBusinessLocationView'),
-    path('v-1/get-business-location-by-id/<int:id>', BusinessLocationView.GetBusinessLocationByBussIDView, name='GetBusinessLocationByBussIDView'),
+    path('v1/business/location/create-update/', BusinessLocationView.CreateOrUpdateBusinessLocationView, name='CreateBusinessLocationView'),
+    path('v1/business/location/<int:id>/', BusinessLocationView.GetBusinessLocationByBussIDView, name='GetBusinessLocationByBussIDView'),
 
 
     #########################################################
     # Business Profile: 
     #########################################################
-    path('v-1/create-update-business-profile', BusinessProfileView.CreateOrUpdateBusinessProfileView, name='CreateOrUpdateBusinessProfileView'),
-    path('v-1/get-business-profile-by-id/<int:id>', BusinessProfileView.GetBusinessProfileByBussIDView, name='GetBusinessProfileByBussIDView'),
-    path('v-1/create-or-update-primary-image', BusinessProfileView.CreateOrUpdatePrimaryImageView, name='CreateOrUpdateProfileImageView'),
-    path('v-1/create-or-update-secondary-image', BusinessProfileView.CreateOrUpdateSecondaryImageView, name='CreateOrUpdateSecondaryImageView'),
-
-    
+    path('v1/business/profile/create-update/', BusinessProfileView.CreateOrUpdateBusinessProfileView, name='CreateOrUpdateBusinessProfileView'),
+    path('v1/business/profile/<int:id>/', BusinessProfileView.GetBusinessProfileByBussIDView, name='GetBusinessProfileByBussIDView'),
+    path('v1/business/primary-image/create-or-update/', BusinessProfileView.CreateOrUpdatePrimaryImageView, name='CreateOrUpdateProfileImageView'),
+    path('v1/business/secondary-image/create-or-update/', BusinessProfileView.CreateOrUpdateSecondaryImageView, name='CreateOrUpdateSecondaryImageView'),
 
 
     #########################################################
     # Query: 
     #########################################################
-    path('v-1/create-query', QueryView.CreateQueryView, name='CreateQueryView'),
-    path('v-1/update-query-id', QueryView.UpdateQueryByIDView, name='UpdateQueryByIDView'),
-    path('v-1/get-business-queries', QueryView.GetQueryBusinessView, name='GetQueryBusinessView'),
-    path('v-1/udpate-query-status', QueryView.UpdateQueryStatusView, name='UpdateQueryStatusView'),
-    path('v-1/udpate-query-priority', QueryView.UpdateQueryPriorityView, name='UpdateQueryPriorityView'),
-    path('v-1/udpate-query-remark', QueryView.UpdateQueryRemarkView, name='UpdateQueryPriorityView'),
+    path('v1/query/create/', QueryView.CreateQueryView, name='CreateQueryView'),
+    path('v1/query/update-query-id/', QueryView.UpdateQueryByIDView, name='UpdateQueryByIDView'),
+    path('v1/query/business-queries/', QueryView.GetQueryBusinessView, name='GetQueryBusinessView'),
+    path('v1/query/udpate-query-status/', QueryView.UpdateQueryStatusView, name='UpdateQueryStatusView'),
+    path('v1/query/udpate-query-priority/', QueryView.UpdateQueryPriorityView, name='UpdateQueryPriorityView'),
+    path('v1/query/udpate-query-remark/', QueryView.UpdateQueryRemarkView, name='UpdateQueryPriorityView'),
 
     #########################################################
     # Quate: 
     #########################################################
-    path('v-1/create-quate', PlanQuateView.CreateQuateView, name='CreateQuateView'),
-    path('v-1/verify-quate', PlanQuateView.VerifyQuateView, name='VerifyQuateView'),
+    path('v1/quate/create-quate/', PlanQuateView.CreateQuateView, name='CreateQuateView'),
+    path('v1/quate/verify-quate/', PlanQuateView.VerifyQuateView, name='VerifyQuateView'),
 
     #########################################################
     # Ads Query: 
     #########################################################
-    path('v-1/create-ads-query', AdsQueryView.CreateAdsQueryView, name='CreateAdsQueryView'),
-    path('v-1/verify-ads-query', AdsQueryView.VerifyAdsQueryView, name='VerifyAdsQueryView'),
+    path('v1/ads/create-ads-query/', AdsQueryView.CreateAdsQueryView, name='CreateAdsQueryView'),
+    path('v1/ads/verify-ads-query/', AdsQueryView.VerifyAdsQueryView, name='VerifyAdsQueryView'),
 
   
     #########################################################
     # Feedback: 
     #########################################################
-    path('v-1/create-feedback', FeedbackView.CreateFeedbackView, name='CreateFeedbackView'),
-    path('v-1/update-feedback-status', FeedbackView.UpdateFeedbackStatusView, name='UpdateFeedbackStatusView'),
+    path('v1/feedback/create-feedback/', FeedbackView.CreateFeedbackView, name='CreateFeedbackView'),
+    path('v1/feedback/update-status/', FeedbackView.UpdateFeedbackStatusView, name='UpdateFeedbackStatusView'),
 
     #########################################################
     # Plan: 
     #########################################################
-    path('v-1/create-plan',  PlanView.CreatePlanView, name='CreatePlanView'),
-    path('v-1/verify-plan', PlanView.VerifyPaymentView, name='VerifyPaymentView'),
+    path('v1/create-plan/',  PlanView.CreatePlanView, name='CreatePlanView'),
+    path('v1/verify-plan/', PlanView.VerifyPaymentView, name='VerifyPaymentView'),
  
     #########################################################
     # Serachview: 
     #########################################################
-    path('v-1/get-business/<int:index>', SearchView.GetBusinessByPaginationView, name='GetBusinessByPaginationView'),
+    path('v1/get-business/<int:index>/', SearchView.GetBusinessByPaginationView, name='GetBusinessByPaginationView'),
 
     #########################################################
     # Contact: 
     #########################################################
-    path('v-1/create-contact', ContactView.CreateContactView, name='CreateContactView'),
+    path('v1/create-contact/', ContactView.CreateContactView, name='CreateContactView'),
 
     #########################################################
     # Pages: 
     #########################################################
-    path('v-1/page/<str:page_name>', PageView.GetPagesView, name='PageView'),
-    path('v-1/qna', PageView.GetQnAView, name='qna'),
+    path('v1/page/<str:page_name>/', PageView.GetPagesView, name='PageView'),
+    path('v1/qna/', PageView.GetQnAView, name='qna'),
+
+    #########################################################
+    # Generate Upload URL: 
+    #########################################################
+    path('v1/common/get-upload-url/', generateUploadUrlView, name='generateUploadUrlView'),
+
+    #########################################################
+    # Stock Media: 
+    #########################################################
+    path('v1/stock-media/<str:page>/<str:section>/', StockMediaView.GetStockMedia, name='GetStockMediaView'),
+    ##########################################################
+    # Blog: 
+    ##########################################################
+    path('v1/blog/', BlogView.GetAllBlogsView, name='GetAllBlogsView'),
+    path('v1/blog/get-pagination/<int:page>/', BlogView.GetBlogsPaginationView, name='GetBlogsPagination'),
+    path('v1/blog/<int:id>/', BlogView.GetBlogByIdView, name='GetBlogByTitleView'),
 ]
+

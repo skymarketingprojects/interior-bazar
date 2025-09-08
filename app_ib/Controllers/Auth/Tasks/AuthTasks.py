@@ -56,7 +56,7 @@ class AUTH_TASK:
             data = {
                 'access_token':access_token,
                 'refresh_token':refresh_token,
-                'user_type':user_ins.type,
+                'type':user_ins.type,
                 'user_id':user_ins.id,
                 'username':user_ins.username,
                 'is_active':user_ins.is_active,
@@ -120,7 +120,7 @@ class AUTH_TASK:
                 link = f'{APPMODE_URL.DEV}v-1/forgot-password/{encoded_hash}'
 
             else:
-                link = f'{APPMODE_URL.PRO}v-1/forgot-password/{encoded_hash}'
+                link = f'{APPMODE_URL.PROD}v-1/forgot-password/{encoded_hash}'
             return link
         except Exception as e:
             print(f'Error in GenerateForgotPasswordLink {e}')

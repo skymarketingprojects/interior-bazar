@@ -49,7 +49,7 @@ async def CreateOrUpdateProfileImageView(request):
     try:
         # Get user instance
         user_ins = request.user
-        profile_image = request.FILES.get('profile_image')        
+        profile_image = request.FILES.get('profile_image_url')        
         # Call Auth Controller to Create User
         auth_resp = await  asyncio.gather(PROFILE_CONTROLLER.CreateOrUpdateProfileImage(
             user_ins=user_ins, profile_image=profile_image))

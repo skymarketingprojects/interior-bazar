@@ -140,7 +140,7 @@ async def ForgotPasswordRequestView(request):
         # Call Auth Controller to Create User
         final_response = await  asyncio.gather(AUTH_CONTROLLER.GenerateAndSendForgotPasswordLink(data=data))
         final_response = final_response[0]
-
+        print(f'final_response {final_response}')
         return ServerResponse(
             response=final_response.response,
             code=final_response.code,

@@ -207,6 +207,23 @@ class RESPONSE_MESSAGES:
     qna_fetch_success= 'QnA fetched successfully'
     qna_fetch_error= 'Unable to fetch QnA'
 
+    presigned_url_failed= "Failed to generate presigned URL"
+    presigned_url_success= "Presigned URL generated successfully"
+    presigned_url_error= "Error generating presigned URL"
+
+    ############################################
+    # Stock Media
+    ############################################
+    stock_media_fetched= "Stock media fetched successfully"
+    stock_media_not_found= "Stock media not found"
+    stock_media_not_saved= "Stock media not saved"
+
+    ############################################
+    # Blogs
+    ############################################
+    blog_fetch_success= 'Blogs fetched successfully'
+    blog_fetch_error= 'Unable to fetch blogs'
+
 class VALIDATION_MESSAGES:
     password_length= 'Password must be at least 8 characters long'
     password_must_contain_digit= 'Password must contain at least one digit'

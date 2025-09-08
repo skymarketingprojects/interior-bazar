@@ -95,3 +95,29 @@ async def GetBusinessByIdView(request,id):
                 'error': str(e)
             })
 
+@api_view(['GET'])
+async def GetBusinessByUser(request):
+    try:
+        user_ins = request.user
+        business = user_ins.user_business
+        # Call Auth Controller to Create User
+        final_response = await  asyncio.gather(BUSS_CONTROLLER.GetBusinessById(id=business.id))
+        print(f'final_response {final_response}')
+        final_response = final_response[0]
+
+        return ServerResponse(
+            response=final_response.response,
+            code=final_response.code,
+            message=final_response.message,
+            data=final_response.data)
+
+    except Exception as e:
+        # print(f'Error: {e}')
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message=RESPONSE_MESSAGES.business_register_error,
+            code=RESPONSE_CODES.error,
+            data={
+                'error': str(e)
+            })
+

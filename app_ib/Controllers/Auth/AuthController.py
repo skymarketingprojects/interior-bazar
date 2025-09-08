@@ -8,6 +8,7 @@ from app_ib.Controllers.Auth.Validators.AuthValidators import AUTH_VALIDATOR
 from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.Utils.StaticValues import STATICVALUES
 
+from app_ib.Controllers.Profile.ProfileController import PROFILE_CONTROLLER
 
 class AUTH_CONTROLLER:
 
@@ -90,6 +91,10 @@ class AUTH_CONTROLLER:
                 # Generate Token and build final response data
                 response_data = await AUTH_TASK.GenerateUserToken(login_user)
                 print(f'response data {response_data}')
+                userdata = await PROFILE_CONTROLLER.GetProfile(login_user)
+                response_data['user'] = userdata.data
+
+                
 
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
@@ -159,7 +164,7 @@ class AUTH_CONTROLLER:
     @classmethod
     async def GenerateAndSendForgotPasswordLink(self, data):
         try:
-            link = ''
+            link = ""
             # Check if user exist
             is_user_exist = await AUTH_TASK.IsUserExist(username=data.username)
             print(f'is user exist {is_user_exist}')
@@ -196,10 +201,12 @@ class AUTH_CONTROLLER:
                                 })
                         else:
                             return LocalResponse(
-                                response=RESPONSE_MESSAGES.error,
+                                response=RESPONSE_MESSAGES.success,
                                 message=RESPONSE_MESSAGES.send_link_error,
-                                code=RESPONSE_CODES.error,
-                                data={})
+                                code=RESPONSE_CODES.success,
+                                data={
+                                    'link':link,
+                                })
 
                 else:
                     return LocalResponse(

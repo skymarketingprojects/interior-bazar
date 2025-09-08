@@ -4,11 +4,10 @@ import time
 from types import SimpleNamespace
 import json
 import re
-
 from django.conf import settings
 from django.core.mail import send_mail
 
-from app_ib.models import CustomUser
+
 
 
 class MY_METHODS:
@@ -89,6 +88,44 @@ class MY_METHODS:
         pattern = r'^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$'
         return bool(re.match(pattern, gst.upper()))
 
+    @staticmethod
+    def generate_slug(text, randomize=True):
+        
+        # Convert to lowercase
+        text = text.lower()
+
+        # Replace spaces and underscores with hyphens
+        text = re.sub(r'[\s_]+', '-', text)
+
+        # Remove non-alphanumeric characters except hyphens
+        text = re.sub(r'[^a-z0-9-]', '', text)
+
+        # Remove leading/trailing hyphens
+        text = text.strip('-')
+
+        # Optionally add a random 4-digit number
+        if randomize:
+            rand_num = random.randint(1000, 9999)
+            text = f"{text}-{rand_num}"
+
+        return text
+
+    @staticmethod
+    def unslugify(slug):
+        """
+        Convert a slug back to a human-readable string.
+        - Removes trailing random number if present.
+        - Replaces hyphens with spaces.
+        - Capitalizes each word.
+        """
+        # Remove trailing "-1234" pattern (random 4-digit number)
+        slug = re.sub(r'-\d{4}$', '', slug)
+
+        # Replace hyphens with spaces
+        words = slug.replace('-', ' ').split()
+
+        # Capitalize each word
+        return ' '.join(word.capitalize() for word in words)
 
     @staticmethod
     async def send_email(email, subject, message):
@@ -105,4 +142,3 @@ class MY_METHODS:
             print(f'Error in send_email {e}')
             return False
     
-  

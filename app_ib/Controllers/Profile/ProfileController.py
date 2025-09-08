@@ -27,11 +27,12 @@ class PROFILE_CONTROLLER:
                 print(f'is profile created {is_profile_updated}')
 
                 if(is_profile_updated):
+                    profile_data = await PROFILE_TASKS.GetProfileDataTask(user_profile_ins=user_profile_ins)
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.success,
                         message=RESPONSE_MESSAGES.user_profile_update_success,
                         code=RESPONSE_CODES.success,
-                        data={})
+                        data=profile_data)
                 else:
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.error,
@@ -142,6 +143,9 @@ class PROFILE_CONTROLLER:
             if is_user_profile_created:
                 user_profile_ins = await sync_to_async(UserProfile.objects.get)(user=user_ins)
                 user_profile_data= await PROFILE_TASKS.GetProfileDataTask(user_profile_ins=user_profile_ins)
+                user_profile_data["username"] = user_ins.username
+                user_profile_data["role"] = user_ins.type
+                user_profile_data["id"] = user_ins.id
                 
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,

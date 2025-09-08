@@ -10,6 +10,8 @@ class BUSS_PROF_TASK:
             business_prof_ins.business= business_ins
             business_prof_ins.about= data.about
             business_prof_ins.youtube_link= data.youtube_link
+            business_prof_ins.primary_image_url= data.primary_image_url if data.primary_image_url else ''
+            business_prof_ins.secondary_images_url= data.secondary_images_url if data.secondary_images_url else ''
             await sync_to_async(business_prof_ins.save)()
             return True
             
@@ -22,6 +24,8 @@ class BUSS_PROF_TASK:
         try:
             business_prof_ins.about= data.about
             business_prof_ins.youtube_link= data.youtube_link
+            business_prof_ins.primary_image_url= data.primary_image_url if data.primary_image_url else business_prof_ins.primary_image_url
+            business_prof_ins.secondary_images_url= data.secondary_images_url if data.secondary_images_url else business_prof_ins.secondary_images_url
             await sync_to_async(business_prof_ins.save)()
             return True
             
