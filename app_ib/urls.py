@@ -88,34 +88,34 @@ urlpatterns = [
     path('v1/query/create/', QueryView.CreateQueryView, name='CreateQueryView'),
     path('v1/query/update-query-id/', QueryView.UpdateQueryByIDView, name='UpdateQueryByIDView'),
     path('v1/query/business-queries/', QueryView.GetQueryBusinessView, name='GetQueryBusinessView'),
-    path('v1/query/udpate-query-status/', QueryView.UpdateQueryStatusView, name='UpdateQueryStatusView'),
-    path('v1/query/udpate-query-priority/', QueryView.UpdateQueryPriorityView, name='UpdateQueryPriorityView'),
-    path('v1/query/udpate-query-remark/', QueryView.UpdateQueryRemarkView, name='UpdateQueryPriorityView'),
+    path('v1/query/udpate/status/', QueryView.UpdateQueryStatusView, name='UpdateQueryStatusView'),
+    path('v1/query/udpate/priority/', QueryView.UpdateQueryPriorityView, name='UpdateQueryPriorityView'),
+    path('v1/query/udpate/remark/', QueryView.UpdateQueryRemarkView, name='UpdateQueryPriorityView'),
 
     #########################################################
     # Quate: 
     #########################################################
-    path('v1/quate/create-quate/', PlanQuateView.CreateQuateView, name='CreateQuateView'),
-    path('v1/quate/verify-quate/', PlanQuateView.VerifyQuateView, name='VerifyQuateView'),
+    path('v1/quate/create/', PlanQuateView.CreateQuateView, name='CreateQuateView'),
+    path('v1/quate/verify/', PlanQuateView.VerifyQuateView, name='VerifyQuateView'),
 
     #########################################################
     # Ads Query: 
     #########################################################
-    path('v1/ads/create-ads-query/', AdsQueryView.CreateAdsQueryView, name='CreateAdsQueryView'),
-    path('v1/ads/verify-ads-query/', AdsQueryView.VerifyAdsQueryView, name='VerifyAdsQueryView'),
+    path('v1/ads/create-query/', AdsQueryView.CreateAdsQueryView, name='CreateAdsQueryView'),
+    path('v1/ads/verify-query/', AdsQueryView.VerifyAdsQueryView, name='VerifyAdsQueryView'),
 
   
     #########################################################
     # Feedback: 
     #########################################################
-    path('v1/feedback/create-feedback/', FeedbackView.CreateFeedbackView, name='CreateFeedbackView'),
-    path('v1/feedback/update-status/', FeedbackView.UpdateFeedbackStatusView, name='UpdateFeedbackStatusView'),
+    path('v1/feedback/create/', FeedbackView.CreateFeedbackView, name='CreateFeedbackView'),
+    path('v1/feedback/status/update/', FeedbackView.UpdateFeedbackStatusView, name='UpdateFeedbackStatusView'),
 
     #########################################################
     # Plan: 
     #########################################################
-    path('v1/create-plan/',  PlanView.CreatePlanView, name='CreatePlanView'),
-    path('v1/verify-plan/', PlanView.VerifyPaymentView, name='VerifyPaymentView'),
+    path('v1/plan/create/',  PlanView.CreatePlanView, name='CreatePlanView'),
+    path('v1/plan/verify/', PlanView.VerifyPaymentView, name='VerifyPaymentView'),
  
     #########################################################
     # Serachview: 
