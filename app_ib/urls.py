@@ -125,7 +125,7 @@ urlpatterns = [
     #########################################################
     # Contact: 
     #########################################################
-    path('v1/create-contact/', ContactView.CreateContactView, name='CreateContactView'),
+    path('v1/contact/create/', ContactView.CreateContactView, name='CreateContactView'),
 
     #########################################################
     # Pages: 

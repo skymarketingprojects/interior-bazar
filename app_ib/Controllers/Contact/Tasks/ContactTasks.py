@@ -6,6 +6,7 @@ class CONTACT_TASKS:
     @classmethod
     async def CreateContactTask(self,data):
         try:
+            # print(f'create contact task data {data}')
             contact_ins= await sync_to_async(Contact.objects.create)(
                 tag=data.tag,
                 name = data.name,
@@ -14,7 +15,7 @@ class CONTACT_TASKS:
                 company = data.company,
                 recognisation = data.recognisation,
                 detail = data.detail,
-                attachment = data.attachment
+                attachment = getattr(data, 'attachment', None)
             )
             print(f'contact ins {contact_ins}')
 

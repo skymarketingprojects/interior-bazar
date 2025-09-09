@@ -11,6 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 @api_view(['POST'])
 async def CreateContactView(request):
     try:
+        print('create contact view request.data', request.data)
         data = MY_METHODS.json_to_object(request.data)
         print(f'create contact view data {data}')
 
