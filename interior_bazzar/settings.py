@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'django_extensions',
     'django_quill',
     'app_ib',
+    'interior_admin',
 ]
 
 MIDDLEWARE = [

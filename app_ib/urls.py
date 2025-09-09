@@ -101,8 +101,8 @@ urlpatterns = [
     #########################################################
     # Ads Query: 
     #########################################################
-    path('v1/ads/create-query/', AdsQueryView.CreateAdsQueryView, name='CreateAdsQueryView'),
-    path('v1/ads/verify-query/', AdsQueryView.VerifyAdsQueryView, name='VerifyAdsQueryView'),
+    path('v1/query/ads/create/', AdsQueryView.CreateAdsQueryView, name='CreateAdsQueryView'),
+    path('v1/query/ads/verify/', AdsQueryView.VerifyAdsQueryView, name='VerifyAdsQueryView'),
 
   
     #########################################################
@@ -148,5 +148,6 @@ urlpatterns = [
     path('v1/blog/', BlogView.GetAllBlogsView, name='GetAllBlogsView'),
     path('v1/blog/get-pagination/<int:page>/', BlogView.GetBlogsPaginationView, name='GetBlogsPagination'),
     path('v1/blog/<int:id>/', BlogView.GetBlogByIdView, name='GetBlogByTitleView'),
+    path('v1/admin/', include('interior_admin.urls')),
 ]
 

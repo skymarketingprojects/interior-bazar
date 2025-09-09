@@ -5,6 +5,7 @@ class ADS_QUERY_TASKS:
     @classmethod
     async def CreateAdsQueryTask(self,data):
         try:
+            print(f'data {data}')
             lead_query_ins = LeadQuery()
             lead_query_ins.phone= data.phone    
             lead_query_ins.interested= data.interested            

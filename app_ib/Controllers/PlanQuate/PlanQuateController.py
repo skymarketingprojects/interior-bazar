@@ -55,8 +55,8 @@ class PLAN_QUATE_CONTROLLER:
             # Test Data
             # print(f'name: {data.phone}')
             # print(f'name: {data.interested}')
-            # print(f'name: {data.email}')
-            # print(f'name: {data.note}')
+            print(f'name: {data.email}')
+            print(f'name: {data.note}')
 
             is_quate_exist= await sync_to_async(Quate.objects.filter(id=data.id).exists)()
             if(is_quate_exist):

@@ -210,4 +210,5 @@ media
 !.elasticbeanstalk/*.global.yml
 
 #custom cmds
-app_ib/management/commands/createfolders.py
+app_ib/management/*
+app_ib/management
