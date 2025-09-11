@@ -3,6 +3,7 @@ from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.LocalResponse import LocalResponse
 from .Tasks.AdminPanelBusinessTasks import ADMIN_PANEL_TASKS
 from .Tasks.AdminPanelLeadTasks import LEAD_TASKS
+from .Tasks.AdminPannelAnalyticsTask import ANALYTICS_TASKS
 import asyncio
 
 class ADMIN_PANEL_CONTROLLER:
@@ -150,6 +151,103 @@ class ADMIN_PANEL_CONTROLLER:
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Failed to fetch paginated lead data.",
+                code=RESPONSE_CODES.error,
+                data={"error": str(e)}
+            )
+    @classmethod
+    async def GetAllUserBusinessStats(cls):
+        """
+        Get total clients, total businesses, and total users.
+        """
+        try:
+            results = await asyncio.gather(
+                ANALYTICS_TASKS.GetTotalClients(),
+                ANALYTICS_TASKS.GetTotalBusiness(),
+                ANALYTICS_TASKS.GetTotalUsers(),
+            )
+
+            total_clients, total_businesses, total_users = results
+
+            response_data = {
+                "clients": total_clients,
+                "businesses": total_businesses,
+                "users": total_users
+            }
+
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message="Total clients, businesses, and users fetched successfully.",
+                code=RESPONSE_CODES.success,
+                data=response_data
+            )
+
+        except Exception as e:
+            print(f"[GetAllUserBusinessStats Error]: {e}")
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message="Failed to fetch user/business stats.",
+                code=RESPONSE_CODES.error,
+                data={"error": str(e)}
+            )
+
+    # 2. Get Today Signups
+    @classmethod
+    async def GetTodaySignupsStats(cls):
+        """
+        Get today's signups for clients, businesses, and users.
+        """
+        try:
+            today_signups = await ANALYTICS_TASKS.GetTodaySignups()
+
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message="Today's signups fetched successfully.",
+                code=RESPONSE_CODES.success,
+                data=today_signups
+            )
+
+        except Exception as e:
+            print(f"[GetTodaySignupsStats Error]: {e}")
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message="Failed to fetch today's signups.",
+                code=RESPONSE_CODES.error,
+                data={"error": str(e)}
+            )
+
+    # 3. Get Charts (Clients, Businesses, Users)
+    @classmethod
+    async def GetChartsStats(cls):
+        """
+        Get chart data for clients, businesses, and users.
+        """
+        try:
+            results = await asyncio.gather(
+                ANALYTICS_TASKS.GetClientChart(),
+                ANALYTICS_TASKS.GetBusinessChart(),
+                ANALYTICS_TASKS.GetUserChart(),
+            )
+
+            client_chart, business_chart, user_chart = results
+
+            response_data = {
+                "clients": client_chart,
+                "businesses": business_chart,
+                "users": user_chart
+            }
+
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message="Charts fetched successfully.",
+                code=RESPONSE_CODES.success,
+                data=response_data
+            )
+
+        except Exception as e:
+            print(f"[GetChartsStats Error]: {e}")
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message="Failed to fetch charts.",
                 code=RESPONSE_CODES.error,
                 data={"error": str(e)}
             )

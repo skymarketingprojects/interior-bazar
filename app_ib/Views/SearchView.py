@@ -16,7 +16,7 @@ from app_ib.Controllers.Search.SearchController import SEARCH_CONTROLLER
 @api_view(['GET'])
 async def GetBusinessByPaginationView(request,index):
     try:
-        final_response= await SEARCH_CONTROLLER.GetBusinessUsingPagination()
+        final_response= await SEARCH_CONTROLLER.GetBusinessUsingPagination(pageNo=index)
         return ServerResponse(
             response=final_response.response,
             code=final_response.code,

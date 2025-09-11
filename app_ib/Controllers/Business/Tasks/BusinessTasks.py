@@ -1,4 +1,4 @@
-from app_ib.models import Business,Location
+from app_ib.models import Business,Location,BusinessBadge
 from asgiref.sync import sync_to_async
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
@@ -9,6 +9,7 @@ class BUSS_TASK:
     @classmethod
     async def CreateBusinessTask(self, user_ins, data):
         try:
+            badge = await sync_to_async(lambda: BusinessBadge.objects.filter(isDefault=True).first())()
             business_ins = Business()
             business_ins.user=user_ins
             business_ins.business_name=getattr(data, 'business_name', "")
@@ -18,6 +19,7 @@ class BUSS_TASK:
             business_ins.gst = getattr(data, 'gst', "")
             business_ins.since = getattr(data, 'since',"" )
             business_ins.bio = getattr(data, 'bio', "")
+            business_ins.businessBadge = badge
             await sync_to_async(business_ins.save)()
             return True
             
@@ -78,6 +80,8 @@ class BUSS_TASK:
                 'since': business_ins.since,
                 'buss_id': business_ins.id,
                 'bio': business_ins.bio,
+                'updated_at': business_ins.updated_at,
+                'badge': business_ins.businessBadge.image_url if business_ins.badge else None,
                 # 'pin_code':business_loc_ins.pin_code,
                 # 'city':business_loc_ins.city,
                 # 'state':business_loc_ins.state,

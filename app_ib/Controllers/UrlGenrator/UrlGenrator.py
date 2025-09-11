@@ -21,6 +21,8 @@ class imageUrlGenrator:
 
             elif ImageIntent == "BusinessPrimaryImage":
                 FolderPath = FilePath.BusinessPrimaryImage()
+            elif ImageIntent == "BusinessBadge":
+                FolderPath = FilePath.BusinessBadge()
 
             elif ImageIntent == "BusinessSecondaryImages":
                 FolderPath = FilePath.BusinessSecondaryImages()
@@ -48,6 +50,7 @@ class imageUrlGenrator:
 
             elif ImageIntent == "Banner":
                 FolderPath = FilePath.Banner()
+
             elif ImageIntent == "StockMedia":
                 FolderPath = FilePath.StockMedia()
 
@@ -103,6 +106,7 @@ class FilePath:
     PAYMENT = "payment_qr"
     BANNERS = "banners"
     STOCK_MEDIA = "stock_media"
+    BUSINESS_BADGE = "business_badge"
 
     @staticmethod
     def ProfileImage():
@@ -111,6 +115,9 @@ class FilePath:
     @staticmethod
     def BusinessPrimaryImage():
         return f"{FilePath.BUSINESS}/primary_image/"
+    @staticmethod
+    def BusinessBadge():
+        return f"{FilePath.BUSINESS_BADGE}/primary_image/"
 
     @staticmethod
     def BusinessSecondaryImages():

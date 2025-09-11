@@ -224,6 +224,18 @@ class RESPONSE_MESSAGES:
     blog_fetch_success= 'Blogs fetched successfully'
     blog_fetch_error= 'Unable to fetch blogs'
 
+
+    ############################################
+    # Subscription
+    ############################################
+    subscription_fetch_error= 'Unable to fetch subscription'
+    subscription_fetch_success= 'Subscription fetched successfully'
+    subscription_create_success= 'Subscription created successfully'
+    subscription_create_error   = 'Subscription creation failed'
+    subscription_update_success= 'Subscription updated successfully'
+    subscription_update_error   = 'Subscription update failed'
+
+
 class VALIDATION_MESSAGES:
     password_length= 'Password must be at least 8 characters long'
     password_must_contain_digit= 'Password must contain at least one digit'

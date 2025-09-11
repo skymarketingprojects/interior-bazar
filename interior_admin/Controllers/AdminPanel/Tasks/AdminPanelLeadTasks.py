@@ -9,9 +9,6 @@ class LEAD_TASKS:
     
     @classmethod
     async def GetTotalAssignedLeads(cls):
-        """
-        Get total platform leads (leads that are not assigned to any business).
-        """
         try:
             platform_leads_count = await sync_to_async(
                 lambda: LeadQuery.objects.filter(business=None).count()
@@ -22,10 +19,7 @@ class LEAD_TASKS:
             return None
     
     @classmethod
-    async def GetTotalPlatformLeads(cls):
-        """
-        Get total assigned leads (leads that are assigned to a business).
-        """
+    async def GetTotalPlatformLeads(cls):  
         try:
             assigned_leads_count = await sync_to_async(
                 lambda: LeadQuery.objects.filter(business__isnull=False).count()
@@ -37,9 +31,6 @@ class LEAD_TASKS:
     
     @classmethod
     async def GetTotalLeads(cls):
-        """
-        Get total leads (sum of platform leads and assigned leads).
-        """
         try:
             platform_leads_count = await cls.GetTotalPlatformLeads()
             assigned_leads_count = await cls.GetTotalAssignedLeads()
@@ -50,9 +41,6 @@ class LEAD_TASKS:
     
     @classmethod
     async def GetTodayLeads(cls):
-        """
-        Get today's leads (leads created today).
-        """
         try:
             today = timezone.now().date()
             today_leads_count = await sync_to_async(
@@ -65,9 +53,6 @@ class LEAD_TASKS:
 
     @classmethod
     async def GetLeadTiles(cls, start_date=None, end_date=None, search_query=None, page_number=1, page_size=10):
-        """
-        Get lead tiles with filters: date, search query, and pagination.
-        """
         try:
             leads = LeadQuery.objects.all()
 

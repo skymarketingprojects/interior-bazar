@@ -19,13 +19,13 @@ from app_ib.Controllers.Search.Tasks.SearchTasks import SEARCH_TASKS
 
 class SEARCH_CONTROLLER:
     @classmethod
-    async def GetBusinessUsingPagination(self):
+    async def GetBusinessUsingPagination(self,pageNo):
         try:
             # Getting all business instance: 
             businesses_query = await sync_to_async(list)(Business.objects.all())
 
             # fetch business data:
-            business_data= await SEARCH_TASKS.GetQueryData(businesses_query=businesses_query)
+            business_data= await SEARCH_TASKS.GetQueryData(businesses_query=businesses_query,pageNo=pageNo)
 
             return LocalResponse(
                 code=RESPONSE_CODES.success,

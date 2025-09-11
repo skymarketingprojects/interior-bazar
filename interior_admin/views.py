@@ -132,3 +132,73 @@ async def GetAssignedLeadsTilesView(request):
                 'error': str(e)
             }
         )
+
+
+@api_view(['GET'])
+async def GetAllUserBusinessStatsView(request):
+    try:
+        final_response = await asyncio.gather(
+            ADMIN_PANEL_CONTROLLER.GetAllUserBusinessStats()
+        )
+        final_response = final_response[0]
+
+        return ServerResponse(
+            response=final_response.response,
+            code=final_response.code,
+            message=final_response.message,
+            data=final_response.data
+        )
+    except Exception as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message="Failed to fetch user/business stats.",
+            code=RESPONSE_CODES.error,
+            data={"error": str(e)}
+        )
+
+
+@api_view(['GET'])
+async def GetTodaySignupsStatsView(request):
+    try:
+        final_response = await asyncio.gather(
+            ADMIN_PANEL_CONTROLLER.GetTodaySignupsStats()
+        )
+        final_response = final_response[0]
+
+        return ServerResponse(
+            response=final_response.response,
+            code=final_response.code,
+            message=final_response.message,
+            data=final_response.data
+        )
+    except Exception as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message="Failed to fetch today signups.",
+            code=RESPONSE_CODES.error,
+            data={"error": str(e)}
+        )
+
+
+@api_view(['POST'])
+async def GetChartsStatsView(request):
+    try:
+        # No filters needed (filters are handled inside task by daily/weekly/monthly buckets)
+        final_response = await asyncio.gather(
+            ADMIN_PANEL_CONTROLLER.GetChartsStats()
+        )
+        final_response = final_response[0]
+
+        return ServerResponse(
+            response=final_response.response,
+            code=final_response.code,
+            message=final_response.message,
+            data=final_response.data
+        )
+    except Exception as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message="Failed to fetch charts.",
+            code=RESPONSE_CODES.error,
+            data={"error": str(e)}
+        )
