@@ -207,27 +207,64 @@ SIMPLE_JWT = {
 
 if(ENV == APPMODE.DEV):
     print(f'Mode Activated [ DEV ]')
-    DEBUG = True 
+    # DEBUG = True 
 
+    # # Razor Pay
+    # RAZORPAY_KEY = os.getenv('RAZORPAY_KEY')
+    # RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET')
+
+    # ALLOWED_HOSTS = ["*"]
+
+    # # CORS Settings (uncomment if needed)
+    # CORS_ORIGIN_ALLOW_ALL = True
+
+    # DATABASES = {
+    #     'default': {
+    #         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+    #         'NAME': os.getenv('DATABASE_NAME'),
+    #         'USER': os.getenv('DATABASE_USERNAME'),
+    #         'PASSWORD': os.getenv('DATABASE_PASSWORD'),
+    #         'HOST': os.getenv('DATABASE_HOST'),
+    #         'PORT': os.getenv('DATABASE_PORT'),
+    #     }
+    # }
+    DEBUG = True 
+        
     # Razor Pay
-    RAZORPAY_KEY = os.getenv('RAZORPAY_KEY')
-    RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET')
+    # RAZORPAY_KEY=env("PROD_RAZORPAY_KEY")
+    # RAZORPAY_KEY_SECRET=env("PROD_RAZORPAY_KEY_SECRET")
+    
 
     ALLOWED_HOSTS = ["*"]
-
-    # CORS Settings (uncomment if needed)
+    # CORS_ORIGIN_WHITELIST = [
+    #     'https://lawcalldevapi.store',
+    # ]
+    # CORS_ALLOWED_ORIGIN_REGEXES = [
+    #     r"^https://\w+\.lawcalldevapi\.store$",
+    # ]
+    
     CORS_ORIGIN_ALLOW_ALL = True
 
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': os.getenv('DATABASE_NAME'),
-            'USER': os.getenv('DATABASE_USERNAME'),
-            'PASSWORD': os.getenv('DATABASE_PASSWORD'),
-            'HOST': os.getenv('DATABASE_HOST'),
-            'PORT': os.getenv('DATABASE_PORT'),
+            'NAME': env('DATABASE_NAME'),
+            'USER': env('DATABASE_USERNAME'),
+            'PASSWORD': env('DATABASE_PASSWORD'),
+            'HOST': env('DATABASE_HOST'),
+            'PORT': env('DATABASE_PORT'),
         }
     }
+    
+    # S3
+    AWS_ACCESS_KEY_ID = env('AWS_KEY')
+    AWS_SECRET_ACCESS_KEY = env('AWS_SECRETE_KEY')
+    AWS_STORAGE_BUCKET_NAME = env('S3_BUCKET_NAME')
+    AWS_S3_REGION_NAME = env('S3_REGION')
+    DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
+    STATICFILES_STORAGE = "storages.backends.s3.S3Storage"
+    AWS_S3_FILE_OVERWRITE = True
+    AWS_DEFAULT_ACL = None
 
     # S3 Settings
     AWS_ACCESS_KEY_ID = os.getenv('AWS_KEY')
