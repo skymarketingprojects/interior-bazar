@@ -13,18 +13,17 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 from app_ib.Utils.AppMode import APPMODE
-from pathlib import Path
-from datetime import timedelta
 import os 
 import environ
+
 env = environ.Env()
-environ.Env.read_env()
 
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+DJANGO_ENV = os.environ.get("ENV", "local").lower()
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -33,7 +32,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-+v0qbypjz*^(5^!7@uosljz@9phfii&=13u3*)0oz802oulfzu'
 
 # Set the environment
-ENV =  APPMODE.DEV
+ENV = APPMODE.LOC
+if DJANGO_ENV == "prod":
+    ENV = APPMODE.PROD
+
+if DJANGO_ENV == "local":
+    env.read_env(BASE_DIR / ".env")
 
 print(f'ENV: {ENV}')
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -205,64 +209,14 @@ SIMPLE_JWT = {
 }
 
 
-if(ENV == APPMODE.DEV):
-    print(f'Mode Activated [ DEV ]')
-    DEBUG = True 
-        
-    # Razor Pay
-    # RAZORPAY_KEY=env("PROD_RAZORPAY_KEY")
-    # RAZORPAY_KEY_SECRET=env("PROD_RAZORPAY_KEY_SECRET")
-    
-
-    ALLOWED_HOSTS = ["*"]
-    # CORS_ORIGIN_WHITELIST = [
-    #     'https://lawcalldevapi.store',
-    # ]
-    # CORS_ALLOWED_ORIGIN_REGEXES = [
-    #     r"^https://\w+\.lawcalldevapi\.store$",
-    # ]
-    
-    CORS_ORIGIN_ALLOW_ALL = True
-
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': env('DATABASE_NAME'),
-            'USER': env('DATABASE_USERNAME'),
-            'PASSWORD': env('DATABASE_PASSWORD'),
-            'HOST': env('DATABASE_HOST'),
-            'PORT': env('DATABASE_PORT'),
-        }
-    }
-    
-    # S3
-    AWS_ACCESS_KEY_ID = env('AWS_KEY')
-    AWS_SECRET_ACCESS_KEY = env('AWS_SECRETE_KEY')
-    AWS_STORAGE_BUCKET_NAME = env('S3_BUCKET_NAME')
-    AWS_S3_REGION_NAME = env('S3_REGION')
-    DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
-    STATICFILES_STORAGE = "storages.backends.s3.S3Storage"
-    AWS_S3_FILE_OVERWRITE = True
-    AWS_DEFAULT_ACL = None
-
-    # # S3 Settings
-    # AWS_ACCESS_KEY_ID = os.getenv('AWS_KEY')
-    # AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRETE_KEY')
-    # AWS_STORAGE_BUCKET_NAME = os.getenv('S3_BUCKET_NAME')
-    # AWS_S3_REGION_NAME = os.getenv('S3_REGION')
-    # DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
-    # STATICFILES_STORAGE = "storages.backends.s3.S3Storage"
-    # AWS_S3_FILE_OVERWRITE = True
-    # AWS_DEFAULT_ACL = None
-    
-    
+       
 if(ENV == APPMODE.PROD):
     print(f'Mode Activated [ PROD ]')
     DEBUG = False
 
     # Razor Pay
-    RAZORPAY_KEY = os.getenv('RAZORPAY_KEY')
-    RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET')
+    # RAZORPAY_KEY = os.getenv('RAZORPAY_KEY')
+    # RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET')
 
     ALLOWED_HOSTS = ["*"]
 
@@ -282,7 +236,7 @@ if(ENV == APPMODE.PROD):
 
     # S3 Settings
     AWS_ACCESS_KEY_ID = os.getenv('AWS_KEY')
-    AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRETE_KEY')
+    AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
     AWS_STORAGE_BUCKET_NAME = os.getenv('S3_BUCKET_NAME')
     AWS_S3_REGION_NAME = os.getenv('S3_REGION')
     DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"

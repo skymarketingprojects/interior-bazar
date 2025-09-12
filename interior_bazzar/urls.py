@@ -23,9 +23,9 @@ from app_ib.views import TestView
 
 
 urlpatterns = [
-    path('',TestView, name='root'),
+    path('',TestView, name='test'),
     path('admin/', admin.site.urls),
-    path('api/', include("app_ib.urls", namespace='interior_bazzar_api'), name='api'),
+    path('api/', include("app_ib.urls")),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

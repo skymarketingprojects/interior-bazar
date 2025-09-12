@@ -29,7 +29,7 @@ class AUTH_CONTROLLER:
                     code=RESPONSE_CODES.error,
                     response=RESPONSE_MESSAGES.error,
                     message=validate_password.message,
-                    data={})
+                    data=validate_password.data)
 
             # Check if user already exist 
             is_user_exist = await AUTH_TASK.IsUserExist(data.username)
@@ -65,12 +65,12 @@ class AUTH_CONTROLLER:
                     code=RESPONSE_CODES.success,
                     data=response_data)
 
-        except:
+        except Exception as e:
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.user_register_error,
                 code=RESPONSE_CODES.error,
-                data={})
+                data=str(e))
 
 
     #####################################
@@ -108,12 +108,12 @@ class AUTH_CONTROLLER:
                     message=RESPONSE_MESSAGES.user_login_error,
                     code=RESPONSE_CODES.error,
                     data={})
-        except:
+        except Exception as e:
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.user_login_error,
                 code=RESPONSE_CODES.error,
-                data={})
+                data=str(e))
 
     #####################################
     # Logout User
