@@ -37,7 +37,7 @@ if DJANGO_ENV == "prod":
     ENV = APPMODE.PROD
 
 if DJANGO_ENV == "local":
-    env.read_env(BASE_DIR / ".env")
+    environ.Env.read_env()
 
 print(f'ENV: {ENV}')
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -215,8 +215,8 @@ if(ENV == APPMODE.PROD):
     DEBUG = False
 
     # Razor Pay
-    # RAZORPAY_KEY = os.getenv('RAZORPAY_KEY')
-    # RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET')
+    # RAZORPAY_KEY = os.environ.get('RAZORPAY_KEY')
+    # RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET')
 
     ALLOWED_HOSTS = ["*"]
 
@@ -226,19 +226,19 @@ if(ENV == APPMODE.PROD):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': os.getenv('DATABASE_NAME'),
-            'USER': os.getenv('DATABASE_USERNAME'),
-            'PASSWORD': os.getenv('DATABASE_PASSWORD'),
-            'HOST': os.getenv('DATABASE_HOST'),
-            'PORT': os.getenv('DATABASE_PORT'),
+            'NAME': os.environ.get('DATABASE_NAME'),
+            'USER': os.environ.get('DATABASE_USERNAME'),
+            'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
+            'HOST': os.environ.get('DATABASE_HOST'),
+            'PORT': os.environ.get('DATABASE_PORT'),
         }
     }
 
     # S3 Settings
-    AWS_ACCESS_KEY_ID = os.getenv('AWS_KEY')
-    AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-    AWS_STORAGE_BUCKET_NAME = os.getenv('S3_BUCKET_NAME')
-    AWS_S3_REGION_NAME = os.getenv('S3_REGION')
+    AWS_ACCESS_KEY_ID = os.environ.get('AWS_KEY')
+    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
+    AWS_S3_REGION_NAME = os.environ.get('S3_REGION')
     DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
     STATICFILES_STORAGE = "storages.backends.s3.S3Storage"
     AWS_S3_FILE_OVERWRITE = True
@@ -291,12 +291,12 @@ STATIC_ROOT = BASE_DIR  / 'static_root'
 # Email Server
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = os.getenv('EMAIL_HOST')
-# EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-# EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')  # Use generated app password here
+# EMAIL_HOST = os.environ.get('EMAIL_HOST')
+# EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+# EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')  # Use generated app password here
 # EMAIL_PORT = 587
 # EMAIL_USE_TLS = True
-# DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
+# DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL')
 EMAIL_HOST = env('EMAIL_HOST')
 EMAIL_HOST_USER = env('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')  # Use generated app password here
