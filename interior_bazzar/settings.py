@@ -266,15 +266,15 @@ if(ENV == APPMODE.DEV):
     AWS_S3_FILE_OVERWRITE = True
     AWS_DEFAULT_ACL = None
 
-    # S3 Settings
-    AWS_ACCESS_KEY_ID = os.getenv('AWS_KEY')
-    AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRETE_KEY')
-    AWS_STORAGE_BUCKET_NAME = os.getenv('S3_BUCKET_NAME')
-    AWS_S3_REGION_NAME = os.getenv('S3_REGION')
-    DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
-    STATICFILES_STORAGE = "storages.backends.s3.S3Storage"
-    AWS_S3_FILE_OVERWRITE = True
-    AWS_DEFAULT_ACL = None
+    # # S3 Settings
+    # AWS_ACCESS_KEY_ID = os.getenv('AWS_KEY')
+    # AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRETE_KEY')
+    # AWS_STORAGE_BUCKET_NAME = os.getenv('S3_BUCKET_NAME')
+    # AWS_S3_REGION_NAME = os.getenv('S3_REGION')
+    # DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
+    # STATICFILES_STORAGE = "storages.backends.s3.S3Storage"
+    # AWS_S3_FILE_OVERWRITE = True
+    # AWS_DEFAULT_ACL = None
     
     
 if(ENV == APPMODE.PROD):
