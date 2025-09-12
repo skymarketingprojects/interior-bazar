@@ -2,13 +2,19 @@
 
 echo "Starting Interior Bazzar Django Server..."
 
+# Source Elastic Beanstalk environment variables
+if [ -f "/opt/elasticbeanstalk/deployment/env" ]; then
+    echo "Loading Elastic Beanstalk environment variables..."
+    source /opt/elasticbeanstalk/deployment/env
+fi
+
 # Activate virtual environment if it exists
 if [ -f "env/bin/activate" ]; then
     source env/bin/activate
     echo "Virtual environment activated"
 fi
 
-# Install requirements if needed
+# (Optional) Install requirements only if needed - be cautious, might slow startup
 if [ -f "requirements.txt" ]; then
     echo "Installing requirements..."
     pip install -r requirements.txt
