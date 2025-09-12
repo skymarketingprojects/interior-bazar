@@ -23,7 +23,7 @@ os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-DJANGO_ENV = os.environ.get("ENV", "local").lower()
+DJANGO_ENV = os.environ.get("ENV", APPMODE.LOC).lower()
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -33,10 +33,10 @@ SECRET_KEY = 'django-insecure-+v0qbypjz*^(5^!7@uosljz@9phfii&=13u3*)0oz802oulfzu
 
 # Set the environment
 ENV = APPMODE.LOC
-if DJANGO_ENV == "prod":
+if DJANGO_ENV == APPMODE.PROD:
     ENV = APPMODE.PROD
 
-if DJANGO_ENV == "local":
+if DJANGO_ENV == APPMODE.LOC:
     environ.Env.read_env()
 
 print(f'ENV: {ENV}')
