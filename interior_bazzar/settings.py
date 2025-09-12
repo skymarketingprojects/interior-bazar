@@ -212,7 +212,7 @@ SIMPLE_JWT = {
        
 if(ENV == APPMODE.PROD):
     print(f'Mode Activated [ PROD ]')
-    DEBUG = False
+    DEBUG = True
 
     # Razor Pay
     # RAZORPAY_KEY = os.environ.get('RAZORPAY_KEY')
