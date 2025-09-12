@@ -238,7 +238,7 @@ if(ENV == APPMODE.PROD):
     AWS_ACCESS_KEY_ID = os.environ.get('AWS_KEY')
     AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
     AWS_STORAGE_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
-    AWS_S3_REGION_NAME = os.environ.get('S3_REGION')
+    AWS_S3_REGION_NAME = os.environ.get('S3_REGION','ap-south-1')
     DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
     STATICFILES_STORAGE = "storages.backends.s3.S3Storage"
     AWS_S3_FILE_OVERWRITE = True
