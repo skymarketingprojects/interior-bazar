@@ -60,7 +60,7 @@ urlpatterns = [
     path('v1/user/client-location/<int:id>/', ClientLocationView.GetClientLocationByIDView, name='GetClientLocationByIDView'),
 
     #########################################################
-    # Business: 
+    # Business:  
     #########################################################
     path('v1/business/create/', BusinessView.CreateBusinessView, name='CreateBusinessView'),
     path('v1/business/update/', BusinessView.UpdateBusinessView, name='UpdateBusinessView'),
@@ -86,8 +86,9 @@ urlpatterns = [
     #########################################################
     # Query: 
     #########################################################
+    path('v1/query/', QueryView.GetQueryView, name='GetQueryView'),
     path('v1/query/create/', QueryView.CreateQueryView, name='CreateQueryView'),
-    path('v1/query/update-query-id/', QueryView.UpdateQueryByIDView, name='UpdateQueryByIDView'),
+    path('v1/query/update/', QueryView.UpdateQueryByIDView, name='UpdateQueryByIDView'),
     path('v1/query/business-queries/', QueryView.GetQueryBusinessView, name='GetQueryBusinessView'),
     path('v1/query/udpate/status/', QueryView.UpdateQueryStatusView, name='UpdateQueryStatusView'),
     path('v1/query/udpate/priority/', QueryView.UpdateQueryPriorityView, name='UpdateQueryPriorityView'),
@@ -154,4 +155,3 @@ urlpatterns = [
 
     path('v1/plan/template/', Subscription.GetSubscriptionsView, name='GetSubscriptionView'),
 ]
-

@@ -26,17 +26,17 @@ class LEAD_QUERY_TASK:
     @classmethod
     async def UpdateLeadQueryTask(self, lead_query_ins, data):
         try:
-            lead_query_ins.name= data.name
-            lead_query_ins.phone= data.phone
-            lead_query_ins.email= data.email
-            lead_query_ins.interested= data.interested            
-            lead_query_ins.query= data.query
-            lead_query_ins.state= data.state
-            lead_query_ins.country= data.country
-            lead_query_ins.status= data.status
-            lead_query_ins.tag= data.tag
-            lead_query_ins.priority= data.priority
-            lead_query_ins.remark= data.remark
+            lead_query_ins.name= getattr(data, 'name', lead_query_ins.name)
+            lead_query_ins.phone= getattr(data, 'phone', lead_query_ins.phone)
+            lead_query_ins.email= getattr(data, 'email', lead_query_ins.email)
+            lead_query_ins.interested= getattr(data, 'interested', lead_query_ins.interested)
+            lead_query_ins.query=getattr(data, 'query', lead_query_ins.query)
+            lead_query_ins.state= getattr(data, 'state', lead_query_ins.state)
+            lead_query_ins.country= getattr(data, 'country', lead_query_ins.country)
+            lead_query_ins.status= getattr(data, 'status', lead_query_ins.status)
+            lead_query_ins.tag= getattr(data, 'tag', lead_query_ins.tag)
+            lead_query_ins.priority= getattr(data, 'priority', lead_query_ins.priority)
+            lead_query_ins.remark= getattr(data, 'remark', lead_query_ins.remark)
             
             await sync_to_async(lead_query_ins.save)()
             return True
@@ -83,6 +83,7 @@ class LEAD_QUERY_TASK:
     async def GetLeadQueryTask(self, lead_query_ins):
         try:
             data = {
+                'id':lead_query_ins.pk,
                 'name':lead_query_ins.name, 
                 'phone':lead_query_ins.phone, 
                 'email':lead_query_ins.email, 

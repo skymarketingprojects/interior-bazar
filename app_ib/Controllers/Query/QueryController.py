@@ -13,6 +13,35 @@ from app_ib.Controllers.Query.Tasks.QueryTasks import LEAD_QUERY_TASK
 
 
 class LEAD_QUERY_CONTROLLER:
+
+    @classmethod
+    async def GetQueries(self,user_ins):
+        try:
+            lead_query_ins= None
+            lead_query_ins = await sync_to_async(
+                lambda: LeadQuery.objects.filter(user=user_ins).all().order_by('-timestamp')
+            )()
+            print(f'lead_query_ins {lead_query_ins}')   
+            leads_data = []
+
+            for leads in lead_query_ins:
+                data = await LEAD_QUERY_TASK.GetLeadQueryTask(leads)
+                leads_data.append(data)
+
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message=RESPONSE_MESSAGES.query_fetch_success,
+                code=RESPONSE_CODES.success,
+                data=leads_data)
+
+        except Exception as e:
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.query_fetch_error,
+                code=RESPONSE_CODES.error,
+                data={
+                    'error': str(e)
+                })
     @classmethod
     async def CreateLeadQuery(self,data):
         try:
@@ -64,13 +93,13 @@ class LEAD_QUERY_CONTROLLER:
                 
                 create_query_resp = await  LEAD_QUERY_TASK.UpdateLeadQueryTask(lead_query_ins=lead_query_ins,data=data)
                 print(f'update query resp {create_query_resp}')
-
+                data =await LEAD_QUERY_TASK.GetLeadQueryTask(lead_query_ins)
                 if create_query_resp:
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.success,
                         message=RESPONSE_MESSAGES.query_update_success,
                         code=RESPONSE_CODES.success,
-                        data=create_query_resp)
+                        data=data)
 
                 else:
                     return LocalResponse(
