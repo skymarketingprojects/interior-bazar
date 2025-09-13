@@ -4,7 +4,7 @@ from django.conf import settings
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
-
+from app_ib.Utils.MyMethods import MY_METHODS
 
 class imageUrlGenrator:
     def GenerateImageUploadUrl(self, FileName, FileType, ImageIntent):

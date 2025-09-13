@@ -20,7 +20,7 @@ class CLIENT_LOCATION_CONTROLLER:
             is_client_loc_exist = await sync_to_async(Location.objects.filter(user=user_ins).exists)()
             if is_client_loc_exist:
                 client_loc_ins = await sync_to_async(Location.objects.get)(user=user_ins)
-                print(f'update location')
+                await MY_METHODS.printStatus(f'update location')
 
                 update_resp = await CLIENT_LOC_TASKS.UpdateClientLocTask(
                     client_loc_ins=client_loc_ins, data=data)
@@ -39,7 +39,7 @@ class CLIENT_LOCATION_CONTROLLER:
                         data={})
 
             else:
-                print(f'create client location')
+                await MY_METHODS.printStatus(f'create client location')
                 create_resp = await CLIENT_LOC_TASKS.CreateClientLocTask(
                     user_ins=user_ins, data=data)
 

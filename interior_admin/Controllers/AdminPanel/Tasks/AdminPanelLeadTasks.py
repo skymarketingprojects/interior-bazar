@@ -4,6 +4,7 @@ from django.utils import timezone
 from datetime import timedelta
 from django.utils.dateparse import parse_datetime
 from django.core.paginator import Paginator
+from app_ib.Utils.MyMethods import MY_METHODS
 from django.db.models import Q
 class LEAD_TASKS:
     
@@ -15,7 +16,7 @@ class LEAD_TASKS:
             )()
             return platform_leads_count
         except Exception as e:
-            print(f"Error in GetTotalPlatformLeads: {e}")
+            await MY_METHODS.printStatus(f"Error in GetTotalPlatformLeads: {e}")
             return None
     
     @classmethod
@@ -26,7 +27,7 @@ class LEAD_TASKS:
             )()
             return assigned_leads_count
         except Exception as e:
-            print(f"Error in GetTotalAssignedLeads: {e}")
+            await MY_METHODS.printStatus(f"Error in GetTotalAssignedLeads: {e}")
             return None
     
     @classmethod
@@ -36,7 +37,7 @@ class LEAD_TASKS:
             assigned_leads_count = await cls.GetTotalAssignedLeads()
             return platform_leads_count + assigned_leads_count
         except Exception as e:
-            print(f"Error in GetTotalLeads: {e}")
+            await MY_METHODS.printStatus(f"Error in GetTotalLeads: {e}")
             return None
     
     @classmethod
@@ -48,7 +49,7 @@ class LEAD_TASKS:
             )()
             return today_leads_count
         except Exception as e:
-            print(f"Error in GetTodayLeads: {e}")
+            await MY_METHODS.printStatus(f"Error in GetTodayLeads: {e}")
             return None
 
     @classmethod
@@ -105,5 +106,5 @@ class LEAD_TASKS:
             }
 
         except Exception as e:
-            print(f"Error in GetLeadTiles: {e}")
+            await MY_METHODS.printStatus(f"Error in GetLeadTiles: {e}")
             return None

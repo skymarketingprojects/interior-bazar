@@ -20,6 +20,8 @@ class RESPONSE_MESSAGES:
     user_profile_delete_success="User profile deleted successfully"
     user_profile_delete_error="User profile delete error"
 
+    #lead
+    assigned_leads_fetch_error="Unable to fetch assigned leads"
 
 
     # AUTH

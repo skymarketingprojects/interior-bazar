@@ -3,6 +3,7 @@ from adrf.decorators import api_view
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.LocalResponse import LocalResponse
+from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.models import Subscription, Business
 from app_ib.Controllers.Subscription.Tasks.SubscriptionTasks import SUBSCRIPTION_TASKS
 
@@ -14,14 +15,14 @@ class SUBSCRIPTION_CONTROLLER:
         try:
             business_ins = None
             is_business_exist = await sync_to_async(Business.objects.filter(pk=data.buss_id).exists)()
-            print(f'is_business_exist {is_business_exist}')
+            await MY_METHODS.printStatus(f'is_business_exist {is_business_exist}')
 
             if is_business_exist:
                 business_ins = await sync_to_async(Business.objects.get)(pk=data.buss_id)
-                print(f'business_ins {business_ins}')
+                await MY_METHODS.printStatus(f'business_ins {business_ins}')
 
                 create_subscription_resp = await SUBSCRIPTION_TASKS.CreateSubscriptionTask(data=data)
-                print(f'create subscription resp {create_subscription_resp}')
+                await MY_METHODS.printStatus(f'create subscription resp {create_subscription_resp}')
 
                 if create_subscription_resp:
                     return LocalResponse(
@@ -51,14 +52,14 @@ class SUBSCRIPTION_CONTROLLER:
         try:
             subscription_ins = None
             is_subscription_exist = await sync_to_async(Subscription.objects.filter(id=data.id).exists)()
-            print(f'is_subscription_exist {is_subscription_exist}')
+            await MY_METHODS.printStatus(f'is_subscription_exist {is_subscription_exist}')
 
             if is_subscription_exist:
                 subscription_ins = await sync_to_async(Subscription.objects.get)(id=data.id)
-                print(f'subscription_ins {subscription_ins}')
+                await MY_METHODS.printStatus(f'subscription_ins {subscription_ins}')
 
                 update_subscription_resp = await SUBSCRIPTION_TASKS.UpdateSubscriptionTask(subscription_ins=subscription_ins, data=data)
-                print(f'update subscription resp {update_subscription_resp}')
+                await MY_METHODS.printStatus(f'update subscription resp {update_subscription_resp}')
 
                 if update_subscription_resp:
                     return LocalResponse(
@@ -87,16 +88,16 @@ class SUBSCRIPTION_CONTROLLER:
     async def GetSubscription(self):
         try:
             subscription_ins = await sync_to_async(Subscription.objects.all)()
-            print(f'subscription_ins {subscription_ins}')
+            await MY_METHODS.printStatus(f'subscription_ins {subscription_ins}')
 
             fetch_subscription_response = []
             for subscription in subscription_ins:
-                print(f'subscription {subscription}')
+                await MY_METHODS.printStatus(f'subscription {subscription}')
                 subscription_response = await SUBSCRIPTION_TASKS.GetSubscriptionTask(subscription_ins=subscription)
 
                 if subscription_response:
                     fetch_subscription_response.append(subscription_response)
-            print(f'fetch subscription resp {fetch_subscription_response}')
+            await MY_METHODS.printStatus(f'fetch subscription resp {fetch_subscription_response}')
 
             if fetch_subscription_response:
                 return LocalResponse(

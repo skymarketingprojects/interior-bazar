@@ -21,18 +21,18 @@ class BUSS_PROFILE_CONTROLLER:
             business_loc_ins= None
 
             is_business_exist = await sync_to_async(Business.objects.filter(user=user_ins).exists)()
-            print(f'is_business_exist {is_business_exist}')
+            await MY_METHODS.printStatus(f'is_business_exist {is_business_exist}')
 
             if(is_business_exist):
                  business_ins = await sync_to_async(Business.objects.get)(user=user_ins)
 
             # Check if business already exist
             is_business_prof_exist = await sync_to_async(BusinessProfile.objects.filter(business=business_ins).exists)()
-            print(f'is_business_prof_exist {is_business_prof_exist}')
+            await MY_METHODS.printStatus(f'is_business_prof_exist {is_business_prof_exist}')
 
             if is_business_prof_exist:
                 business_prof_ins = await sync_to_async(BusinessProfile.objects.get)(business=business_ins)
-                print(f'update business profile')
+                await MY_METHODS.printStatus(f'update business profile')
                 update_resp = await BUSS_PROF_TASK.UpdateBusinessProfileTask(business_prof_ins=business_prof_ins,data=data)
 
                 if update_resp:
@@ -49,7 +49,7 @@ class BUSS_PROFILE_CONTROLLER:
                         data={})
 
             else:
-                print(f'create business location')
+                await MY_METHODS.printStatus(f'create business location')
                 create_resp = await BUSS_PROF_TASK.CreateBusinessProfileTask(
                     business_ins=business_ins, data=data)
                 if create_resp:
@@ -80,7 +80,7 @@ class BUSS_PROFILE_CONTROLLER:
             business_prof_ins= None
 
             is_business_exist = await sync_to_async(Business.objects.filter(pk=id).exists)()
-            print(f'is_business_exist {is_business_exist}')
+            await MY_METHODS.printStatus(f'is_business_exist {is_business_exist}')
 
             if(is_business_exist):
                  business_ins = await sync_to_async(Business.objects.get)(pk=id)
@@ -121,13 +121,13 @@ class BUSS_PROFILE_CONTROLLER:
         try:
             business_ins = None
             is_business_exist = await sync_to_async(Business.objects.filter(user=user_ins).exists)()
-            print(f'is_business_exist {is_business_exist}')
+            await MY_METHODS.printStatus(f'is_business_exist {is_business_exist}')
 
             if(is_business_exist): 
                 business_ins = await sync_to_async(Business.objects.get)(user=user_ins)
 
             is_buss_prof_ins_exist = await sync_to_async(BusinessProfile.objects.filter(business=business_ins).exists)()
-            print(f'is_buss_prof_ins_exist {is_buss_prof_ins_exist}')
+            await MY_METHODS.printStatus(f'is_buss_prof_ins_exist {is_buss_prof_ins_exist}')
 
             # Update Profile Image if already exist : 
             if is_buss_prof_ins_exist:
@@ -162,13 +162,13 @@ class BUSS_PROFILE_CONTROLLER:
         try:
             business_ins = None
             is_business_exist = await sync_to_async(Business.objects.filter(user=user_ins).exists)()
-            print(f'is_business_exist {is_business_exist}')
+            await MY_METHODS.printStatus(f'is_business_exist {is_business_exist}')
 
             if(is_business_exist): 
                 business_ins = await sync_to_async(Business.objects.get)(user=user_ins)
 
             is_buss_prof_ins_exist = await sync_to_async(BusinessProfile.objects.filter(business=business_ins).exists)()
-            print(f'is_buss_prof_ins_exist {is_buss_prof_ins_exist}')
+            await MY_METHODS.printStatus(f'is_buss_prof_ins_exist {is_buss_prof_ins_exist}')
 
             # Update Profile Image if already exist : 
             if is_buss_prof_ins_exist:

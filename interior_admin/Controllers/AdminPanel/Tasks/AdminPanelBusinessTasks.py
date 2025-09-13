@@ -4,6 +4,7 @@ from django.utils import timezone
 from datetime import timedelta
 from django.utils.dateparse import parse_datetime
 from django.core.paginator import Paginator
+from app_ib.Utils.MyMethods import MY_METHODS
 
 
 class ADMIN_PANEL_TASKS:
@@ -16,7 +17,7 @@ class ADMIN_PANEL_TASKS:
             )()
             return active_businesses
         except Exception as e:
-            print(f"Error in GetTotalActiveBusinesses: {e}")
+            await MY_METHODS.printStatus(f"Error in GetTotalActiveBusinesses: {e}")
             return None
         
     @classmethod
@@ -30,7 +31,7 @@ class ADMIN_PANEL_TASKS:
             )()
             return inactive_count
         except Exception as e:
-            print(f"Error in GetTotalInactiveBusinesses: {e}")
+            await MY_METHODS.printStatus(f"Error in GetTotalInactiveBusinesses: {e}")
             return None
     @classmethod
     async def GetTotalBusinesses(cls):
@@ -38,7 +39,7 @@ class ADMIN_PANEL_TASKS:
             count = await sync_to_async(Business.objects.count)()
             return count
         except Exception as e:
-            print(f"Error in GetTotalBusinesses: {e}")
+            await MY_METHODS.printStatus(f"Error in GetTotalBusinesses: {e}")
             return None
     @classmethod
     async def GetWeeklySignups(cls):
@@ -49,7 +50,7 @@ class ADMIN_PANEL_TASKS:
             )()
             return count
         except Exception as e:
-            print(f"Error in GetWeeklySignups: {e}")
+            await MY_METHODS.printStatus(f"Error in GetWeeklySignups: {e}")
             return None
 
     @classmethod
@@ -113,7 +114,7 @@ class ADMIN_PANEL_TASKS:
             }
 
         except Exception as e:
-            print(f"Error in GetBusinessTiles: {e}")
+            await MY_METHODS.printStatus(f"Error in GetBusinessTiles: {e}")
             return None
 
 

@@ -1,5 +1,6 @@
 from asgiref.sync import sync_to_async
 from app_ib.models import Quate
+from app_ib.Utils.MyMethods import MY_METHODS
 
 class PLAN_QUATE_TASKS:
     @classmethod
@@ -11,11 +12,11 @@ class PLAN_QUATE_TASKS:
             quate_ins.email= data.email
             quate_ins.note= data.note
             await sync_to_async(quate_ins.save)()
-            print(f'quate instance pk {quate_ins.pk}')
+            await MY_METHODS.printStatus(f'quate instance pk {quate_ins.pk}')
             return quate_ins.pk
             
         except Exception as e:
-            print(f'Error in CreatePlanQuateTask {e}')
+            await MY_METHODS.printStatus(f'Error in CreatePlanQuateTask {e}')
             return None
 
 
@@ -27,9 +28,9 @@ class PLAN_QUATE_TASKS:
             quate_ins.email= data.email
             quate_ins.note= data.note
             await sync_to_async(quate_ins.save)()
-            # print(f'quate instance pk {quate_ins.pk}')
+            # await MY_METHODS.printStatus(f'quate instance pk {quate_ins.pk}')
             return True
             
         except Exception as e:
-            print(f'Error in VerifyQuateTask {e}')
+            await MY_METHODS.printStatus(f'Error in VerifyQuateTask {e}')
             return None

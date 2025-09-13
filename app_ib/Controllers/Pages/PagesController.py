@@ -15,9 +15,9 @@ class PAGE_CONTROLLER:
     @classmethod
     async def GetPages(self,page_name):
         try:
-            print(f'page name: {page_name}')
+            await MY_METHODS.printStatus(f'page name: {page_name}')
             page_ins=await sync_to_async(Pages.objects.get)(page_name=page_name)
-            print(f'page ins {page_ins}')
+            await MY_METHODS.printStatus(f'page ins {page_ins}')
             page_data={
                 'id':page_ins.id,
                 'page_name':page_ins.page_name,

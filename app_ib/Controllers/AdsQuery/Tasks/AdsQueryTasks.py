@@ -1,11 +1,12 @@
 from asgiref.sync import sync_to_async
 from app_ib.models import LeadQuery
+from app_ib.Utils.MyMethods import MY_METHODS
 
 class ADS_QUERY_TASKS:
     @classmethod
     async def CreateAdsQueryTask(self,data):
         try:
-            print(f'data {data}')
+            await MY_METHODS.printStatus(f'data {data}')
             lead_query_ins = LeadQuery()
             lead_query_ins.phone= data.phone    
             lead_query_ins.interested= data.interested            
@@ -16,7 +17,7 @@ class ADS_QUERY_TASKS:
             return data
             
         except Exception as e:
-            print(f'Error in CreateAdsQueryTask {e}')
+            await MY_METHODS.printStatus(f'Error in CreateAdsQueryTask {e}')
             return None
   
     @classmethod
@@ -31,5 +32,5 @@ class ADS_QUERY_TASKS:
             return True
             
         except Exception as e:
-            print(f'Error in VerifyAdsQueryTask {e}')
+            await MY_METHODS.printStatus(f'Error in VerifyAdsQueryTask {e}')
             return None

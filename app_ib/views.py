@@ -12,6 +12,9 @@ from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 
 from app_ib.Controllers.UrlGenrator.UrlGenrator import imageUrlGenrator
+
+from app_ib.Utils.MyMethods import MY_METHODS
+
 userCtrl = imageUrlGenrator()
 # Create your views here.
 @api_view(['GET'])
@@ -19,11 +22,11 @@ async def TestView(request):
     try:
         # file = request.data.get("lawyer_profile_image")
         # compress_image = await asyncio.gather(helpingMethos.MyImageCompression(type=COMPRESSSION_TYPE.LAWYER_PROFILE, image=file))
-        # print(f'compress_image {compress_image[0]}')
+        # await MY_METHODS.printStatus(f'compress_image {compress_image[0]}')
         return JsonResponse({"result": 'success'})
 
     except Exception as e:
-        print(f'{e}')
+        await MY_METHODS.printStatus(e)
         return JsonResponse({"result": 'fail'})
 
 @api_view(['POST'])
@@ -34,10 +37,10 @@ async def TestMailView(request):
         subject=data.get('subject')
         message=data.get('message')
         link=data.get('link')
-        print(f'email {email}')
-        print(f'subject {subject}')
-        print(f'message {message}')
-        print(f'link {link}')
+        await MY_METHODS.printStatus(f'email {email}')
+        await MY_METHODS.printStatus(f'subject {subject}')
+        await MY_METHODS.printStatus(f'message {message}')
+        await MY_METHODS.printStatus(f'link {link}')
 
 
         send_mail(
@@ -46,11 +49,11 @@ async def TestMailView(request):
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[f'{email}'],
         )
-        print('Email sent successfully!')
+        await MY_METHODS.printStatus('Email sent successfully!')
         return JsonResponse({"result": 'success'})
     except Exception as e:
         return JsonResponse({"result": 'error'})
-        print(f'Email sending failed: {e}')
+        await MY_METHODS.printStatus(f'Email sending failed: {e}')
 
 @api_view(['POST'])
 async def generateUploadUrlView(request):

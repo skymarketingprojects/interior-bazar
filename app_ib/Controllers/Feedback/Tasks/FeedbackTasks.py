@@ -1,5 +1,6 @@
 from asgiref.sync import sync_to_async
 from app_ib.models import Feedback
+from app_ib.Utils.MyMethods import MY_METHODS
 
 class FEEDBACK_TASKS:
     @classmethod
@@ -13,7 +14,7 @@ class FEEDBACK_TASKS:
             return True
             
         except Exception as e:
-            print(f'Error in CreateFeedback {e}')
+            await MY_METHODS.printStatus(f'Error in CreateFeedback {e}')
             return None
 
     @classmethod
@@ -24,5 +25,5 @@ class FEEDBACK_TASKS:
             return True
             
         except Exception as e:
-            print(f'Error in UdpateFeedbackTask {e}')
+            await MY_METHODS.printStatus(f'Error in UdpateFeedbackTask {e}')
             return None

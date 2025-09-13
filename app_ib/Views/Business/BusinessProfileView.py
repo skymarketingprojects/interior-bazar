@@ -23,7 +23,7 @@ async def CreateOrUpdateBusinessProfileView(request):
             BUSS_PROFILE_CONTROLLER.CreateOrUpdateBusinessProfile(user_ins=user_ins, data=data))
         final_response = final_response[0]
 
-        print(f'final_response {final_response}')
+        await MY_METHODS.printStatus(f'final_response {final_response}')
 
         return ServerResponse(
             response=final_response.response,
@@ -32,7 +32,7 @@ async def CreateOrUpdateBusinessProfileView(request):
             data=final_response.data)
 
     except Exception as e:
-        # print(f'Error: {e}')
+        # await MY_METHODS.printStatus(f'Error: {e}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.business_register_error,
@@ -48,7 +48,7 @@ async def GetBusinessProfileByBussIDView(request,id):
         # Call Auth Controller to Create User
         final_response = await  asyncio.gather(
             BUSS_PROFILE_CONTROLLER.GetBuisnessProfByBusinessID(id=id))
-        print(f'final_response {final_response}')
+        await MY_METHODS.printStatus(f'final_response {final_response}')
         final_response = final_response[0]
 
         return ServerResponse(
@@ -58,7 +58,7 @@ async def GetBusinessProfileByBussIDView(request,id):
             data=final_response.data)
 
     except Exception as e:
-        # print(f'Error: {e}')
+        # await MY_METHODS.printStatus(f'Error: {e}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.business_fetch_error,
@@ -75,7 +75,7 @@ async def CreateOrUpdatePrimaryImageView(request):
         # Get user instance
         user_ins = request.user
         primary_image = request.FILES.get('primary_image')  
-        print(f'primary image {primary_image}')
+        await MY_METHODS.printStatus(f'primary image {primary_image}')
 
         # Call Auth Controller to Create User
         auth_resp = await  asyncio.gather(BUSS_PROFILE_CONTROLLER.CreateOrUpdatePrimaryImage(primary_image=primary_image,user_ins=user_ins))
@@ -89,7 +89,7 @@ async def CreateOrUpdatePrimaryImageView(request):
             data=auth_resp.data)
 
     except Exception as e:
-        # print(f'Error: {e}')
+        # await MY_METHODS.printStatus(f'Error: {e}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.user_profile_create_error,
@@ -106,7 +106,7 @@ async def CreateOrUpdateSecondaryImageView(request):
         # Get user instance
         user_ins = request.user
         secondary_image = request.FILES.get('secondary_image')  
-        print(f'secondary image  {secondary_image}')
+        await MY_METHODS.printStatus(f'secondary image  {secondary_image}')
 
         # Call Auth Controller to Create User
         auth_resp = await  asyncio.gather(BUSS_PROFILE_CONTROLLER.CreateOrUpdateSecondaryImage(secondary_image=secondary_image,user_ins=user_ins))
@@ -119,7 +119,7 @@ async def CreateOrUpdateSecondaryImageView(request):
             data=auth_resp.data)
 
     except Exception as e:
-        # print(f'Error: {e}')
+        # await MY_METHODS.printStatus(f'Error: {e}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.default_error,

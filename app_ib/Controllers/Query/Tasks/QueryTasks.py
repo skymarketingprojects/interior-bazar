@@ -1,5 +1,6 @@
 from asgiref.sync import sync_to_async
 from app_ib.models import LeadQuery
+from app_ib.Utils.MyMethods import MY_METHODS
 
 class LEAD_QUERY_TASK:
 
@@ -20,7 +21,7 @@ class LEAD_QUERY_TASK:
             return True
             
         except Exception as e:
-            print(f'Error in CreateLeadQueryTask {e}')
+            await MY_METHODS.printStatus(f'Error in CreateLeadQueryTask {e}')
             return None
   
     @classmethod
@@ -42,7 +43,7 @@ class LEAD_QUERY_TASK:
             return True
             
         except Exception as e:
-            print(f'Error in CreateLeadQueryTask {e}')
+            await MY_METHODS.printStatus(f'Error in CreateLeadQueryTask {e}')
             return None
 
     @classmethod
@@ -53,7 +54,7 @@ class LEAD_QUERY_TASK:
             return True
             
         except Exception as e:
-            print(f'Error in CreateLeadQueryTask {e}')
+            await MY_METHODS.printStatus(f'Error in CreateLeadQueryTask {e}')
             return None
 
     @classmethod
@@ -64,7 +65,7 @@ class LEAD_QUERY_TASK:
             return True
             
         except Exception as e:
-            print(f'Error in CreateLeadQueryTask {e}')
+            await MY_METHODS.printStatus(f'Error in CreateLeadQueryTask {e}')
             return None
 
     @classmethod
@@ -75,7 +76,7 @@ class LEAD_QUERY_TASK:
             return True
             
         except Exception as e:
-            print(f'Error in CreateLeadQueryTask {e}')
+            await MY_METHODS.printStatus(f'Error in CreateLeadQueryTask {e}')
             return None
 
 
@@ -99,7 +100,7 @@ class LEAD_QUERY_TASK:
             return data
             
         except Exception as e:
-            print(f'Error in CreateLeadQueryTask {e}')
+            await MY_METHODS.printStatus(f'Error in CreateLeadQueryTask {e}')
             return None
 
 
@@ -127,5 +128,5 @@ class LEAD_QUERY_TASK:
             return query_data
 
         except Exception as e:
-            print(f'Error in GetLeadQueryTask: {e}')
+            await MY_METHODS.printStatus(f'Error in GetLeadQueryTask: {e}')
             return None

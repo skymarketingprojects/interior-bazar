@@ -4,6 +4,7 @@ from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.models import Location, Business
+from app_ib.Utils.MyMethods import MY_METHODS
 
 class BUSS_LOC_TASK:
 
@@ -21,7 +22,7 @@ class BUSS_LOC_TASK:
             return True
             
         except Exception as e:
-            print(f'Error in CreateBusinessLocTask {e}')
+            await MY_METHODS.printStatus(f'Error in CreateBusinessLocTask {e}')
             return None
 
     @classmethod
@@ -36,7 +37,7 @@ class BUSS_LOC_TASK:
             return True
             
         except Exception as e:
-            print(f'Error in UpdateBusinessLocTask {e}')
+            await MY_METHODS.printStatus(f'Error in UpdateBusinessLocTask {e}')
             return None
 
     @classmethod
@@ -53,5 +54,5 @@ class BUSS_LOC_TASK:
             return business_loc_data
             
         except Exception as e:
-            print(f'Error in GetBusinessLocTask {e}')
+            await MY_METHODS.printStatus(f'Error in GetBusinessLocTask {e}')
             return None

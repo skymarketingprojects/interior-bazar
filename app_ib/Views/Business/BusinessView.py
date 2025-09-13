@@ -23,7 +23,7 @@ async def CreateBusinessView(request):
 
         # Call Auth Controller to Create User
         final_response = await  asyncio.gather(BUSS_CONTROLLER.CreateBusiness(user_ins=user_ins, data=data))
-        print(f'final_response {final_response}')
+        await MY_METHODS.printStatus(f'final_response {final_response}')
         final_response = final_response[0]
 
         return ServerResponse(
@@ -33,7 +33,7 @@ async def CreateBusinessView(request):
             data=final_response.data)
 
     except Exception as e:
-        # print(f'Error: {e}')
+        # await MY_METHODS.printStatus(f'Error: {e}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.business_register_error,
@@ -52,7 +52,7 @@ async def UpdateBusinessView(request):
 
         # Call Auth Controller to Create User
         final_response = await  asyncio.gather(BUSS_CONTROLLER.UpdateeBusiness(user_ins=user_ins, data=data))
-        print(f'final_response {final_response}')
+        await MY_METHODS.printStatus(f'final_response {final_response}')
         final_response = final_response[0]
 
         return ServerResponse(
@@ -62,7 +62,7 @@ async def UpdateBusinessView(request):
             data=final_response.data)
 
     except Exception as e:
-        # print(f'Error: {e}')
+        # await MY_METHODS.printStatus(f'Error: {e}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.business_register_error,
@@ -76,7 +76,7 @@ async def GetBusinessByIdView(request,id):
     try:
         # Call Auth Controller to Create User
         final_response = await  asyncio.gather(BUSS_CONTROLLER.GetBusinessById(id=id))
-        print(f'final_response {final_response}')
+        await MY_METHODS.printStatus(f'final_response {final_response}')
         final_response = final_response[0]
 
         return ServerResponse(
@@ -86,7 +86,7 @@ async def GetBusinessByIdView(request,id):
             data=final_response.data)
 
     except Exception as e:
-        # print(f'Error: {e}')
+        # await MY_METHODS.printStatus(f'Error: {e}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.business_register_error,
@@ -102,7 +102,7 @@ async def GetBusinessByUser(request):
         business = user_ins.user_business
         # Call Auth Controller to Create User
         final_response = await  asyncio.gather(BUSS_CONTROLLER.GetBusinessById(id=business.id))
-        print(f'final_response {final_response}')
+        await MY_METHODS.printStatus(f'final_response {final_response}')
         final_response = final_response[0]
 
         return ServerResponse(
@@ -112,7 +112,7 @@ async def GetBusinessByUser(request):
             data=final_response.data)
 
     except Exception as e:
-        # print(f'Error: {e}')
+        # await MY_METHODS.printStatus(f'Error: {e}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.business_register_error,

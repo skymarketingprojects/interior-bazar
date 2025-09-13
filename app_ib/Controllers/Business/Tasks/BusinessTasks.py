@@ -3,7 +3,7 @@ from asgiref.sync import sync_to_async
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.LocalResponse import LocalResponse
-
+from app_ib.Utils.MyMethods import MY_METHODS
 class BUSS_TASK:
 
     @classmethod
@@ -24,7 +24,7 @@ class BUSS_TASK:
             return True
             
         except Exception as e:
-            print(f'Error in CreateBusinessTask {e}')
+            await MY_METHODS.printStatus(f'Error in CreateBusinessTask {e}')
             return None
 
 
@@ -58,7 +58,7 @@ class BUSS_TASK:
             return True
             
         except Exception as e:
-            print(f'Error in UpdateBusinessTask {e}')
+            await MY_METHODS.printStatus(f'Error in UpdateBusinessTask {e}')
             return None
 
 
@@ -68,7 +68,7 @@ class BUSS_TASK:
             business_ins = await sync_to_async(Business.objects.get)(pk=id)
             business_loc_ins = business_ins.business_location if hasattr(business_ins, 'business_location') else None
             business_prof_ins =business_ins.business_profile if hasattr(business_ins, 'business_profile') else None
-            print(f'business_loc_ins {business_loc_ins}')
+            await MY_METHODS.printStatus(f'business_loc_ins {business_loc_ins}')
 
             data = {
                 'business_name': business_ins.business_name,
@@ -99,5 +99,5 @@ class BUSS_TASK:
             return data
             
         except Exception as e:
-            print(f'Error in GetBusinessInfo {e}')
+            await MY_METHODS.printStatus(f'Error in GetBusinessInfo {e}')
             return None

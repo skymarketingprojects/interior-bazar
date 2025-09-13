@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.db.models import Q, Count
 from datetime import timedelta
 from django.db.models.functions import TruncDate, TruncWeek, TruncMonth
-
+from app_ib.Utils.MyMethods import MY_METHODS
 
 class ANALYTICS_TASKS:
 
@@ -17,7 +17,7 @@ class ANALYTICS_TASKS:
             )()
             return clients_count
         except Exception as e:
-            print(f"Error in GetTotalClients: {e}")
+            await MY_METHODS.printStatus(f"Error in GetTotalClients: {e}")
             return None
 
     # 2. Total Business
@@ -29,7 +29,7 @@ class ANALYTICS_TASKS:
             )()
             return business_count
         except Exception as e:
-            print(f"Error in GetTotalBusiness: {e}")
+            await MY_METHODS.printStatus(f"Error in GetTotalBusiness: {e}")
             return None
 
     # 3. Total Users
@@ -41,7 +41,7 @@ class ANALYTICS_TASKS:
             )()
             return users_count
         except Exception as e:
-            print(f"Error in GetTotalUsers: {e}")
+            await MY_METHODS.printStatus(f"Error in GetTotalUsers: {e}")
             return None
 
     # 4. Today Signups (Clients / Business / Users)
@@ -68,7 +68,7 @@ class ANALYTICS_TASKS:
                 "users": users_today
             }
         except Exception as e:
-            print(f"Error in GetTodaySignups: {e}")
+            await MY_METHODS.printStatus(f"Error in GetTodaySignups: {e}")
             return None
 
     # 5. Business Active / Inactive (daily-weekly-monthly)
@@ -96,7 +96,7 @@ class ANALYTICS_TASKS:
             }
             return data
         except Exception as e:
-            print(f"Error in GetBusinessStatus: {e}")
+            await MY_METHODS.printStatus(f"Error in GetBusinessStatus: {e}")
             return None
 
     # 6. Chart Data (generic function for clients, businesses, users)
@@ -122,7 +122,7 @@ class ANALYTICS_TASKS:
             }
             return data
         except Exception as e:
-            print(f"Error in GetChartData: {e}")
+            await MY_METHODS.printStatus(f"Error in GetChartData: {e}")
             return None
 
     # 6.a Chart for Clients

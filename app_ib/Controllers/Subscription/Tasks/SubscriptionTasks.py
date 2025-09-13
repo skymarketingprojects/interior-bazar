@@ -1,6 +1,6 @@
 from asgiref.sync import sync_to_async
 from app_ib.models import Subscription
-
+from app_ib.Utils.MyMethods import MY_METHODS
 class SUBSCRIPTION_TASKS:
 
     @classmethod
@@ -30,7 +30,7 @@ class SUBSCRIPTION_TASKS:
             return True
         
         except Exception as e:
-            print(f"Error in CreateSubscriptionTask {e}")
+            await MY_METHODS.printStatus(f"Error in CreateSubscriptionTask {e}")
             return None
     
     @classmethod
@@ -55,7 +55,7 @@ class SUBSCRIPTION_TASKS:
             return True
         
         except Exception as e:
-            print(f"Error in UpdateSubscriptionTask {e}")
+            await MY_METHODS.printStatus(f"Error in UpdateSubscriptionTask {e}")
             return None
 
     @classmethod
@@ -75,7 +75,7 @@ class SUBSCRIPTION_TASKS:
             return data
         
         except Exception as e:
-            print(f"Error in GetSubscriptionTask {e}")
+            await MY_METHODS.printStatus(f"Error in GetSubscriptionTask {e}")
             return None
     
     @classmethod
@@ -98,5 +98,5 @@ class SUBSCRIPTION_TASKS:
             return query_data
         
         except Exception as e:
-            print(f"Error in GetSubscriptionsTask: {e}")
+            await MY_METHODS.printStatus(f"Error in GetSubscriptionsTask: {e}")
             return None

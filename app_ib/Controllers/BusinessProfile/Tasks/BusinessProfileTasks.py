@@ -1,5 +1,6 @@
 from asgiref.sync import sync_to_async
 from app_ib.models import BusinessProfile, Business
+from app_ib.Utils.MyMethods import MY_METHODS
 
 class BUSS_PROF_TASK:
 
@@ -16,7 +17,7 @@ class BUSS_PROF_TASK:
             return True
             
         except Exception as e:
-            print(f'Error in CreateBusinessProfileTask {e}')
+            await MY_METHODS.printStatus(f'Error in CreateBusinessProfileTask {e}')
             return None
 
     @classmethod
@@ -30,7 +31,7 @@ class BUSS_PROF_TASK:
             return True
             
         except Exception as e:
-            print(f'Error in UpdateBusinessProfileTask {e}')
+            await MY_METHODS.printStatus(f'Error in UpdateBusinessProfileTask {e}')
             return None
 
 
@@ -45,5 +46,5 @@ class BUSS_PROF_TASK:
             return business_prof_data
             
         except Exception as e:
-            print(f'Error in GetBusinessProfTask {e}')
+            await MY_METHODS.printStatus(f'Error in GetBusinessProfTask {e}')
             return None

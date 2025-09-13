@@ -1,5 +1,6 @@
 from asgiref.sync import sync_to_async
 from app_ib.models import UserProfile
+from app_ib.Utils.MyMethods import MY_METHODS
 
 class PROFILE_TASKS:
     @classmethod
@@ -15,7 +16,7 @@ class PROFILE_TASKS:
             return True
             
         except Exception as e:
-            print(f'Error in CreateProfileTask {e}')
+            await MY_METHODS.printStatus(f'Error in CreateProfileTask {e}')
             return None
 
     @classmethod
@@ -29,7 +30,7 @@ class PROFILE_TASKS:
             return True
             
         except Exception as e:
-            print(f'Error in UpdateProfileTask {e}')
+            await MY_METHODS.printStatus(f'Error in UpdateProfileTask {e}')
             return None
 
     @classmethod
@@ -42,7 +43,7 @@ class PROFILE_TASKS:
             return True
             
         except Exception as e:
-            print(f'Error in CreateProfileImageTask {e}')
+            await MY_METHODS.printStatus(f'Error in CreateProfileImageTask {e}')
             return None
 
     @classmethod
@@ -53,7 +54,7 @@ class PROFILE_TASKS:
             return True
             
         except Exception as e:
-            print(f'Error in UpdateProfileImageTask {e}')
+            await MY_METHODS.printStatus(f'Error in UpdateProfileImageTask {e}')
             return None
 
 
@@ -71,5 +72,5 @@ class PROFILE_TASKS:
             return user_profile_data
             
         except Exception as e:
-            print(f'Error in GetProfileDataTask {e}')
+            await MY_METHODS.printStatus(f'Error in GetProfileDataTask {e}')
             return None

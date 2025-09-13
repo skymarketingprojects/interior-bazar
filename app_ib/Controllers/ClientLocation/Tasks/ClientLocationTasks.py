@@ -1,5 +1,6 @@
 from asgiref.sync import sync_to_async
 from app_ib.models import Location, Business
+from app_ib.Utils.MyMethods import MY_METHODS
 
 class CLIENT_LOC_TASKS:
 
@@ -17,7 +18,7 @@ class CLIENT_LOC_TASKS:
             return True
             
         except Exception as e:
-            print(f'Error in CreateClientLocTask {e}')
+            await MY_METHODS.printStatus(f'Error in CreateClientLocTask {e}')
             return None
 
 
@@ -33,7 +34,7 @@ class CLIENT_LOC_TASKS:
             return True
             
         except Exception as e:
-            print(f'Error in UpdateClientLocTask {e}')
+            await MY_METHODS.printStatus(f'Error in UpdateClientLocTask {e}')
             return None
 
 
@@ -51,5 +52,5 @@ class CLIENT_LOC_TASKS:
             return client_loc_data
             
         except Exception as e:
-            print(f'Error in GetClientLocTask {e}')
+            await MY_METHODS.printStatus(f'Error in GetClientLocTask {e}')
             return None

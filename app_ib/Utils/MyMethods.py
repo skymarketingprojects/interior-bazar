@@ -6,7 +6,7 @@ import json
 import re
 from django.conf import settings
 from django.core.mail import send_mail
-
+from app_ib.Utils.AppMode import APPMODE
 
 
 
@@ -141,4 +141,10 @@ class MY_METHODS:
         except Exception as e:
             print(f'Error in send_email {e}')
             return False
+        
+    @staticmethod
+    async def printStatus(status):
+        if settings.ENV == APPMODE.PROD:
+            return 0
+        print(status)
     

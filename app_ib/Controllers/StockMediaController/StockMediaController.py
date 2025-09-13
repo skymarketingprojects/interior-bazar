@@ -6,6 +6,7 @@ from app_ib.models import StockMedia, Page, Section
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.MyMethods import MY_METHODS
 
 from .Tasks.StockData import getStockData  # Should be async or wrapped
 
@@ -36,7 +37,7 @@ class StockMediaController:
             for media in stock_media_qs:
                 # Wrap getStockData if it's not async
                 mediadataresp = await sync_to_async(getStockData)(media)
-                # print(f"mediadataresp {mediadataresp}")
+                # await MY_METHODS.printStatus(f"mediadataresp {mediadataresp}")
                 if mediadataresp.response == RESPONSE_MESSAGES.success:
                     data.append(mediadataresp.data)
 
