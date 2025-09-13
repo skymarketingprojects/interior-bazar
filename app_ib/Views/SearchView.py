@@ -31,3 +31,20 @@ async def GetBusinessByPaginationView(request,index):
                 'error': str(e)
             })
 
+@api_view(['GET'])
+async def GetTopBusinessView(request):
+    try:
+        final_response= await SEARCH_CONTROLLER.GetTopBusiness()
+        return ServerResponse(
+            response=final_response.response,
+            code=final_response.code,
+            message=final_response.message,
+            data=final_response.data)
+    except Exception as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message=RESPONSE_MESSAGES.default_error,
+            code=RESPONSE_CODES.error,
+            data={
+                'error': str(e)
+            })

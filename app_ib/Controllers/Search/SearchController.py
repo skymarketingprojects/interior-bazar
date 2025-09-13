@@ -41,3 +41,29 @@ class SEARCH_CONTROLLER:
                 data={
                     'error': str(e)
                 })
+
+    @classmethod
+    async def GetTopBusiness(self):
+        try:
+            # Getting all business instance: 
+            businesses_query = await sync_to_async(list)(Business.objects.all())
+
+            # fetch business data:
+            business_data= await SEARCH_TASKS.GetQueryData(businesses_query=businesses_query,pageNo=1)
+
+            business_data['topSeller'] = business_data['data'][0]
+
+            return LocalResponse(
+                code=RESPONSE_CODES.success,
+                response=RESPONSE_MESSAGES.success,
+                message=RESPONSE_MESSAGES.business_fetch_success,
+                data=business_data)
+
+        except Exception as e:
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.business_fetch_error,
+                code=RESPONSE_CODES.error,
+                data={
+                    'error': str(e)
+                })

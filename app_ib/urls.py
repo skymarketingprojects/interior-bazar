@@ -122,6 +122,7 @@ urlpatterns = [
     # Serachview: 
     #########################################################
     path('v1/business/pagination/<int:index>/', SearchView.GetBusinessByPaginationView, name='GetBusinessByPaginationView'),
+    path('v1/business/top-business/', SearchView.GetTopBusinessView, name='GetTopBusinessView'),
 
     #########################################################
     # Contact: 

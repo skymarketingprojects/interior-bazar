@@ -13,17 +13,18 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 from app_ib.Utils.AppMode import APPMODE
+from pathlib import Path
+from datetime import timedelta
 import os 
 import environ
-
 env = environ.Env()
+environ.Env.read_env()
 
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-DJANGO_ENV = os.environ.get("ENV", APPMODE.LOC)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -32,12 +33,7 @@ DJANGO_ENV = os.environ.get("ENV", APPMODE.LOC)
 SECRET_KEY = 'django-insecure-+v0qbypjz*^(5^!7@uosljz@9phfii&=13u3*)0oz802oulfzu'
 
 # Set the environment
-ENV = APPMODE.LOC
-if DJANGO_ENV == APPMODE.PROD:
-    ENV = APPMODE.PROD
-
-if DJANGO_ENV == APPMODE.LOC:
-    environ.Env.read_env()
+ENV =  APPMODE.DEV
 
 print(f'ENV: {ENV}')
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -209,42 +205,7 @@ SIMPLE_JWT = {
 }
 
 
-       
-if(ENV == APPMODE.PROD):
-    print(f'Mode Activated [ PROD ]')
-    DEBUG = True
-
-    # Razor Pay
-    # RAZORPAY_KEY = os.environ.get('RAZORPAY_KEY')
-    # RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET')
-
-    ALLOWED_HOSTS = ["*"]
-
-    # CORS Settings (uncomment if needed)
-    CORS_ORIGIN_ALLOW_ALL = True
-
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': os.environ.get('DATABASE_NAME'),
-            'USER': os.environ.get('DATABASE_USERNAME'),
-            'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
-            'HOST': os.environ.get('DATABASE_HOST'),
-            'PORT': os.environ.get('DATABASE_PORT'),
-        }
-    }
-
-    # S3 Settings
-    AWS_ACCESS_KEY_ID = os.environ.get('AWS_KEY')
-    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-    AWS_STORAGE_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
-    AWS_S3_REGION_NAME = os.environ.get('S3_REGION','ap-south-1')
-    DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
-    STATICFILES_STORAGE = "storages.backends.s3.S3Storage"
-    AWS_S3_FILE_OVERWRITE = True
-    AWS_DEFAULT_ACL = None
-    
-if(ENV == APPMODE.LOC):
+if(ENV == APPMODE.DEV):
     print(f'Mode Activated [ DEV ]')
     DEBUG = True 
         
@@ -283,6 +244,72 @@ if(ENV == APPMODE.LOC):
     STATICFILES_STORAGE = "storages.backends.s3.S3Storage"
     AWS_S3_FILE_OVERWRITE = True
     AWS_DEFAULT_ACL = None
+    
+    
+if(ENV == APPMODE.PROD):
+    print(f'Mode Activated [ PROD ]')    
+    DEBUG = False 
+
+    # Razor pay
+    # RAZORPAY_KEY=env("PROD_RAZORPAY_KEY")
+    # RAZORPAY_KEY_SECRET=env("PROD_RAZORPAY_KEY_SECRET")
+    # AWS
+    AWS_ACCESS_KEY_ID = env('AWS_KEY')
+    AWS_SECRET_ACCESS_KEY = env('AWS_SECRETE_KEY')
+        
+    ALLOWED_HOSTS = ["*"]
+    
+    CORS_ORIGIN_ALLOW_ALL = True
+    # CORS_ORIGIN_WHITELIST = [        
+    #     'https://granthamapi.store',
+    #     'https://grantham.org.in', 
+    # ]
+    
+    # CORS_ALLOWED_ORIGIN_REGEXES = [
+    # r"^https://\w+\.grantham\.org.in$",
+    # r"^https://\w+\.granthamapi\.store$",
+    # ]
+    
+    AWS_ACCESS_KEY_ID = env('AWS_KEY')
+    AWS_SECRET_ACCESS_KEY = env('AWS_SECRETE_KEY')
+    
+    # DB
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': env('PROD_DATABASE_NAME'),
+            'USER': env('PROD_DATABASE_USERNAME'),
+            'PASSWORD': env('PROD_DATABASE_PASSWORD'),
+            'HOST': env('PROD_DATABASE_HOST'),
+            'PORT': env('PROD_DATABASE_PORT'),
+        }
+    }
+    
+
+    # S3:
+    AWS_STORAGE_BUCKET_NAME = env('PROD_S3_BUCKET_NAME')
+    AWS_S3_REGION_NAME = env('PROD_S3_REGION')
+    DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
+    STATICFILES_STORAGE = "storages.backends.s3.S3Storage"
+    AWS_S3_FILE_OVERWRITE = True
+    AWS_DEFAULT_ACL = None
+
+if(ENV == APPMODE.LOC):
+    ALLOWED_HOSTS = ["*"]
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+    AWS_ACCESS_KEY_ID = env('AWS_KEY')
+    AWS_SECRET_ACCESS_KEY = env('AWS_SECRETE_KEY')
+    AWS_STORAGE_BUCKET_NAME = env('S3_BUCKET_NAME')
+    AWS_S3_REGION_NAME = env('S3_REGION')
+    DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
+    STATICFILES_STORAGE = "storages.backends.s3.S3Storage"
+    AWS_S3_FILE_OVERWRITE = True
+    AWS_DEFAULT_ACL = None
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
@@ -291,18 +318,12 @@ STATIC_ROOT = BASE_DIR  / 'static_root'
 # Email Server
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.environ.get('EMAIL_HOST')
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')  # Use generated app password here
+EMAIL_HOST = env('EMAIL_HOST')
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD') # Use generated app password here
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL')
-# EMAIL_HOST = env('EMAIL_HOST')
-# EMAIL_HOST_USER = env('EMAIL_HOST_USER')
-# EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')  # Use generated app password here
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
 
     # Development:
     #  eb deploy dev-ib-env-1 --profile interior_bazzar_home
@@ -372,5 +393,3 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL')
 # end_time = time.time()
 # execution_time = end_time - start_time
 # print(f"Execution time: {execution_time:.4f} seconds")
-# username: intBazzarhji
-# password: nomoreadmin@123
