@@ -59,13 +59,16 @@ class BusinessBadge(models.Model):
     image_url = models.URLField(max_length=2250, null=True, blank=True)
     isDefault = models.BooleanField(default=False)
 
+    def __str__(self):
+        return f'badge - {self.type}'
+
 class Business(models.Model):
     user= models.OneToOneField(CustomUser,on_delete=models.CASCADE, null=True, blank=True,related_name='user_business')
     business_name= models.CharField(max_length=250)
     whatsapp= models.CharField(max_length=100,default='',null=True, blank=True)
     cover_image_url = models.TextField(default='',null=True, blank=True)
-    gst= models.CharField(max_length=250)
-    since= models.CharField(max_length=250)
+    gst= models.CharField(max_length=250,null=True, blank=True)
+    since= models.CharField(max_length=250,null=True, blank=True)
     segment= models.TextField() # "manufraturer"
     catigory= models.TextField() # ["interior", "exterior","office"]
     badge = models.TextField(null=True, blank=True)
