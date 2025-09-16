@@ -17,21 +17,21 @@ class PLAN_CONTROLLER:
         try:
             # Test Data
             plan_create_resp = await  PLAN_TASKS.CreatePlanTask(payment_proof=payment_proof, data=data, user_ins= user_ins)
-
+            print(plan_create_resp)
             if plan_create_resp:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
                     message=RESPONSE_MESSAGES.plan_create_success,
                     code=RESPONSE_CODES.success,
-                    data={
-                    })
+                    data=plan_create_resp
+                    )
 
             else:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.error,
                     message=RESPONSE_MESSAGES.plan_create_error,
                     code=RESPONSE_CODES.error,
-                    data={})
+                    data={plan_create_resp})
 
         except Exception as e:
             return LocalResponse(
@@ -51,7 +51,7 @@ class PLAN_CONTROLLER:
                 plan_ins=await sync_to_async(PlanQuery.objects.get)(id=data.id)
                 await MY_METHODS.printStatus(f'plan ins {plan_ins}')
 
-                verify_plan_response = await  PLAN_TASKS.VerifyPlanTask(plan_ins=plan_ins)
+                verify_plan_response = await  PLAN_TASKS.VerifyPlanTask(plan_ins=plan_ins,data=data)
                 await MY_METHODS.printStatus(f'verift plan resp {verify_plan_response}')
 
                 if verify_plan_response:
@@ -59,14 +59,14 @@ class PLAN_CONTROLLER:
                         response=RESPONSE_MESSAGES.success,
                         message=RESPONSE_MESSAGES.plan_verify_success,
                         code=RESPONSE_CODES.success,
-                        data={})
+                        data={"id":plan_ins.id})
 
                 else:
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.error,
                         message=RESPONSE_MESSAGES.plan_verify_errror,
                         code=RESPONSE_CODES.error,
-                        data={})
+                        data={"id":plan_ins.id})
             else:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.error,

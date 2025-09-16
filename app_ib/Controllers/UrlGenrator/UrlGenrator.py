@@ -16,52 +16,7 @@ class imageUrlGenrator:
                 region_name=settings.AWS_S3_REGION_NAME
             )
 
-            if ImageIntent == "ProfileImage":
-                FolderPath = FilePath.ProfileImage()
-
-            elif ImageIntent == "BusinessPrimaryImage":
-                FolderPath = FilePath.BusinessPrimaryImage()
-            elif ImageIntent == "BusinessBadge":
-                FolderPath = FilePath.BusinessBadge()
-
-            elif ImageIntent == "BusinessSecondaryImages":
-                FolderPath = FilePath.BusinessSecondaryImages()
-
-            elif ImageIntent == "LeadQueryAttachment":
-                FolderPath = FilePath.LeadQueryAttachment()
-
-            elif ImageIntent == "SubscriptionCover":
-                FolderPath = FilePath.SubscriptionCover()
-
-            elif ImageIntent == "SubscriptionVideo":
-                FolderPath = FilePath.SubscriptionVideo()
-
-            elif ImageIntent == "SubscriptionPDF":
-                FolderPath = FilePath.SubscriptionPDF()
-
-            elif ImageIntent == "BlogCover":
-                FolderPath = FilePath.BlogCover()
-
-            elif ImageIntent == "ContactAttachment":
-                FolderPath = FilePath.ContactAttachment()
-
-            elif ImageIntent == "PaymentQR":
-                FolderPath = FilePath.PaymentQR()
-
-            elif ImageIntent == "Banner":
-                FolderPath = FilePath.Banner()
-
-            elif ImageIntent == "StockMedia":
-                FolderPath = FilePath.StockMedia()
-
-            else:
-                return LocalResponse(
-                    response=RESPONSE_MESSAGES.error,
-                    message=f"Unsupported ImageIntent: {ImageIntent}",
-                    data={},
-                    code=RESPONSE_CODES.error,
-                )
-
+            FolderPath =FilePath.get_path(ImageIntent)
             UniqueFileName = f"{FolderPath}{uuid.uuid4()}_{FileName}"
 
             PresignedUrl = s3.generate_presigned_url(
@@ -97,63 +52,26 @@ class imageUrlGenrator:
 
 
 class FilePath:
-    USERS = "user"
-    BUSINESS = "business"
-    LEAD_QUERY = "lead_query"
-    SUBSCRIPTION = "subscription"
-    BLOG = "blog"
-    CONTACT = "contact"
-    PAYMENT = "payment_qr"
-    BANNERS = "banners"
-    STOCK_MEDIA = "stock_media"
-    BUSINESS_BADGE = "business_badge"
+    PATHS = {
+        "ProfileImage": "user/profile_image/",
+        "BusinessPrimaryImage": "business/primary_image/",
+        "BusinessBadge": "business_badge/primary_image/",
+        "BusinessSecondaryImages": "business/secondary_images/",
+        "LeadQueryAttachment": "lead_query/attachment/",
+        "SubscriptionCover": "subscription/attachment/",
+        "SubscriptionVideo": "subscription/video/",
+        "SubscriptionPDF": "subscription/pdf/",
+        "BlogCover": "blog/cover/",
+        "ContactAttachment": "contact/attachment/",
+        "PaymentQR": "payment_qr/",
+        "Banner": "banners/",
+        "StockMedia": "stock_media/",
+        "PaymentScreenshot": "payment_screenshot/",
+    }
 
-    @staticmethod
-    def ProfileImage():
-        return f"{FilePath.USERS}/profile_image/"
-
-    @staticmethod
-    def BusinessPrimaryImage():
-        return f"{FilePath.BUSINESS}/primary_image/"
-    @staticmethod
-    def BusinessBadge():
-        return f"{FilePath.BUSINESS_BADGE}/primary_image/"
-
-    @staticmethod
-    def BusinessSecondaryImages():
-        return f"{FilePath.BUSINESS}/secondary_images/"
-
-    @staticmethod
-    def LeadQueryAttachment():
-        return f"{FilePath.LEAD_QUERY}/attachment/"
-
-    @staticmethod
-    def SubscriptionCover():
-        return f"{FilePath.SUBSCRIPTION}/attachment/"
-
-    @staticmethod
-    def SubscriptionVideo():
-        return f"{FilePath.SUBSCRIPTION}/video/"
-
-    @staticmethod
-    def SubscriptionPDF():
-        return f"{FilePath.SUBSCRIPTION}/pdf/"
-
-    @staticmethod
-    def BlogCover():
-        return f"{FilePath.BLOG}/cover/"
-
-    @staticmethod
-    def ContactAttachment():
-        return f"{FilePath.CONTACT}/attachment/"
-
-    @staticmethod
-    def PaymentQR():
-        return f"{FilePath.PAYMENT}/"
-
-    @staticmethod
-    def Banner():
-        return f"{FilePath.BANNERS}/"
-    @staticmethod
-    def StockMedia():
-        return f"{FilePath.STOCK_MEDIA}/"
+    @classmethod
+    def get_path(cls, intent_name):
+        path = cls.PATHS.get(intent_name)
+        if not path:
+            raise ValueError(f"Unsupported ImageIntent: {intent_name}")
+        return path

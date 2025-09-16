@@ -118,6 +118,7 @@ urlpatterns = [
     #########################################################
     path('v1/plan/create/',  PlanView.CreatePlanView, name='CreatePlanView'),
     path('v1/plan/verify/', PlanView.VerifyPaymentView, name='VerifyPaymentView'),
+    path('v1/plan/template/', Subscription.GetSubscriptionsView, name='GetSubscriptionView'),
  
     #########################################################
     # Serachview: 
@@ -153,5 +154,5 @@ urlpatterns = [
     path('v1/blog/<int:id>/', BlogView.GetBlogByIdView, name='GetBlogByTitleView'),
     path('v1/admin/', include('interior_admin.urls')),
 
-    path('v1/plan/template/', Subscription.GetSubscriptionsView, name='GetSubscriptionView'),
+    
 ]

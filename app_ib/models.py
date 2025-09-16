@@ -157,6 +157,7 @@ class PlanQuery(models.Model):
     transaction_id= models.CharField(max_length=500,default='')
     stage= models.CharField(max_length=500,default='') #{"1":"Lead","2":"Contacted","3":"Followed Up","4":"Closed"}
     attachment= models.FileField(null=True, blank=True, upload_to='lead_query/attachment')
+    attachment_url = models.URLField(default='',null=True, blank=True)
     timestamp= models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

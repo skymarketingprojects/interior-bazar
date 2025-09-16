@@ -64,6 +64,7 @@ class SUBSCRIPTION_TASKS:
             # Convert subscription model into a dict format matching PlanType
             data = {
                 'id': subscription_ins.id,
+                'type': subscription_ins.type,
                 'name': subscription_ins.title,  # Title as name
                 'features': subscription_ins.services.split(','),  # Assuming services are comma-separated
                 'price':subscription_ins.payable_amount,  # Convert to a float for price

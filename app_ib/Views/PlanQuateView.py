@@ -15,9 +15,7 @@ async def CreateQuateView(request):
         data = MY_METHODS.json_to_object(request.data)
         
         # Call Auth Controller to Create User
-        final_response = await  asyncio.gather(PLAN_QUATE_CONTROLLER.CreateQuate(data=data))
-        final_response = final_response[0]
-
+        final_response = await  PLAN_QUATE_CONTROLLER.CreateQuate(data=data)
         return ServerResponse(
             response=final_response.response,
             code=final_response.code,
@@ -42,8 +40,7 @@ async def VerifyQuateView(request):
         await MY_METHODS.printStatus(f'verify data {data}')
         
         # Call Auth Controller to Create User
-        final_response = await  asyncio.gather(PLAN_QUATE_CONTROLLER.VerifyQuate(data=data))
-        final_response = final_response[0]
+        final_response = await PLAN_QUATE_CONTROLLER.VerifyQuate(data=data)
 
         return ServerResponse(
             response=final_response.response,

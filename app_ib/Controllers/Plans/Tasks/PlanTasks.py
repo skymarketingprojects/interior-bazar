@@ -8,52 +8,21 @@ class PLAN_TASKS:
         try:
             
             plan_query = PlanQuery()
-            plan_query.user= user_ins
+            # plan_query.user= user_ins
             plan_query.plan= data.plan     
             plan_query.name= data.name
             plan_query.email= data.email
             plan_query.phone= data.phone
             plan_query.state= data.state
             plan_query.country= data.country
-            plan_query.address= data.address
+            # plan_query.address= data.address
             plan_query.stage= "pending"
+            plan_query.attachment_url= payment_proof
+            plan_query.transaction_id= getattr(data, 'transactionId', '')
 
-            # # If transaction id had and attachment is None
-            if(not data.transaction_id and not payment_proof):
-                await MY_METHODS.printStatus(f'Both are None')
-                plan_query.stage= "pending"
+            await sync_to_async(plan_query.save)()
 
-                await sync_to_async(plan_query.save)()
-                return False
-
-            # # If transaction id or attachment both are None 
-            if(data.transaction_id and payment_proof):
-                # Test: 
-                await MY_METHODS.printStatus(f'BOTH EXIST')
-                await MY_METHODS.printStatus(f'payment_proof  {payment_proof}')
-                await MY_METHODS.printStatus(f'transaction id {data.transaction_id}')
-
-                plan_query.stage= "complete"
-                plan_query.transaction_id= data.transaction_id
-                plan_query.attachment= payment_proof
-                
-                await sync_to_async(plan_query.save)()
-                return True
-            
-            
-            # Any one exist 
-            if(data.transaction_id or payment_proof):
-                await MY_METHODS.printStatus(f'Any one exist')
-                if(data.transaction_id):
-                    await MY_METHODS.printStatus(f'transaction id {data.transaction_id}')
-                    plan_query.transaction_id= data.transaction_id
-
-                if(payment_proof):
-                    await MY_METHODS.printStatus(f'payment_proof  {payment_proof}')
-                    plan_query.transaction_id= data.transaction_id
-
-                await sync_to_async(plan_query.save)()
-                return True
+            return {"id":plan_query.id}
 
         except Exception as e:
             await MY_METHODS.printStatus(f'Error in CreatePlanTask {e}')
@@ -61,10 +30,20 @@ class PLAN_TASKS:
 
 
     @classmethod
-    async def VerifyPlanTask(self, plan_ins):
+    async def VerifyPlanTask(self, plan_ins,data):
         try:
             await MY_METHODS.printStatus(f'Task {plan_ins}')
             plan_ins.stage= 'confirm'
+            plan_ins.plan= getattr(data, 'plan', plan_ins.plan)
+            plan_ins.name= getattr(data, 'name', plan_ins.name)
+            plan_ins.email= getattr(data, 'email', plan_ins.email)
+            plan_ins.phone= getattr(data, 'phone', plan_ins.phone)
+            plan_ins.state= getattr(data, 'state', plan_ins.state)
+            plan_ins.country= getattr(data, 'country', plan_ins.country)
+            # plan_query.address= getattr(data, 'address', plan_ins.address)
+            plan_ins.stage= getattr(data, 'stage', plan_ins.stage)
+            plan_ins.attachment_url= getattr(data, 'attachment_url', plan_ins.attachment_url)
+            plan_ins.transaction_id= getattr(data, 'transactionId', plan_ins.transaction_id)
             await sync_to_async(plan_ins.save)()
             return True
             
