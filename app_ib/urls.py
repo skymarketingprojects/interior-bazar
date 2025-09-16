@@ -97,8 +97,8 @@ urlpatterns = [
     #########################################################
     # Quate: 
     #########################################################
-    path('v1/quate/create/', PlanQuateView.CreateQuateView, name='CreateQuateView'),
-    path('v1/quate/verify/', PlanQuateView.VerifyQuateView, name='VerifyQuateView'),
+    path('v1/quote/create/', PlanQuateView.CreateQuateView, name='CreateQuateView'),
+    path('v1/quote/verify/', PlanQuateView.VerifyQuateView, name='VerifyQuateView'),
 
     #########################################################
     # Ads Query: 

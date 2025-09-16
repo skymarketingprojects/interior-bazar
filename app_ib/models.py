@@ -166,17 +166,32 @@ class PlanQuery(models.Model):
         
 # Plan Buy Quate related to service
 class Quate(models.Model):
+    leadType = models.CharField(max_length=500,default='')
+    businessType = models.CharField(max_length=500,default='')
+    budget= models.CharField(max_length=500,default='')
     name= models.CharField(max_length=500,default='')
-    phone= models.CharField(max_length=500,default='')
-    interested= models.CharField(max_length=500,default='')
+    phoneNumber= models.CharField(max_length=500,default='')
+    query= models.TextField(default='')
     email= models.CharField(max_length=500,default='')
+    noOfEmp = models.CharField(max_length=500,default='')
+    companyName = models.CharField(max_length=500,default='')
     note= models.CharField(max_length=500,default='')
     stage= models.CharField(max_length=500,default='') #{"1":"Lead","2":"Contacted","3":"Followed Up","4":"Closed"} Admin
+    city= models.CharField(max_length=500,default='')
+    state= models.CharField(max_length=500,default='')
     timestamp= models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f'ID {self.pk} phone:{self.phone} stage:{self.stage}'
+        if self.phoneNumber and not self.stage:
+            return f'ID {self.pk} phone:{self.phoneNumber}'
+        elif self.phoneNumber and self.stage:
+            return f'ID {self.pk} phone:{self.phone} stage:{self.stage}'
+        return f'ID {self.pk}'
+    
+    class Meta:
+        verbose_name = "Leads for company"
+        verbose_name_plural = "Platform Own Leads"
 
 
 class Feedback(models.Model):
@@ -279,6 +294,8 @@ class Pages(models.Model):
     content = QuillField(null=True, blank=True)
     def __str__(self):
         return f'page_name: {self.page_name} title:{self.title}'
+    class Meta:
+        verbose_name_plural = "information pages"
     
 class QNA(models.Model):
     question = models.TextField()
@@ -296,6 +313,8 @@ class Page(models.Model):
 
     def __str__(self):
         return f"Page {self.name}"
+    class Meta:
+        verbose_name_plural = "stockimages page"
     
 class Section(models.Model):
     name = models.CharField(max_length=255)

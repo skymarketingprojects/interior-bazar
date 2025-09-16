@@ -16,10 +16,10 @@ class PLAN_QUATE_CONTROLLER:
     async def CreateQuate(self,data):
         try:
             # Test Data
-            await MY_METHODS.printStatus(f'name: {data.phone}')
-            await MY_METHODS.printStatus(f'name: {data.interested}')
-            await MY_METHODS.printStatus(f'name: {data.email}')
-            await MY_METHODS.printStatus(f'name: {data.note}')
+            # await MY_METHODS.printStatus(f'name: {data.phone}')
+            # await MY_METHODS.printStatus(f'name: {data.interested}')
+            # await MY_METHODS.printStatus(f'name: {data.email}')
+            # await MY_METHODS.printStatus(f'name: {data.note}')
 
             quate_create_resp_data = await  PLAN_QUATE_TASKS.CreateQuateTask(data=data)
             await MY_METHODS.printStatus(f'create query resp {quate_create_resp_data}')
@@ -30,7 +30,7 @@ class PLAN_QUATE_CONTROLLER:
                     message=RESPONSE_MESSAGES.Quate_generate_success,
                     code=RESPONSE_CODES.success,
                     data={
-                        'query_id':quate_create_resp_data
+                        'id':quate_create_resp_data
                     })
 
             else:
@@ -55,8 +55,8 @@ class PLAN_QUATE_CONTROLLER:
             # Test Data
             # await MY_METHODS.printStatus(f'name: {data.phone}')
             # await MY_METHODS.printStatus(f'name: {data.interested}')
-            await MY_METHODS.printStatus(f'name: {data.email}')
-            await MY_METHODS.printStatus(f'name: {data.note}')
+            # await MY_METHODS.printStatus(f'name: {data.email}')
+            # await MY_METHODS.printStatus(f'name: {data.note}')
 
             is_quate_exist= await sync_to_async(Quate.objects.filter(id=data.id).exists)()
             if(is_quate_exist):
