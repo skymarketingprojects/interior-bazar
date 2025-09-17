@@ -110,7 +110,7 @@ class SEARCH_TASKS:
             city = f"{location_data.get('city', None)} ," if location_data.get('city') else None 
             state = f"{location_data.get('state', None)} ," if location_data.get('state') else None
             country = f"{location_data.get('country', None)}" if location_data.get('country') else None
-            final_data['location'] = f"{city}{state}{country}"
+            final_data['location'] = f"{city if city else ''}{state if state else ''}{country if country else ''}"
             # Handle rating - assuming you still want a random rating for the example
             rating = await MY_METHODS.get_random_rating()
             final_data['rating'] = f"{rating}"
