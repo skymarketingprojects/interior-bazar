@@ -43,15 +43,16 @@ class SEARCH_CONTROLLER:
                 })
 
     @classmethod
-    async def GetTopBusiness(self):
+    async def GetTopBusiness(self,index):
         try:
             # Getting all business instance: 
             businesses_query = await sync_to_async(list)(Business.objects.all())
 
             # fetch business data:
-            business_data= await SEARCH_TASKS.GetQueryData(businesses_query=businesses_query,pageNo=1)
+            business_data= await SEARCH_TASKS.GetQueryData(businesses_query=businesses_query,pageNo=index)
 
-            business_data['topSeller'] = business_data['data'][0]
+            business_data['topSeller'] = business_data['data'][:5]
+            business_data['businesses'] = business_data.pop('data')
 
             return LocalResponse(
                 code=RESPONSE_CODES.success,

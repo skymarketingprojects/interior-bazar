@@ -57,7 +57,6 @@ class AUTH_CONTROLLER:
                         message=RESPONSE_MESSAGES.token_generate_error,
                         code=RESPONSE_CODES.error,
                         data={})
-                
                 # Success Response: 
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,

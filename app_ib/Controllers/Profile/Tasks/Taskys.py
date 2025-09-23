@@ -62,10 +62,10 @@ class PROFILE_TASKS:
     async def GetProfileDataTask(self, user_profile_ins):
         try:
             user_profile_data = {
-                "profile_image_url":user_profile_ins.profile_image_url,
-                'name': user_profile_ins.name,
-                'email': user_profile_ins.email,
-                'phone': user_profile_ins.phone,
+                "profile_image_url": user_profile_ins.profile_image_url if user_profile_ins.profile_image_url else '',
+                'name': user_profile_ins.name if user_profile_ins.name else '',
+                'email': user_profile_ins.email if user_profile_ins.email else '',
+                'phone': user_profile_ins.phone if user_profile_ins.phone else '',
             }
             if(user_profile_ins.profile_image):
                 user_profile_data['profile_image']=user_profile_ins.profile_image.url

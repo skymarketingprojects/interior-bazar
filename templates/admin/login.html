@@ -1,0 +1,53 @@
+{% extends "admin/login.html" %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <style>
+        .password-toggle {
+            position: relative;
+        }
+        .password-toggle input {
+            padding-right: 30px;
+        }
+        .password-toggle .toggle-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 12px;
+            color: #007bff;
+            user-select: none;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    {{ block.super }}
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const passwordInput = document.getElementById("id_password");
+            if (passwordInput) {
+                const wrapper = document.createElement("div");
+                wrapper.className = "password-toggle";
+                passwordInput.parentNode.insertBefore(wrapper, passwordInput);
+                wrapper.appendChild(passwordInput);
+
+                const toggleBtn = document.createElement("span");
+                toggleBtn.className = "toggle-btn";
+                toggleBtn.textContent = "Show";
+                wrapper.appendChild(toggleBtn);
+
+                toggleBtn.addEventListener("click", function () {
+                    if (passwordInput.type === "password") {
+                        passwordInput.type = "text";
+                        toggleBtn.textContent = "Hide";
+                    } else {
+                        passwordInput.type = "password";
+                        toggleBtn.textContent = "Show";
+                    }
+                });
+            }
+        });
+    </script>
+{% endblock %}

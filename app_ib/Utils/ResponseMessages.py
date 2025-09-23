@@ -237,6 +237,12 @@ class RESPONSE_MESSAGES:
     subscription_update_success= 'Subscription updated successfully'
     subscription_update_error   = 'Subscription update failed'
 
+    ############################################
+    # Offer text
+    ############################################
+    OFFER_TEXT_FETCH_ERROR= 'Unable to fetch offer text'
+    OFFER_TEXT_FETCH_SUCCESS= 'Offer text fetched successfully'
+    
 
 class VALIDATION_MESSAGES:
     password_length= 'Password must be at least 8 characters long'

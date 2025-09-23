@@ -17,6 +17,7 @@ from app_ib.Views.Client import ClientLocationView, ClientsView
 from app_ib.Views import StockMediaView
 from app_ib.Views import BlogView
 from app_ib.Views import Subscription
+from app_ib.Views import OfferTextView
 
 from app_ib.Views import ContactView
 from app_ib.Views import PageView
@@ -124,7 +125,7 @@ urlpatterns = [
     # Serachview: 
     #########################################################
     path('v1/business/pagination/<int:index>/', SearchView.GetBusinessByPaginationView, name='GetBusinessByPaginationView'),
-    path('v1/business/top-business/', SearchView.GetTopBusinessView, name='GetTopBusinessView'),
+    path('v1/business/top-business/<int:index>/', SearchView.GetTopBusinessView, name='GetTopBusinessView'),
 
     #########################################################
     # Contact: 
@@ -154,5 +155,9 @@ urlpatterns = [
     path('v1/blog/<int:id>/', BlogView.GetBlogByIdView, name='GetBlogByTitleView'),
     path('v1/admin/', include('interior_admin.urls')),
 
+    #########################################################
+    # Offer text
+    ##########################################################
+    path('v1/query/offer-text/', OfferTextView.GetOfferText, name='GetOfferTextView'),
     
 ]

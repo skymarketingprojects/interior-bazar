@@ -54,6 +54,7 @@ class imageUrlGenrator:
 class FilePath:
     PATHS = {
         "ProfileImage": "user/profile_image/",
+        "BusinessCover": "business/cover/",
         "BusinessPrimaryImage": "business/primary_image/",
         "BusinessBadge": "business_badge/primary_image/",
         "BusinessSecondaryImages": "business/secondary_images/",

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Backend Deployment Successful</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f5f7fa;
+      color: #222;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      text-align: center;
+      background: #ffffff;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 40px 30px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      max-width: 500px;
+      width: 100%;
+    }
+
+    h1 {
+      color: #007fa6;
+      font-size: 1.8rem;
+      margin-bottom: 15px;
+    }
+
+    p {
+      font-size: 1rem;
+      color: #444;
+      margin-bottom: 20px;
+    }
+
+    code {
+      display: inline-block;
+      background: #f0f0f0;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-family: monospace;
+      color: #333;
+      font-size: 0.95rem;
+    }
+
+    .footer {
+      margin-top: 30px;
+      font-size: 0.85rem;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>✅ {{page_name}}</h1>
+    <p>Your backend is running at:</p>
+    <code id="baseUrl">https://your-base-url.com/{{page_name}}</code>
+    <div class="footer">© <span id="year"></span> DevOps Team</div>
+  </div>
+
+  <script>
+    document.getElementById('baseUrl').textContent = window.location.origin + '/';
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

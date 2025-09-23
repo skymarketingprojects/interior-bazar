@@ -215,3 +215,4 @@ app_ib/management
 data.json
 dev.json
 prod.json
+*.json

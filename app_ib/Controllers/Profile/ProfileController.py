@@ -47,11 +47,13 @@ class PROFILE_CONTROLLER:
                 await MY_METHODS.printStatus(f' is profile updated {is_profile_created}')
                 
                 if(is_profile_created):
+                    user_profile_ins = await sync_to_async(UserProfile.objects.get)(user=user_ins)
+                    profile_data = await PROFILE_TASKS.GetProfileDataTask(user_profile_ins=user_profile_ins)
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.success,
                         message=RESPONSE_MESSAGES.user_profile_create_success,
                         code=RESPONSE_CODES.success,
-                        data={})
+                        data=profile_data)
                 else:
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.error,
@@ -154,7 +156,15 @@ class PROFILE_CONTROLLER:
                     message=RESPONSE_MESSAGES.user_profile_fetch_success,
                     code=RESPONSE_CODES.success,
                     data=user_profile_data)
-            
+            return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.user_profile_fetch_success,
+                    code=RESPONSE_CODES.success,
+                    data={
+                        "username": user_ins.username,
+                        "role": user_ins.type,
+                        "id": user_ins.id
+                    })
 
         except Exception as e:
             return LocalResponse(

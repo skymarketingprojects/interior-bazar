@@ -333,3 +333,11 @@ class StockMedia(models.Model):
         with transaction.atomic():
             indexShifting(self)
             super().save(*args, **kwargs)
+
+#offer text
+class OfferText(models.Model):
+    text = models.TextField()
+    link = models.URLField(max_length=2250, null=True, blank=True)
+    show = models.BooleanField(default=False)
+    def __str__(self):
+        return f' pk {self.pk} text:{self.text}'

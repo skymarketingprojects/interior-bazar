@@ -33,7 +33,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-+v0qbypjz*^(5^!7@uosljz@9phfii&=13u3*)0oz802oulfzu'
 
 # Set the environment
-ENV =  APPMODE.PROD
+ENV =  APPMODE.DEV
 
 print(f'ENV: {ENV}')
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -66,6 +66,8 @@ INSTALLED_APPS = [
     'django_quill',
     'app_ib',
     'interior_admin',
+    'django.contrib.sitemaps',
+    'django.contrib.sites',
 ]
 
 MIDDLEWARE = [
@@ -84,7 +86,7 @@ ROOT_URLCONF = 'interior_bazzar.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [ BASE_DIR / 'templates' ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -152,7 +154,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
-
+SITE_ID = 1
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 

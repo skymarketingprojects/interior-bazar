@@ -32,9 +32,9 @@ async def GetBusinessByPaginationView(request,index):
             })
 
 @api_view(['GET'])
-async def GetTopBusinessView(request):
+async def GetTopBusinessView(request,index):
     try:
-        final_response= await SEARCH_CONTROLLER.GetTopBusiness()
+        final_response= await SEARCH_CONTROLLER.GetTopBusiness(index=index)
         return ServerResponse(
             response=final_response.response,
             code=final_response.code,

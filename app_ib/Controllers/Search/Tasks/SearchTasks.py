@@ -26,7 +26,7 @@ class SEARCH_TASKS:
     @classmethod
     async def PaginateQuery(self,businesses_query,PageNo):
         page_number = PageNo
-        page_size = 10
+        page_size = 3 # for production 3 for testing
 
         # Fetch the user data asynchronously
         businesses = await sync_to_async(list)(businesses_query)
@@ -41,7 +41,9 @@ class SEARCH_TASKS:
             
         data = {
         'businesses': businesses_page,
-        'has_next': businesses_page.has_next()
+        'hasNext': businesses_page.has_next(),
+        'totalPage': paginator.num_pages,
+        'pageNo': page_number
         } 
         return data
 
@@ -58,7 +60,9 @@ class SEARCH_TASKS:
 
             
             business_list = pageingate_lawers['businesses']
-            has_next = pageingate_lawers['has_next']
+            has_next = pageingate_lawers['hasNext']
+            totalPage = pageingate_lawers['totalPage']
+            pageNo = pageingate_lawers['pageNo']
 
             # fetch all information 
             for business in business_list:
@@ -66,7 +70,9 @@ class SEARCH_TASKS:
                 lawyres_data.append(lawer_resp)
             
             final_data = {
-                'has_next':has_next,
+                'hasNext':has_next,
+                'totalPage':totalPage,
+                'pageNo':pageNo,
                 'data':lawyres_data
             }
             
