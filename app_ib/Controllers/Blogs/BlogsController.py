@@ -31,14 +31,12 @@ class BLOG_CONTROLLER:
             # Step 4: Build and return plain dict response
             blog_data = {
                 "blogs": blog_details,
-                "pagination": {
                     "current_page": page_obj.number,
-                    "has_next": page_obj.has_next(),
-                    "has_previous": page_obj.has_previous(),
-                    "total_pages": paginator.num_pages,
-                    "total_count": len(all_blogs),
-                    "page_size": per_page
-                }
+                    "hasNext": page_obj.has_next(),
+                    "hasPrevious": page_obj.has_previous(),
+                    "totalPages": paginator.num_pages,
+                    "totalCount": len(all_blogs),
+                    "pageSize": per_page
             }
             return LocalResponse(
                 code=RESPONSE_CODES.success,

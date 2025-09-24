@@ -14,8 +14,7 @@ from app_ib.Controllers.Blogs.BlogsController import BLOG_CONTROLLER
 @api_view(['GET'])
 async def GetBlogsPaginationView(request,page):
     try:
-
-        blogs_resp = await asyncio.gather(BLOG_CONTROLLER.GetBlogsPagination(page=page, per_page=2))
+        blogs_resp = await asyncio.gather(BLOG_CONTROLLER.GetBlogsPagination(page=page, per_page=3))
         blogs_resp = blogs_resp[0]
 
         return ServerResponse(
