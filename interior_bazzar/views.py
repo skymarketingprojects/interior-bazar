@@ -1,5 +1,5 @@
 from django.shortcuts import render
-
+from django.http import HttpResponse
 def render_index(request, page_name):
     return render(request, 'index.html', {'page_name': page_name})
 
@@ -39,3 +39,13 @@ def sign_in(request):
 
 def contact_us(request):
     return render_index(request, 'contact_us')
+
+
+def robots_txt(request):
+    lines = [
+        "User-Agent: *",
+        "Allow: /",
+        "Sitemap: https://interiorbazzar.com/sitemap.xml"
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain")
+

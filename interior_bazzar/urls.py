@@ -32,6 +32,7 @@ sitemaps = {
 urlpatterns = [
     path('',TestView, name='test'),
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
+    path('robots.txt', views.robots_txt, name='robots'),
     path('terms-of-use/', admin.site.urls),
     path('api/', include("app_ib.urls")),
      path('seller-buyer/', views.seller_buyer, name='seller_buyer'),
