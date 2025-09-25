@@ -146,5 +146,6 @@ class MY_METHODS:
     async def printStatus(status):
         if settings.ENV == APPMODE.PROD:
             return 0
-        print(status)
+        else:
+            print(status)
     

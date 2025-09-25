@@ -7,6 +7,7 @@ from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from interior_admin.Controllers.AdminPanel.AdminPanelController import ADMIN_PANEL_CONTROLLER
+from interior_admin.Controllers.PanelSearch.PanelSearchController import PANEL_SEARCH_CONTROLLER
 
 @api_view(['POST'])
 async def GetBusinessTilesStatsView(request):
@@ -201,4 +202,25 @@ async def GetChartsStatsView(request):
             message="Failed to fetch charts.",
             code=RESPONSE_CODES.error,
             data={"error": str(e)}
+        )
+    
+
+@api_view(['GET'])
+async def SearchQueryView(request,query):
+    try:
+        result =  await PANEL_SEARCH_CONTROLLER.GetSearchResults(Query=query)
+        return ServerResponse(
+            response=result.response,
+            message=result.message,
+            data= result.data,
+            code=result.code
+        )
+
+    except Exception as e:
+        return ServerResponse(
+            response= RESPONSE_MESSAGES.error,
+            message=RESPONSE_MESSAGES.business_fetch_error,
+            code=RESPONSE_CODES.error,
+            data={'error':str(e)}
+
         )

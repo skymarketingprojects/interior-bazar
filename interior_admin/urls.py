@@ -9,4 +9,5 @@ urlpatterns = [
     path('leads/stats/', views.GetAssignedLeadsTilesView, name='get_assigned_leads_stats'),
     path('signup/stats/',views.GetTodaySignupsStatsView, name='get_today_signups_stats'),
     path('chart/', views.GetChartsStatsView, name='get_chart_view'),
+    path('business/search/<str:query>/', views.SearchQueryView, name='admin_search'),
 ]

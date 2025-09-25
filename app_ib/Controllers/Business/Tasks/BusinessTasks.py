@@ -4,6 +4,7 @@ from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.Utils.MyMethods import MY_METHODS
+from django.db.models import Prefetch
 class BUSS_TASK:
 
     @classmethod
@@ -100,4 +101,41 @@ class BUSS_TASK:
             
         except Exception as e:
             await MY_METHODS.printStatus(f'Error in GetBusinessInfo {e}')
+            return None
+        
+    @classmethod
+    async def GetBusinessInfoForSearch(cls, id):
+        try:
+            business_ins = await sync_to_async(
+                Business.objects.select_related('business_profile')
+                .only(
+                    'id',
+                    'business_name',
+                    'segment',
+                    'cover_image_url',
+                    'since',
+                    'business_profile__primary_image_url'
+                ).get
+            )(pk=id)
+
+            # Get the image safely
+            business_profile = getattr(business_ins, 'business_profile', None)
+            
+            businessImage = business_profile.primary_image_url if business_profile else None
+            MY_METHODS.printStatus(f'businessImage {businessImage}')
+                
+
+            data = {
+                'businessName': business_ins.business_name,
+                # 'segment': business_ins.segment,
+                # 'coverImageUrl': business_ins.cover_image_url,
+                # 'since': business_ins.since,
+                'id': business_ins.id,
+                'businessImage': businessImage,
+            }
+
+            return data
+
+        except Exception as e:
+            await MY_METHODS.printStatus(f'Error in GetBusinessInfo: {e}')
             return None
