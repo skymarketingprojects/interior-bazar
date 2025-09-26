@@ -96,21 +96,23 @@ class ADMIN_PANEL_TASKS:
 
                 results.append({
                     "id": business_id,
-                    "join_at": business.timestamp,
+                    "joinAt": business.timestamp,
                     "name": business.business_name,
                     "plan": plan_name,
-                    "platform_lead": assigned_leads_count,
-                    "assigned_lead": platform_leads_count,
-                    "total_leads": total_leads,
+                    "assignedLead": assigned_leads_count,
+                    "platformLead": platform_leads_count,
+                    "totalLeads": total_leads,
                     "date": timezone.now().date()
                 })
 
             # Return paginated response
             return {
                 "results": results,
-                "total_pages": paginator.num_pages,
-                "current_page": page_number,
-                "total_items": paginator.count
+                "totalPages": paginator.num_pages,
+                "currentPage": page_number,
+                "totalItems": paginator.count,
+                'hasNext': page.has_next(),
+                'hasPrevious': page.has_previous()
             }
 
         except Exception as e:

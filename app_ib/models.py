@@ -111,8 +111,8 @@ class Location(models.Model):
         return f'State: {self.state}'
 
 class LeadQuery(models.Model):
-    business= models.ForeignKey(Business,on_delete=models.CASCADE, null=True, blank=True)
-    user= models.ForeignKey(CustomUser,on_delete=models.CASCADE, null=True, blank=True)
+    business= models.ForeignKey(Business,on_delete=models.CASCADE, null=True, blank=True,related_name='business_lead_query')
+    user= models.ForeignKey(CustomUser,on_delete=models.CASCADE, null=True, blank=True,related_name='user_lead_query')
     name= models.CharField(max_length=500,default='',null=True,blank=True)
     phone= models.CharField(max_length=500,default='',null=True,blank=True)
     email= models.CharField(max_length=500,default='',null=True,blank=True)
@@ -133,7 +133,7 @@ class LeadQuery(models.Model):
 
 
 class BusinessPlan(models.Model):
-    business= models.ForeignKey(Business,on_delete=models.CASCADE, null=True, blank=True)
+    business= models.ForeignKey(Business,on_delete=models.CASCADE, null=True, blank=True,related_name='business_plan')
     services= models.TextField()
     is_active= models.BooleanField(default=False)
     plan_summary= models.TextField()

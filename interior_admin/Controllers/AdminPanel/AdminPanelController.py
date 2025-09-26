@@ -57,11 +57,11 @@ class ADMIN_PANEL_CONTROLLER:
             )
 
             dashboard_data = {
-                "total_businesses": total_businesses,
-                "total_active_businesses": total_active,
-                "total_inactive_businesses": total_inactive,
-                "weekly_signups": weekly_signups,
-                "business_tiles": all_tiles
+                "totalBusinesses": total_businesses,
+                "totalActiveBusinesses": total_active,
+                "totalInactiveBusinesses": total_inactive,
+                "weeklySignups": weekly_signups,
+                "businessTiles": all_tiles
             }
 
             return LocalResponse(
@@ -101,11 +101,11 @@ class ADMIN_PANEL_CONTROLLER:
 
             # Combine all the fetched data into a single response
             response_data = {
-                "total_platform_leads": total_platform_leads,
-                "total_assigned_leads": total_assigned_leads,
-                "total_leads": total_leads,
-                "today_leads": today_leads,
-                "lead_tiles": lead_tiles_data
+                "totalPlatformLeads": total_platform_leads,
+                "totalAssignedLeads": total_assigned_leads,
+                "totalLeads": total_leads,
+                "todayLeads": today_leads,
+                "leadTiles": lead_tiles_data
             }
 
             return LocalResponse(

@@ -30,7 +30,8 @@ sitemaps = {
 
 
 urlpatterns = [
-    path('',TestView, name='test'),
+    path('test/',TestView, name='test'),
+    path('', views.home, name='home'),
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
     path('robots.txt', views.robots_txt, name='robots'),
     path('terms-of-use/', admin.site.urls),

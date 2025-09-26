@@ -329,12 +329,12 @@ EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
 
     # Development:
-    #  eb deploy dev-ib-env-2 --profile interior_bazzar_home
+    #  eb deploy dev-ib-env-2 --profile interiorBazzar
     # [domain]
     
     
     # Production
-    # eb deploy prod-ib-env-1 --profile interior_bazzar_home
+    # eb deploy prod-ib-env-1 --profile interiorBazzar
     # [domain]
     
     

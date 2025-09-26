@@ -1,24 +1,24 @@
 import asyncio
-from app_ib.Utils.MyMethods import MY_METHODS
-from django.http import JsonResponse
-from asgiref.sync import sync_to_async
 from adrf.decorators import api_view
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from interior_admin.Controllers.AdminPanel.AdminPanelController import ADMIN_PANEL_CONTROLLER
-from interior_admin.Controllers.PanelSearch.PanelSearchController import PANEL_SEARCH_CONTROLLER
 
+import asyncio
+from rest_framework.decorators import permission_classes
+from rest_framework.permissions import IsAuthenticated
 @api_view(['POST'])
+#@permission_classes([IsAuthenticated])
 async def GetBusinessTilesStatsView(request):
     try:
         # Convert request.data to dot notation object
         data = request.data
 
-        start_date = data.get('start_date', None)
-        end_date = data.get('end_date', None)
-        page_number = data.get('page_number', 1)  # Default to page 1
-        page_size = data.get('page_size', 10)  # Default to 10 items per page
+        start_date = data.get('startDate', None)
+        end_date = data.get('endDate', None)
+        page_number = data.get('pageNumber', 1)
+        page_size = data.get('pageSize', 10) 
 
         # Call the controller to get business tiles data
         final_response = await asyncio.gather(
@@ -48,6 +48,7 @@ async def GetBusinessTilesStatsView(request):
             }
         )
 @api_view(['GET'])
+#@permission_classes([IsAuthenticated])
 async def GetAdminDashboardStatsView(request):
     try:
         # No filters needed for this endpoint
@@ -73,6 +74,7 @@ async def GetAdminDashboardStatsView(request):
             }
         )
 @api_view(['GET'])
+#@permission_classes([IsAuthenticated])
 async def GetPlatformLeadsStatsView(request):
     try:
         final_response = await ADMIN_PANEL_CONTROLLER.GetAllLeadsStats()
@@ -95,6 +97,7 @@ async def GetPlatformLeadsStatsView(request):
             }
         )
 @api_view(['POST'])
+#@permission_classes([IsAuthenticated])
 async def GetAssignedLeadsTilesView(request):
     try:
         # Convert request.data to dot notation object
@@ -136,6 +139,7 @@ async def GetAssignedLeadsTilesView(request):
 
 
 @api_view(['GET'])
+#@permission_classes([IsAuthenticated])
 async def GetAllUserBusinessStatsView(request):
     try:
         final_response = await asyncio.gather(
@@ -159,6 +163,7 @@ async def GetAllUserBusinessStatsView(request):
 
 
 @api_view(['GET'])
+#@permission_classes([IsAuthenticated])
 async def GetTodaySignupsStatsView(request):
     try:
         final_response = await asyncio.gather(
@@ -182,7 +187,9 @@ async def GetTodaySignupsStatsView(request):
 
 
 @api_view(['POST'])
+#@permission_classes([IsAuthenticated])
 async def GetChartsStatsView(request):
+    
     try:
         # No filters needed (filters are handled inside task by daily/weekly/monthly buckets)
         final_response = await asyncio.gather(
@@ -204,23 +211,5 @@ async def GetChartsStatsView(request):
             data={"error": str(e)}
         )
     
+    
 
-@api_view(['GET'])
-async def SearchQueryView(request,query):
-    try:
-        result =  await PANEL_SEARCH_CONTROLLER.GetSearchResults(Query=query)
-        return ServerResponse(
-            response=result.response,
-            message=result.message,
-            data= result.data,
-            code=result.code
-        )
-
-    except Exception as e:
-        return ServerResponse(
-            response= RESPONSE_MESSAGES.error,
-            message=RESPONSE_MESSAGES.business_fetch_error,
-            code=RESPONSE_CODES.error,
-            data={'error':str(e)}
-
-        )

@@ -91,11 +91,13 @@ class LEAD_QUERY_TASK:
                 'interested':lead_query_ins.interested, 
                 'query':lead_query_ins.query, 
                 'state':lead_query_ins.state, 
+                'city':lead_query_ins.city, 
                 'country':lead_query_ins.country, 
                 'status':lead_query_ins.status, 
                 'tag':lead_query_ins.tag, 
                 'priority':lead_query_ins.priority, 
-                'remark':lead_query_ins.remark
+                'remark':lead_query_ins.remark,
+                'date':lead_query_ins.timestamp.strftime('%d-%m-%Y')
             }
             return data
             

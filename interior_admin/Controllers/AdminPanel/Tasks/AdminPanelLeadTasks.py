@@ -94,15 +94,17 @@ class LEAD_TASKS:
                     "country": lead.country,
                     "city": lead.city,
                     "assigned": business_name,
-                    "view": f"/leads/{lead.id}/view"  # URL to view the lead details
+                    "view": f"/leads/{lead.id}/view"
                 })
 
             # Return paginated response
             return {
                 "results": results,
-                "total_pages": paginator.num_pages,
-                "current_page": page_number,
-                "total_items": paginator.count
+                "totalPages": paginator.num_pages,
+                "currentPage": page_number,
+                "totalItems": paginator.count,
+                "hasNext": page.has_next(),
+                "hasPrevious": page.has_previous()
             }
 
         except Exception as e:
