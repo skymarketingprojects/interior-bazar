@@ -1,7 +1,7 @@
 from django.urls import path, include
 
 from . import views
-from .Views import AdminLeadsViews, BusinessInfoViews,PannelSearchViews
+from .Views import AdminLeadsViews, BusinessInfoViews,PannelSearchViews,MatchLeadsViews
 urlpatterns = [
     path('paginate-business/', views.GetBusinessTilesStatsView, name='get_business_tiles_stats'),
     path('dashboard/', views.GetAdminDashboardStatsView, name='get_admin_dashboard_stats'),
@@ -27,4 +27,8 @@ urlpatterns = [
     # leads
     ############################################################
     path('query/<int:pageNo>/<int:pageSize>/', AdminLeadsViews.GetAdminQueryView, name='query_data'),
+    ############################################################
+    # Match leads
+    ############################################################
+    path('leads/match/', MatchLeadsViews.MatchLeadsView, name='match_leads'),
 ]
