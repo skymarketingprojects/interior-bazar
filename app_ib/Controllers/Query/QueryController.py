@@ -21,7 +21,7 @@ class LEAD_QUERY_CONTROLLER:
             lead_query_ins = await sync_to_async(
                 lambda: LeadQuery.objects.filter(user=user_ins).all().order_by('-timestamp')
             )()
-            await MY_METHODS.printStatus(f'lead_query_ins {lead_query_ins}')   
+            #await MY_METHODS.printStatus(f'lead_query_ins {lead_query_ins}')   
             leads_data = []
 
             for leads in lead_query_ins:
@@ -48,14 +48,14 @@ class LEAD_QUERY_CONTROLLER:
             business_ins = None
 
             is_business_exist = await sync_to_async(Business.objects.filter(pk=data.buss_id).exists)()
-            await MY_METHODS.printStatus(f'is_business_exist {is_business_exist}')
+            #await MY_METHODS.printStatus(f'is_business_exist {is_business_exist}')
 
             if(is_business_exist):
                  business_ins = await sync_to_async(Business.objects.get)(pk=data.buss_id)
-                 await MY_METHODS.printStatus(f'business_ins {business_ins}')   
+                 #await MY_METHODS.printStatus(f'business_ins {business_ins}')   
 
                  create_query_resp = await  LEAD_QUERY_TASK.CreateLeadQueryTask(business_ins=business_ins,data=data)
-                 await MY_METHODS.printStatus(f'create query resp {create_query_resp}')
+                 #await MY_METHODS.printStatus(f'create query resp {create_query_resp}')
 
                  if create_query_resp:
                     return LocalResponse(
@@ -85,14 +85,14 @@ class LEAD_QUERY_CONTROLLER:
         try:
             lead_query_ins= None
             is_query_exist = await sync_to_async(LeadQuery.objects.filter(id=data.id).exists)()
-            await MY_METHODS.printStatus(f'is_query_exist {is_query_exist}')
+            #await MY_METHODS.printStatus(f'is_query_exist {is_query_exist}')
 
             if(is_query_exist):
                 lead_query_ins = await sync_to_async(LeadQuery.objects.get)(id=data.id)
-                await MY_METHODS.printStatus(f'lead_query_ins {lead_query_ins}')   
+                #await MY_METHODS.printStatus(f'lead_query_ins {lead_query_ins}')   
                 
                 create_query_resp = await  LEAD_QUERY_TASK.UpdateLeadQueryTask(lead_query_ins=lead_query_ins,data=data)
-                await MY_METHODS.printStatus(f'update query resp {create_query_resp}')
+                #await MY_METHODS.printStatus(f'update query resp {create_query_resp}')
                 data =await LEAD_QUERY_TASK.GetLeadQueryTask(lead_query_ins)
                 if create_query_resp:
                     return LocalResponse(
@@ -123,14 +123,14 @@ class LEAD_QUERY_CONTROLLER:
         try:
             lead_query_ins= None
             is_query_exist = await sync_to_async(LeadQuery.objects.filter(id=data.id).exists)()
-            await MY_METHODS.printStatus(f'is_query_exist {is_query_exist}')
+            #await MY_METHODS.printStatus(f'is_query_exist {is_query_exist}')
 
             if(is_query_exist):
                 lead_query_ins = await sync_to_async(LeadQuery.objects.get)(id=data.id)
-                await MY_METHODS.printStatus(f'lead_query_ins {lead_query_ins}')   
+                #await MY_METHODS.printStatus(f'lead_query_ins {lead_query_ins}')   
                 
                 create_query_resp = await  LEAD_QUERY_TASK.UpdateLeadQueryStatusTask(lead_query_ins=lead_query_ins,data=data)
-                await MY_METHODS.printStatus(f'update query resp {create_query_resp}')
+                #await MY_METHODS.printStatus(f'update query resp {create_query_resp}')
 
                 if create_query_resp:
                     return LocalResponse(
@@ -160,14 +160,14 @@ class LEAD_QUERY_CONTROLLER:
         try:
             lead_query_ins= None
             is_query_exist = await sync_to_async(LeadQuery.objects.filter(id=data.id).exists)()
-            await MY_METHODS.printStatus(f'is_query_exist {is_query_exist}')
+            #await MY_METHODS.printStatus(f'is_query_exist {is_query_exist}')
 
             if(is_query_exist):
                 lead_query_ins = await sync_to_async(LeadQuery.objects.get)(id=data.id)
-                await MY_METHODS.printStatus(f'lead_query_ins {lead_query_ins}')   
+                #await MY_METHODS.printStatus(f'lead_query_ins {lead_query_ins}')   
                 
                 create_query_resp = await  LEAD_QUERY_TASK.UpdateLeadQueryPriorityTask(lead_query_ins=lead_query_ins,data=data)
-                await MY_METHODS.printStatus(f'update query resp {create_query_resp}')
+                #await MY_METHODS.printStatus(f'update query resp {create_query_resp}')
 
                 if create_query_resp:
                     return LocalResponse(
@@ -197,14 +197,14 @@ class LEAD_QUERY_CONTROLLER:
         try:
             lead_query_ins= None
             is_query_exist = await sync_to_async(LeadQuery.objects.filter(id=data.id).exists)()
-            await MY_METHODS.printStatus(f'is_query_exist {is_query_exist}')
+            #await MY_METHODS.printStatus(f'is_query_exist {is_query_exist}')
 
             if(is_query_exist):
                 lead_query_ins = await sync_to_async(LeadQuery.objects.get)(id=data.id)
-                await MY_METHODS.printStatus(f'lead_query_ins {lead_query_ins}')   
+                #await MY_METHODS.printStatus(f'lead_query_ins {lead_query_ins}')   
                 
                 create_query_resp = await  LEAD_QUERY_TASK.UpdateLeadQueryRemarkTask(lead_query_ins=lead_query_ins,data=data)
-                await MY_METHODS.printStatus(f'update query resp {create_query_resp}')
+                #await MY_METHODS.printStatus(f'update query resp {create_query_resp}')
 
                 if create_query_resp:
                     return LocalResponse(
@@ -236,14 +236,14 @@ class LEAD_QUERY_CONTROLLER:
         try:
             lead_query_ins= None
             is_query_exist = await sync_to_async(LeadQuery.objects.filter(id=id).exists)()
-            await MY_METHODS.printStatus(f'is_query_exist {is_query_exist}')
+            #await MY_METHODS.printStatus(f'is_query_exist {is_query_exist}')
 
             if(is_query_exist):
                 lead_query_ins = await sync_to_async(LeadQuery.objects.get)(id=id)
-                await MY_METHODS.printStatus(f'lead_query_ins {lead_query_ins}') 
+                #await MY_METHODS.printStatus(f'lead_query_ins {lead_query_ins}') 
                 
                 fetch_query_response = await  LEAD_QUERY_TASK.GetLeadQueryTask(lead_query_ins=lead_query_ins)
-                await MY_METHODS.printStatus(f'update query resp {fetch_query_response}')
+                #await MY_METHODS.printStatus(f'update query resp {fetch_query_response}')
 
                 if fetch_query_response:
                     return LocalResponse(
@@ -274,13 +274,13 @@ class LEAD_QUERY_CONTROLLER:
             lead_query_ins= None
 
             is_business_exist = await sync_to_async(Business.objects.filter(user=user_ins).exists)()
-            await MY_METHODS.printStatus(f'is_business_exist {is_business_exist}')
+            #await MY_METHODS.printStatus(f'is_business_exist {is_business_exist}')
 
             if(is_business_exist):
                  business_ins = await sync_to_async(Business.objects.get)(user=user_ins)
                 
                  buss_queries = await LEAD_QUERY_TASK.GetLeadQueriesTask(business_ins=business_ins)
-                #  await MY_METHODS.printStatus(f'queries {buss_queries}')
+                #  #await MY_METHODS.printStatus(f'queries {buss_queries}')
                  if buss_queries:
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.success,
@@ -296,7 +296,7 @@ class LEAD_QUERY_CONTROLLER:
                         data={})
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'fetch quries error {e}')
+            #await MY_METHODS.printStatus(f'fetch quries error {e}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.query_fetch_error,

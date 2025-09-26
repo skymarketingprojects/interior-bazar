@@ -37,7 +37,7 @@ async def VerifyQuateView(request):
     try:
         # Convert request.data to dot notation object
         data = MY_METHODS.json_to_object(request.data)
-        await MY_METHODS.printStatus(f'verify data {data}')
+        #await MY_METHODS.printStatus(f'verify data {data}')
         
         # Call Auth Controller to Create User
         final_response = await PLAN_QUATE_CONTROLLER.VerifyQuate(data=data)

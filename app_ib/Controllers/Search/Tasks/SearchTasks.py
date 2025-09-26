@@ -79,7 +79,7 @@ class SEARCH_TASKS:
             return final_data
             
         except Exception as e:
-            await MY_METHODS.printStatus(f' Error runing pagination {e}')
+            #await MY_METHODS.printStatus(f' Error runing pagination {e}')
             return None
 
 
@@ -87,7 +87,7 @@ class SEARCH_TASKS:
     async def FetchBusiness(self, business):
         try:
             final_data = {}
-            await MY_METHODS.printStatus(f'business {business}')
+            #await MY_METHODS.printStatus(f'business {business}')
             user_ins = business.user
 
             # Use asyncio.gather to fetch data in parallel for faster performance
@@ -124,7 +124,7 @@ class SEARCH_TASKS:
 
             return final_data
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error while fetching business {e}')
+            #await MY_METHODS.printStatus(f'Error while fetching business {e}')
             return None
 
     @staticmethod

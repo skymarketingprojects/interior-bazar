@@ -49,10 +49,10 @@ class PLAN_CONTROLLER:
             is_plan_exist= await sync_to_async(PlanQuery.objects.filter(id=data.id).exists)()
             if(is_plan_exist):
                 plan_ins=await sync_to_async(PlanQuery.objects.get)(id=data.id)
-                await MY_METHODS.printStatus(f'plan ins {plan_ins}')
+                #await MY_METHODS.printStatus(f'plan ins {plan_ins}')
 
                 verify_plan_response = await  PLAN_TASKS.VerifyPlanTask(plan_ins=plan_ins,data=data)
-                await MY_METHODS.printStatus(f'verift plan resp {verify_plan_response}')
+                #await MY_METHODS.printStatus(f'verift plan resp {verify_plan_response}')
 
                 if verify_plan_response:
                     return LocalResponse(

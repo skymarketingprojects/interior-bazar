@@ -27,7 +27,7 @@ class ADMIN_PANEL_CONTROLLER:
             )
 
         except Exception as e:
-            await MY_METHODS.printStatus(f"[Tile Stats Error]: {e}")
+            #await MY_METHODS.printStatus(f"[Tile Stats Error]: {e}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Failed to fetch business tile data.",
@@ -72,7 +72,7 @@ class ADMIN_PANEL_CONTROLLER:
             )
 
         except Exception as e:
-            await MY_METHODS.printStatus(f"[Dashboard Stats Error]: {e}")
+            #await MY_METHODS.printStatus(f"[Dashboard Stats Error]: {e}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Failed to fetch admin dashboard stats.",
@@ -116,7 +116,7 @@ class ADMIN_PANEL_CONTROLLER:
             )
 
         except Exception as e:
-            await MY_METHODS.printStatus(f"[All Leads Stats Error]: {e}")
+            #await MY_METHODS.printStatus(f"[All Leads Stats Error]: {e}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Failed to fetch all lead statistics.",
@@ -147,7 +147,7 @@ class ADMIN_PANEL_CONTROLLER:
             )
 
         except Exception as e:
-            await MY_METHODS.printStatus(f"[Paginated Leads Stats Error]: {e}")
+            #await MY_METHODS.printStatus(f"[Paginated Leads Stats Error]: {e}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Failed to fetch paginated lead data.",
@@ -182,7 +182,7 @@ class ADMIN_PANEL_CONTROLLER:
             )
 
         except Exception as e:
-            await MY_METHODS.printStatus(f"[GetAllUserBusinessStats Error]: {e}")
+            #await MY_METHODS.printStatus(f"[GetAllUserBusinessStats Error]: {e}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Failed to fetch user/business stats.",
@@ -207,7 +207,7 @@ class ADMIN_PANEL_CONTROLLER:
             )
 
         except Exception as e:
-            await MY_METHODS.printStatus(f"[GetTodaySignupsStats Error]: {e}")
+            #await MY_METHODS.printStatus(f"[GetTodaySignupsStats Error]: {e}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Failed to fetch today's signups.",
@@ -244,7 +244,7 @@ class ADMIN_PANEL_CONTROLLER:
             )
 
         except Exception as e:
-            await MY_METHODS.printStatus(f"[GetChartsStats Error]: {e}")
+            #await MY_METHODS.printStatus(f"[GetChartsStats Error]: {e}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Failed to fetch charts.",

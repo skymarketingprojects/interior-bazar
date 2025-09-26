@@ -38,7 +38,7 @@ class MATCH_LEADS_CONTROLLER:
 
             # Run match task for this lead only
             leadData = await MATCH_LEADS_TASKS.MatchLeadTask(lead_query)
-            #await MY_METHODS.printStatus(f'leadData {leadData}')
+            ##await MY_METHODS.printStatus(f'leadData {leadData}')
 
             if leadData is None:
                 return LocalResponse(
@@ -56,7 +56,7 @@ class MATCH_LEADS_CONTROLLER:
             )
 
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in GetBusinessCandidates: {e}")
+            #await MY_METHODS.printStatus(f"Error in GetBusinessCandidates: {e}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Error while fetching candidates",

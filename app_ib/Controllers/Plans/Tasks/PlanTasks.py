@@ -25,14 +25,14 @@ class PLAN_TASKS:
             return {"id":plan_query.id}
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in CreatePlanTask {e}')
+            #await MY_METHODS.printStatus(f'Error in CreatePlanTask {e}')
             return None
 
 
     @classmethod
     async def VerifyPlanTask(self, plan_ins,data):
         try:
-            await MY_METHODS.printStatus(f'Task {plan_ins}')
+            #await MY_METHODS.printStatus(f'Task {plan_ins}')
             plan_ins.stage= 'confirm'
             plan_ins.plan= getattr(data, 'plan', plan_ins.plan)
             plan_ins.name= getattr(data, 'name', plan_ins.name)
@@ -48,5 +48,5 @@ class PLAN_TASKS:
             return True
             
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in VerifyPlanTask {e}')
+            #await MY_METHODS.printStatus(f'Error in VerifyPlanTask {e}')
             return None

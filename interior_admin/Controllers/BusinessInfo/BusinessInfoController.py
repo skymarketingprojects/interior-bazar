@@ -15,7 +15,7 @@ class BUSINESS_INFO_CONTROLLER:
     @classmethod
     async def GetBusinessInfo(cls,pageNo=1,size=10):
         try:
-            await MY_METHODS.printStatus(f'pageNo {pageNo}')
+            #await MY_METHODS.printStatus(f'pageNo {pageNo}')
             businessesIns = await sync_to_async(lambda: Business.objects.all().select_related('business_profile').only(
                     'id',
                     'business_name',
@@ -27,7 +27,7 @@ class BUSINESS_INFO_CONTROLLER:
                     'business_lead_query__id'
                 ).order_by('-timestamp')
             )()
-            await MY_METHODS.printStatus(f'pageNo {pageNo}')
+            #await MY_METHODS.printStatus(f'pageNo {pageNo}')
 
             paginator = Paginator(businessesIns, size)
             page_obj = paginator.get_page(pageNo)

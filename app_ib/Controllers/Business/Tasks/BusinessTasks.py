@@ -25,7 +25,7 @@ class BUSS_TASK:
             return True
             
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in CreateBusinessTask {e}')
+            #await MY_METHODS.printStatus(f'Error in CreateBusinessTask {e}')
             return None
 
 
@@ -59,7 +59,7 @@ class BUSS_TASK:
             return True
             
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in UpdateBusinessTask {e}')
+            #await MY_METHODS.printStatus(f'Error in UpdateBusinessTask {e}')
             return None
 
 
@@ -69,7 +69,7 @@ class BUSS_TASK:
             business_ins = await sync_to_async(Business.objects.get)(pk=id)
             business_loc_ins = business_ins.business_location if hasattr(business_ins, 'business_location') else None
             business_prof_ins =business_ins.business_profile if hasattr(business_ins, 'business_profile') else None
-            await MY_METHODS.printStatus(f'business_loc_ins {business_loc_ins}')
+            #await MY_METHODS.printStatus(f'business_loc_ins {business_loc_ins}')
 
             data = {
                 'business_name': business_ins.business_name,
@@ -100,7 +100,7 @@ class BUSS_TASK:
             return data
             
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in GetBusinessInfo {e}')
+            #await MY_METHODS.printStatus(f'Error in GetBusinessInfo {e}')
             return None
         
     @classmethod
@@ -137,5 +137,5 @@ class BUSS_TASK:
             return data
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in GetBusinessInfo: {e}')
+            #await MY_METHODS.printStatus(f'Error in GetBusinessInfo: {e}')
             return None

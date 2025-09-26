@@ -30,7 +30,7 @@ class SUBSCRIPTION_TASKS:
             return True
         
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in CreateSubscriptionTask {e}")
+            #await MY_METHODS.printStatus(f"Error in CreateSubscriptionTask {e}")
             return None
     
     @classmethod
@@ -55,7 +55,7 @@ class SUBSCRIPTION_TASKS:
             return True
         
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in UpdateSubscriptionTask {e}")
+            #await MY_METHODS.printStatus(f"Error in UpdateSubscriptionTask {e}")
             return None
 
     @classmethod
@@ -76,7 +76,7 @@ class SUBSCRIPTION_TASKS:
             return data
         
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in GetSubscriptionTask {e}")
+            #await MY_METHODS.printStatus(f"Error in GetSubscriptionTask {e}")
             return None
     
     @classmethod
@@ -99,5 +99,5 @@ class SUBSCRIPTION_TASKS:
             return query_data
         
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in GetSubscriptionsTask: {e}")
+            #await MY_METHODS.printStatus(f"Error in GetSubscriptionsTask: {e}")
             return None

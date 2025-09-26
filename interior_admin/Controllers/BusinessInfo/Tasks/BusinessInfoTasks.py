@@ -28,5 +28,5 @@ class BUSINESS_INFO_TASKS:
             }
             return data
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in GetBusinessInfo: {e}")
+            #await MY_METHODS.printStatus(f"Error in GetBusinessInfo: {e}")
             return None

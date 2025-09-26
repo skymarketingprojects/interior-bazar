@@ -17,7 +17,7 @@ class ADMIN_PANEL_TASKS:
             )()
             return active_businesses
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in GetTotalActiveBusinesses: {e}")
+            #await MY_METHODS.printStatus(f"Error in GetTotalActiveBusinesses: {e}")
             return None
         
     @classmethod
@@ -31,7 +31,7 @@ class ADMIN_PANEL_TASKS:
             )()
             return inactive_count
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in GetTotalInactiveBusinesses: {e}")
+            #await MY_METHODS.printStatus(f"Error in GetTotalInactiveBusinesses: {e}")
             return None
     @classmethod
     async def GetTotalBusinesses(cls):
@@ -39,7 +39,7 @@ class ADMIN_PANEL_TASKS:
             count = await sync_to_async(Business.objects.count)()
             return count
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in GetTotalBusinesses: {e}")
+            #await MY_METHODS.printStatus(f"Error in GetTotalBusinesses: {e}")
             return None
     @classmethod
     async def GetWeeklySignups(cls):
@@ -50,7 +50,7 @@ class ADMIN_PANEL_TASKS:
             )()
             return count
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in GetWeeklySignups: {e}")
+            #await MY_METHODS.printStatus(f"Error in GetWeeklySignups: {e}")
             return None
 
     @classmethod
@@ -116,7 +116,7 @@ class ADMIN_PANEL_TASKS:
             }
 
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in GetBusinessTiles: {e}")
+            #await MY_METHODS.printStatus(f"Error in GetBusinessTiles: {e}")
             return None
 
 

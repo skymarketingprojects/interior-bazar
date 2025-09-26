@@ -22,11 +22,11 @@ async def TestView(request):
     try:
         # file = request.data.get("lawyer_profile_image")
         # compress_image = await asyncio.gather(helpingMethos.MyImageCompression(type=COMPRESSSION_TYPE.LAWYER_PROFILE, image=file))
-        # await MY_METHODS.printStatus(f'compress_image {compress_image[0]}')
+        # #await MY_METHODS.printStatus(f'compress_image {compress_image[0]}')
         return JsonResponse({"result": 'success'})
 
     except Exception as e:
-        await MY_METHODS.printStatus(e)
+        #await MY_METHODS.printStatus(e)
         return JsonResponse({"result": 'fail'})
 
 @api_view(['POST'])
@@ -37,10 +37,10 @@ async def TestMailView(request):
         subject=data.get('subject')
         message=data.get('message')
         link=data.get('link')
-        await MY_METHODS.printStatus(f'email {email}')
-        await MY_METHODS.printStatus(f'subject {subject}')
-        await MY_METHODS.printStatus(f'message {message}')
-        await MY_METHODS.printStatus(f'link {link}')
+        #await MY_METHODS.printStatus(f'email {email}')
+        #await MY_METHODS.printStatus(f'subject {subject}')
+        #await MY_METHODS.printStatus(f'message {message}')
+        #await MY_METHODS.printStatus(f'link {link}')
 
 
         send_mail(
@@ -49,11 +49,11 @@ async def TestMailView(request):
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[f'{email}'],
         )
-        await MY_METHODS.printStatus('Email sent successfully!')
+        #await MY_METHODS.printStatus('Email sent successfully!')
         return JsonResponse({"result": 'success'})
     except Exception as e:
         return JsonResponse({"result": 'error'})
-        await MY_METHODS.printStatus(f'Email sending failed: {e}')
+        #await MY_METHODS.printStatus(f'Email sending failed: {e}')
 
 @api_view(['POST'])
 async def generateUploadUrlView(request):

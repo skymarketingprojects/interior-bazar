@@ -16,7 +16,7 @@ class LEAD_TASKS:
             )()
             return platform_leads_count
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in GetTotalPlatformLeads: {e}")
+            #await MY_METHODS.printStatus(f"Error in GetTotalPlatformLeads: {e}")
             return None
     
     @classmethod
@@ -27,7 +27,7 @@ class LEAD_TASKS:
             )()
             return assigned_leads_count
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in GetTotalAssignedLeads: {e}")
+            #await MY_METHODS.printStatus(f"Error in GetTotalAssignedLeads: {e}")
             return None
     
     @classmethod
@@ -37,7 +37,7 @@ class LEAD_TASKS:
             assigned_leads_count = await cls.GetTotalAssignedLeads()
             return platform_leads_count + assigned_leads_count
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in GetTotalLeads: {e}")
+            #await MY_METHODS.printStatus(f"Error in GetTotalLeads: {e}")
             return None
     
     @classmethod
@@ -49,7 +49,7 @@ class LEAD_TASKS:
             )()
             return today_leads_count
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in GetTodayLeads: {e}")
+            #await MY_METHODS.printStatus(f"Error in GetTodayLeads: {e}")
             return None
 
     @classmethod
@@ -108,5 +108,5 @@ class LEAD_TASKS:
             }
 
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in GetLeadTiles: {e}")
+            #await MY_METHODS.printStatus(f"Error in GetLeadTiles: {e}")
             return None

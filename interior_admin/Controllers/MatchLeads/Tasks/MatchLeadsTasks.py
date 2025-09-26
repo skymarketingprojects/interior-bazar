@@ -16,12 +16,8 @@ class MATCH_LEADS_TASKS:
 
             businesses = await cls.MatchingBusinesses(city, state, country)
             pre_ranked = await cls.LocationScore(businesses, city, state, country)
-            await MY_METHODS.printStatus(f"pre_ranked {pre_ranked}")
-            candidates = await cls.FilterAndRankCandidates(pre_ranked, interested_text)
-
-            # Fallback if no candidates
-            if not candidates:
-                candidates = await cls.FallbackCandidates()
+            #await MY_METHODS.printStatus(f"pre_ranked {pre_ranked}")
+            candidates = await cls.GetBusinessesCandidate(pre_ranked, interested_text)
 
             return {
                 "id": lead_query_ins.pk,
@@ -30,7 +26,7 @@ class MATCH_LEADS_TASKS:
             }
 
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in MatchLeadTask: {e}")
+            #await MY_METHODS.printStatus(f"Error in MatchLeadTask: {e}")
             return None
 
     @classmethod
@@ -78,63 +74,48 @@ class MATCH_LEADS_TASKS:
         return pre_ranked
 
     @classmethod
-    async def FilterAndRankCandidates(cls, pre_ranked_businesses, interested_text):
-        """Filter businesses by segment and lead count, return top 6 asynchronously"""
-        candidates = []
+    async def GetBusinessesCandidate(cls, businesses, interestedText=None, interest=True):
+        """
+        Get up to 6 business candidates.
+        First filters by segment interest; if no candidates are found,
+        retries without filtering (fallback mode).
+        """
+        try:
+            candidates = []
 
-        for business, location_score in pre_ranked_businesses:
-            if len(candidates) >= 6:
-                break
+            for business, location_score in businesses:
+                if len(candidates) >= 6:
+                    break
 
-            business_segment = (business.segment or "").lower()
-            segment_words = business_segment.split() if business_segment else []
+                if interest:
+                    segment_words = (business.segment or "").lower().split()
+                    if interestedText and segment_words:
+                        if not any(word in interestedText for word in segment_words):
+                            continue
 
-            # Segment relevance check
-            if interested_text and segment_words:
-                if not any(word in interested_text for word in segment_words):
+                lead_count = await sync_to_async(lambda: business.business_lead_query.count())()
+                if lead_count >= 4:
                     continue
 
-            # Count leads and skip overloaded businesses
-            lead_count = await sync_to_async(lambda: business.business_lead_query.count())()
-            if lead_count >= 4:
-                continue
+                bl = getattr(business, "business_location", None)
+                candidates.append({
+                    "id": business.pk,
+                    "businessName": business.business_name,
+                    "segment": business.segment,
+                    "city": getattr(bl, "city", None),
+                    "state": getattr(bl, "state", None),
+                    "country": getattr(bl, "country", None),
+                    "leadCount": lead_count,
+                    "locationScore": location_score
+                })
 
-            bl = getattr(business, "business_location", None)
-            candidates.append({
-                "business_id": business.pk,
-                "business_name": business.business_name,
-                "segment": business.segment,
-                "city": getattr(bl, "city", None),
-                "state": getattr(bl, "state", None),
-                "country": getattr(bl, "country", None),
-                "lead_count": lead_count,
-                "location_match_score": location_score
-            })
+            # Fallback to unfiltered if no matches
+            if not candidates and interest:
+                return await cls.GetBusinessesCandidate(businesses, interestedText=None, interest=False)
 
-        return candidates
+            return candidates
 
-    @classmethod
-    async def FallbackCandidates(cls):
-        """Fetch any available businesses if no matches found asynchronously"""
-        candidates = []
-        fallback_businesses = await sync_to_async(lambda: list(Business.objects.all()[:20]))()
-
-        for business in fallback_businesses:
-            if len(candidates) >= 6:
-                break
-            lead_count = await sync_to_async(lambda: business.business_lead_query.count())()
-            if lead_count >= 4:
-                continue
-            bl = getattr(business, "business_location", None)
-            candidates.append({
-                "business_id": business.pk,
-                "business_name": business.business_name,
-                "segment": business.segment,
-                "city": getattr(bl, "city", None),
-                "state": getattr(bl, "state", None),
-                "country": getattr(bl, "country", None),
-                "lead_count": lead_count,
-                "location_match_score": 0
-            })
-
-        return candidates
+        except Exception as e:
+            # Optional: log the error with your method
+            # await MY_METHODS.printStatus(f"Error in GetBusinessesCandidate: {e}")
+            return []

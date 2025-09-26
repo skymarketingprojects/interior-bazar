@@ -6,7 +6,7 @@ class ADS_QUERY_TASKS:
     @classmethod
     async def CreateAdsQueryTask(self,data):
         try:
-            await MY_METHODS.printStatus(f'data {data}')
+            #await MY_METHODS.printStatus(f'data {data}')
             lead_query_ins = LeadQuery()
             lead_query_ins.phone= data.phone    
             lead_query_ins.interested= data.interested            
@@ -17,7 +17,7 @@ class ADS_QUERY_TASKS:
             return data
             
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in CreateAdsQueryTask {e}')
+            #await MY_METHODS.printStatus(f'Error in CreateAdsQueryTask {e}')
             return None
   
     @classmethod
@@ -32,5 +32,5 @@ class ADS_QUERY_TASKS:
             return True
             
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in VerifyAdsQueryTask {e}')
+            #await MY_METHODS.printStatus(f'Error in VerifyAdsQueryTask {e}')
             return None

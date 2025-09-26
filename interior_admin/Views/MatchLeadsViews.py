@@ -21,7 +21,7 @@ async def MatchLeadsView(request):
             code=result.code
         )
     except Exception as e:
-        await MY_METHODS.printStatus(f"Error in MatchLeadsView: {e}")
+        #await MY_METHODS.printStatus(f"Error in MatchLeadsView: {e}")
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.error,
