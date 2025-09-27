@@ -26,7 +26,7 @@ class SEARCH_TASKS:
     @classmethod
     async def PaginateQuery(self,businesses_query,PageNo):
         page_number = PageNo
-        page_size = 3 # for production 3 for testing
+        page_size = 6 # for production 3 for testing
 
         # Fetch the user data asynchronously
         businesses = await sync_to_async(list)(businesses_query)
@@ -79,7 +79,7 @@ class SEARCH_TASKS:
             return final_data
             
         except Exception as e:
-            #await MY_METHODS.printStatus(f' Error runing pagination {e}')
+            await MY_METHODS.printStatus(f' Error runing pagination {e}')
             return None
 
 

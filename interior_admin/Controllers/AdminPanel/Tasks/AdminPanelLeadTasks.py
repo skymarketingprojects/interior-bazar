@@ -85,7 +85,7 @@ class LEAD_TASKS:
                 business_name = lead.business.business_name if lead.business else None
 
                 results.append({
-                    "date": lead.timestamp,
+                    "date": lead.timestamp.strftime("%d-%m-%Y"),
                     "name": lead.name,
                     "phone": lead.phone,
                     "email": lead.email,

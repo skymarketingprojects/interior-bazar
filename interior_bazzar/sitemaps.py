@@ -12,7 +12,7 @@ def slugify(title: str, id: str | int) -> str:
 class StaticPageSitemap(Sitemap):
     def items(self):
         return [
-            '',
+            'home',
             'seller_buyer',
             'blog',
             'plan',

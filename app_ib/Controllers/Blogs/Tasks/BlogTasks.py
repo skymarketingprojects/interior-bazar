@@ -12,8 +12,9 @@ class BLOG_TASK:
                 "title": blog_instance.title,
                 "slug": blog_instance.slug,
                 "cover_image_url": blog_instance.cover_image_url,
-                "author": blog_instance.author,
-                "timestamp": blog_instance.timestamp,
+                "author_name": blog_instance.author,
+                "author_image":blog_instance.authorImage,
+                "publish_date": blog_instance.timestamp.strftime("%d-%m-%Y"),
             }
             return blog_data
 
@@ -32,8 +33,9 @@ class BLOG_TASK:
                 "title": blog_instance.title,
                 "cover_image_url": blog_instance.cover_image_url,
                 "content": blog_instance.description.html,
-                "author": blog_instance.author,
-                "timestamp": blog_instance.timestamp,
+                "author_name": blog_instance.author,
+                "author_image":blog_instance.authorImage,
+                "publish_date": blog_instance.timestamp.strftime("%d-%m-%Y")
             }
             return blog_data
 

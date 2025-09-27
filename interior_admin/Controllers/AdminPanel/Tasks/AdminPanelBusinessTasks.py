@@ -96,7 +96,7 @@ class ADMIN_PANEL_TASKS:
 
                 results.append({
                     "id": business_id,
-                    "joinAt": business.timestamp,
+                    "joinAt": business.timestamp.strftime("%d-%m-%Y"),
                     "name": business.business_name,
                     "plan": plan_name,
                     "assignedLead": assigned_leads_count,

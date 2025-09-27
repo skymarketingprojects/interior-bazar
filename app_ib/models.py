@@ -239,6 +239,7 @@ class Blog(models.Model):
     cover_image_url = models.TextField(default='',null=True, blank=True)
     description=QuillField(null=True, blank=True)
     author= models.TextField()
+    authorImage = models.URLField(max_length=2250,help_text="add the url or the image",default="",null=True,blank=True)
     timestamp= models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -336,8 +337,8 @@ class StockMedia(models.Model):
 
 #offer text
 class OfferText(models.Model):
-    text = models.TextField()
+    text = QuillField(null=True, blank=True)
     link = models.URLField(max_length=2250, null=True, blank=True)
     show = models.BooleanField(default=False)
     def __str__(self):
-        return f' pk {self.pk} text:{self.text}'
+        return f' pk {self.pk}'
