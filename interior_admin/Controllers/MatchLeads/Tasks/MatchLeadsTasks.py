@@ -75,11 +75,7 @@ class MATCH_LEADS_TASKS:
 
     @classmethod
     async def GetBusinessesCandidate(cls, businesses, interestedText=None, interest=True):
-        """
-        Get up to 6 business candidates.
-        First filters by segment interest; if no candidates are found,
-        retries without filtering (fallback mode).
-        """
+        
         try:
             candidates = []
 
@@ -109,13 +105,12 @@ class MATCH_LEADS_TASKS:
                     "locationScore": location_score
                 })
 
-            # Fallback to unfiltered if no matches
+            # if no matches
             if not candidates and interest:
                 return await cls.GetBusinessesCandidate(businesses, interestedText=None, interest=False)
 
             return candidates
 
         except Exception as e:
-            # Optional: log the error with your method
             # await MY_METHODS.printStatus(f"Error in GetBusinessesCandidate: {e}")
             return []

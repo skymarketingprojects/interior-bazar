@@ -200,6 +200,8 @@ async def GetQueryByID(request,id):
                 'error': str(e)
             })
 
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 async def GetQueryBusinessView(request):

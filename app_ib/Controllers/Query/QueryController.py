@@ -229,8 +229,6 @@ class LEAD_QUERY_CONTROLLER:
                     'error': str(e)
                 })
 
-
-
     @classmethod
     async def GetQueryById(self, id):
         try:
@@ -304,3 +302,7 @@ class LEAD_QUERY_CONTROLLER:
                 data={
                     'error': str(e)
                 })
+
+
+
+        

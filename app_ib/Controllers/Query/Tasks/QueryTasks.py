@@ -83,6 +83,7 @@ class LEAD_QUERY_TASK:
     @classmethod
     async def GetLeadQueryTask(self, lead_query_ins):
         try:
+            assignedbusiness = lead_query_ins.business.business_name if lead_query_ins.business else None
             data = {
                 'id':lead_query_ins.pk,
                 'name':lead_query_ins.name, 
@@ -97,7 +98,9 @@ class LEAD_QUERY_TASK:
                 'tag':lead_query_ins.tag, 
                 'priority':lead_query_ins.priority, 
                 'remark':lead_query_ins.remark,
-                'date':lead_query_ins.timestamp.strftime('%d-%m-%Y')
+                'date':lead_query_ins.timestamp.strftime('%d-%m-%Y'),
+                'assigned':assignedbusiness
+
             }
             return data
             
@@ -130,5 +133,16 @@ class LEAD_QUERY_TASK:
             return query_data
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in GetLeadQueryTask: {e}')
+            await MY_METHODS.printStatus(f'Error in GetLeadQueryTask: {e}')
             return None
+
+    @classmethod
+    async def AssignLeadQueryTask(self,leadQueryIns,business):
+        try:
+            leadQueryIns.business = business
+            await sync_to_async(leadQueryIns.save)()
+            leadData = await self.GetLeadQueryTask(leadQueryIns)
+            return leadData
+        except Exception as e:
+            await MY_METHODS.printStatus(f'Error in  AssignLeadQueryTask- {e}')
+            return False

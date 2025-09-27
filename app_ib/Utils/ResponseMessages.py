@@ -22,6 +22,8 @@ class RESPONSE_MESSAGES:
 
     #lead
     assigned_leads_fetch_error="Unable to fetch assigned leads"
+    query_assigned_success = "lead assigned successful"
+    query_assigned_faliure = "lead assigned faliure"
 
 
     # AUTH

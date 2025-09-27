@@ -27,6 +27,7 @@ urlpatterns = [
     # leads
     ############################################################
     path('query/<int:pageNo>/<int:pageSize>/', AdminLeadsViews.GetAdminQueryView, name='query_data'),
+    path('lead/assign/', AdminLeadsViews.AssignQueryView, name='assign_lead'),
     ############################################################
     # Match leads
     ############################################################
