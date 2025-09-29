@@ -159,5 +159,11 @@ urlpatterns = [
     # Offer text
     ##########################################################
     path('v1/query/offer-text/', OfferTextView.GetOfferText, name='GetOfferTextView'),
-    
+
+    ##########################################################
+    # business type, category, segment
+    ##########################################################
+    path('v1/business/types/', BusinessView.GetAllBusinessTypesView, name='GetAllBusinessTypes'),
+    path('v1/business/categories/', BusinessView.GetAllBusinessCategoriesView, name='GetAllBusinessCategories'),
+    path('v1/business/segments/<int:typeId>/', BusinessView.GetAllBusinessSegmentsByTypeView, name='GetBusinessSegmentsByCategory'),
 ]

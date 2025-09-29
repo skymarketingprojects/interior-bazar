@@ -7,7 +7,8 @@ from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.Controllers.Business.Tasks.BusinessTasks import BUSS_TASK
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
-from app_ib.models import Business
+from app_ib.models import Business,BusinessType,BusinessCategory,BusinessSegment
+import asyncio
 
 
 class BUSS_CONTROLLER:
@@ -85,7 +86,7 @@ class BUSS_CONTROLLER:
                 data={
                     'error': str(e)
                 })
-
+    
     @classmethod
     async def GetBusinessById(self,id):
         try:
@@ -119,6 +120,84 @@ class BUSS_CONTROLLER:
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.business_fetch_error,
+                code=RESPONSE_CODES.error,
+                data={
+                    'error': str(e)
+                })
+
+
+    @classmethod
+    async def GetAllBusinessTypes(self):
+        try:
+            type_instances = await sync_to_async(list)(BusinessType.objects.all())
+            type_list = []
+            for type_instance in type_instances:
+                type_data = await BUSS_TASK.GetBusinessTypeData(type_instance)
+                if type_data:
+                    type_list.append(type_data)
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message=RESPONSE_MESSAGES.business_type_fetch_success,
+                code=RESPONSE_CODES.success,
+                data=type_list)
+        except Exception as e:
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.business_type_fetch_error,
+                code=RESPONSE_CODES.error,
+                data={
+                    'error': str(e)
+                })
+    
+    @classmethod
+    async def GetAllBusinessCategories(self):
+        try:
+            categoryInstances = await sync_to_async(list)(BusinessCategory.objects.all())
+            category_list = []
+            for categoryInstance in categoryInstances:
+                categoryData = await BUSS_TASK.GetBusinessTypeData(categoryInstance)
+                if categoryData:
+                    category_list.append(categoryData)
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message=RESPONSE_MESSAGES.business_category_fetch_success,
+                code=RESPONSE_CODES.success,
+                data=category_list)
+        except Exception as e:
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.business_category_fetch_error,
+                code=RESPONSE_CODES.error,
+                data={
+                    'error': str(e)
+                })
+    
+    @classmethod
+    async def GetBusinessSegmentsByType(self,typeId):
+        try:
+            isTypeExist = await sync_to_async(BusinessType.objects.filter(pk=typeId).exists)()
+            if not isTypeExist:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.error,
+                    message=RESPONSE_MESSAGES.business_type_fetch_error,
+                    code=RESPONSE_CODES.error,
+                    data={})
+            businessType = await sync_to_async(BusinessType.objects.get)(pk=typeId)
+            segmentInstances = await sync_to_async(list)(businessType.business_type_segment.all())
+            segment_list = []
+            for segmentInstance in segmentInstances:
+                segmentData = await BUSS_TASK.GetBusinessTypeData(segmentInstance)
+                if segmentData:
+                    segment_list.append(segmentData)
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message=RESPONSE_MESSAGES.business_category_fetch_success,
+                code=RESPONSE_CODES.success,
+                data=segment_list)
+        except Exception as e:
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.business_category_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
                     'error': str(e)

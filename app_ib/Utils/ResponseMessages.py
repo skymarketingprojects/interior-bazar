@@ -95,6 +95,12 @@ class RESPONSE_MESSAGES:
     business_prof_fetch_error = "Business profile fetch error"
     business_prof_fetch_success = "Business profile fetch success"
 
+    business_type_fetch_error = "Business type fetch error"
+    business_type_fetch_success = "Business type fetch success"
+
+    business_category_fetch_success = "Business category fetch success"
+    business_category_fetch_error = "Business category fetch error"
+
 
 
 

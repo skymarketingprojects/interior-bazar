@@ -62,6 +62,27 @@ class BusinessBadge(models.Model):
     def __str__(self):
         return f'badge - {self.type}'
 
+class BusinessType(models.Model):
+    value = models.CharField(max_length=250)
+    lable = models.CharField(max_length=250)
+    def __str__(self):
+        return f'business type - {self.lable}'
+
+class BusinessCategory(models.Model):
+    # businessType = models.ForeignKey(BusinessType, on_delete=models.CASCADE, null=True, blank=True, related_name='business_type_category')
+    value = models.CharField(max_length=250)
+    lable = models.CharField(max_length=250)
+    def __str__(self):
+        return f'business category - {self.lable}'
+
+class BusinessSegment(models.Model):
+    businessType = models.ForeignKey(BusinessType, on_delete=models.CASCADE, null=True, blank=True, related_name='business_type_segment')
+    # businessCategory = models.ForeignKey(BusinessCategory, on_delete=models.CASCADE, null=True, blank=True, related_name='business_category_segment')
+    value = models.CharField(max_length=250)
+    lable = models.CharField(max_length=250)
+    def __str__(self):
+        return f'business segment - {self.lable}'
+
 class Business(models.Model):
     user= models.OneToOneField(CustomUser,on_delete=models.CASCADE, null=True, blank=True,related_name='user_business')
     business_name= models.CharField(max_length=250)
@@ -69,8 +90,14 @@ class Business(models.Model):
     cover_image_url = models.TextField(default='',null=True, blank=True)
     gst= models.CharField(max_length=250,null=True, blank=True)
     since= models.CharField(max_length=250,null=True, blank=True)
+
     segment= models.TextField() # "manufraturer"
     catigory= models.TextField() # ["interior", "exterior","office"]
+    business_type= models.ForeignKey(BusinessType, on_delete=models.SET_NULL, null=True, blank=True)
+    businessSegment= models.ManyToManyField(BusinessSegment, null=True, blank=True)
+    businessCategory= models.ManyToManyField(BusinessCategory, null=True, blank=True)
+
+
     badge = models.TextField(null=True, blank=True)
     businessBadge= models.ForeignKey(BusinessBadge, on_delete=models.SET_NULL, null=True, blank=True)
     bio = models.TextField( null=True, blank=True)

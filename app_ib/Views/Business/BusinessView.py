@@ -121,3 +121,71 @@ async def GetBusinessByUser(request):
                 'error': str(e)
             })
 
+@api_view(['GET'])
+async def GetAllBusinessTypesView(request):
+    try:
+        # Call Auth Controller to Create User
+        final_response = await BUSS_CONTROLLER.GetAllBusinessTypes()
+        #await MY_METHODS.printStatus(f'final_response {final_response}')
+
+        return ServerResponse(
+            response=final_response.response,
+            code=final_response.code,
+            message=final_response.message,
+            data=final_response.data)
+
+    except Exception as e:
+        # #await MY_METHODS.printStatus(f'Error: {e}')
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message=RESPONSE_MESSAGES.business_type_fetch_error,
+            code=RESPONSE_CODES.error,
+            data={
+                'error': str(e)
+            })
+    
+@api_view(['GET'])
+async def GetAllBusinessCategoriesView(request):
+    try:
+        # Call Auth Controller to Create User
+        final_response = await BUSS_CONTROLLER.GetAllBusinessCategories()
+        #await MY_METHODS.printStatus(f'final_response {final_response}')
+
+        return ServerResponse(
+            response=final_response.response,
+            code=final_response.code,
+            message=final_response.message,
+            data=final_response.data)
+
+    except Exception as e:
+        # #await MY_METHODS.printStatus(f'Error: {e}')
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message=RESPONSE_MESSAGES.business_category_fetch_error,
+            code=RESPONSE_CODES.error,
+            data={
+                'error': str(e)
+            })
+
+@api_view(['GET'])
+async def GetAllBusinessSegmentsByTypeView(request,typeId):
+    try:
+        # Call Auth Controller to Create User
+        final_response = await BUSS_CONTROLLER.GetBusinessSegmentsByType(typeId=typeId)
+        #await MY_METHODS.printStatus(f'final_response {final_response}')
+
+        return ServerResponse(
+            response=final_response.response,
+            code=final_response.code,
+            message=final_response.message,
+            data=final_response.data)
+
+    except Exception as e:
+        # #await MY_METHODS.printStatus(f'Error: {e}')
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message=RESPONSE_MESSAGES.business_category_fetch_error,
+            code=RESPONSE_CODES.error,
+            data={
+                'error': str(e)
+            })

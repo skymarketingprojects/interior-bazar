@@ -95,21 +95,24 @@ class SEARCH_TASKS:
                 BUSS_TASK.GetBusinessInfo(id=business.pk),
                 BUSS_LOC_TASK.GetBusinessLocTask(business_loc_ins=await sync_to_async(Location.objects.get)(business=business) if await sync_to_async(Location.objects.filter(business=business).exists)() else None)
             )
+            await MY_METHODS.printStatus(f'\nbusiness_data {business_data}\n')
 
             # Handle time ago logic
-            updated_at = business_data.get('updated_at', None)
-            time_ago = await sync_to_async(self.get_time_ago)(updated_at)  # Wrap with sync_to_async
+            updatedAt = business_data.get('updatedAt', None)
+            time_ago = await sync_to_async(self.get_time_ago)(updatedAt)  # Wrap with sync_to_async
 
             # Assign the required fields to final_data in camelCase format
             final_data['id'] = business.pk
-            final_data['businessName'] = business_data.get('business_name', '')
-            final_data['companyName'] = business_data.get('business_name', '')
+            final_data['businessName'] = business_data.get('businessName', '')
+            final_data['companyName'] = business_data.get('businessName', '')
             final_data['membershipId'] = business.pk
             final_data['badge'] = business_data.get('badge', '')
             final_data['timeAgo'] = time_ago  # Add the timeAgo field
             final_data['since'] = business_data.get('since', '')
-            final_data['category'] = business_data.get('category', '')
-            final_data['businessImage'] = business_data.get('cover_image_url', '')
+            # final_data['category'] = business_data.get('category', '')
+            final_data['businessImage'] = business_data.get('coverImageUrl', '')
+
+
 
             # Handle location
             location_data = business_location_data if business_location_data else {}
@@ -121,10 +124,11 @@ class SEARCH_TASKS:
             rating = await MY_METHODS.get_random_rating()
             final_data['rating'] = f"{rating}"
             final_data['ratingValue'] = float(rating)  # ratingValue as number
+            await MY_METHODS.printStatus(f'final_data {final_data}')
 
             return final_data
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error while fetching business {e}')
+            await MY_METHODS.printStatus(f'Error while fetching business {e}')
             return None
 
     @staticmethod

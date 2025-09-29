@@ -7,7 +7,7 @@ class OFFER_TEXT_TASKS:
     async def GetOfferText(cls, offerText):
         try:
             offerData = {
-                "text": offerText.text,
+                "text": offerText.text.html,
                 "link": offerText.link,
                 "show": offerText.show
             }
