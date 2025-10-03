@@ -94,6 +94,8 @@ urlpatterns = [
     path('v1/query/udpate/status/', QueryView.UpdateQueryStatusView, name='UpdateQueryStatusView'),
     path('v1/query/udpate/priority/', QueryView.UpdateQueryPriorityView, name='UpdateQueryPriorityView'),
     path('v1/query/udpate/remark/', QueryView.UpdateQueryRemarkView, name='UpdateQueryPriorityView'),
+    #funnel query
+    path('v1/query/funnel/create/', QueryView.CreateFunnelQueryView, name='CreateFunnelQueryView'),
 
     #########################################################
     # Quate: 

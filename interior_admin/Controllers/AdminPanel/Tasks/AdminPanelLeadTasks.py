@@ -1,4 +1,4 @@
-from app_ib.models import LeadQuery
+from app_ib.models import LeadQuery,PlanQuery
 from asgiref.sync import sync_to_async
 from django.utils import timezone
 from datetime import timedelta
@@ -11,21 +11,31 @@ class LEAD_TASKS:
     @classmethod
     async def GetTotalAssignedLeads(cls):
         try:
-            platform_leads_count = await sync_to_async(
-                lambda: LeadQuery.objects.filter(business=None).count()
+            assingedLeads = await sync_to_async(
+                lambda: LeadQuery.objects.filter(business__isnull=False).count()
             )()
-            return platform_leads_count
+            return assingedLeads
         except Exception as e:
             #await MY_METHODS.printStatus(f"Error in GetTotalPlatformLeads: {e}")
             return None
     
     @classmethod
-    async def GetTotalPlatformLeads(cls):  
+    async def GetPlatformLeads(cls):  
         try:
-            assigned_leads_count = await sync_to_async(
-                lambda: LeadQuery.objects.filter(business__isnull=False).count()
+            assignedLeadsCount = await sync_to_async(
+                lambda: PlanQuery.objects.filter().count()
             )()
-            return assigned_leads_count
+            return assignedLeadsCount
+        except Exception as e:
+            #await MY_METHODS.printStatus(f"Error in GetTotalAssignedLeads: {e}")
+            return None
+    @classmethod
+    async def GetTotalUnassignedLeads(cls):  
+        try:
+            unassignedCount = await sync_to_async(
+                lambda: LeadQuery.objects.filter(business__isnull=True).count()
+            )()
+            return unassignedCount
         except Exception as e:
             #await MY_METHODS.printStatus(f"Error in GetTotalAssignedLeads: {e}")
             return None
@@ -33,9 +43,10 @@ class LEAD_TASKS:
     @classmethod
     async def GetTotalLeads(cls):
         try:
-            platform_leads_count = await cls.GetTotalPlatformLeads()
-            assigned_leads_count = await cls.GetTotalAssignedLeads()
-            return platform_leads_count + assigned_leads_count
+            unassignedLeads = await cls.GetTotalUnassignedLeads()
+            assignedLeads = await cls.GetTotalAssignedLeads()
+            platformLeads = await cls.GetPlatformLeads()
+            return unassignedLeads + assignedLeads + platformLeads
         except Exception as e:
             #await MY_METHODS.printStatus(f"Error in GetTotalLeads: {e}")
             return None
@@ -44,13 +55,14 @@ class LEAD_TASKS:
     async def GetTodayLeads(cls):
         try:
             today = timezone.now().date()
-            today_leads_count = await sync_to_async(
+            todayLeads = await sync_to_async(
                 lambda: LeadQuery.objects.filter(timestamp__date=today).count()
             )()
-            return today_leads_count
+            return todayLeads
         except Exception as e:
             #await MY_METHODS.printStatus(f"Error in GetTodayLeads: {e}")
             return None
+
 
     @classmethod
     async def GetLeadTiles(cls, start_date=None, end_date=None, search_query=None, page_number=1, page_size=10):
@@ -110,3 +122,4 @@ class LEAD_TASKS:
         except Exception as e:
             #await MY_METHODS.printStatus(f"Error in GetLeadTiles: {e}")
             return None
+    

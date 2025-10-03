@@ -5,6 +5,8 @@ class RESPONSE_CODES:
     server_unavailable= 503
     page_not_found= 404
     auth_error= 401
+    already_exist= 409
+    not_exist= 410
 
     
 

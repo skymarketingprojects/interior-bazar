@@ -38,8 +38,8 @@ class AUTH_CONTROLLER:
             if is_user_exist:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
-                    message=RESPONSE_MESSAGES.user_exist,
-                    code=RESPONSE_CODES.success,
+                    message=RESPONSE_MESSAGES.username_already_taken,
+                    code=RESPONSE_CODES.already_exist,
                     data={})
             else:
                 # Create User
@@ -79,8 +79,14 @@ class AUTH_CONTROLLER:
     async def LoginUser(self, data):
         try:
             # Validate Password
-            validate_password = await AUTH_VALIDATOR._validate_password(password=data.password)
+            # validate_password = await AUTH_VALIDATOR._validate_password(password=data.password)
             #await MY_METHODS.printStatus(f'validate_password')
+            # if validate_password.code == RESPONSE_CODES.error:
+            #     return LocalResponse(
+            #         code=RESPONSE_CODES.error,
+            #         response=RESPONSE_MESSAGES.error,
+            #         message=validate_password.message,
+            #         data=validate_password.data)
 
             # Login User
             login_user = await AUTH_TASK.LoginUser(data.username, data.password)
@@ -104,7 +110,7 @@ class AUTH_CONTROLLER:
             else:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.error,
-                    message=RESPONSE_MESSAGES.user_login_error,
+                    message=RESPONSE_MESSAGES.incorrect_password,
                     code=RESPONSE_CODES.error,
                     data={})
         except Exception as e:

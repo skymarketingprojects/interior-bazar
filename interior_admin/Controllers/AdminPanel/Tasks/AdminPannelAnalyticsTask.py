@@ -1,4 +1,5 @@
 from app_ib.models import CustomUser, Business, BusinessPlan
+from collections import defaultdict
 from asgiref.sync import sync_to_async
 from django.utils import timezone
 from django.db.models import Q, Count
@@ -70,7 +71,19 @@ class ANALYTICS_TASKS:
         except Exception as e:
             #await MY_METHODS.printStatus(f"Error in GetTodaySignups: {e}")
             return None
+    @classmethod
+    async def GetTodayUserSignups(cls):
+        try:
+            today = timezone.now().date()
 
+            users_today = await sync_to_async(
+                lambda: CustomUser.objects.filter(timestamp__date=today).count()
+            )()
+
+            return users_today
+        except Exception as e:
+            #await MY_METHODS.printStatus(f"Error in GetTodaySignups: {e}")
+            return None
     # 5. Business Active / Inactive (daily-weekly-monthly)
     @classmethod
     async def GetBusinessStatus(cls):
@@ -101,41 +114,101 @@ class ANALYTICS_TASKS:
 
     # 6. Chart Data (generic function for clients, businesses, users)
     @classmethod
-    async def GetChartData(cls, model, date_field="timestamp"):
+    async def GetChartData(cls, queryset, trunc_func, date_field="timestamp"):
         try:
-            def build_chart(qs, field):
-                return list(
-                    qs.annotate(period=field)
-                      .values("period")
-                      .annotate(count=Count("id"))
-                      .order_by("period")
-                )
+            return list(
+                queryset.annotate(period=trunc_func(date_field))
+                        .values("period")
+                        .annotate(count=Count("id"))
+                        .order_by("period")
+            )
+        except Exception:
+            return []
 
-            daily_qs = model.objects.all()
-            weekly_qs = model.objects.all()
-            monthly_qs = model.objects.all()
+    @classmethod
+    async def GetGroupedChartData(cls, model_map: dict, date_field="timestamp"):
+        # await MY_METHODS.printStatus("Entering GetGroupedChartData...")
 
-            data = {
-                "daily": build_chart(daily_qs, TruncDate(date_field)),
-                "weekly": build_chart(weekly_qs, TruncWeek(date_field)),
-                "monthly": build_chart(monthly_qs, TruncMonth(date_field)),
-            }
-            return data
-        except Exception as e:
-            #await MY_METHODS.printStatus(f"Error in GetChartData: {e}")
-            return None
+        periods = {
+            "daily": TruncDate,
+            # "weekly": TruncWeek,
+            # "monthly": TruncMonth,
+        }
 
+        results = {
+            "daily": [],
+            # "weekly": [],
+            # "monthly": [],
+        }
+
+        for period_label, trunc_func in periods.items():
+            # Use defaultdict to merge counts from multiple models by period
+            period_counts = defaultdict(lambda: defaultdict(int))
+
+            for model_label, queryset in model_map.items():
+                data = await cls.GetChartData(queryset, trunc_func, date_field)
+                for item in data:
+                    # await MY_METHODS.printStatus(f"[{model_label} - {period_label}]: {item}")
+                    period_str = item["period"].isoformat()
+                    period_counts[period_str][model_label] = item["count"]
+
+            # Transform merged data into a list of dicts
+            merged_data = []
+            for period, counts in sorted(period_counts.items()):
+                entry = {"date": period}
+                for model_label in model_map.keys():
+                    entry[model_label] = counts.get(model_label, 0)
+                merged_data.append(entry)
+
+            results[period_label] = merged_data
+
+        # await MY_METHODS.printStatus("Exiting GetGroupedChartData...")
+
+        return results["daily"]
     # 6.a Chart for Clients
     @classmethod
     async def GetClientChart(cls):
-        return await cls.GetChartData(CustomUser.objects.filter(type="client"))
+        data = await cls.GetChartData(CustomUser.objects.filter(type="client"))
+        return data if data else {"daily": [], "weekly": [], "monthly": []}
 
     # 6.b Chart for Businesses
     @classmethod
     async def GetBusinessChart(cls):
-        return await cls.GetChartData(Business)
-
+        data = await cls.GetChartData(Business)
+        return data if data else {"daily": [], "weekly": [], "monthly": []}
     # 6.c Chart for Users
     @classmethod
     async def GetUserChart(cls):
-        return await cls.GetChartData(CustomUser)
+        data = await cls.GetChartData(CustomUser)
+        return data if data else {"daily": [], "weekly": [], "monthly": []}
+
+    @classmethod
+    async def GetDailyUsersTask(cls):
+        try:
+            # Step 1: Query daily lead counts
+            daily_counts = await sync_to_async(
+                lambda: list(
+                    CustomUser.objects
+                    .annotate(date=TruncDate('timestamp'))
+                    .values('date')
+                    .annotate(count=Count('id'))
+                    .order_by('date')
+                )
+            )()
+
+            # Step 2: Build cumulative data
+            cumulative = []
+            total = 0
+            for item in daily_counts:
+                total += item['count']
+                cumulative.append({
+                    'date': item['date'].isoformat(),  # Make JSON serializable
+                    'users': total
+                })
+
+            return cumulative
+
+        except Exception as e:
+            # Log or handle error if needed
+            await MY_METHODS.printStatus(f"Error in GetUsersDataTask: {e}")
+            return None

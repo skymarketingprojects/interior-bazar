@@ -94,8 +94,8 @@ class Business(models.Model):
     segment= models.TextField() # "manufraturer"
     catigory= models.TextField() # ["interior", "exterior","office"]
     business_type= models.ForeignKey(BusinessType, on_delete=models.SET_NULL, null=True, blank=True)
-    businessSegment= models.ManyToManyField(BusinessSegment, null=True, blank=True)
-    businessCategory= models.ManyToManyField(BusinessCategory, null=True, blank=True)
+    businessSegment= models.ManyToManyField(BusinessSegment)
+    businessCategory= models.ManyToManyField(BusinessCategory)
 
 
     badge = models.TextField(null=True, blank=True)
@@ -356,15 +356,40 @@ class StockMedia(models.Model):
     section = models.ForeignKey(Section, on_delete=models.CASCADE, null=True, blank=True)
     index = models.IntegerField(default=1)
 
-    def save(self, *args, **kwargs):
-        with transaction.atomic():
-            indexShifting(self)
-            super().save(*args, **kwargs)
+
+    def __str__(self):
+        if self.page and self.section:
+            return f"StockMedia {self.pk} | Page: {self.page.name} | Section: {self.section.name} | Index: {self.index}"
+        elif self.page:
+            return f"StockMedia {self.pk} | Page: {self.page.name} | Index: {self.index}"
+        elif self.section:
+            return f"StockMedia {self.pk} | Section: {self.section.name} | Index: {self.index}"
+        return f"StockMedia {self.pk} | Index: {self.index}"
+    
 
 #offer text
 class OfferText(models.Model):
-    text = models.TextField()
+    text = QuillField(null=True, blank=True)
     link = models.URLField(max_length=2250, null=True, blank=True)
     show = models.BooleanField(default=False)
     def __str__(self):
         return f' pk {self.pk} text:{self.text}'
+
+#funnel form
+class FunnelForm(models.Model):
+    name = models.CharField(max_length=255, default='', null=True, blank=True)
+    companyName = models.CharField(max_length=255, default='', null=True, blank=True)
+    email = models.CharField(max_length=255, default='', null=True, blank=True)
+    phone = models.CharField(max_length=255, default='', null=True, blank=True)
+    planType = models.CharField(max_length=255, default='', null=True, blank=True)
+    plan = models.CharField(max_length=255, default='', null=True, blank=True)
+    intrest = models.TextField(default='', null=True, blank=True)
+    need = models.TextField(default='', null=True, blank=True)
+    timestamp= models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=255, default='New', null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f' pk {self.pk} name:{self.name} phone:{self.phone}'
+
+

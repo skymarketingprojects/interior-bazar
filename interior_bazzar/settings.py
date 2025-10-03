@@ -235,6 +235,7 @@ if(ENV == APPMODE.DEV):
             'PASSWORD': env('DATABASE_PASSWORD'),
             'HOST': env('DATABASE_HOST'),
             'PORT': env('DATABASE_PORT'),
+            'CONN_MAX_AGE': 60,
         }
     }
     
@@ -285,6 +286,7 @@ if(ENV == APPMODE.PROD):
             'PASSWORD': env('PROD_DATABASE_PASSWORD'),
             'HOST': env('PROD_DATABASE_HOST'),
             'PORT': env('PROD_DATABASE_PORT'),
+            'CONN_MAX_AGE': 60,
         }
     }
     
@@ -303,6 +305,7 @@ if(ENV == APPMODE.LOC):
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
+            'CONN_MAX_AGE': 60,
         }
     }
     AWS_ACCESS_KEY_ID = env('AWS_KEY')
@@ -329,7 +332,7 @@ EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
 
     # Development:
-    #  eb deploy dev-ib-env-2 --profile interiorBazzar
+    #  eb deploy dev-ib-env-1 --profile interiorBazzar
     # [domain]
     
     

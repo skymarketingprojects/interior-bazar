@@ -8,9 +8,8 @@ from app_ib.Utils.ResponseMessages import VALIDATION_MESSAGES
 class AUTH_VALIDATOR: 
     @classmethod
     async def _validate_password(self,password):
+        msg = ""
         try:
-            msg = ""
-           
             if len(password) < 8:
                 msg = VALIDATION_MESSAGES.password_length
                 raise ValueError(VALIDATION_MESSAGES.password_length)

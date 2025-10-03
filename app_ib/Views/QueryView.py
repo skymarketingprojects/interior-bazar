@@ -11,6 +11,7 @@ from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 from app_ib.Controllers.Query.QueryController import LEAD_QUERY_CONTROLLER
+from app_ib.Controllers.FunnelQuery.FunnelQueryController import FUNNEL_QUERY_CONTROLLER
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -200,8 +201,6 @@ async def GetQueryByID(request,id):
                 'error': str(e)
             })
 
-
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 async def GetQueryBusinessView(request):
@@ -222,6 +221,28 @@ async def GetQueryBusinessView(request):
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.query_fetch_error,
+            code=RESPONSE_CODES.error,
+            data={
+                'error': str(e)
+            })
+    
+@api_view(['POST'])
+async def CreateFunnelQueryView(request):
+    try:
+        
+        # Call Funnel Query Controller to Create Funnel Query
+        final_response = await FUNNEL_QUERY_CONTROLLER.CreateFunnelQuery(request=request)
+
+        return ServerResponse(
+            response=final_response.response,
+            code=final_response.code,
+            message=final_response.message,
+            data=final_response.data)
+
+    except Exception as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message=RESPONSE_MESSAGES.funnel_query_create_error,
             code=RESPONSE_CODES.error,
             data={
                 'error': str(e)

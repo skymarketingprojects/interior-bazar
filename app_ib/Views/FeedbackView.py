@@ -13,10 +13,10 @@ from rest_framework.permissions import IsAuthenticated
 async def CreateFeedbackView(request):
     try:
         # Convert request.data to dot notation object
-        data = MY_METHODS.json_to_object(request.data)
+        # data = MY_METHODS.json_to_object(request.data)
         user_ins=request.user
         # Call Auth Controller to Create User
-        final_response = await  asyncio.gather(FEEDBACK_CONTROLLER.CreateFeedback(data=data,user_ins=user_ins))
+        final_response = await  asyncio.gather(FEEDBACK_CONTROLLER.CreateFeedback(data=request.data,user_ins=user_ins))
         final_response = final_response[0]
 
         return ServerResponse(

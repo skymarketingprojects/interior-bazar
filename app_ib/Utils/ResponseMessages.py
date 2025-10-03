@@ -19,6 +19,7 @@ class RESPONSE_MESSAGES:
     user_profile_fetch_error="User profile fetch error"
     user_profile_delete_success="User profile deleted successfully"
     user_profile_delete_error="User profile delete error"
+    username_already_taken = "Username already taken"
 
     #lead
     assigned_leads_fetch_error="Unable to fetch assigned leads"
@@ -51,11 +52,14 @@ class RESPONSE_MESSAGES:
     send_link_error= 'Unable to send link'
     link_expired_error= 'Link expired'
 
+    invalid_credentials= 'Invalid credentials'
+
 
     password_reset_success= 'Password reset successfully'
     password_reset_error= 'Unable to reset password'
     user_removed_success= 'User removed successfully'
     password_not_match= 'Password does not match'
+    incorrect_password= 'Incorrect password'
 
     unauthorized= 'Unauthorized'
 
@@ -122,6 +126,9 @@ class RESPONSE_MESSAGES:
 
     query_assign_errror= 'Unable to assign query'
     query_assign_success= 'Query assigned successfully'
+
+    funnel_query_create_error= 'Unable to create funnel query'
+    funnel_query_created_success= 'Funnel query created successfully'
 
     ############################################
     #Query

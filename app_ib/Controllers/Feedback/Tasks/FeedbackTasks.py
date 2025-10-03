@@ -8,13 +8,13 @@ class FEEDBACK_TASKS:
         try:
             feedback_ins = Feedback()
             feedback_ins.user= user_ins
-            feedback_ins.contact= data.contact
-            feedback_ins.feedback= data.feedback     
+            # feedback_ins.contact= data.contact
+            feedback_ins.feedback= data   
             await sync_to_async(feedback_ins.save)()
             return True
             
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in CreateFeedback {e}')
+            await MY_METHODS.printStatus(f'Error in CreateFeedback {e}')
             return None
 
     @classmethod

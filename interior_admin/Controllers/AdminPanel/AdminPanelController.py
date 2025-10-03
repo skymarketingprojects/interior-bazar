@@ -5,6 +5,7 @@ from .Tasks.AdminPanelBusinessTasks import ADMIN_PANEL_TASKS
 from .Tasks.AdminPanelLeadTasks import LEAD_TASKS
 from .Tasks.AdminPannelAnalyticsTask import ANALYTICS_TASKS
 import asyncio
+from app_ib.models import CustomUser, Business, BusinessPlan
 from app_ib.Utils.MyMethods import MY_METHODS
 class ADMIN_PANEL_CONTROLLER:
 
@@ -89,23 +90,25 @@ class ADMIN_PANEL_CONTROLLER:
         try:
             # Use asyncio.gather to run tasks concurrently
             results = await asyncio.gather(
-                LEAD_TASKS.GetTotalPlatformLeads(),
+                LEAD_TASKS.GetTotalUnassignedLeads(),
                 LEAD_TASKS.GetTotalAssignedLeads(),
                 LEAD_TASKS.GetTotalLeads(),
                 LEAD_TASKS.GetTodayLeads(),
-                LEAD_TASKS.GetLeadTiles()
+                LEAD_TASKS.GetLeadTiles(),
+                LEAD_TASKS.GetPlatformLeads()
             )
 
             # Unpack results from asyncio.gather
-            total_platform_leads, total_assigned_leads, total_leads, today_leads, lead_tiles_data = results
+            unassignedLeads, assignedLeads, totalLeads, todayLeads, leadTiles, platformLeads = results
 
             # Combine all the fetched data into a single response
             response_data = {
-                "totalPlatformLeads": total_platform_leads,
-                "totalAssignedLeads": total_assigned_leads,
-                "totalLeads": total_leads,
-                "todayLeads": today_leads,
-                "leadTiles": lead_tiles_data
+                "unassignedLeads": unassignedLeads,
+                "assignedLeads": assignedLeads,
+                "platformLeads": platformLeads,
+                "totalLeads": totalLeads,
+                "todayLeads": todayLeads,
+                "leadTiles": leadTiles,
             }
 
             return LocalResponse(
@@ -218,36 +221,100 @@ class ADMIN_PANEL_CONTROLLER:
     # 3. Get Charts (Clients, Businesses, Users)
     @classmethod
     async def GetChartsStats(cls):
-        """
-        Get chart data for clients, businesses, and users.
-        """
         try:
-            results = await asyncio.gather(
-                ANALYTICS_TASKS.GetClientChart(),
-                ANALYTICS_TASKS.GetBusinessChart(),
-                ANALYTICS_TASKS.GetUserChart(),
-            )
-
-            client_chart, business_chart, user_chart = results
-
-            response_data = {
-                "clients": client_chart,
-                "businesses": business_chart,
-                "users": user_chart
+            model_map = {
+                "clients": CustomUser.objects.filter(type="client"),
+                "businesses": Business.objects.all(),
+                "users": CustomUser.objects.all(),
             }
+
+            chart_data = await ANALYTICS_TASKS.GetGroupedChartData(model_map)
+            await MY_METHODS.printStatus(f"[Chart Data]: {chart_data}")
 
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message="Charts fetched successfully.",
                 code=RESPONSE_CODES.success,
+                data=chart_data
+            )
+
+        except Exception as e:
+            # Optionally log the error
+            await MY_METHODS.printStatus(f"[GetChartsStats Error]: {e}")
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message="Failed to fetch charts.",
+                code=RESPONSE_CODES.error,
+                data={"error": str(e)}
+            )
+    @classmethod
+    async def GetTotalNoOfUsers(cls):
+        try:
+            result = await ADMIN_PANEL_TASKS.GetTotalUsers()
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message="Total users fetched successfully.",
+                code=RESPONSE_CODES.success,
+                data={"totalUsers": result}
+            )
+        except Exception as e:
+            await MY_METHODS.printStatus(f"[GetTotalNoOfUsers Error]: {e}")
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message="Failed to fetch total users.",
+                code=RESPONSE_CODES.error,
+                data={"error": str(e)}
+            )
+
+    @classmethod
+    async def GetDailyUserData(cls):
+        try:
+            result = await ANALYTICS_TASKS.GetDailyUsersTask()
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message="Daily user data fetched successfully.",
+                code=RESPONSE_CODES.success,
+                data=result
+            )
+        except Exception as e:
+            await MY_METHODS.printStatus(f"[GetDailyUserData Error]: {e}")
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message="Failed to fetch daily user data.",
+                code=RESPONSE_CODES.error,
+                data={"error": str(e)}
+            )
+
+    # controller for total users , business, total query and today signups
+    @classmethod
+    async def GetDashboardData(cls):
+        try:
+            total_users, total_businesses, total_queries, today_signups = await asyncio.gather(
+                ADMIN_PANEL_TASKS.GetTotalUsers(),
+                ADMIN_PANEL_TASKS.GetTotalBusinesses(),
+                LEAD_TASKS.GetTotalLeads(),
+                ANALYTICS_TASKS.GetTodayUserSignups()
+            )
+
+            response_data = {
+                "totalUsers": total_users,
+                "totalBusinesses": total_businesses,
+                "totalQueries": total_queries,
+                "todaySignups": today_signups
+            }
+
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message="Dashboard data fetched successfully.",
+                code=RESPONSE_CODES.success,
                 data=response_data
             )
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f"[GetChartsStats Error]: {e}")
+            #await MY_METHODS.printStatus(f"[GetDashboardData Error]: {e}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Failed to fetch charts.",
+                message="Failed to fetch dashboard data.",
                 code=RESPONSE_CODES.error,
                 data={"error": str(e)}
             )

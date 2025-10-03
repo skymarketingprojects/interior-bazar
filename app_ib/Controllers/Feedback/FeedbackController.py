@@ -20,7 +20,7 @@ class FEEDBACK_CONTROLLER:
             # #await MY_METHODS.printStatus(f'name: {data.feedback}')
 
             feedback_create_resp_data = await FEEDBACK_TASKS.CreateFeedbackTask(user_ins=user_ins,data=data)
-            #await MY_METHODS.printStatus(f'create query resp {feedback_create_resp_data}')
+            await MY_METHODS.printStatus(f'create query resp {feedback_create_resp_data}')
 
             if feedback_create_resp_data:
                 return LocalResponse(
@@ -37,6 +37,7 @@ class FEEDBACK_CONTROLLER:
                     data={})
 
         except Exception as e:
+            await MY_METHODS.printStatus(f'Error in CreateFeedback: {e}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.feedback_generate_error,

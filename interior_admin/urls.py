@@ -9,11 +9,14 @@ urlpatterns = [
     path('leads/stats/', views.GetAssignedLeadsTilesView, name='get_assigned_leads_stats'),
     path('signup/stats/',views.GetTodaySignupsStatsView, name='get_today_signups_stats'),
     path('chart/', views.GetChartsStatsView, name='get_chart_view'),
+    path('total-users/', views.GetTotalUsersView, name='get_chart_view'),
+    path('users/', views.GetDailyUsersStatsView, name='get_daily_users_view'),
+    path('analytics/', views.GetDashboardDataView, name='get_daily_users_view'),
+
 
     ############################################################
     # Pannel Search
     ############################################################
-
     path('business/search/<str:query>/', PannelSearchViews.SearchQueryView, name='admin_search'),
     path('business/<int:Id>/', PannelSearchViews.GetBusinessByIdView, name='business_data'),
 
@@ -32,4 +35,10 @@ urlpatterns = [
     # Match leads
     ############################################################
     path('leads/match/', MatchLeadsViews.MatchLeadsView, name='match_leads'),
+
+    #########################################################
+    # Funnel Query
+    #########################################################
+    path('funnel/<int:pageNumber>/<int:pageSize>/', views.GetFunnelQueriesView, name='GetFunnelQueriesView'),
+    
 ]

@@ -4,7 +4,7 @@ from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from interior_admin.Controllers.AdminPanel.AdminPanelController import ADMIN_PANEL_CONTROLLER
-
+from app_ib.Controllers.FunnelQuery.FunnelQueryController import FUNNEL_QUERY_CONTROLLER
 import asyncio
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -137,7 +137,25 @@ async def GetAssignedLeadsTilesView(request):
             }
         )
 
+@api_view(['GET'])
+#@permission_classes([IsAuthenticated])
+async def GetDashboardDataView(request):
+    try:
+        final_response = await ADMIN_PANEL_CONTROLLER.GetDashboardData()
 
+        return ServerResponse(
+            response=final_response.response,
+            code=final_response.code,
+            message=final_response.message,
+            data=final_response.data
+        )
+    except Exception as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message="Failed to fetch dashboard data.",
+            code=RESPONSE_CODES.error,
+            data={"error": str(e)}
+        )
 @api_view(['GET'])
 #@permission_classes([IsAuthenticated])
 async def GetAllUserBusinessStatsView(request):
@@ -161,6 +179,26 @@ async def GetAllUserBusinessStatsView(request):
             data={"error": str(e)}
         )
 
+@api_view(['GET'])
+#@permission_classes([IsAuthenticated])
+async def GetDailyUsersStatsView(request):
+    try:
+        final_response = await ADMIN_PANEL_CONTROLLER.GetDailyUserData()
+        
+
+        return ServerResponse(
+            response=final_response.response,
+            code=final_response.code,
+            message=final_response.message,
+            data=final_response.data
+        )
+    except Exception as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message="Failed to fetch daily users.",
+            code=RESPONSE_CODES.error,
+            data={"error": str(e)}
+        )
 
 @api_view(['GET'])
 #@permission_classes([IsAuthenticated])
@@ -186,7 +224,7 @@ async def GetTodaySignupsStatsView(request):
         )
 
 
-@api_view(['POST'])
+@api_view(['GET'])
 #@permission_classes([IsAuthenticated])
 async def GetChartsStatsView(request):
     
@@ -211,5 +249,48 @@ async def GetChartsStatsView(request):
             data={"error": str(e)}
         )
     
-    
+@api_view(['GET'])
+#@permission_classes([IsAuthenticated])
+async def GetFunnelQueriesView(request,pageNumber, pageSize):
+    try:
+        # Call Funnel Query Controller to Get Funnel Queries
+        final_response = await FUNNEL_QUERY_CONTROLLER.GetFunnelQueries(pageNumber=pageNumber, pageSize=pageSize)
 
+        return ServerResponse(
+            response=final_response.response,
+            code=final_response.code,
+            message=final_response.message,
+            data=final_response.data)
+
+    except Exception as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message=RESPONSE_MESSAGES.query_fetch_error,
+            code=RESPONSE_CODES.error,
+            data={
+                'error': str(e)
+            })
+
+@api_view(['GET'])
+#@permission_classes([IsAuthenticated])
+async def GetTotalUsersView(request):
+    try:
+        # Call the controller to get total users count
+        final_response = await ADMIN_PANEL_CONTROLLER.GetTotalNoOfUsers()
+
+        return ServerResponse(
+            response=final_response.response,
+            code=final_response.code,
+            message=final_response.message,
+            data=final_response.data
+        )
+
+    except Exception as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message="Failed to fetch total users.",
+            code=RESPONSE_CODES.error,
+            data={
+                'error': str(e)
+            }
+        )

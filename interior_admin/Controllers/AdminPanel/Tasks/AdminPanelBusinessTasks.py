@@ -1,5 +1,5 @@
 from asgiref.sync import sync_to_async
-from app_ib.models import Business, LeadQuery, BusinessPlan
+from app_ib.models import Business, LeadQuery, BusinessPlan,CustomUser
 from django.utils import timezone
 from datetime import timedelta
 from django.utils.dateparse import parse_datetime
@@ -119,4 +119,11 @@ class ADMIN_PANEL_TASKS:
             #await MY_METHODS.printStatus(f"Error in GetBusinessTiles: {e}")
             return None
 
-
+    @classmethod
+    async def GetTotalUsers(cls):
+        try:
+            count = await sync_to_async(CustomUser.objects.count)()
+            return count
+        except Exception as e:
+            #await MY_METHODS.printStatus(f"Error in GetTotalUsers: {e}")
+            return None
