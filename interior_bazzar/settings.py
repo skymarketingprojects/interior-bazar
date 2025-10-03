@@ -233,10 +233,8 @@ if(ENV == APPMODE.DEV):
             'NAME': env('DATABASE_NAME'),
             'USER': env('DATABASE_USERNAME'),
             'PASSWORD': env('DATABASE_PASSWORD'),
-            # 'HOST': env('DATABASE_HOST'),
-            'HOST': '127.0.0.1',
-            'PORT': '6432',
-            # 'PORT': env('DATABASE_PORT'),
+            'HOST': env('DATABASE_HOST'),
+            'PORT': env('DATABASE_PORT'),
         }
     }
     
@@ -285,10 +283,9 @@ if(ENV == APPMODE.PROD):
             'NAME': env('PROD_DATABASE_NAME'),
             'USER': env('PROD_DATABASE_USERNAME'),
             'PASSWORD': env('PROD_DATABASE_PASSWORD'),
-            # 'HOST': env('PROD_DATABASE_HOST'),
-            # 'PORT': env('PROD_DATABASE_PORT'),
-            'HOST': '127.0.0.1',
-            'PORT': '6432',
+            'HOST': env('PROD_DATABASE_HOST'),
+            'PORT': env('PROD_DATABASE_PORT'),
+            
         }
     }
     
