@@ -46,6 +46,7 @@ class UserProfile(models.Model):
     user= models.OneToOneField(CustomUser,on_delete=models.CASCADE, null=True, blank=True,related_name='user_profile')
     name= models.CharField(max_length=250,default='',null=True, blank=True)
     phone= models.CharField(max_length=100,default='',null=True, blank=True)
+    countryCode= models.CharField(max_length=10,default='',null=True, blank=True)
     email= models.CharField(max_length=250,default='',null=True, blank=True)
     profile_image= models.FileField(null=True, blank=True, upload_to='user/profile_image')
     profile_image_url = models.TextField(default='',null=True, blank=True)
@@ -118,13 +119,29 @@ class BusinessProfile(models.Model):
 
     def __str__(self):
         return f'business profile - {self.business.pk}'
-    
+
+
+class Country(models.Model):
+    name = models.CharField(max_length=255)
+    code = models.CharField(max_length=10)
+
+    def __str__(self):
+        return f'Country: {self.name} ({self.code})'
+
+class State(models.Model):
+    country = models.ForeignKey(Country, on_delete=models.CASCADE, related_name='states')
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f'State: {self.name} in {self.country.name}'
 class Location(models.Model):
     user= models.OneToOneField(CustomUser,on_delete=models.CASCADE, null=True, blank=True)
     business= models.OneToOneField(Business,on_delete=models.CASCADE, null=True, blank=True, related_name='business_location')
     pin_code= models.CharField(max_length=500)
     city= models.CharField(max_length=500)
+    locationState = models.ForeignKey(State, on_delete=models.CASCADE,null=True, blank=True)
     state= models.CharField(max_length=500)
+    locationCountry = models.ForeignKey(Country, on_delete=models.CASCADE,null=True, blank=True)
     country= models.CharField(max_length=500)
     location_link= models.TextField()
     timestamp= models.DateTimeField(auto_now_add=True)
@@ -393,3 +410,4 @@ class FunnelForm(models.Model):
         return f' pk {self.pk} name:{self.name} phone:{self.phone}'
 
 
+    

@@ -168,4 +168,10 @@ urlpatterns = [
     path('v1/business/types/', BusinessView.GetAllBusinessTypesView, name='GetAllBusinessTypes'),
     path('v1/business/categories/', BusinessView.GetAllBusinessCategoriesView, name='GetAllBusinessCategories'),
     path('v1/business/segments/<int:typeId>/', BusinessView.GetAllBusinessSegmentsByTypeView, name='GetBusinessSegmentsByCategory'),
+
+    ######################################################
+    # location
+    ######################################################
+    path('v1/business/location/countries/', BusinessLocationView.GetCountryListView, name='GetCountryListView'),
+    path('v1/business/location/states/<int:countryId>/', BusinessLocationView.GetStateListByCountryIDView, name='GetStateListView'),
 ]

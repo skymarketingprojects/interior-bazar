@@ -43,7 +43,7 @@ async def AssignQueryView(request):
         data = request.data
         businessId = data.get('businessId',None)
         leadId = data.get('leadId',None)
-        await MY_METHODS.printStatus(status=f"businessId {businessId}--lead {leadId}")
+        #await MY_METHODS.printStatus(status=f"businessId {businessId}--lead {leadId}")
         assignResponse = await ADMIN_LEADS_CONTROLLER.AssignLeadQuery(user_ins=user,businessId=businessId,leadId=leadId)
         return ServerResponse(
             response=assignResponse.response,

@@ -35,7 +35,7 @@ class FUNNEL_QUERY_CONTROLLER:
             )
         
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in CreateFunnelQuery:{str(e)}")
+            #await MY_METHODS.printStatus(f"Error in CreateFunnelQuery:{str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.funnel_query_create_error,
@@ -74,7 +74,7 @@ class FUNNEL_QUERY_CONTROLLER:
                 data=response_data
             )
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in GetFunnelQueries:{str(e)}")
+            #await MY_METHODS.printStatus(f"Error in GetFunnelQueries:{str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.query_fetch_error,

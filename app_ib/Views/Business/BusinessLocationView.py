@@ -68,3 +68,49 @@ async def GetBusinessLocationByBussIDView(request,id):
             data={
                 'error': str(e)
             })
+    
+@api_view(['GET'])
+async def GetCountryListView(request):
+    try:
+        # Call Auth Controller to Create User
+        final_response = await BUSS_LOCATION_CONTROLLER.GetCountryList()
+        #await MY_METHODS.printStatus(f'final_response {final_response}')
+
+        return ServerResponse(
+            response=final_response.response,
+            code=final_response.code,
+            message=final_response.message,
+            data=final_response.data)
+
+    except Exception as e:
+        #await MY_METHODS.printStatus(f'Error: {e}')
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message=RESPONSE_MESSAGES.business_register_error,
+            code=RESPONSE_CODES.error,
+            data={
+                'error': str(e)
+            })
+    
+@api_view(['GET'])
+async def GetStateListByCountryIDView(request,countryId):
+    try:
+        # Call Auth Controller to Create User
+        final_response = await BUSS_LOCATION_CONTROLLER.GetStateListByCountry(countryId=countryId)
+        #await MY_METHODS.printStatus(f'final_response {final_response}')
+
+        return ServerResponse(
+            response=final_response.response,
+            code=final_response.code,
+            message=final_response.message,
+            data=final_response.data)
+
+    except Exception as e:
+        #await MY_METHODS.printStatus(f'Error: {e}')
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message=RESPONSE_MESSAGES.business_register_error,
+            code=RESPONSE_CODES.error,
+            data={
+                'error': str(e)
+            })

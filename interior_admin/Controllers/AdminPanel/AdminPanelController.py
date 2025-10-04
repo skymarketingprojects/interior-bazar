@@ -229,7 +229,7 @@ class ADMIN_PANEL_CONTROLLER:
             }
 
             chart_data = await ANALYTICS_TASKS.GetGroupedChartData(model_map)
-            await MY_METHODS.printStatus(f"[Chart Data]: {chart_data}")
+            #await MY_METHODS.printStatus(f"[Chart Data]: {chart_data}")
 
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
@@ -240,7 +240,7 @@ class ADMIN_PANEL_CONTROLLER:
 
         except Exception as e:
             # Optionally log the error
-            await MY_METHODS.printStatus(f"[GetChartsStats Error]: {e}")
+            #await MY_METHODS.printStatus(f"[GetChartsStats Error]: {e}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Failed to fetch charts.",
@@ -258,7 +258,7 @@ class ADMIN_PANEL_CONTROLLER:
                 data={"totalUsers": result}
             )
         except Exception as e:
-            await MY_METHODS.printStatus(f"[GetTotalNoOfUsers Error]: {e}")
+            #await MY_METHODS.printStatus(f"[GetTotalNoOfUsers Error]: {e}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Failed to fetch total users.",
@@ -277,7 +277,7 @@ class ADMIN_PANEL_CONTROLLER:
                 data=result
             )
         except Exception as e:
-            await MY_METHODS.printStatus(f"[GetDailyUserData Error]: {e}")
+            #await MY_METHODS.printStatus(f"[GetDailyUserData Error]: {e}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Failed to fetch daily user data.",

@@ -105,6 +105,12 @@ class RESPONSE_MESSAGES:
     business_category_fetch_success = "Business category fetch success"
     business_category_fetch_error = "Business category fetch error"
 
+    ############################################
+    #location
+    ############################################
+    country_list_fetch_success= 'Country list fetched successfully'
+    country_list_fetch_error= 'Unable to fetch country list'
+
 
 
 

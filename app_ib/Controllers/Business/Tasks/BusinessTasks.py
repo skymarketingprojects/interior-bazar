@@ -4,6 +4,7 @@ from asgiref.sync import sync_to_async
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.LocalResponse import LocalResponse
+from app_ib.Controllers.BussLocation.Tasks.BusinessLocationTasks import BUSS_LOC_TASK
 from app_ib.Utils.MyMethods import MY_METHODS
 from django.db.models import Prefetch
 class BUSS_TASK:
@@ -99,11 +100,9 @@ class BUSS_TASK:
 
             # --- Business Location (if exists) ---
             if loc:
-                location_fields = ['pinCode', 'city', 'state', 'country', 'locationLink']
-                for field in location_fields:
-                    if hasattr(data, field):
-                        setattr(loc, field.lower(), getattr(data, field))  # assume model fields are lowercase
-                await sync_to_async(loc.save)()
+                await BUSS_LOC_TASK.UpdateBusinessLocTask(loc, data)
+            else:
+                await BUSS_LOC_TASK.CreateBusinessLocTask(business_ins, data)
 
             # --- Business Profile (if exists) ---
             if prof and hasattr(data, 'youtubeLink'):
@@ -113,7 +112,7 @@ class BUSS_TASK:
             return await cls.GetBusinessInfo(business_ins.id)
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in UpdateBusinessTask: {e}')
+            #await MY_METHODS.printStatus(f'Error in UpdateBusinessTask: {e}')
             return None
 
     @classmethod
@@ -151,11 +150,12 @@ class BUSS_TASK:
 
             # Location
             if business_loc_ins:
-                data['location_link'] = business_loc_ins.location_link
-                data['pin_code'] = business_loc_ins.pin_code
-                data['city'] = business_loc_ins.city
-                data['state'] = business_loc_ins.state
-                data['country'] = business_loc_ins.country
+                location = await BUSS_LOC_TASK.GetBusinessLocTask(business_loc_ins)
+                data['location_link'] = location["location_link"]
+                data['pin_code'] =location['pin_code']
+                data['city'] = location['city']
+                data['state'] = location['state']
+                data['country'] = location['country']
 
             # Profile
             if business_prof_ins:
@@ -164,7 +164,7 @@ class BUSS_TASK:
             return data
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in GetBusinessInfo: {e}')
+            #await MY_METHODS.printStatus(f'Error in GetBusinessInfo: {e}')
             return None
 
     @classmethod
@@ -208,7 +208,7 @@ class BUSS_TASK:
             return data
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in GetBusinessInfoForSearch: {e}')
+            #await MY_METHODS.printStatus(f'Error in GetBusinessInfoForSearch: {e}')
             return None
 
     @classmethod
@@ -222,5 +222,5 @@ class BUSS_TASK:
 
             return typeData
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in GetAllBusinessTypes: {e}')
+            #await MY_METHODS.printStatus(f'Error in GetAllBusinessTypes: {e}')
             return None

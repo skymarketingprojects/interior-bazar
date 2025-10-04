@@ -1,5 +1,5 @@
 from asgiref.sync import sync_to_async
-from app_ib.models import Location, Business
+from app_ib.models import Location, Business,Country,State
 from app_ib.Utils.MyMethods import MY_METHODS
 
 class CLIENT_LOC_TASKS:
@@ -7,12 +7,16 @@ class CLIENT_LOC_TASKS:
     @classmethod
     async def CreateClientLocTask(self, user_ins, data):
         try:
+            state = await sync_to_async(State.objects.filter(id=data.state.id).first)()
+            country = await sync_to_async(Country.objects.filter(id=data.country.id).first)()
             client_loc_ins = Location()
             client_loc_ins.user=user_ins
             client_loc_ins.pin_code=data.pin_code
             client_loc_ins.city=data.city
-            client_loc_ins.state=data.state
-            client_loc_ins.country=data.country
+            # client_loc_ins.state=data.state
+            # client_loc_ins.country=data.country
+            client_loc_ins.locationState=state
+            client_loc_ins.locationCountry=country
             client_loc_ins.location_link=data.location_link
             await sync_to_async(client_loc_ins.save)()
             return True
@@ -25,10 +29,14 @@ class CLIENT_LOC_TASKS:
     @classmethod
     async def UpdateClientLocTask(self,client_loc_ins, data):
         try:
+            state = await sync_to_async(State.objects.filter(id=data.state.id).first)()
+            country = await sync_to_async(Country.objects.filter(id=data.country.id).first)()
+            client_loc_ins.locationState=state
+            client_loc_ins.locationCountry=country
             client_loc_ins.pin_code=data.pin_code
             client_loc_ins.city=data.city
-            client_loc_ins.state=data.state
-            client_loc_ins.country=data.country
+            # client_loc_ins.state=data.state
+            # client_loc_ins.country=data.country
             client_loc_ins.location_link=data.location_link
             await sync_to_async(client_loc_ins.save)()
             return True
@@ -44,8 +52,8 @@ class CLIENT_LOC_TASKS:
             client_loc_data={
                 'pin_code':client_loc_ins.pin_code,
                 'city':client_loc_ins.city,
-                'state':client_loc_ins.state,
-                'country':client_loc_ins.country,
+                'state':client_loc_ins.locationState.name if client_loc_ins.locationState else client_loc_ins.state,
+                'country':client_loc_ins.locationCountry.name if client_loc_ins.locationCountry else client_loc_ins.country,
                 'location_link':client_loc_ins.location_link,
                 'id':client_loc_ins.pk,
             }

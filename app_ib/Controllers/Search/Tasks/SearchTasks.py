@@ -95,7 +95,7 @@ class SEARCH_TASKS:
                 BUSS_TASK.GetBusinessInfo(id=business.pk),
                 BUSS_LOC_TASK.GetBusinessLocTask(business_loc_ins=await sync_to_async(Location.objects.get)(business=business) if await sync_to_async(Location.objects.filter(business=business).exists)() else None)
             )
-            await MY_METHODS.printStatus(f'\nbusiness_data {business_data}\n')
+            #await MY_METHODS.printStatus(f'\nbusiness_data {business_data}\n')
 
             # Handle time ago logic
             updatedAt = business_data.get('updatedAt', None)
@@ -124,11 +124,11 @@ class SEARCH_TASKS:
             rating = await MY_METHODS.get_random_rating()
             final_data['rating'] = f"{rating}"
             final_data['ratingValue'] = float(rating)  # ratingValue as number
-            await MY_METHODS.printStatus(f'final_data {final_data}')
+            #await MY_METHODS.printStatus(f'final_data {final_data}')
 
             return final_data
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error while fetching business {e}')
+            #await MY_METHODS.printStatus(f'Error while fetching business {e}')
             return None
 
     @staticmethod

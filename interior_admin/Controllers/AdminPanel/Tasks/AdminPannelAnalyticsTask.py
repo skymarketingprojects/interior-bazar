@@ -127,7 +127,7 @@ class ANALYTICS_TASKS:
 
     @classmethod
     async def GetGroupedChartData(cls, model_map: dict, date_field="timestamp"):
-        # await MY_METHODS.printStatus("Entering GetGroupedChartData...")
+        # #await MY_METHODS.printStatus("Entering GetGroupedChartData...")
 
         periods = {
             "daily": TruncDate,
@@ -148,7 +148,7 @@ class ANALYTICS_TASKS:
             for model_label, queryset in model_map.items():
                 data = await cls.GetChartData(queryset, trunc_func, date_field)
                 for item in data:
-                    # await MY_METHODS.printStatus(f"[{model_label} - {period_label}]: {item}")
+                    # #await MY_METHODS.printStatus(f"[{model_label} - {period_label}]: {item}")
                     period_str = item["period"].isoformat()
                     period_counts[period_str][model_label] = item["count"]
 
@@ -162,7 +162,7 @@ class ANALYTICS_TASKS:
 
             results[period_label] = merged_data
 
-        # await MY_METHODS.printStatus("Exiting GetGroupedChartData...")
+        # #await MY_METHODS.printStatus("Exiting GetGroupedChartData...")
 
         return results["daily"]
     # 6.a Chart for Clients
@@ -210,5 +210,5 @@ class ANALYTICS_TASKS:
 
         except Exception as e:
             # Log or handle error if needed
-            await MY_METHODS.printStatus(f"Error in GetUsersDataTask: {e}")
+            #await MY_METHODS.printStatus(f"Error in GetUsersDataTask: {e}")
             return None

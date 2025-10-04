@@ -11,6 +11,7 @@ class PROFILE_TASKS:
             user_profile_ins.name = data.name
             user_profile_ins.email = data.email
             user_profile_ins.phone = data.phone
+            user_profile_ins.countryCode = data.countryCode
             user_profile_ins.profile_image_url = data.profile_image_url
             await sync_to_async(user_profile_ins.save)()
             return True
@@ -25,6 +26,7 @@ class PROFILE_TASKS:
             user_profile_ins.name = data.name
             user_profile_ins.email = data.email
             user_profile_ins.phone = data.phone
+            user_profile_ins.countryCode = data.countryCode
             user_profile_ins.profile_image_url = data.profile_image_url
             await sync_to_async(user_profile_ins.save)()
             return True
@@ -66,6 +68,7 @@ class PROFILE_TASKS:
                 'name': user_profile_ins.name if user_profile_ins.name else '',
                 'email': user_profile_ins.email if user_profile_ins.email else '',
                 'phone': user_profile_ins.phone if user_profile_ins.phone else '',
+                'countryCode': user_profile_ins.countryCode if user_profile_ins.countryCode else '',
             }
             if(user_profile_ins.profile_image):
                 user_profile_data['profile_image']=user_profile_ins.profile_image.url
