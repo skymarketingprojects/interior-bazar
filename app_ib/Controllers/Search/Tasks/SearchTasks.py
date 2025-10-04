@@ -117,13 +117,14 @@ class SEARCH_TASKS:
             # Handle location
             location_data = business_location_data if business_location_data else {}
             city = f"{location_data.get('city', None)} ," if location_data.get('city') else None 
-            state = f"{location_data.get('state', None)} ," if location_data.get('state') else None
-            country = f"{location_data.get('country', None)}" if location_data.get('country') else None
+            state = f"{location_data.get('state', None)['name']} ," if location_data.get('state') else None
+            country = f"{location_data.get('country', None)['name']}" if location_data.get('country') else None
+            await MY_METHODS.printStatus(f'state {state} country {country}')
             final_data['location'] = f"{city if city else ''}{state if state else ''}{country if country else ''}"
             # Handle rating - assuming you still want a random rating for the example
             rating = await MY_METHODS.get_random_rating()
             final_data['rating'] = f"{rating}"
-            final_data['ratingValue'] = float(rating)  # ratingValue as number
+            final_data['ratingValue'] = float(rating)
             #await MY_METHODS.printStatus(f'final_data {final_data}')
 
             return final_data
