@@ -26,7 +26,7 @@ class SEARCH_TASKS:
     @classmethod
     async def PaginateQuery(self,businesses_query,PageNo):
         page_number = PageNo
-        page_size = 3 # for production 3 for testing
+        page_size = 6 # for production 3 for testing
 
         # Fetch the user data asynchronously
         businesses = await sync_to_async(list)(businesses_query)
@@ -119,7 +119,7 @@ class SEARCH_TASKS:
             city = f"{location_data.get('city', None)} ," if location_data.get('city') else None 
             state = f"{location_data.get('state', None)['name']} ," if location_data.get('state') else None
             country = f"{location_data.get('country', None)['name']}" if location_data.get('country') else None
-            await MY_METHODS.printStatus(f'state {state} country {country}')
+            #await MY_METHODS.printStatus(f'state {state} country {country}')
             final_data['location'] = f"{city if city else ''}{state if state else ''}{country if country else ''}"
             # Handle rating - assuming you still want a random rating for the example
             rating = await MY_METHODS.get_random_rating()

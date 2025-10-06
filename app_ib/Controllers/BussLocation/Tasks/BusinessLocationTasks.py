@@ -54,7 +54,7 @@ class BUSS_LOC_TASK:
                 "id": business_loc_ins.locationState.id,
                 "name": business_loc_ins.locationState.name
             } if business_loc_ins.locationState else {
-                "id": None,
+                "id": 1,
                 "name": business_loc_ins.state
             }
             country = {
@@ -62,9 +62,9 @@ class BUSS_LOC_TASK:
                 "name": business_loc_ins.locationCountry.name,
                 "code": business_loc_ins.locationCountry.code
             } if business_loc_ins.locationCountry else {
-                "id": None,
+                "id": 1,
                 "name": business_loc_ins.country,
-                "code": None
+                "code":1
             }
             business_loc_data={
                 'pin_code':business_loc_ins.pin_code,
