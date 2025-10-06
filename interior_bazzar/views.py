@@ -7,7 +7,7 @@ def render_index(request, page_name):
 def seller_buyer(request):
     return render_index(request, 'seller buyer')
 def home(request):
-    return render(request, 'home.html', {'page_name': 'home'})
+    return render_index(request, 'Home')
 
 def blog(request):
     return render_index(request, 'blog')
