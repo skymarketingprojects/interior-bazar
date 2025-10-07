@@ -175,19 +175,47 @@ class LeadQuery(models.Model):
     def __str__(self):
         return f'business_id {self.pk}  name: {self.name}  phone{self.phone} date {self.timestamp}'
 
+class Subscription(models.Model):
+    type= models.CharField(max_length=800,null=True, blank=True) #listing or #Filter
+    title= models.CharField(max_length=800,null=True, blank=True) 
+    subtitle= models.CharField(max_length=800,null=True, blank=True) 
+    services= models.TextField()
+    duration= models.CharField(max_length=800,null=True, blank=True)
+    tag= models.CharField(max_length=800,null=True, blank=True) 
+    amount= models.CharField(max_length=800,null=True, blank=True) 
+    discount_percentage= models.CharField(max_length=800,null=True, blank=True) 
+    discount_amount= models.CharField(max_length=800,null=True, blank=True) 
+    payable_amount= models.CharField(max_length=800,null=True, blank=True) 
+
+    cover_image= models.FileField(null=True, blank=True, upload_to='subscription/attachment')
+    fallback_image_url= models.URLField(max_length=2250, null=True, blank=True) 
+    video= models.FileField(null=True, blank=True, upload_to='subscription/video')
+    video_url= models.URLField(max_length=2250, null=True, blank=True)
+    plan_pdf= models.FileField(null=True, blank=True, upload_to='subscription/pdf')
+    plan_pdf_url= models.URLField(max_length=2250, null=True, blank=True)
+
+    is_active= models.BooleanField(default=False)
+    timestamp= models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    def __str__(self):
+        return f'ID:{self.id} rating:{self.title}'
+
 
 class BusinessPlan(models.Model):
     business= models.ForeignKey(Business,on_delete=models.CASCADE, null=True, blank=True,related_name='business_plan')
     services= models.TextField()
-    is_active= models.BooleanField(default=False)
-    plan_summary= models.TextField()
-    last_activate= models.DateTimeField(auto_now_add=True)
-    expire_date= models.DateTimeField(auto_now_add=True)
+    amount= models.CharField(max_length=500,default='')
+    plan = models.ForeignKey(Subscription, on_delete=models.SET_NULL, null=True, blank=True)
+    isActive= models.BooleanField(default=False)
+    transactionId= models.CharField(max_length=500,default='',null=True, blank=True)
+    planSummary= models.TextField()
+    lastActivate= models.DateTimeField(auto_now_add=True)
+    expireDate= models.DateTimeField(null=True, blank=True)
     timestamp= models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    updatedAt = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f'is_active:{self.is_active} expire_date:{self.expire_date}'
+        return f'is_active:{self.isActive} expire_date:{self.expireDate}'
 # Platform own Plan buy query
 class PlanQuery(models.Model):
     user= models.ForeignKey(CustomUser,on_delete=models.CASCADE, null=True, blank=True)
@@ -250,30 +278,6 @@ class Feedback(models.Model):
         return f'pk:{self.pk}  feedback:{self.feedback}'
 
 
-class Subscription(models.Model):
-    type= models.CharField(max_length=800,null=True, blank=True) #listing or #Filter
-    title= models.CharField(max_length=800,null=True, blank=True) 
-    subtitle= models.CharField(max_length=800,null=True, blank=True) 
-    services= models.TextField()
-    duration= models.CharField(max_length=800,null=True, blank=True) 
-    tag= models.CharField(max_length=800,null=True, blank=True) 
-    amount= models.CharField(max_length=800,null=True, blank=True) 
-    discount_percentage= models.CharField(max_length=800,null=True, blank=True) 
-    discount_amount= models.CharField(max_length=800,null=True, blank=True) 
-    payable_amount= models.CharField(max_length=800,null=True, blank=True) 
-
-    cover_image= models.FileField(null=True, blank=True, upload_to='subscription/attachment')
-    fallback_image_url= models.URLField(max_length=2250, null=True, blank=True) 
-    video= models.FileField(null=True, blank=True, upload_to='subscription/video')
-    video_url= models.URLField(max_length=2250, null=True, blank=True)
-    plan_pdf= models.FileField(null=True, blank=True, upload_to='subscription/pdf')
-    plan_pdf_url= models.URLField(max_length=2250, null=True, blank=True)
-
-    is_active= models.BooleanField(default=False)
-    timestamp= models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    def __str__(self):
-        return f'ID:{self.id} rating:{self.title}'
 
 class Blog(models.Model):
     user= models.ForeignKey(CustomUser,on_delete=models.CASCADE, null=True, blank=True)

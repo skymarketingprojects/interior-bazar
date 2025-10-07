@@ -18,6 +18,7 @@ from app_ib.Views import StockMediaView
 from app_ib.Views import BlogView
 from app_ib.Views import Subscription
 from app_ib.Views import OfferTextView
+from app_ib.Views import PaymentView
 
 from app_ib.Views import ContactView
 from app_ib.Views import PageView
@@ -174,4 +175,11 @@ urlpatterns = [
     ######################################################
     path('v1/business/location/countries/', BusinessLocationView.GetCountryListView, name='GetCountryListView'),
     path('v1/business/location/states/<int:countryId>/', BusinessLocationView.GetStateListByCountryIDView, name='GetStateListView'),
+    ######################################################
+    # payment gateway
+    ######################################################
+    path('v1/payment/initiate/', PaymentView.InitiatePaymentView, name='InitiatePaymentView'),
+    path('v1/payment/status/', PaymentView.CheckPaymentStatusView, name='CheckPaymentStatusView'),
+    path('v1/payment/refund/', PaymentView.RefundTransactionView, name='RefundTransactionView'),
+
 ]

@@ -11,6 +11,30 @@ from app_ib.Utils.AppMode import APPMODE
 
 
 class MY_METHODS:
+
+    @staticmethod
+    async def formatAmount(input_value):
+        if not isinstance(input_value, str):
+            input_value = str(input_value)
+        cleaned = re.sub(r"[^0-9.]", "", input_value)
+
+        parts = cleaned.split(".")
+
+        if len(parts) > 2:
+            valid_number = f"{parts[0]}.{parts[1]}"
+        else:
+            valid_number = cleaned
+
+        try:
+            parsed = float(valid_number)
+        except ValueError:
+            return 0.0
+
+        return round(parsed, 2)
+
+    @staticmethod
+    async def getCurrentDateTime():
+        return time.localtime(time.time())
     @staticmethod
     async def get_random_rating():
         rating = random.uniform(3, 5)

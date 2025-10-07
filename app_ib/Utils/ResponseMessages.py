@@ -265,6 +265,15 @@ class RESPONSE_MESSAGES:
     ############################################
     OFFER_TEXT_FETCH_ERROR= 'Unable to fetch offer text'
     OFFER_TEXT_FETCH_SUCCESS= 'Offer text fetched successfully'
+
+    ############################################
+    # Business Plan
+    ############################################
+    business_plan_activate_success= 'Business plan activated successfully'
+    business_plan_activate_error= 'Unable to activate business plan'
+
+    business_plan_create_success= 'Business plan created successfully'
+    business_plan_create_error= 'Unable to create business plan'
     
 
 class VALIDATION_MESSAGES:

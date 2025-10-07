@@ -33,7 +33,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-+v0qbypjz*^(5^!7@uosljz@9phfii&=13u3*)0oz802oulfzu'
 
 # Set the environment
-ENV =  APPMODE.PROD
+ENV =  APPMODE.DEV
 
 
 print(f'ENV: {ENV}')
@@ -327,6 +327,12 @@ EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD') # Use generated app password he
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
+
+
+#payment Gateway
+PHONEPE_CLIENT_ID = env('PHONEPE_CLIENT_ID')
+PHONEPE_CLIENT_SECRET = env('PHONEPE_CLIENT_SECRET')
+PHONEPE_CLIENT_VERSION = env('PHONEPE_CLIENT_VERSION')
 
     # Development:
     #  eb deploy dev-ib-env-1 --profile interiorBazzar
