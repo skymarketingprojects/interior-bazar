@@ -216,6 +216,15 @@ class BusinessPlan(models.Model):
 
     def __str__(self):
         return f'is_active:{self.isActive} expire_date:{self.expireDate}'
+    
+    def save(self, *args, **kwargs):
+        if self.isActive and self.business:
+            BusinessPlan.objects.filter(
+                business=self.business,
+                isActive=True
+            ).exclude(id=self.id).update(isActive=False)
+
+        super().save(*args, **kwargs)
 # Platform own Plan buy query
 class PlanQuery(models.Model):
     user= models.ForeignKey(CustomUser,on_delete=models.CASCADE, null=True, blank=True)

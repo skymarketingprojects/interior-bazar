@@ -5,7 +5,7 @@ from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.models import UserProfile
 from app_ib.Controllers.Profile.Tasks.Taskys import PROFILE_TASKS
 from app_ib.Utils.MyMethods import MY_METHODS
-
+from app_ib.Controllers.Plans.PlanController import PLAN_CONTROLLER
 
 class PROFILE_CONTROLLER:
 ###########################################
@@ -132,45 +132,66 @@ class PROFILE_CONTROLLER:
                 })
 
 
- ###########################################
- # GetProfile   
- ###########################################                   
-    @classmethod 
-    async def GetProfile(self, user_ins):
+    ###########################################
+    # GetProfile   
+    ###########################################                   
+
+    @classmethod
+    async def GetProfileData(cls, userIns, includePlan=False):
         try:
-            #await MY_METHODS.printStatus(f'user instance {user_ins}')
+            is_user_profile_created = await sync_to_async(UserProfile.objects.filter(user=userIns).exists)()
             
-            is_user_profile_created = await sync_to_async(UserProfile.objects.filter(user=user_ins).exists)()
-            #await MY_METHODS.printStatus(f'is user profile created {is_user_profile_created}')
-            
-            # Update Profile Image if already exist : 
+            user_data = {
+                "username": userIns.username,
+                "role": userIns.type,
+                "id": userIns.id
+            }
+
             if is_user_profile_created:
-                user_profile_ins = await sync_to_async(UserProfile.objects.get)(user=user_ins)
-                user_profile_data= await PROFILE_TASKS.GetProfileDataTask(user_profile_ins=user_profile_ins)
-                user_profile_data["username"] = user_ins.username
-                user_profile_data["role"] = user_ins.type
-                user_profile_data["id"] = user_ins.id
-                
-                return LocalResponse(
-                    response=RESPONSE_MESSAGES.success,
-                    message=RESPONSE_MESSAGES.user_profile_fetch_success,
-                    code=RESPONSE_CODES.success,
-                    data=user_profile_data)
+                user_profile_ins = await sync_to_async(UserProfile.objects.get)(user=userIns)
+                user_profile_data = await PROFILE_TASKS.GetProfileDataTask(user_profile_ins=user_profile_ins)
+
+                user_profile_data.update(user_data)
+
+                if includePlan:
+                    plan_data = await PLAN_CONTROLLER.GetBusinessPlan(user=userIns)
+                    return LocalResponse(
+                        response=RESPONSE_MESSAGES.success,
+                        message=RESPONSE_MESSAGES.user_profile_fetch_success,
+                        code=RESPONSE_CODES.success,
+                        data={
+                            "user": user_profile_data,
+                            "plan": plan_data.data
+                        }
+                    )
+                else:
+                    return LocalResponse(
+                        response=RESPONSE_MESSAGES.success,
+                        message=RESPONSE_MESSAGES.user_profile_fetch_success,
+                        code=RESPONSE_CODES.success,
+                        data=user_profile_data
+                    )
+
+            # If profile doesn't exist
             return LocalResponse(
-                    response=RESPONSE_MESSAGES.success,
-                    message=RESPONSE_MESSAGES.user_profile_fetch_success,
-                    code=RESPONSE_CODES.success,
-                    data={
-                        "username": user_ins.username,
-                        "role": user_ins.type,
-                        "id": user_ins.id
-                    })
+                response=RESPONSE_MESSAGES.success,
+                message=RESPONSE_MESSAGES.user_profile_fetch_success,
+                code=RESPONSE_CODES.success,
+                data=user_data
+            )
 
         except Exception as e:
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.user_profile_fetch_error,
                 code=RESPONSE_CODES.error,
-                data={
-                    'error': str(e)
-                })
+                data={'error': str(e)}
+            )
+
+    @classmethod
+    async def GetProfile(cls, userIns):
+        return await cls.GetProfileData(userIns, includePlan=False)
+
+    @classmethod
+    async def GetProfileDashbord(cls, userIns):
+        return await cls.GetProfileData(userIns, includePlan=True)

@@ -119,9 +119,9 @@ class PLAN_CONTROLLER:
     @classmethod
     async def ActivateBusinessPlan(self,transectionId):
         try:
-            is_plan_exist= await sync_to_async(BusinessPlan.objects.filter(transaction_id=transectionId).exists)()
+            is_plan_exist= await sync_to_async(BusinessPlan.objects.filter(transactionId=transectionId).exists)()
             if(is_plan_exist):
-                planIns=await sync_to_async(BusinessPlan.objects.get)(transaction_id=transectionId)
+                planIns=await sync_to_async(BusinessPlan.objects.get)(transactionId=transectionId)
                 activate_plan_response = await  PLAN_TASKS.ActivateBusinessPlan(planIns)
                 if activate_plan_response:
                     return LocalResponse(
@@ -131,12 +131,14 @@ class PLAN_CONTROLLER:
                         data={"id":planIns.id})
 
                 else:
+                    await MY_METHODS.printStatus(f'Failed to activate business plan for transaction id {transectionId}')
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.error,
                         message=RESPONSE_MESSAGES.business_plan_activate_error,
                         code=RESPONSE_CODES.error,
                         data={"id":planIns.id})
             else:
+                await MY_METHODS.printStatus(f'Business plan does not exist for transaction id {transectionId}')
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.error,
                     message=RESPONSE_MESSAGES.business_plan_activate_error,
@@ -144,9 +146,49 @@ class PLAN_CONTROLLER:
                     data={})
 
         except Exception as e:
+            await MY_METHODS.printStatus(f'Error in ActivateBusinessPlan: {e}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.business_plan_activate_error,
+                code=RESPONSE_CODES.error,
+                data={
+                    'error': str(e)
+                })
+        
+    @classmethod
+    async def GetBusinessPlan(self,user):
+        try:
+            business = user.user_business
+            plans = business.business_plan.all()
+            plansData= {}
+            for plan in plans:
+                if plan.isActive == False:
+                    continue
+                data = await PLAN_TASKS.GetBusinessPlanData(businessPlan=plan)
+                if data:
+                    plansData=data
+                if plan.isActive == True:
+                    break
+
+            if plansData:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.business_plan_fetch_success,
+                    code=RESPONSE_CODES.success,
+                    data=plansData
+                    )
+
+            else:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.error,
+                    message=RESPONSE_MESSAGES.business_plan_fetch_error,
+                    code=RESPONSE_CODES.error,
+                    data={})
+
+        except Exception as e:
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.business_plan_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
                     'error': str(e)

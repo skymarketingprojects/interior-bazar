@@ -274,6 +274,9 @@ class RESPONSE_MESSAGES:
 
     business_plan_create_success= 'Business plan created successfully'
     business_plan_create_error= 'Unable to create business plan'
+
+    business_plan_fetch_success= 'Business plan fetched successfully'
+    business_plan_fetch_error= 'Unable to fetch business plan'
     
 
 class VALIDATION_MESSAGES:

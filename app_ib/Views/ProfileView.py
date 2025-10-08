@@ -12,7 +12,7 @@ from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 from app_ib.Controllers.Profile.ProfileController import PROFILE_CONTROLLER
-
+from app_ib.Controllers.Plans.PlanController import PLAN_CONTROLLER
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 async def CreateProfileView(request):
@@ -78,10 +78,35 @@ async def CreateOrUpdateProfileImageView(request):
 async def GetProfileView(request):
     try:
         # Get user instance
-        user_ins = request.user
+        userIns = request.user
         
         # Call Auth Controller to Create User
-        auth_resp = await  asyncio.gather(PROFILE_CONTROLLER.GetProfile(user_ins=user_ins))
+        auth_resp = await  asyncio.gather(PROFILE_CONTROLLER.GetProfile(userIns=userIns))
+        auth_resp = auth_resp[0]
+
+        return ServerResponse(
+            response=auth_resp.response,
+            code=auth_resp.code,
+            message=auth_resp.message,
+            data=auth_resp.data)
+
+    except Exception as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message=RESPONSE_MESSAGES.user_profile_create_error,
+            code=RESPONSE_CODES.error,
+            data={
+                'error': str(e)
+            })
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+async def GetProfileDashbordView(request):
+    try:
+        # Get user instance
+        userIns = request.user
+        
+        # Call Auth Controller to Create User
+        auth_resp = await  asyncio.gather(PROFILE_CONTROLLER.GetProfileDashbord(userIns=userIns))
         auth_resp = auth_resp[0]
 
         return ServerResponse(
@@ -99,3 +124,30 @@ async def GetProfileView(request):
                 'error': str(e)
             })
 
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+async def GetPlanView(request):
+    try:
+        # Get user instance
+        userIns = request.user
+        
+        # Call Auth Controller to Create User
+        planData = await PLAN_CONTROLLER.GetBusinessPlan(user=userIns)
+ 
+
+        return ServerResponse(
+            response=planData.response,
+            code=planData.code,
+            message=planData.message,
+            data=planData.data)
+
+    except Exception as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message=RESPONSE_MESSAGES.user_profile_create_error,
+            code=RESPONSE_CODES.error,
+            data={
+                'error': str(e)
+            }
+        )

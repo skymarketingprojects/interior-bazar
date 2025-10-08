@@ -120,6 +120,7 @@ class PaymentGatewayController:
             response = client.get_order_status(merchant_order_id=transactionId)
             if response.state == "COMPLETED":
                 activate = await PLAN_CONTROLLER.ActivateBusinessPlan(transactionId)
+                await MY_METHODS.printStatus(f"activate {activate}")
             data={
                     "status": response.state,  # "COMPLETED", "PENDING", etc.
                     "transactionId": transactionId

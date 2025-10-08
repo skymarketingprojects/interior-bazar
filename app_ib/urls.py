@@ -54,6 +54,8 @@ urlpatterns = [
     path('v1/user/profile/create/', ProfileView.CreateProfileView, name='CreateProfileView'),
     path('v1/user/profile-image/update/', ProfileView.CreateOrUpdateProfileImageView, name='CreateOrUpdateProfileImageView'),
     path('v1/user/profile/', ProfileView.GetProfileView, name='GetProfileView'),
+    path('v1/user/profile/dashboard/', ProfileView.GetProfileDashbordView, name='GetProfileView'),
+    path('v1/user/plan/', ProfileView.GetPlanView, name='GetPlanView'),
 
     #########################################################
     # Client Location: 
