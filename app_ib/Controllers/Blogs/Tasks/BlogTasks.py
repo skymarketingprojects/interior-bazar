@@ -14,7 +14,7 @@ class BLOG_TASK:
                 "coverImageUrl": blog_instance.cover_image_url,
                 "authorName": blog_instance.author,
                 "authorImage": blog_instance.authorImageUrl,
-                "publishDate": blog_instance.timestamp,
+                "publishDate": blog_instance.timestamp.strftime("%d-%m-%Y"),
                 "readTime": await MY_METHODS.getReadTime(blog_instance.description.html),
             }
             return blog_data
