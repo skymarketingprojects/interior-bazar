@@ -296,6 +296,7 @@ class Blog(models.Model):
     cover_image_url = models.TextField(default='',null=True, blank=True)
     description=QuillField(null=True, blank=True)
     author= models.TextField()
+    authorImageUrl = models.URLField(default='',null=True, blank=True)
     timestamp= models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
