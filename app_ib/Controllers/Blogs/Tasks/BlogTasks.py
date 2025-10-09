@@ -12,8 +12,10 @@ class BLOG_TASK:
                 "title": blog_instance.title,
                 "slug": blog_instance.slug,
                 "coverImageUrl": blog_instance.cover_image_url,
-                "author": blog_instance.author,
-                "timestamp": blog_instance.timestamp,
+                "authorName": blog_instance.author,
+                "authorImage": blog_instance.authorImage,
+                "publishDate": blog_instance.timestamp,
+                "readTime": await MY_METHODS.getReadTime(blog_instance.description.html),
             }
             return blog_data
 

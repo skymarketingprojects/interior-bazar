@@ -13,6 +13,12 @@ from app_ib.Utils.AppMode import APPMODE
 class MY_METHODS:
 
     @staticmethod
+    async def getReadTime(content):
+        words = content.split()
+        read_time = len(words) // 200 + 1
+        return read_time
+
+    @staticmethod
     async def formatAmount(input_value):
         if not isinstance(input_value, str):
             input_value = str(input_value)
