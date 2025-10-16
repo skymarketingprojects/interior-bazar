@@ -158,7 +158,6 @@ urlpatterns = [
     path('v1/blog/', BlogView.GetAllBlogsView, name='GetAllBlogsView'),
     path('v1/blog/pagination/<int:page>/', BlogView.GetBlogsPaginationView, name='GetBlogsPagination'),
     path('v1/blog/<int:id>/', BlogView.GetBlogByIdView, name='GetBlogByTitleView'),
-    path('v1/admin/', include('interior_admin.urls')),
 
     #########################################################
     # Offer text
@@ -184,4 +183,9 @@ urlpatterns = [
     path('v1/payment/status/', PaymentView.CheckPaymentStatusView, name='CheckPaymentStatusView'),
     path('v1/payment/refund/', PaymentView.RefundTransactionView, name='RefundTransactionView'),
 
+    ######################################################
+    # include
+    ######################################################
+    path('v1/admin/', include('interior_admin.urls')),
+    path('v1/ads/', include('interior_ads.urls')),
 ]

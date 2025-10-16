@@ -10,18 +10,27 @@ class BUSINESS_INFO_TASKS:
             assignLeads = business.business_lead_query.count()
             platformLeads = 0
             totalLeads = assignLeads + platformLeads
-            plan = business.business_plan.all()
-            if plan:
-                plan = plan.first()
-                plan = plan.services
-            else:
-                plan = None
+            plans = business.business_plan.all()
+            planData = []
+            if plans:
+                # plans = plans.first()
+                # plans = plans.service
+                plans = plans.filter(isActive=True)
+                for plan in plans:
+                    plan = {
+                        "id": plan.id,
+                        "name": plan.plan.title,
+                        "expiryDate": plan.expireDate.strftime("%d-%m-%Y"),
+                        "isActive": plan.isActive,
+                        "amount": plan.amount
+                    }
+                    planData.append(plan)
 
             data = {
                 'name': business.business_name,
                 "joinAt": business.timestamp.strftime("%d-%m-%Y"),
                 "id": business.id,
-                "plan": plan,
+                "plan": planData,
                 "assignedLeads": assignLeads,
                 "platformLeads": platformLeads,
                 "totalLeads":totalLeads

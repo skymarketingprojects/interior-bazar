@@ -5,7 +5,8 @@ from datetime import timedelta
 from django.utils.dateparse import parse_datetime
 from django.core.paginator import Paginator
 from app_ib.Utils.MyMethods import MY_METHODS
-
+from django.conf import settings
+from app_ib.Utils.AppMode import APPMODE
 
 class ADMIN_PANEL_TASKS:
     
@@ -15,7 +16,7 @@ class ADMIN_PANEL_TASKS:
             active_businesses = await sync_to_async(
                 lambda: BusinessPlan.objects.filter(expire_date__gte=timezone.now()).values_list('business_id', flat=True).distinct().count()
             )()
-            return active_businesses
+            return active_businesses if active_businesses is not None else 0
         except Exception as e:
             #await MY_METHODS.printStatus(f"Error in GetTotalActiveBusinesses: {e}")
             return None
@@ -29,14 +30,18 @@ class ADMIN_PANEL_TASKS:
             inactive_count = await sync_to_async(
                 lambda: Business.objects.exclude(id__in=active_ids).count()
             )()
-            return inactive_count
+            return inactive_count if inactive_count is not None else 0
         except Exception as e:
             #await MY_METHODS.printStatus(f"Error in GetTotalInactiveBusinesses: {e}")
             return None
     @classmethod
     async def GetTotalBusinesses(cls):
         try:
-            count = await sync_to_async(Business.objects.count)()
+            count = 0
+            if settings.ENV == APPMODE.PROD:
+                count = await sync_to_async(lambda: Business.objects.filter(selfCreated=False).count())()
+            else:
+                count = await sync_to_async(lambda: Business.objects.all().count())()
             return count
         except Exception as e:
             #await MY_METHODS.printStatus(f"Error in GetTotalBusinesses: {e}")
@@ -45,9 +50,15 @@ class ADMIN_PANEL_TASKS:
     async def GetWeeklySignups(cls):
         try:
             last_week = timezone.now() - timedelta(days=7)
-            count = await sync_to_async(
-                lambda: Business.objects.filter(timestamp__gte=last_week).count()
-            )()
+            count = 0
+            if settings.ENV == APPMODE.PROD:
+                count = await sync_to_async(
+                    lambda: Business.objects.filter(timestamp__gte=last_week,selfCreated=False).count()
+                )()
+            else:
+                count = await sync_to_async(
+                    lambda: Business.objects.filter(timestamp__gte=last_week).count()
+                )()
             return count
         except Exception as e:
             #await MY_METHODS.printStatus(f"Error in GetWeeklySignups: {e}")
@@ -56,7 +67,11 @@ class ADMIN_PANEL_TASKS:
     @classmethod
     async def GetBusinessTiles(cls, start_date=None, end_date=None, page_number=1, page_size=2):
         try:
-            businesses = Business.objects.all()
+            businesses = None
+            if settings.ENV == APPMODE.PROD:
+                businesses = Business.objects.filter(selfCreated=False)
+            else:
+                businesses = Business.objects.all()
 
             # Apply date filters if provided
             if start_date:
@@ -122,7 +137,11 @@ class ADMIN_PANEL_TASKS:
     @classmethod
     async def GetTotalUsers(cls):
         try:
-            count = await sync_to_async(CustomUser.objects.count)()
+            count = 0
+            if settings.ENV == APPMODE.PROD:
+                count = await sync_to_async(CustomUser.objects.filter(selfCreated=False).count)()
+            else:
+                count = await sync_to_async(CustomUser.objects.all().count)()
             return count
         except Exception as e:
             #await MY_METHODS.printStatus(f"Error in GetTotalUsers: {e}")

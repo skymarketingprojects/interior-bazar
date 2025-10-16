@@ -6,6 +6,8 @@ from django.db.models import Q, Count
 from datetime import timedelta
 from django.db.models.functions import TruncDate, TruncWeek, TruncMonth
 from app_ib.Utils.MyMethods import MY_METHODS
+from django.conf import settings
+from app_ib.Utils.AppMode import APPMODE
 
 class ANALYTICS_TASKS:
 
@@ -13,9 +15,15 @@ class ANALYTICS_TASKS:
     @classmethod
     async def GetTotalClients(cls):
         try:
-            clients_count = await sync_to_async(
-                lambda: CustomUser.objects.filter(type="client").count()
-            )()
+            clients_count = 0
+            if settings.ENV == APPMODE.PROD:
+                clients_count = await sync_to_async(
+                    lambda: CustomUser.objects.filter(type="client", selfCreated=False).count()
+                )()
+            else:
+                clients_count = await sync_to_async(
+                    lambda: CustomUser.objects.filter(type="client").count()
+                )()
             return clients_count
         except Exception as e:
             #await MY_METHODS.printStatus(f"Error in GetTotalClients: {e}")
@@ -25,9 +33,15 @@ class ANALYTICS_TASKS:
     @classmethod
     async def GetTotalBusiness(cls):
         try:
-            business_count = await sync_to_async(
-                lambda: Business.objects.count()
-            )()
+            business_count = 0
+            if settings.ENV == APPMODE.PROD:
+                business_count = await sync_to_async(
+                    lambda: Business.objects.filter(selfCreated=False).count()
+                )()
+            else:
+                business_count = await sync_to_async(
+                    lambda: Business.objects.all().count()
+                )()
             return business_count
         except Exception as e:
             #await MY_METHODS.printStatus(f"Error in GetTotalBusiness: {e}")
@@ -37,9 +51,15 @@ class ANALYTICS_TASKS:
     @classmethod
     async def GetTotalUsers(cls):
         try:
-            users_count = await sync_to_async(
-                lambda: CustomUser.objects.count()
-            )()
+            users_count = 0
+            if settings.ENV == APPMODE.PROD:
+                users_count = await sync_to_async(
+                    lambda: CustomUser.objects.filter(selfCreated=False).count()
+                )()
+            else:
+                users_count = await sync_to_async(
+                    lambda: CustomUser.objects.all().count()
+                )()
             return users_count
         except Exception as e:
             #await MY_METHODS.printStatus(f"Error in GetTotalUsers: {e}")
@@ -51,17 +71,32 @@ class ANALYTICS_TASKS:
         try:
             today = timezone.now().date()
 
-            clients_today = await sync_to_async(
-                lambda: CustomUser.objects.filter(type="client", timestamp__date=today).count()
-            )()
+            clients_today = 0
+            business_today = 0
+            users_today = 0
+            
+            if settings.ENV == APPMODE.PROD:
+                clients_today = await sync_to_async(
+                    lambda: CustomUser.objects.filter(type="client", timestamp__date=today,selfCreated = False).count()
+                )()
+                business_today = await sync_to_async(
+                    lambda: Business.objects.filter(timestamp__date=today,selfCreated = False).count()
+                )()
+                users_today = await sync_to_async(
+                    lambda: CustomUser.objects.filter(timestamp__date=today,selfCreated = False).count()
+                )()
+            else:
+                clients_today = await sync_to_async(
+                    lambda: CustomUser.objects.filter(type="client", timestamp__date=today).count()
+                )()
 
-            business_today = await sync_to_async(
-                lambda: Business.objects.filter(timestamp__date=today).count()
-            )()
+                business_today = await sync_to_async(
+                    lambda: Business.objects.filter(timestamp__date=today).count()
+                )()
 
-            users_today = await sync_to_async(
-                lambda: CustomUser.objects.filter(timestamp__date=today).count()
-            )()
+                users_today = await sync_to_async(
+                    lambda: CustomUser.objects.filter(timestamp__date=today).count()
+                )()
 
             return {
                 "clients": clients_today,
@@ -75,10 +110,16 @@ class ANALYTICS_TASKS:
     async def GetTodayUserSignups(cls):
         try:
             today = timezone.now().date()
-
-            users_today = await sync_to_async(
-                lambda: CustomUser.objects.filter(timestamp__date=today).count()
-            )()
+            
+            users_today = 0
+            if settings.ENV == APPMODE.PROD:
+                users_today = await sync_to_async(
+                    lambda: CustomUser.objects.filter(timestamp__date=today,selfCreated = False).count()
+                )()
+            else:
+                users_today = await sync_to_async(
+                    lambda: CustomUser.objects.filter(timestamp__date=today).count()
+                )()
 
             return users_today
         except Exception as e:
@@ -91,15 +132,30 @@ class ANALYTICS_TASKS:
             now = timezone.now()
 
             def get_counts(start_date):
-                active = Business.objects.filter(
-                    businessplan__is_active=True,
-                    timestamp__gte=start_date
-                ).count()
-                inactive = Business.objects.filter(
-                    Q(businessplan__isnull=True) |
-                    Q(businessplan__is_active=False),
-                    timestamp__gte=start_date
-                ).count()
+                active = 0
+                inactive = 0
+                if settings.ENV == APPMODE.PROD:
+                    active = Business.objects.filter(
+                        businessplan__is_active=True,
+                        timestamp__gte=start_date,
+                        selfCreated = False
+                    ).count()
+                    inactive = Business.objects.filter(
+                        Q(businessplan__isnull=True) |
+                        Q(businessplan__is_active=False),
+                        timestamp__gte=start_date,
+                        selfCreated = False
+                    ).count()
+                else:
+                    active = Business.objects.filter(
+                        businessplan__is_active=True,
+                        timestamp__gte=start_date
+                    ).count()
+                    inactive = Business.objects.filter(
+                        Q(businessplan__isnull=True) |
+                        Q(businessplan__is_active=False),
+                        timestamp__gte=start_date
+                    ).count()
                 return {"active": active, "inactive": inactive}
 
             data = {
@@ -116,12 +172,15 @@ class ANALYTICS_TASKS:
     @classmethod
     async def GetChartData(cls, queryset, trunc_func, date_field="timestamp"):
         try:
-            return list(
+            data = list(
                 queryset.annotate(period=trunc_func(date_field))
                         .values("period")
                         .annotate(count=Count("id"))
                         .order_by("period")
             )
+            if data:
+                return data
+            return []
         except Exception:
             return []
 
@@ -168,33 +227,57 @@ class ANALYTICS_TASKS:
     # 6.a Chart for Clients
     @classmethod
     async def GetClientChart(cls):
-        data = await cls.GetChartData(CustomUser.objects.filter(type="client"))
-        return data if data else {"daily": [], "weekly": [], "monthly": []}
+        data = {"daily": [], "weekly": [], "monthly": []}
+        if settings.ENV == APPMODE.PROD:
+            data = await cls.GetChartData(CustomUser.objects.filter(type="client",selfCreated = False))
+        else:
+            data = await cls.GetChartData(CustomUser.objects.filter(type="client"))
+        return data
 
     # 6.b Chart for Businesses
     @classmethod
     async def GetBusinessChart(cls):
-        data = await cls.GetChartData(Business)
-        return data if data else {"daily": [], "weekly": [], "monthly": []}
+        data = {"daily": [], "weekly": [], "monthly": []}
+        if settings.ENV == APPMODE.PROD:
+            data = await cls.GetChartData(Business.objects.filter(selfCreated = False))
+        else:
+            data = await cls.GetChartData(Business)
+        return data
     # 6.c Chart for Users
     @classmethod
     async def GetUserChart(cls):
-        data = await cls.GetChartData(CustomUser)
-        return data if data else {"daily": [], "weekly": [], "monthly": []}
+        data  = {"daily": [], "weekly": [], "monthly": []}
+        if settings.ENV == APPMODE.PROD:
+            data = await cls.GetChartData(CustomUser.objects.filter(selfCreated = False))
+        else:
+            data = await cls.GetChartData(CustomUser)
+        return data
 
     @classmethod
     async def GetDailyUsersTask(cls):
         try:
             # Step 1: Query daily lead counts
-            daily_counts = await sync_to_async(
-                lambda: list(
-                    CustomUser.objects
-                    .annotate(date=TruncDate('timestamp'))
-                    .values('date')
-                    .annotate(count=Count('id'))
-                    .order_by('date')
-                )
-            )()
+            daily_counts = 0
+            if settings.ENV == APPMODE.PROD:
+                daily_counts = await sync_to_async(
+                    lambda: list(
+                        CustomUser.objects.filter(selfCreated = False)
+                        .annotate(date=TruncDate('timestamp'))
+                        .values('date')
+                        .annotate(count=Count('id'))
+                        .order_by('date')
+                    )
+                )()
+            else:
+                daily_counts = await sync_to_async(
+                    lambda: list(
+                        CustomUser.objects
+                        .annotate(date=TruncDate('timestamp'))
+                        .values('date')
+                        .annotate(count=Count('id'))
+                        .order_by('date')
+                    )
+                )()
 
             # Step 2: Build cumulative data
             cumulative = []

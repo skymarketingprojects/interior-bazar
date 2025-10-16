@@ -58,7 +58,7 @@ class PLAN_TASKS:
     @classmethod
     async def CreateBusinessPlan(self,plan,businessId,transectionId):
         try:
-            await MY_METHODS.printStatus(f'Creating business plan for businessId: {businessId} with planId: {plan.id}')
+            #await MY_METHODS.printStatus(f'Creating business plan for businessId: {businessId} with planId: {plan.id}')
             business = await sync_to_async(Business.objects.get)(id=businessId)
             today = await MY_METHODS.getCurrentDateTime()
             planDuration = int(plan.duration)
@@ -77,7 +77,7 @@ class PLAN_TASKS:
             data = self.GetBusinessPlanData(businessPlanIns)
             return data
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in CreateBusinessPlan {e}')
+            #await MY_METHODS.printStatus(f'Error in CreateBusinessPlan {e}')
             return None
         
     @classmethod

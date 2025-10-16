@@ -98,8 +98,8 @@ class SEARCH_TASKS:
             #await MY_METHODS.printStatus(f'\nbusiness_data {business_data}\n')
 
             # Handle time ago logic
-            updatedAt = business_data.get('updatedAt', None)
-            time_ago = await sync_to_async(self.get_time_ago)(updatedAt)  # Wrap with sync_to_async
+            timestamp = business_data.get('timestamp', None)
+            time_ago = await sync_to_async(self.get_time_ago)(updated_at=timestamp)
 
             # Assign the required fields to final_data in camelCase format
             final_data['id'] = business.pk

@@ -2,7 +2,8 @@ from asgiref.sync import sync_to_async
 from app_ib.models import Business
 from app_ib.Utils.MyMethods import MY_METHODS
 from django.db.models import Q
-
+from django.conf import settings
+from app_ib.Utils.AppMode import APPMODE
 
 class MATCH_LEADS_TASKS:
 
@@ -32,13 +33,30 @@ class MATCH_LEADS_TASKS:
     @classmethod
     async def MatchingBusinesses(cls, city, state, country):
         """Fetch businesses matching at least one location field"""
-        return await sync_to_async(
-            lambda: list(Business.objects.filter(
-                Q(business_location__city__iexact=city)
-                | Q(business_location__state__iexact=state)
-                | Q(business_location__country__iexact=country)
-            ))
-        )()
+        businessList = []
+        try:
+            if settings.ENV == APPMODE.PROD:
+                businessList = await sync_to_async(
+                                lambda: list(Business.objects.filter(
+                                    Q(business_location__city__iexact=city)
+                                    | Q(business_location__state__iexact=state)
+                                    | Q(business_location__country__iexact=country),
+                                    selfCreated = False
+                                ))
+                            )()
+            else:
+                businessList = await sync_to_async(
+                    lambda: list(Business.objects.filter(
+                        Q(business_location__city__iexact=city)
+                        | Q(business_location__state__iexact=state)
+                        | Q(business_location__country__iexact=country)
+                    ))
+                )()
+        except Exception as e:
+            #await MY_METHODS.printStatus(f"Error in MatchingBusinesses: {e}")
+            return None
+
+        return 
 
     @classmethod
     async def LocationScore(cls, businesses, city, state, country):

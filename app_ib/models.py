@@ -32,6 +32,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)  # Needed for Django admin
     is_delete = models.BooleanField(default=False)
     timestamp = models.DateTimeField(auto_now_add=True)
+    selfCreated = models.BooleanField(default=False)
     last_login = models.DateTimeField(null=True, blank=True)  # From AbstractBaseUser but can override
 
     objects = CustomUserManager()
@@ -104,6 +105,8 @@ class Business(models.Model):
     bio = models.TextField( null=True, blank=True)
     timestamp= models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    selfCreated = models.BooleanField(default=False)
 
     def __str__(self):
         return f'business name - {self.business_name} : pk: {self.pk}'
