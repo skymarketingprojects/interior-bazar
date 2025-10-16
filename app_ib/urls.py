@@ -188,4 +188,5 @@ urlpatterns = [
     ######################################################
     path('v1/admin/', include('interior_admin.urls')),
     path('v1/ads/', include('interior_ads.urls')),
+    path('v1/bots/', include('interior_bot.urls')),
 ]

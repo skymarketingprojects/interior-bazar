@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     'django.contrib.sitemaps',
     'django.contrib.sites',
     'interior_ads',
+    'interior_bot',
 ]
 
 MIDDLEWARE = [
