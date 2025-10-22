@@ -129,6 +129,7 @@ class BUSS_TASK:
             # Serialize them
             segment_data = [await cls.GetBusinessTypeData(seg) for seg in segments]
             category_data = [await cls.GetBusinessTypeData(cat) for cat in categories]
+            #await MY_METHODS.printStatus(f"category {category_data},categories {categories}")
 
             data = {
                 'businessName': business_ins.business_name,
@@ -142,6 +143,7 @@ class BUSS_TASK:
                 'bio': business_ins.bio,
                 'updatedAt': business_ins.updated_at,
                 'badge': business_ins.businessBadge.image_url if business_ins.businessBadge else None,
+                'timestamp': business_ins.timestamp
             }
 
             # Serialize business type

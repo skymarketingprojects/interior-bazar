@@ -12,6 +12,6 @@ class MESSAGE_BOT_TASKS:
             }
             return botData
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error getting message data : {str(e)}")
+            #await MY_METHODS.printStatus(f"Error getting message data : {str(e)}")
             return False
 

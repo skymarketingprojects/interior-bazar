@@ -99,7 +99,9 @@ class SEARCH_TASKS:
 
             # Handle time ago logic
             timestamp = business_data.get('timestamp', None)
-            time_ago = await sync_to_async(self.get_time_ago)(updated_at=timestamp)
+            time_ago = await self.get_time_ago(updated_at=timestamp)
+            
+            #await MY_METHODS.printStatus(f"time_ago {time_ago}, timestamp {timestamp}")
 
             # Assign the required fields to final_data in camelCase format
             final_data['id'] = business.pk
@@ -107,10 +109,15 @@ class SEARCH_TASKS:
             final_data['companyName'] = business_data.get('businessName', '')
             final_data['membershipId'] = business.pk
             final_data['badge'] = business_data.get('badge', '')
-            final_data['timeAgo'] = time_ago  # Add the timeAgo field
+            final_data['timeAgo'] = str(time_ago)  # Add the timeAgo field
             final_data['since'] = business_data.get('since', '')
             # final_data['category'] = business_data.get('category', '')
             final_data['businessImage'] = business_data.get('coverImageUrl', '')
+            final_data['city'] = business_location_data.get('city', '')
+            final_data['state'] = business_location_data.get('state', '')
+            final_data['country'] = business_location_data.get('country', '')
+            final_data['pincode'] = business_location_data.get('pin_code', '')
+            # final_data['category'] = business_data.get('categories', [])
 
 
 
@@ -133,10 +140,11 @@ class SEARCH_TASKS:
             return None
 
     @staticmethod
-    def get_time_ago(updated_at):
+    async def get_time_ago(updated_at):
         if updated_at:
             # Calculate the time difference between now and updated_at
             time_diff = timezone.now() - updated_at
+            #await MY_METHODS.printStatus(f'time_diff {time_diff}')
 
             # Determine the number of seconds, minutes, hours, and days
             if time_diff < timedelta(minutes=1):
