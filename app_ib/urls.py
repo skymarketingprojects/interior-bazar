@@ -5,10 +5,10 @@ from app_ib import views
 from rest_framework_simplejwt.views import (TokenRefreshView)
 from app_ib.Views import AuthView, QueryView, FeedbackView
 from app_ib.Views import ProfileView
-from app_ib.Views.Business import BusinessView
-from app_ib.Views.Business import BusinessLocationView
-from app_ib.Views.Business import BusinessProfileView
-from app_ib.Views import SearchView
+# from app_ib.Views.Business import BusinessView
+# from app_ib.Views.Business import BusinessLocationView
+# from app_ib.Views.Business import BusinessProfileView
+# from app_ib.Views import SearchView
 from app_ib.Views import PlanQuateView
 from app_ib.Views import PlanView
 from app_ib.Views import AdsQueryView
@@ -26,11 +26,13 @@ from .views import generateUploadUrlView
 
 app_name = 'interior_bazzar'
 urlpatterns = [
+    
     #########################################################
     # Test: 
     #########################################################
     path('test/', views.TestView, name='TestView'),
     path('test-mail/', views.TestMailView, name='TestMailView'),
+
     #########################################################
     # Authentication: 
     #########################################################
@@ -62,29 +64,6 @@ urlpatterns = [
     #########################################################
     path('v1/user/client-location/create-update/', ClientLocationView.CreateOrUpdateClientLocationView, name='CreateOrUpdateClientLocationView'),
     path('v1/user/client-location/<int:id>/', ClientLocationView.GetClientLocationByIDView, name='GetClientLocationByIDView'),
-
-    #########################################################
-    # Business:  
-    #########################################################
-    path('v1/business/create/', BusinessView.CreateBusinessView, name='CreateBusinessView'),
-    path('v1/business/update/', BusinessView.UpdateBusinessView, name='UpdateBusinessView'),
-    path('v1/business/<int:id>/', BusinessView.GetBusinessByIdView, name='GetBusinessByIdView'),
-    path('v1/business/', BusinessView.GetBusinessByUser, name='GetBusinessByUser'),
-    
-    #########################################################
-    # Business Location: 
-    #########################################################
-    path('v1/business/location/create-update/', BusinessLocationView.CreateOrUpdateBusinessLocationView, name='CreateBusinessLocationView'),
-    path('v1/business/location/<int:id>/', BusinessLocationView.GetBusinessLocationByBussIDView, name='GetBusinessLocationByBussIDView'),
-
-
-    #########################################################
-    # Business Profile: 
-    #########################################################
-    path('v1/business/profile/create-update/', BusinessProfileView.CreateOrUpdateBusinessProfileView, name='CreateOrUpdateBusinessProfileView'),
-    path('v1/business/profile/<int:id>/', BusinessProfileView.GetBusinessProfileByBussIDView, name='GetBusinessProfileByBussIDView'),
-    path('v1/business/primary-image/create-or-update/', BusinessProfileView.CreateOrUpdatePrimaryImageView, name='CreateOrUpdateProfileImageView'),
-    path('v1/business/secondary-image/create-or-update/', BusinessProfileView.CreateOrUpdateSecondaryImageView, name='CreateOrUpdateSecondaryImageView'),
 
 
     #########################################################
@@ -127,12 +106,6 @@ urlpatterns = [
     path('v1/plan/template/', Subscription.GetSubscriptionsView, name='GetSubscriptionView'),
  
     #########################################################
-    # Serachview: 
-    #########################################################
-    path('v1/business/pagination/<int:index>/', SearchView.GetBusinessByPaginationView, name='GetBusinessByPaginationView'),
-    path('v1/business/top-business/<int:index>/', SearchView.GetTopBusinessView, name='GetTopBusinessView'),
-
-    #########################################################
     # Contact: 
     #########################################################
     path('v1/contact/create/', ContactView.CreateContactView, name='CreateContactView'),
@@ -152,6 +125,7 @@ urlpatterns = [
     # Stock Media: 
     #########################################################
     path('v1/stock-media/<str:page>/<str:section>/', StockMediaView.GetStockMedia, name='GetStockMediaView'),
+
     ##########################################################
     # Blog: 
     ##########################################################
@@ -164,18 +138,6 @@ urlpatterns = [
     ##########################################################
     path('v1/query/offer-text/', OfferTextView.GetOfferText, name='GetOfferTextView'),
 
-    ##########################################################
-    # business type, category, segment
-    ##########################################################
-    path('v1/business/types/', BusinessView.GetAllBusinessTypesView, name='GetAllBusinessTypes'),
-    path('v1/business/categories/', BusinessView.GetAllBusinessCategoriesView, name='GetAllBusinessCategories'),
-    path('v1/business/segments/<int:typeId>/', BusinessView.GetAllBusinessSegmentsByTypeView, name='GetBusinessSegmentsByCategory'),
-
-    ######################################################
-    # location
-    ######################################################
-    path('v1/business/location/countries/', BusinessLocationView.GetCountryListView, name='GetCountryListView'),
-    path('v1/business/location/states/<int:countryId>/', BusinessLocationView.GetStateListByCountryIDView, name='GetStateListView'),
     ######################################################
     # payment gateway
     ######################################################
@@ -189,4 +151,6 @@ urlpatterns = [
     path('v1/admin/', include('interior_admin.urls')),
     path('v1/ads/', include('interior_ads.urls')),
     path('v1/bots/', include('interior_bot.urls')),
+    path('v1/business/', include('interior_business.urls')),
+    path('v1/market/', include('interior_products.urls')),
 ]

@@ -68,6 +68,7 @@ class FilePath:
         "Banner": "banners/",
         "StockMedia": "stock_media/",
         "PaymentScreenshot": "payment_screenshot/",
+        "CatalogueFile": "catalogue/"
     }
 
     @classmethod

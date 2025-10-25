@@ -71,6 +71,8 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'interior_ads',
     'interior_bot',
+    'interior_business',
+    'interior_products',
 ]
 
 MIDDLEWARE = [

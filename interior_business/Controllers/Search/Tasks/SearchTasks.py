@@ -99,7 +99,7 @@ class SEARCH_TASKS:
 
             # Handle time ago logic
             timestamp = business_data.get('timestamp', None)
-            time_ago = await MY_METHODS.get_time_ago(updated_at=timestamp)
+            time_ago = await self.get_time_ago(updated_at=timestamp)
             
             #await MY_METHODS.printStatus(f"time_ago {time_ago}, timestamp {timestamp}")
 
@@ -138,3 +138,30 @@ class SEARCH_TASKS:
         except Exception as e:
             #await MY_METHODS.printStatus(f'Error while fetching business {e}')
             return None
+
+    @staticmethod
+    async def get_time_ago(updated_at):
+        if updated_at:
+            # Calculate the time difference between now and updated_at
+            time_diff = timezone.now() - updated_at
+            #await MY_METHODS.printStatus(f'time_diff {time_diff}')
+
+            # Determine the number of seconds, minutes, hours, and days
+            if time_diff < timedelta(minutes=1):
+                return "Just now"
+            elif time_diff < timedelta(hours=1):
+                minutes = time_diff.seconds // 60
+                return f"{minutes} minute{'s' if minutes > 1 else ''} ago"
+            elif time_diff < timedelta(days=1):
+                hours = time_diff.seconds // 3600
+                return f"{hours} hour{'s' if hours > 1 else ''} ago"
+            elif time_diff < timedelta(weeks=1):
+                days = time_diff.days
+                return f"{days} day{'s' if days > 1 else ''} ago"
+            elif time_diff < timedelta(weeks=4):
+                weeks = time_diff.days // 7
+                return f"{weeks} week{'s' if weeks > 1 else ''} ago"
+            else:
+                months = time_diff.days // 30
+                return f"{months} month{'s' if months > 1 else ''} ago"
+        return "No update available"

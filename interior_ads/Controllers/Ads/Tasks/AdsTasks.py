@@ -390,6 +390,7 @@ class ADS_TASKS:
             AdPersonaIns.personaType = Data.get("personaType", AdPersonaIns.personaType)
 
             categorydata = Data.get("categories")
+            
             for category in categorydata:
                 categoryIns = await sync_to_async(BusinessCategory.objects.get)(id=category.get("id"))
                 AdPersonaIns.categories.add(categoryIns)
@@ -419,6 +420,8 @@ class ADS_TASKS:
             AdPersonaIns.ageBetween = Data.get("ageBetween")
             AdPersonaIns.personaType = Data.get("personaType")
             categorydata = Data.get("categories")
+            if categorydata:
+                AdPersonaIns.categories.clear()
             for category in categorydata:
                 categoryIns = await sync_to_async(BusinessCategory.objects.get)(id=category.get("id"))
                 AdPersonaIns.categories.add(categoryIns)

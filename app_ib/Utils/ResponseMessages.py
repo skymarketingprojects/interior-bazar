@@ -20,6 +20,7 @@ class RESPONSE_MESSAGES:
     user_profile_delete_success="User profile deleted successfully"
     user_profile_delete_error="User profile delete error"
     username_already_taken = "Username already taken"
+    user_profile_deleted_error="Unable to delete user profile"
 
     #lead
     assigned_leads_fetch_error="Unable to fetch assigned leads"
@@ -277,6 +278,24 @@ class RESPONSE_MESSAGES:
 
     business_plan_fetch_success= 'Business plan fetched successfully'
     business_plan_fetch_error= 'Unable to fetch business plan'
+
+
+    ############################################
+    # Catelog
+    ############################################
+    catelog_fetch_success= 'Catelog fetched successfully'
+    catelog_fetch_error= 'Unable to fetch catelog'
+
+    catelog_create_success= 'Catelog created successfully'
+    catelog_create_error= 'Unable to create catelog'
+
+    catelog_update_success= 'Catelog updated successfully'
+    catelog_update_error= 'Unable to update catelog'
+
+    catelog_delete_success= 'Catelog deleted successfully'
+    catelog_delete_error= 'Unable to delete catelog'
+    user_catelog_create_error= 'Unable to create user catelog'
+    catelog_deleted_error= 'Unable to delete catelog'
     
 
 class VALIDATION_MESSAGES:

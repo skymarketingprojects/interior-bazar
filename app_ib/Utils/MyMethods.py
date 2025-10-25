@@ -7,7 +7,8 @@ import re
 from django.conf import settings
 from django.core.mail import send_mail
 from app_ib.Utils.AppMode import APPMODE
-
+from django.utils import timezone
+from datetime import timedelta
 
 
 class MY_METHODS:
@@ -178,4 +179,31 @@ class MY_METHODS:
             return 0
         else:
             print(status)
+
+    @staticmethod
+    async def get_time_ago(updated_at):
+        if updated_at:
+            # Calculate the time difference between now and updated_at
+            time_diff = timezone.now() - updated_at
+            #await MY_METHODS.printStatus(f'time_diff {time_diff}')
+
+            # Determine the number of seconds, minutes, hours, and days
+            if time_diff < timedelta(minutes=1):
+                return "Just now"
+            elif time_diff < timedelta(hours=1):
+                minutes = time_diff.seconds // 60
+                return f"{minutes} min{'s' if minutes > 1 else ''}"
+            elif time_diff < timedelta(days=1):
+                hours = time_diff.seconds // 3600
+                return f"{hours} hr{'s' if hours > 1 else ''}"
+            elif time_diff < timedelta(weeks=1):
+                days = time_diff.days
+                return f"{days} day{'s' if days > 1 else ''}"
+            elif time_diff < timedelta(weeks=4):
+                weeks = time_diff.days // 7
+                return f"{weeks} week{'s' if weeks > 1 else ''}"
+            else:
+                months = time_diff.days // 30
+                return f"{months} month{'s' if months > 1 else ''}"
+        return "No update available"
     
