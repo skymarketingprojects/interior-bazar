@@ -99,7 +99,6 @@ class Business(models.Model):
     businessSegment= models.ManyToManyField(BusinessSegment)
     businessCategory= models.ManyToManyField(BusinessCategory)
 
-
     badge = models.TextField(null=True, blank=True)
     businessBadge= models.ForeignKey(BusinessBadge, on_delete=models.SET_NULL, null=True, blank=True)
     bio = models.TextField( null=True, blank=True)
@@ -122,7 +121,6 @@ class BusinessProfile(models.Model):
 
     def __str__(self):
         return f'business profile - {self.business.pk}'
-
 
 class Country(models.Model):
     name = models.CharField(max_length=255)
@@ -203,7 +201,6 @@ class Subscription(models.Model):
     def __str__(self):
         return f'ID:{self.id} rating:{self.title}'
 
-
 class BusinessPlan(models.Model):
     business= models.ForeignKey(Business,on_delete=models.CASCADE, null=True, blank=True,related_name='business_plan')
     services= models.TextField()
@@ -228,6 +225,7 @@ class BusinessPlan(models.Model):
             ).exclude(id=self.id).update(isActive=False)
 
         super().save(*args, **kwargs)
+
 # Platform own Plan buy query
 class PlanQuery(models.Model):
     user= models.ForeignKey(CustomUser,on_delete=models.CASCADE, null=True, blank=True)
@@ -277,7 +275,6 @@ class Quate(models.Model):
         verbose_name = "Leads for company"
         verbose_name_plural = "Platform Own Leads"
 
-
 class Feedback(models.Model):
     user= models.ForeignKey(CustomUser,on_delete=models.CASCADE, null=True, blank=True)
     contact= models.CharField(max_length=500) # lable : Contact detail 
@@ -288,8 +285,6 @@ class Feedback(models.Model):
 
     def __str__(self):
         return f'pk:{self.pk}  feedback:{self.feedback}'
-
-
 
 class Blog(models.Model):
     user= models.ForeignKey(CustomUser,on_delete=models.CASCADE, null=True, blank=True)
@@ -348,7 +343,6 @@ class OfferHeading(models.Model):
     def __str__(self):
         return f' pk {self.pk} title:{self.title}'
 
-
 class Pages(models.Model):
     page_name = models.CharField(max_length=500, unique=True)
     title = models.CharField(max_length=500)
@@ -365,8 +359,6 @@ class QNA(models.Model):
     def __str__(self):
         return f' pk {self.pk} question:{self.question}'
     
-
-
 # Create your models here.
 class Page(models.Model):
     name = models.CharField(max_length=255)
@@ -400,7 +392,6 @@ class StockMedia(models.Model):
             return f"StockMedia {self.pk} | Section: {self.section.name} | Index: {self.index}"
         return f"StockMedia {self.pk} | Index: {self.index}"
     
-
 #offer text
 class OfferText(models.Model):
     text = QuillField(null=True, blank=True)
@@ -425,6 +416,3 @@ class FunnelForm(models.Model):
 
     def __str__(self):
         return f' pk {self.pk} name:{self.name} phone:{self.phone}'
-
-
-    

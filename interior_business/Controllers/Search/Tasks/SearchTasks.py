@@ -20,6 +20,7 @@ from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.Utils.LocalResponse import LocalResponse
 from django.utils import timezone
 from datetime import timedelta
+from django.db.models import Q
 
 class SEARCH_TASKS:
     
@@ -165,3 +166,37 @@ class SEARCH_TASKS:
                 months = time_diff.days // 30
                 return f"{months} month{'s' if months > 1 else ''} ago"
         return "No update available"
+    @classmethod
+    async def GetRelatedBusinesses(self, business_id, pageNo=1):
+        try:
+            business = await sync_to_async(Business.objects.get)(id=business_id)
+
+            # Build a single Q object combining all filters
+            q_filter = Q(business_type=business.business_type) | \
+                       Q(businessSegment__in=business.businessSegment.all()) | \
+                       Q(businessCategory__in=business.businessCategory.all())
+
+            # Fetch related businesses in one query, excluding the current business
+            related_query = Business.objects.filter(q_filter).exclude(id=business_id).distinct()
+
+            # Paginate and fetch full business data
+            return await self.GetQueryData(businesses_query=related_query, pageNo=pageNo)
+        
+        except Exception as e:
+            await MY_METHODS.printStatus(f'Error while fetching business {e}')
+            return None
+    @classmethod
+    async def GetNearbyBusinesses(self, business_id, pageNo=1):
+        try:
+            business_location = await sync_to_async(Location.objects.get)(business__id=business_id)
+
+            # Use Q to check city OR state
+            nearby_query = Business.objects.filter(
+                Q(business_location__city=business_location.city) |
+                Q(business_location__state=business_location.locationState)
+            ).exclude(id=business_id)
+
+            return await self.GetQueryData(businesses_query=nearby_query, pageNo=pageNo)
+        except Exception as e:
+            await MY_METHODS.printStatus(f'Error while fetching business {e}')
+            return None

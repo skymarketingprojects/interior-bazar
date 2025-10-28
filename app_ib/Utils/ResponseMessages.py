@@ -296,6 +296,45 @@ class RESPONSE_MESSAGES:
     catelog_delete_error= 'Unable to delete catelog'
     user_catelog_create_error= 'Unable to create user catelog'
     catelog_deleted_error= 'Unable to delete catelog'
+
+    user_catelog_update_error= 'Unable to update user catelog'
+    
+
+    ####################################
+    # Product
+    ############################################
+    products_fetch_success= 'Products fetched successfully'
+    products_fetch_error= 'Unable to fetch products'
+
+    product_fetch_success= 'Product fetched successfully'
+    product_fetch_error= 'Unable to fetch product'
+
+    product_create_error= 'Unable to create product'
+    product_create_success= 'Product created successfully'
+
+    product_update_error= 'Unable to update product'
+    product_update_success= 'Product updated successfully'
+
+    product_delete_success= 'Product deleted successfully'
+    product_delete_error= 'Unable to delete product'
+
+    ############################################
+    # Service
+    ############################################
+    service_fetch_success= 'Service fetched successfully'
+    service_fetch_error= 'Unable to fetch service'
+
+    services_fetch_success= 'Services fetched successfully'
+    services_fetch_error= 'Unable to fetch services'
+
+    service_create_error= 'Unable to create service'
+    service_create_success= 'Service created successfully'
+    
+    service_update_error= 'Unable to update service'
+    service_update_success= 'Service updated successfully'
+    
+    service_delete_success= 'Service deleted successfully'
+    service_delete_error= 'Unable to delete service'
     
 
 class VALIDATION_MESSAGES:

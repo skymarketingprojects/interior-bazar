@@ -48,3 +48,41 @@ async def GetTopBusinessView(request,index):
             data={
                 'error': str(e)
             })
+@api_view(['GET'])
+async def GetRelatedBusinessView(request, businessId):
+    try:
+        pageNo = request.GET.get('pageNo', 1)
+        final_response = await SEARCH_CONTROLLER.GetRelatedBusiness(businessId=businessId, pageNo=pageNo)
+        return ServerResponse(
+            response=final_response.response,
+            code=final_response.code,
+            message=final_response.message,
+            data=final_response.data
+        )
+    except Exception as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            code=RESPONSE_CODES.error,
+            message="Error fetching related businesses",
+            data={"error": str(e)}
+        )
+
+@api_view(['GET'])
+async def GetNearbyBusinessView(request, businessId):
+    try:
+        pageNo = request.GET.get('pageNo', 1)
+        
+        final_response = await SEARCH_CONTROLLER.GetNearbyBusiness(businessId=businessId, pageNo=pageNo)
+        return ServerResponse(
+            response=final_response.response,
+            code=final_response.code,
+            message=final_response.message,
+            data=final_response.data
+        )
+    except Exception as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            code=RESPONSE_CODES.error,
+            message="Error fetching nearby businesses",
+            data={"error": str(e)}
+        )

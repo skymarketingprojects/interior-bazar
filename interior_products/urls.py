@@ -12,4 +12,12 @@ urlpatterns = [
     path('catalogue/<int:catelogueId>/',views.CatelogView.as_view()),
     path('catalogue/business/<int:businessId>/',views.GetBusinessCatelogs, name='get_catelog'),
 
+    #products
+    path('product/',views.ProductView.as_view()),
+    path('product/<int:productId>/',views.ProductView.as_view()),
+    path('product/business/<int:businessId>/',views.GetBusinessProducts, name='get_products'),
+    #service
+    path('service/',views.ServiceView.as_view()),
+    path('service/<int:serviceId>/',views.ServiceView.as_view()),
+    path('service/business/<int:businessId>/',views.GetBusinessServices, name='get_Services'),
 ]

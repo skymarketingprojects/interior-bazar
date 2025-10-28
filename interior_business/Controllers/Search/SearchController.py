@@ -68,3 +68,54 @@ class SEARCH_CONTROLLER:
                 data={
                     'error': str(e)
                 })
+    @classmethod
+    async def GetRelatedBusiness(self, businessId, pageNo=1):
+        try:
+            related_businesses = await SEARCH_TASKS.GetRelatedBusinesses(business_id=businessId, pageNo=pageNo)
+            if related_businesses is None:
+                return LocalResponse(
+                    code=RESPONSE_CODES.error,
+                    response=RESPONSE_MESSAGES.error,
+                    message="Business not found",
+                    data=[]
+                )
+
+            return LocalResponse(
+                code=RESPONSE_CODES.success,
+                response=RESPONSE_MESSAGES.success,
+                message=RESPONSE_MESSAGES.business_fetch_success,
+                data=related_businesses
+            )
+        except Exception as e:
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=str(e),
+                code=RESPONSE_CODES.error,
+                data={}
+            )
+
+    @classmethod
+    async def GetNearbyBusiness(self, businessId, pageNo=1):
+        try:
+            nearby_businesses = await SEARCH_TASKS.GetNearbyBusinesses(business_id=businessId, pageNo=pageNo)
+            if nearby_businesses is None:
+                return LocalResponse(
+                    code=RESPONSE_CODES.error,
+                    response=RESPONSE_MESSAGES.error,
+                    message="Business or location not found",
+                    data=[]
+                )
+
+            return LocalResponse(
+                code=RESPONSE_CODES.success,
+                response=RESPONSE_MESSAGES.success,
+                message=RESPONSE_MESSAGES.business_fetch_success,
+                data=nearby_businesses
+            )
+        except Exception as e:
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=str(e),
+                code=RESPONSE_CODES.error,
+                data={}
+            )

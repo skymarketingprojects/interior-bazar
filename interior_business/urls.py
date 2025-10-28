@@ -2,6 +2,9 @@ from interior_business.Views import BusinessView, BusinessLocationView, Business
 from django.urls import path, include
 
 urlpatterns = [
+
+    path('related/<int:businessId>/',SearchView.GetRelatedBusinessView, name='GetRelatedBusinessView'),
+    path('nearby/<int:businessId>/',SearchView.GetNearbyBusinessView, name='GetRelatedBusinessView'),
      #########################################################
     # Business:  
     #########################################################
