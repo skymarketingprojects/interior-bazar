@@ -13,6 +13,31 @@ from interior_business.Controllers.BusinessProfile.Tasks.BusinessProfileTasks im
 
 
 class BUSS_PROFILE_CONTROLLER:
+
+    @classmethod
+    async def GetBusinessProfileForDisplay(self, business_id):
+        try:
+            get_resp = await BUSS_PROF_TASK.GetBusinessProfileTask(business_id=business_id)
+            if 'error' not in get_resp:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.business_prof_fetch_success,
+                    code=RESPONSE_CODES.success,
+                    data=get_resp)
+            else:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.error,
+                    message=RESPONSE_MESSAGES.business_prof_fetch_error,
+                    code=RESPONSE_CODES.error,
+                    data={})
+        except Exception as e:
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.business_prof_fetch_error,
+                code=RESPONSE_CODES.error,
+                data={
+                    'error': str(e)
+                })
   
     @classmethod
     async def CreateOrUpdateBusinessProfile(self, user_ins, data):

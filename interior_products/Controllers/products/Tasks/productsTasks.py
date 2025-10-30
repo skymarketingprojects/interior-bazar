@@ -12,7 +12,7 @@ class PRODUCTS_TASKS:
             product.delete()
             return True
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in deleteProduct: {str(e)}")
+            #await MY_METHODS.printStatus(f"Error in deleteProduct: {str(e)}")
             return False
     
     @classmethod
@@ -42,12 +42,12 @@ class PRODUCTS_TASKS:
                                 link=image.link
                             )
             except Exception as e:
-                await MY_METHODS.printStatus(f"Error in updateProduct: {str(e)}")
+                #await MY_METHODS.printStatus(f"Error in updateProduct: {str(e)}")
                 pass
             data = await self.getProduct(product)
             return data
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in updateProduct: {str(e)}")
+            #await MY_METHODS.printStatus(f"Error in updateProduct: {str(e)}")
             return False
     
     @classmethod
@@ -72,12 +72,12 @@ class PRODUCTS_TASKS:
                             link=image.link
                         )
             except Exception as e:
-                await MY_METHODS.printStatus(f"Error in createProduct: {str(e)}")
+                #await MY_METHODS.printStatus(f"Error in createProduct: {str(e)}")
                 pass
             data = await self.getProduct(product)
             return data
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in createProduct: {str(e)}")
+            #await MY_METHODS.printStatus(f"Error in createProduct: {str(e)}")
             return False
         
     @classmethod
@@ -92,7 +92,7 @@ class PRODUCTS_TASKS:
                     'index':image.index,
                     'link':image.link
                 })
-            await MY_METHODS.printStatus(f"Product tag Data: {product.productTags} of type {type(product.productTags)}")
+            #await MY_METHODS.printStatus(f"Product tag Data: {product.productTags} of type {type(product.productTags)}")
             tags = json.loads(str(product.productTags).replace("'",'"')) if product.productTags else []
             productData = {
                 'id':product.id,
@@ -109,5 +109,5 @@ class PRODUCTS_TASKS:
             }
             return productData
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in getProduct: {str(e)}")
+            #await MY_METHODS.printStatus(f"Error in getProduct: {str(e)}")
             return False

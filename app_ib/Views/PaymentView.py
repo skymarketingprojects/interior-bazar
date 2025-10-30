@@ -30,7 +30,6 @@ async def InitiatePaymentView(request):
             data={"error": str(e)}
         )
 
-
 @api_view(['POST'])
 async def CheckPaymentStatusView(request):
     try:

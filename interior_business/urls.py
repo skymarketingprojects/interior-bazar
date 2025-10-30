@@ -1,6 +1,6 @@
 from interior_business.Views import BusinessView, BusinessLocationView, BusinessProfileView,SearchView
 from django.urls import path, include
-
+from . import views
 urlpatterns = [
 
     path('related/<int:businessId>/',SearchView.GetRelatedBusinessView, name='GetRelatedBusinessView'),
@@ -17,12 +17,13 @@ urlpatterns = [
     # Business Location: 
     #########################################################
     path('location/create-update/', BusinessLocationView.CreateOrUpdateBusinessLocationView, name='CreateBusinessLocationView'),
-    path('location/<int:id>/', BusinessLocationView.GetBusinessLocationByBussIDView, name='GetBusinessLocationByBussIDView'),
+    path('location/', BusinessLocationView.GetBusinessLocationView, name='GetBusinessLocationByBussIDView'),
 
 
     #########################################################
     # Business Profile: 
     #########################################################
+
     path('profile/create-update/', BusinessProfileView.CreateOrUpdateBusinessProfileView, name='CreateOrUpdateBusinessProfileView'),
     path('profile/<int:id>/', BusinessProfileView.GetBusinessProfileByBussIDView, name='GetBusinessProfileByBussIDView'),
     path('primary-image/create-or-update/', BusinessProfileView.CreateOrUpdatePrimaryImageView, name='CreateOrUpdateProfileImageView'),
@@ -46,4 +47,19 @@ urlpatterns = [
     #########################################################
     path('pagination/<int:index>/', SearchView.GetBusinessByPaginationView, name='GetBusinessByPaginationView'),
     path('top-business/<int:index>/', SearchView.GetTopBusinessView, name='GetTopBusinessView'),
+    
+    #########################################################
+    # Business Social Media: 
+    #########################################################
+    path('social-media/', views.BusinessSocialMediaAPIView.as_view(), name='create_bsm'),
+    path('social-media/<int:businessId>/', views.BusinessSocialMediaAPIView.as_view()),
+    path('social-media/get', views.GetSocialMediaListView, name='get_social_media_list'),
+
+    ##########################################################
+    # Business Detail: 
+    ##########################################################
+    path('detail/header/<int:businessId>/', BusinessProfileView.GetBusinessProfileForDisplayView, name='GetBusinessProfileForDisplayView'),
+    path('detail/header/', BusinessProfileView.GetBusinessProfileForDisplayView, name='GetBusinessProfileForDisplayView'),
+    path('detail/contact/<int:businessId>/', views.GetContactView, name='GetBusinesscontact'),
+
 ]

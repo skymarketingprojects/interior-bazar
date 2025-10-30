@@ -102,7 +102,7 @@ async def GetBusinessByUser(request):
         business = user_ins.user_business
         # Call Auth Controller to Create User
         final_response = await  asyncio.gather(BUSS_CONTROLLER.GetBusinessById(id=business.id))
-        #await MY_METHODS.printStatus(f'final_response {final_response}')
+        await MY_METHODS.printStatus(f'final_response {final_response}')
         final_response = final_response[0]
 
         return ServerResponse(

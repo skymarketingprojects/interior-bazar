@@ -45,11 +45,13 @@ async def CreateOrUpdateBusinessLocationView(request):
             })
 
 @api_view(['GET'])
-async def GetBusinessLocationByBussIDView(request,id):
+@permission_classes([IsAuthenticated])
+async def GetBusinessLocationView(request):
     try:
+        
         # Call Auth Controller to Create User
         final_response = await  asyncio.gather(
-            BUSS_LOCATION_CONTROLLER.GetBuisnessLocByBusinessID(id=id))
+            BUSS_LOCATION_CONTROLLER.GetBuisnessLocByBusinessID(business = request.user.user_business))
         #await MY_METHODS.printStatus(f'final_response {final_response}')
         final_response = final_response[0]
 

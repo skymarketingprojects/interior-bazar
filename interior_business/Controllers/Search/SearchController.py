@@ -22,7 +22,7 @@ class SEARCH_CONTROLLER:
     async def GetBusinessUsingPagination(self,pageNo):
         try:
             # Getting all business instance: 
-            businesses_query = await sync_to_async(list)(Business.objects.all())
+            businesses_query = await sync_to_async(list)(Business.objects.all().order_by('-timestamp'))
 
             # fetch business data:
             business_data= await SEARCH_TASKS.GetQueryData(businesses_query=businesses_query,pageNo=pageNo)
@@ -46,7 +46,7 @@ class SEARCH_CONTROLLER:
     async def GetTopBusiness(self,index):
         try:
             # Getting all business instance: 
-            businesses_query = await sync_to_async(list)(Business.objects.all())
+            businesses_query = await sync_to_async(list)(Business.objects.all().order_by('-timestamp'))
 
             # fetch business data:
             business_data= await SEARCH_TASKS.GetQueryData(businesses_query=businesses_query,pageNo=index)

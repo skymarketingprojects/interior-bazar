@@ -12,6 +12,31 @@ import asyncio
 
 
 class BUSS_CONTROLLER:
+
+    @classmethod
+    async def GetBusinessContactInfo(self, business:Business):
+        try:
+            contact_info = await BUSS_TASK.GetBusinessContactInfoTask(business)
+            if contact_info is not None:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.business_contact_fetch_success,
+                    code=RESPONSE_CODES.success,
+                    data=contact_info)
+            return LocalResponse(
+                code=RESPONSE_CODES.success,
+                response=RESPONSE_MESSAGES.success,
+                message=RESPONSE_MESSAGES.business_contact_fetch_error,
+                data={})
+
+        except Exception as e:
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.business_contact_fetch_error,
+                code=RESPONSE_CODES.error,
+                data={
+                    'error': str(e)
+                })
     @classmethod
     async def CreateBusiness(self, user_ins, data):
         try:
@@ -95,7 +120,7 @@ class BUSS_CONTROLLER:
 
             if is_business_exist:
                 business_data = await BUSS_TASK.GetBusinessInfo(id=id)
-                #await MY_METHODS.printStatus(f'business data {business_data}')
+                await MY_METHODS.printStatus(f'business data {business_data}')
 
                 if business_data is not None:
                     return LocalResponse(

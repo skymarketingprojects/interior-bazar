@@ -90,6 +90,7 @@ class Business(models.Model):
     business_name= models.CharField(max_length=250)
     whatsapp= models.CharField(max_length=100,default='',null=True, blank=True)
     cover_image_url = models.TextField(default='',null=True, blank=True)
+    banner_image_url = models.TextField(default='',null=True, blank=True)
     gst= models.CharField(max_length=250,null=True, blank=True)
     since= models.CharField(max_length=250,null=True, blank=True)
 
@@ -416,3 +417,18 @@ class FunnelForm(models.Model):
 
     def __str__(self):
         return f' pk {self.pk} name:{self.name} phone:{self.phone}'
+
+class SocialMedia(models.Model):
+    name= models.CharField(max_length=250)
+
+    def __str__(self):
+        return f'social media - {self.name}'
+
+# Business Social Media
+class BusinessSocialMedia(models.Model):
+    business= models.ForeignKey(Business,on_delete=models.CASCADE,related_name='businessSocialMedia')
+    socialMedia= models.ForeignKey(SocialMedia,on_delete=models.CASCADE,related_name='socialMediaBusiness')
+    link= models.TextField()
+
+    def __str__(self):
+        return f'business social media - {self.business.pk} - {self.socialMedia.name}'

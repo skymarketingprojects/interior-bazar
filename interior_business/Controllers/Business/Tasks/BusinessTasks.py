@@ -1,4 +1,4 @@
-from app_ib.models import Business,Location,BusinessBadge,BusinessType,BusinessCategory,BusinessSegment
+from app_ib.models import Business,Location,BusinessBadge,BusinessType,BusinessCategory,BusinessSegment,BusinessSocialMedia
 import asyncio
 from asgiref.sync import sync_to_async
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
@@ -8,6 +8,65 @@ from interior_business.Controllers.BussLocation.Tasks.BusinessLocationTasks impo
 from app_ib.Utils.MyMethods import MY_METHODS
 from django.db.models import Prefetch
 class BUSS_TASK:
+
+    @classmethod
+    async def GetBusinessContactInfoTask(cls, business: Business):
+        try:
+            # 1️⃣ Fetch Business with user + user_profile + location
+            business = await sync_to_async(
+                lambda: Business.objects.select_related(
+                    "user__user_profile",
+                    "business_location",
+                ).get(id=business.id)
+            )()
+
+            # 2️⃣ Fetch website link from BusinessSocialMedia
+            website_link = await sync_to_async(
+                lambda: BusinessSocialMedia.objects.filter(
+                    business=business,
+                    socialMedia__name__iexact="website"
+                ).values_list("link", flat=True).first()
+            )()
+
+            # 3️⃣ Build location safely
+            loc = getattr(business, "business_location", None)
+            if loc:
+                location_parts = [
+                    loc.city or "",
+                    loc.state or "",
+                    loc.country or "",
+                ]
+                location = ", ".join([part for part in location_parts if part])
+            else:
+                location = ""
+
+            # 4️⃣ Build structured response
+            data = {
+                "phone": (
+                    business.user.user_profile.phone
+                    if business.user and business.user.user_profile else ""
+                ),
+                "countryCode": (
+                    business.user.user_profile.countryCode
+                    if business.user and business.user.user_profile else ""
+                ),
+                "location": location,
+                "email": (
+                    business.user.user_profile.email
+                    if business.user and business.user.user_profile else ""
+                ),
+                "gmbLink":loc.location_link,
+                "websiteLink": website_link or ""
+            }
+
+            return data
+
+        except Business.DoesNotExist:
+            return {"error": "Business not found"}
+        except Exception as e:
+            await MY_METHODS.printStatus(f"Error in GetBusinessContactInfoTask: {e}")
+            return None
+
     @classmethod
     async def CreateBusinessTask(cls, user_ins, data):
         try:
@@ -42,6 +101,7 @@ class BUSS_TASK:
             business_ins.since = getattr(data, 'since', "")
             business_ins.bio = getattr(data, 'bio', "")
             business_ins.cover_image_url = getattr(data, 'coverImageUrl', "")
+            business_ins.banner_image_url = getattr(data, 'bannerImageUrl', "")
             business_ins.business_type = business_type
             business_ins.businessBadge = badge
 
@@ -60,7 +120,7 @@ class BUSS_TASK:
         except Exception as e:
             return None
     @classmethod
-    async def UpdateBusinessTask(cls, business_ins, data):
+    async def UpdateBusinessTask(cls, business_ins:Business, data):
         try:
             # Related instances (nullable)
             loc = getattr(business_ins, 'business_location', None)
@@ -96,6 +156,7 @@ class BUSS_TASK:
             business_ins.since = getattr(data, 'since', business_ins.since)
             business_ins.bio = getattr(data, 'bio', business_ins.bio)
             business_ins.cover_image_url = getattr(data, 'coverImageUrl', business_ins.cover_image_url)
+            business_ins.banner_image_url = getattr(data, 'bannerImageUrl', business_ins.banner_image_url)
             await sync_to_async(business_ins.save)()
 
             # --- Business Location (if exists) ---
@@ -137,7 +198,8 @@ class BUSS_TASK:
                 'categories': category_data,
                 'whatsapp': business_ins.whatsapp,
                 'gst': business_ins.gst,
-                'coverImageUrl': business_ins.cover_image_url,
+                'coverImageUrl': business_ins.cover_image_url if business_ins.cover_image_url else "",
+                'bannerImageUrl': business_ins.banner_image_url if business_ins.banner_image_url else "",
                 'since': business_ins.since,
                 'id': business_ins.id,
                 'bio': business_ins.bio,
@@ -146,6 +208,10 @@ class BUSS_TASK:
                 'timestamp': business_ins.timestamp
             }
 
+            rating = await MY_METHODS.get_random_rating()
+            data['rating'] = f"{rating}"
+            data['ratingValue'] = float(rating)
+
             # Serialize business type
             if business_ins.business_type:
                 data['businessType'] = await cls.GetBusinessTypeData(business_ins.business_type)
@@ -153,7 +219,7 @@ class BUSS_TASK:
             # Location
             if business_loc_ins:
                 location = await BUSS_LOC_TASK.GetBusinessLocTask(business_loc_ins)
-                data['location_link'] = location["location_link"]
+                data['gmbLink'] = location["gmbLink"]
                 data['pin_code'] =location['pin_code']
                 data['city'] = location['city']
                 data['state'] = location['state']
@@ -166,7 +232,7 @@ class BUSS_TASK:
             return data
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in GetBusinessInfo: {e}')
+            await MY_METHODS.printStatus(f'Error in GetBusinessInfo: {e}')
             return None
 
     @classmethod

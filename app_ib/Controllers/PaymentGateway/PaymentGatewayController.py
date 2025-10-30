@@ -1,33 +1,31 @@
 # app_ib/Controllers/PaymentGateway/PaymentGatewayController.py
-
 from uuid import uuid4
 from asgiref.sync import sync_to_async
+from django.conf import settings
+import requests
+
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Controllers.PaymentGateway.Tasks.PaymentGatewayTasks import PaymentGatewayTasks
-from app_ib.Utils.PhonePeClient import PhonePeClientWrapper
-from phonepe.sdk.pg.payments.v2.models.request.standard_checkout_pay_request import StandardCheckoutPayRequest
-from phonepe.sdk.pg.common.models.request.meta_info import MetaInfo
-from phonepe.sdk.pg.common.models.request.refund_request import RefundRequest
+from app_ib.Utils.CashfreeClient import CashfreeClientWrapper
 from app_ib.Controllers.Plans.PlanController import PLAN_CONTROLLER
 from app_ib.Utils.MyMethods import MY_METHODS
-from app_ib.models import BusinessPlan, Subscription, Business
+from app_ib.models import Subscription
+
+
 class PaymentGatewayController:
 
     @classmethod
-    async def InitiatePayment(cls,data,userId):
+    async def InitiatePayment(cls, data, userId):
+        """
+        Create a Cashfree payment order using REST API.
+        """
         try:
-            # #await MY_METHODS.printStatus(f"amount {data['amount']}")
-            # amount = data["amount"]*100
-            # #await MY_METHODS.printStatus(f"Initiating payment for user {userId} of amount {amount}")
-
             planId = data['planId']
             domain = data['domain']
-            #await MY_METHODS.printStatus(f"plan id {planId}")
 
-            is_plan_exist= await sync_to_async(Subscription.objects.filter(id=planId).exists)()
-            #await MY_METHODS.printStatus(f"plan exist {is_plan_exist}")
+            is_plan_exist = await sync_to_async(Subscription.objects.filter(id=planId).exists)()
             if not is_plan_exist:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.error,
@@ -35,14 +33,13 @@ class PaymentGatewayController:
                     code=RESPONSE_CODES.error,
                     data={}
                 )
+
             plan = await sync_to_async(Subscription.objects.get)(id=planId)
-
             planAmount = await MY_METHODS.formatAmount(plan.amount)
-            #await MY_METHODS.printStatus(f"plan amount {planAmount}")
-            amount = planAmount * 100
-            #await MY_METHODS.printStatus(f"amount {amount}")
+            amount = float(planAmount)
 
-            transactionData = await PaymentGatewayTasks.GenerateTransactionData(userId, amount,domain)
+            # Generate transaction data
+            transactionData = await PaymentGatewayTasks.GenerateTransactionData(userId, amount, domain)
             if not transactionData:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.error,
@@ -51,36 +48,39 @@ class PaymentGatewayController:
                     data={}
                 )
 
-            # Setup meta info if needed (you can customize UDFs)
-            meta_info = MetaInfo(
-                udf1=str(userId),
-                udf2="InteriorBazzar",
-                udf3="v2"
-            )
+            # Prepare payload for Cashfree REST API
+            payload = {
+                "order_id": transactionData["transactionId"],
+                "order_amount": amount,
+                "order_currency": "INR",
+                "customer_details": {
+                    "customer_id": str(userId),
+                    "customer_phone": data.get("phone", "9999999999"),
+                    "customer_email": data.get("email", "test@example.com"),
+                },
+                "order_meta": {
+                    "return_url": f"{transactionData['redirectUrl']}?order_id={{order_id}}&order_token={{order_token}}"
+                },
+            }
 
-            # Build SDK payment request
-            #await MY_METHODS.printStatus(f"transaction data {transactionData}")
-            sdk_request = StandardCheckoutPayRequest.build_request(
-                merchant_order_id=transactionData["transactionId"],
-                amount= int(amount),
-                redirect_url=transactionData["redirectUrl"],
-                meta_info=meta_info
-            )
-            #await MY_METHODS.printStatus(f"sdk request {sdk_request}")
+            response_data = await sync_to_async(CashfreeClientWrapper.create_order)(payload)
 
-            # Get PhonePe client and send request
-            client = PhonePeClientWrapper.get_client()
-            sdk_response = client.pay(sdk_request)
-            #await MY_METHODS.printStatus(f"sdk response {sdk_response}")
+            if response_data and response_data.get("payment_session_id"):
+                payment_url = f"https://payments.cashfree.com/pgui/v2/checkout?payment_session_id={response_data['payment_session_id']}"
 
-            if sdk_response and sdk_response.redirect_url:
-                data={
-                        "paymentUrl": sdk_response.redirect_url,
-                        "redirectUrl": transactionData["redirectUrl"],
-                        # "callbackUrl": transactionData["callbackUrl"],
-                        "transactionId": transactionData["transactionId"]
-                    }
-                businessPlan = await PLAN_CONTROLLER.CreateBusinessPlan(planId=plan.id,userId = userId, transectionId= transactionData["transactionId"])
+                # Create Business Plan
+                businessPlan = await PLAN_CONTROLLER.CreateBusinessPlan(
+                    planId=plan.id,
+                    userId=userId,
+                    transectionId=transactionData["transactionId"]
+                )
+
+                data = {
+                    "paymentUrl": payment_url,
+                    "transactionId": transactionData["transactionId"],
+                    "orderToken": response_data.get("payment_session_id"),
+                }
+
                 if businessPlan is None:
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.warning,
@@ -98,13 +98,12 @@ class PaymentGatewayController:
             else:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.error,
-                    message="Failed to get redirect URL from PhonePe",
+                    message=f"Failed to create Cashfree order: {response_data}",
                     code=RESPONSE_CODES.error,
                     data={}
                 )
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in InitiatePayment: {e}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Exception during payment initiation",
@@ -112,19 +111,22 @@ class PaymentGatewayController:
                 data={"error": str(e)}
             )
 
-
     @classmethod
     async def CheckPaymentStatus(cls, transactionId):
+        """
+        Check payment status using Cashfree REST API.
+        """
         try:
-            client = PhonePeClientWrapper.get_client()
-            response = client.get_order_status(merchant_order_id=transactionId)
-            if response.state == "COMPLETED":
-                activate = await PLAN_CONTROLLER.ActivateBusinessPlan(transactionId)
-                #await MY_METHODS.printStatus(f"activate {activate}")
-            data={
-                    "status": response.state,  # "COMPLETED", "PENDING", etc.
-                    "transactionId": transactionId
-                }
+            response_data = await sync_to_async(CashfreeClientWrapper.fetch_order)(transactionId)
+            status = response_data.get("order_status", "UNKNOWN")
+
+            if status == "PAID":
+                await PLAN_CONTROLLER.ActivateBusinessPlan(transactionId)
+
+            data = {
+                "status": status,
+                "transactionId": transactionId,
+            }
 
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
@@ -143,32 +145,34 @@ class PaymentGatewayController:
 
     @classmethod
     async def RefundTransaction(cls, transaction_id, amount):
+        """
+        Initiate refund via REST API.
+        """
         try:
-            from uuid import uuid4
             refund_id = f"RFND-{uuid4().hex[:10]}"
+            refund_payload = {
+                "refund_amount": float(amount),
+                "refund_id": refund_id,
+                "refund_note": "Customer requested refund",
+            }
 
-            refund_request = RefundRequest.build_refund_request(
-                merchant_refund_id=refund_id,
-                original_merchant_order_id=transaction_id,
-                amount=amount
-            )
-
-            client = PhonePeClientWrapper.get_client()
-            response = client.refund(refund_request=refund_request)
+            response_data = await sync_to_async(CashfreeClientWrapper.create_refund)(transaction_id, refund_payload)
 
             return LocalResponse(
-                response=RESPONSE_MESSAGES.success,
-                message="Refund initiated",
-                code=RESPONSE_CODES.success,
-                data={
-                    "state": response.state.value,
-                    "refund_id": refund_id
+                RESPONSE_MESSAGES.success,
+                "Refund initiated",
+                RESPONSE_CODES.success,
+                {
+                    "refund_id": refund_id,
+                    "status": response_data.get("refund_status", "UNKNOWN"),
+                    "response": response_data,
                 }
             )
+
         except Exception as e:
             return LocalResponse(
-                response=RESPONSE_MESSAGES.error,
-                message="Refund failed",
-                code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                RESPONSE_MESSAGES.error,
+                "Refund failed",
+                RESPONSE_CODES.error,
+                {"error": str(e)}
             )

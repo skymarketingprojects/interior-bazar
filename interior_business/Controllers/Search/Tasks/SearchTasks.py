@@ -183,7 +183,7 @@ class SEARCH_TASKS:
             return await self.GetQueryData(businesses_query=related_query, pageNo=pageNo)
         
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error while fetching business {e}')
+            #await MY_METHODS.printStatus(f'Error while fetching business {e}')
             return None
     @classmethod
     async def GetNearbyBusinesses(self, business_id, pageNo=1):
@@ -198,5 +198,5 @@ class SEARCH_TASKS:
 
             return await self.GetQueryData(businesses_query=nearby_query, pageNo=pageNo)
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error while fetching business {e}')
+            #await MY_METHODS.printStatus(f'Error while fetching business {e}')
             return None

@@ -9,6 +9,33 @@ from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from interior_business.Controllers.BusinessProfile.BusinessProfileController import BUSS_PROFILE_CONTROLLER
 
 
+@api_view(['GET'])
+async def GetBusinessProfileForDisplayView(request, businessId = None):
+    try:
+        if businessId is None:
+            businessId = request.user.user_business.id
+        # Call Auth Controller to Create User
+        final_response = await  asyncio.gather(
+            BUSS_PROFILE_CONTROLLER.GetBusinessProfileForDisplay(business_id=businessId))
+        final_response = final_response[0]
+
+        #await MY_METHODS.printStatus(f'final_response {final_response}')
+
+        return ServerResponse(
+            response=final_response.response,
+            code=final_response.code,
+            message=final_response.message,
+            data=final_response.data)
+
+    except Exception as e:
+        # #await MY_METHODS.printStatus(f'Error: {e}')
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message=RESPONSE_MESSAGES.business_prof_fetch_error,
+            code=RESPONSE_CODES.error,
+            data={
+                'error': str(e)
+            })
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

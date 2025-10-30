@@ -1,29 +1,30 @@
-from django.urls import reverse
+# app_ib/Controllers/PaymentGateway/Tasks/PaymentGatewayTasks.py
+import uuid
 from app_ib.Utils.MyMethods import MY_METHODS
+
 class PaymentGatewayTasks:
 
     @classmethod
-    async def GenerateTransactionData(cls, userId: int, amount: int,domain:str):
+    async def GenerateTransactionData(cls, userId: int, amount: float, domain: str):
+        """
+        Generates a unique transaction/order ID and associated redirect URLs
+        for initiating a Cashfree payment.
+        """
         try:
-            import uuid
-            transactionId = f"TID-{uuid.uuid4().hex[:12].upper()}"
+            transactionId = f"CFORD-{uuid.uuid4().hex[:12].upper()}"  # Cashfree-friendly ID
 
-            redirectPath = f"{domain}/confirm-payment/{transactionId}/"
-            # callbackPath = reverse("interior_bazzar:CheckPaymentStatusView", args=[transactionId])
-
-            redirectUrl = redirectPath
-            # callbackUrl = callbackPath
+            redirectUrl = f"{domain}/confirm-payment/{transactionId}/"
 
             transaction_data = {
                 "transactionId": transactionId,
                 "userId": userId,
-                "amount": int(amount),
+                "amount": float(amount),
                 "redirectUrl": redirectUrl,
-                # "callbackUrl": callbackUrl
             }
 
+            await MY_METHODS.printStatus(f"Generated Cashfree transaction: {transaction_data}")
             return transaction_data
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in GenerateTransactionData: {e}')
+            await MY_METHODS.printStatus(f"Error in GenerateTransactionData: {e}")
             return None

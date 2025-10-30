@@ -106,6 +106,10 @@ class RESPONSE_MESSAGES:
     business_category_fetch_success = "Business category fetch success"
     business_category_fetch_error = "Business category fetch error"
 
+
+    business_contact_fetch_error = "Business contact fetch error"
+    business_contact_fetch_success = "Business contact fetch success"
+
     ############################################
     #location
     ############################################
