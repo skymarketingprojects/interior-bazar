@@ -4,7 +4,7 @@ from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.Utils.LocalResponse import LocalResponse
 from .Tasks.AdsTasks import ADS_TASKS
-from interior_ads.models import AdCampaign, AdAsset, AdPersona
+from interior_advertisement.models import AdCampaign, AdAsset, AdPersona
 from app_ib.models import Business
 import asyncio
 

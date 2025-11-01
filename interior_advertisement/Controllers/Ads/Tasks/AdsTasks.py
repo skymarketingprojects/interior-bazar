@@ -1,5 +1,5 @@
 from asgiref.sync import sync_to_async
-from interior_ads.models import (
+from interior_advertisement.models import (
     AdCampaign,
     AdPlacement,
     AdAsset,
