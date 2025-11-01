@@ -108,9 +108,16 @@ class AUTH_CONTROLLER:
                     data=response_data)
 
             else:
+                userExits = await AUTH_TASK.IsUserExist(data.username)
+                if userExits:
+                    return LocalResponse(
+                        response=RESPONSE_MESSAGES.error,
+                        message=RESPONSE_MESSAGES.incorrect_password,
+                        code=RESPONSE_CODES.error,
+                        data={})
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.error,
-                    message=RESPONSE_MESSAGES.incorrect_password,
+                    message=RESPONSE_MESSAGES.incorrect_username,
                     code=RESPONSE_CODES.error,
                     data={})
         except Exception as e:

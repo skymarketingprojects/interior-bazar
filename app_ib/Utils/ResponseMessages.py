@@ -61,6 +61,7 @@ class RESPONSE_MESSAGES:
     user_removed_success= 'User removed successfully'
     password_not_match= 'Password does not match'
     incorrect_password= 'Incorrect password'
+    incorrect_username= 'Incorrect username'
 
     unauthorized= 'Unauthorized'
 
