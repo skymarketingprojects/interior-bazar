@@ -63,7 +63,7 @@ class CATELOG_TASKS:
             try:
                 if data.images:
                     for image in data.images:
-                        # #await MY_METHODS.printStatus(f"createCatelog: {image}")
+                        await MY_METHODS.printStatus(f"createCatelog: {image}")
                         await sync_to_async(CatelogueImage.objects.create)(
                             catelouge=catelog,
                             catelougeImage=image.imageUrl,
@@ -71,12 +71,12 @@ class CATELOG_TASKS:
                             link=image.link
                         )
             except Exception as e:
-                #await MY_METHODS.printStatus(f"Error in createCatelog: {str(e)}")
+                await MY_METHODS.printStatus(f"Error in createCatelog: {str(e)}")
                 pass
             data = await self.getCatelog(catelog)
             return data
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error in createCatelog: {str(e)}")
+            await MY_METHODS.printStatus(f"Error in createCatelog: {str(e)}")
             return False
         
     @classmethod

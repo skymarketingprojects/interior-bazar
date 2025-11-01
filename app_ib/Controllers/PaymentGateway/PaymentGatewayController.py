@@ -59,7 +59,7 @@ class PaymentGatewayController:
                     "customer_email": data.get("email", "test@example.com"),
                 },
                 "order_meta": {
-                    "return_url": f"{transactionData['redirectUrl']}?order_id={{order_id}}&order_token={{order_token}}"
+                    "return_url": f"{transactionData['redirectUrl']}?order_id={{order_id}}"
                 },
             }
 

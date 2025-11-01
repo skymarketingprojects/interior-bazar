@@ -10,6 +10,7 @@ from app_ib.Utils.MyMethods import MY_METHODS
 
 from interior_products.models import Catelogue
 
+from django.db.models import Q
 
 class CATELOG_CONTROLLER:
     
@@ -79,6 +80,7 @@ class CATELOG_CONTROLLER:
                 )
 
         except Exception as e:
+            await MY_METHODS.printStatus(f'Error during CreateCatelog: {e}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.catelog_create_error,
@@ -156,3 +158,36 @@ class CATELOG_CONTROLLER:
                 code=RESPONSE_CODES.error,
                 data={'error':str(e)}
             )
+        
+    @classmethod
+    async def GetRelatedCatelogs(cls, catelogId: int, page: int = 1, size: int = 10):
+        try:
+            catelog = Catelogue.objects.get(id=catelogId)
+            related_qs = Catelogue.objects.filter(
+                            Q(category=catelog.category)
+                            | Q(catelogueType=catelog.catelogueType)
+                            | Q(title__icontains=catelog.title.split(" ")[0])
+                        ).exclude(id=catelog.id)
+            paginated = await MY_METHODS.paginate_queryset(related_qs, page, size)
+            catelogData = []
+
+            for c in paginated["results"]:
+                data = await CATELOG_TASKS.getCatelog(c)
+                if data:
+                    catelogData.append(data)
+
+            paginated['pagination']['data'] = catelogData
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message="Related catelogues fetched successfully",
+                code=RESPONSE_CODES.success,
+                data=paginated["pagination"]
+            )
+        except Exception as e:
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message="Error fetching related catelogues",
+                code=RESPONSE_CODES.error,
+                data={"error": str(e)}
+            )
+        

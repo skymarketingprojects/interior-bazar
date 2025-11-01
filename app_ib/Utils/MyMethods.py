@@ -9,8 +9,8 @@ from django.core.mail import send_mail
 from app_ib.Utils.AppMode import APPMODE
 from django.utils import timezone
 from datetime import timedelta
-
-
+from math import ceil
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 class MY_METHODS:
 
     @staticmethod
@@ -207,3 +207,42 @@ class MY_METHODS:
                 return f"{months} month{'s' if months > 1 else ''}"
         return "No update available"
     
+    @staticmethod
+    async def paginate_queryset(queryset, page=1, size=10):
+        """Paginate queryset using Django's Paginator and return PascalCase pagination."""
+        try:
+            paginator = Paginator(queryset, size)
+            
+            try:
+                page_obj = paginator.page(page)
+            except PageNotAnInteger:
+                page_obj = paginator.page(1)
+            except EmptyPage:
+                page_obj = paginator.page(paginator.num_pages)
+
+            results = list(page_obj.object_list)  # convert queryset slice to list if needed
+
+            return {
+                "results": results,
+                "pagination": {
+                    "pageNo": page_obj.number,
+                    "pageSize": size,
+                    "totalItems": paginator.count,
+                    "totalPages": paginator.num_pages,
+                    "hasNext": page_obj.has_next(),
+                    "hasPrev": page_obj.has_previous()
+                }
+            }
+        except Exception as e:
+            print(f"Pagination error: {e}")
+            return {
+                "results": [],
+                "pagination": {
+                    "pageNo": 1,
+                    "pageSize": size,
+                    "totalItems": 0,
+                    "totalPages": 0,
+                    "hasNext": False,
+                    "hasPrev": False
+                }
+            }

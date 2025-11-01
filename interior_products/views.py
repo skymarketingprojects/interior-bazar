@@ -18,6 +18,11 @@ class ProductView(AsyncAPIView):
     """
     permission_classes = [IsAuthenticated]
 
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            self.permission_classes = [AllowAny]
+        return super().get_permissions()
+
 
     async def get(self, request: HttpRequest,productId: int = None)->ServerResponse:
         try:
@@ -102,6 +107,11 @@ class ServiceView(AsyncAPIView):
     Works with Django + DRF + Uvicorn (ASGI).
     """
     permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            self.permission_classes = [AllowAny]
+        return super().get_permissions()
 
 
     async def get(self, request: HttpRequest,serviceId: int = None)->ServerResponse:
@@ -189,6 +199,11 @@ class CatelogView(AsyncAPIView):
     """
     permission_classes = [IsAuthenticated]
 
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            self.permission_classes = [AllowAny]
+        return super().get_permissions()
+
 
     async def get(self, request, catelogueId: int = None)->ServerResponse:
         """Get all catalogs for a given business."""
@@ -207,7 +222,7 @@ class CatelogView(AsyncAPIView):
                 data=catelogResponse.data
             )
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in GET: {e}')
+            await MY_METHODS.printStatus(f'Error in GET: {e}')
             return ServerResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.catelog_fetch_error,
@@ -231,7 +246,7 @@ class CatelogView(AsyncAPIView):
                 data=auth_resp.data
             )
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in POST: {e}')
+            await MY_METHODS.printStatus(f'Error in POST: {e}')
             return ServerResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.user_catelog_create_error,
@@ -349,6 +364,67 @@ async def GetBusinessServices(request, businessId: int)->ServerResponse:
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.product_fetch_error,
+            code=RESPONSE_CODES.error,
+            data={'error': str(e)}
+        )
+
+
+@api_view(['GET'])
+async def GetRelatedCatelogs(request, catelogId: int)->ServerResponse:
+    try:
+        page = int(request.query_params.get('pageNo', 1))
+        size = int(request.query_params.get('pageSize', 10))
+        resp = await CATELOG_CONTROLLER.GetRelatedCatelogs(catelogId, page, size)
+        return ServerResponse(
+            response=resp.response,
+            message=resp.message,
+            code=resp.code,
+            data=resp.data
+        )
+    except Exception as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message="Error fetching related catelogues",
+            code=RESPONSE_CODES.error,
+            data={'error': str(e)}
+        )
+
+@api_view(['GET'])
+async def GetRelatedProducts(request, productId: int)->ServerResponse:
+    try:
+        page = int(request.query_params.get('pageNo', 1))
+        size = int(request.query_params.get('pageSize', 10))
+        resp = await PRODUCTS_CONTROLLER.GetRelatedProducts(productId, page, size)
+        return ServerResponse(
+            response=resp.response,
+            message=resp.message,
+            code=resp.code,
+            data=resp.data
+        )
+    except Exception as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message="Error fetching related products",
+            code=RESPONSE_CODES.error,
+            data={'error': str(e)}
+        )
+
+@api_view(['GET'])
+async def GetRelatedServices(request, serviceId: int)->ServerResponse:
+    try:
+        page = int(request.query_params.get('pageNo', 1))
+        size = int(request.query_params.get('pageSize', 10))
+        resp = await SERVICES_CONTROLLER.GetRelatedServices(serviceId, page, size)
+        return ServerResponse(
+            response=resp.response,
+            message=resp.message,
+            code=resp.code,
+            data=resp.data
+        )
+    except Exception as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message="Error fetching related services",
             code=RESPONSE_CODES.error,
             data={'error': str(e)}
         )

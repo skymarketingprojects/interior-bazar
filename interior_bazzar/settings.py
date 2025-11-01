@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     'interior_bot',
     'interior_business',
     'interior_products',
+    'interior_notification',
 ]
 
 MIDDLEWARE = [
@@ -210,11 +211,16 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainSlidingSerializer",
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
-
-
+AWS_REGION_NAME = env('S3_REGION')
 if(ENV == APPMODE.DEV):
     print(f'Mode Activated [ DEV ]')
     DEBUG = True 
+
+    #cashfree
+    CASHFREE_CLIENT_ID = env('TEST_CASHFREE_CLIENT_ID')
+    CASHFREE_CLIENT_SECRET = env('TEST_CASHFREE_CLIENT_SECRET')
+    CASHFREE_ENVIRONMENT = env('TEST_CASHFREE_ENVIRONMENT', default="SANDBOX")
+    CASHFREE_API_VERSION = env('TEST_CASHFREE_API_VERSION')
         
     # Razor Pay
     # RAZORPAY_KEY=env("PROD_RAZORPAY_KEY")
@@ -256,6 +262,13 @@ if(ENV == APPMODE.DEV):
 if(ENV == APPMODE.PROD):
     print(f'Mode Activated [ PROD ]')    
     DEBUG = False 
+
+    #cashfree
+    CASHFREE_CLIENT_ID = env('CASHFREE_CLIENT_ID')
+    CASHFREE_CLIENT_SECRET = env('CASHFREE_CLIENT_SECRET')
+    CASHFREE_ENVIRONMENT = env('CASHFREE_ENVIRONMENT', default="PRODUCTION")
+    CASHFREE_API_VERSION = env('CASHFREE_API_VERSION')
+
 
     # Razor pay
     # RAZORPAY_KEY=env("PROD_RAZORPAY_KEY")
@@ -318,6 +331,12 @@ if(ENV == APPMODE.LOC):
     AWS_S3_FILE_OVERWRITE = True
     AWS_DEFAULT_ACL = None
 
+    #cashfree
+    CASHFREE_CLIENT_ID = env('TEST_CASHFREE_CLIENT_ID')
+    CASHFREE_CLIENT_SECRET = env('TEST_CASHFREE_CLIENT_SECRET')
+    CASHFREE_ENVIRONMENT = env('TEST_CASHFREE_ENVIRONMENT', default="SANDBOX")
+    CASHFREE_API_VERSION = env('TEST_CASHFREE_API_VERSION')
+
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR  / 'static_root'
@@ -332,12 +351,8 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
 
-
+SNS_TOPIC_ARN = env('SNS_TOPIC_ARN')
 #payment Gateway
-CASHFREE_CLIENT_ID = env('CASHFREE_CLIENT_ID')
-CASHFREE_CLIENT_SECRET = env('CASHFREE_CLIENT_SECRET')
-CASHFREE_ENVIRONMENT = "SANDBOX"  # or "PRODUCTION"
-CASHFREE_API_VERSION = env('CASHFREE_API_VERSION')
 
 # PHONEPE_CLIENT_ID = env('PHONEPE_CLIENT_ID')
 # PHONEPE_CLIENT_SECRET = env('PHONEPE_CLIENT_SECRET')

@@ -153,4 +153,5 @@ urlpatterns = [
     path('v1/bots/', include('interior_bot.urls')),
     path('v1/business/', include('interior_business.urls')),
     path('v1/market/', include('interior_products.urls')),
+    path('v1/notification/', include('interior_notification.urls')),
 ]

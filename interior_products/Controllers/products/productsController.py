@@ -8,6 +8,7 @@ from .Tasks.productsTasks import PRODUCTS_TASKS
 from .Validators.productsValidators import PRODUCTS_VALIDATORS
 from app_ib.models import Business
 from interior_products.models import Product
+from django.db.models import Q
 
 class PRODUCTS_CONTROLLER:
 
@@ -166,4 +167,38 @@ class PRODUCTS_CONTROLLER:
                 message=RESPONSE_MESSAGES.product_delete_error,
                 code=RESPONSE_CODES.error,
                 data={'error':str(e)}
+            )
+        
+    @classmethod
+    async def GetRelatedProducts(cls, productId: int, page: int = 1, size: int = 10):
+        try:
+            product = Product.objects.get(id=productId)
+            tags = [tag.strip().lower() for tag in product.productTags.split(",")]
+            related_qs = Product.objects.filter(
+                                Q(productTags__iregex=r"(" + "|".join(tags) + ")")
+                                | Q(title__icontains=product.title.split(" ")[0])
+                            ).exclude(id=product.id)
+
+            paginated = await MY_METHODS.paginate_queryset(related_qs, page, size)
+            productData = []
+
+            for c in paginated["results"]:
+                data = await PRODUCTS_TASKS.getProduct(c)
+                if data:
+                    productData.append(data)
+
+            paginated['pagination']['data'] = productData
+
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message="Related catelogues fetched successfully",
+                code=RESPONSE_CODES.success,
+                data=paginated["pagination"]
+            )
+        except Exception as e:
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message="Error fetching related catelogues",
+                code=RESPONSE_CODES.error,
+                data={"error": str(e)}
             )
