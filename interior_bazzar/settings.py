@@ -69,10 +69,10 @@ INSTALLED_APPS = [
     'interior_admin',
     'django.contrib.sitemaps',
     'django.contrib.sites',
-    'interior_ads',
     'interior_bot',
     'interior_business',
     'interior_products',
+    'interior_advertisement',
     'interior_notification',
 ]
 

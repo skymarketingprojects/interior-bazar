@@ -149,7 +149,7 @@ urlpatterns = [
     # include
     ######################################################
     path('v1/admin/', include('interior_admin.urls')),
-    path('v1/ads/', include('interior_ads.urls')),
+    path('v1/ads/', include('interior_advertisement.urls')),
     path('v1/bots/', include('interior_bot.urls')),
     path('v1/business/', include('interior_business.urls')),
     path('v1/market/', include('interior_products.urls')),
