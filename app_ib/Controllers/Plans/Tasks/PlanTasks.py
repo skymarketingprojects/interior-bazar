@@ -74,7 +74,7 @@ class PLAN_TASKS:
             businessPlanIns.expireDate= expiry_date
             await sync_to_async(businessPlanIns.save)()
 
-            data = self.GetBusinessPlanData(businessPlanIns)
+            data = await self.GetBusinessPlanData(businessPlanIns)
             return data
         except Exception as e:
             await MY_METHODS.printStatus(f'Error in CreateBusinessPlan {e}')

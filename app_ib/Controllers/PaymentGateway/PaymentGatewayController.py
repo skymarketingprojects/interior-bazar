@@ -78,7 +78,7 @@ class PaymentGatewayController:
                 data = {
                     "paymentUrl": payment_url,
                     "transactionId": transactionData["transactionId"],
-                    "se": response_data.get("payment_session_id"),
+                    "sessionId": response_data.get("payment_session_id"),
                 }
 
                 if businessPlan is None:
