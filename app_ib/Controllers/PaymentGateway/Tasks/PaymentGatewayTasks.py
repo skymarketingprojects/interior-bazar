@@ -13,7 +13,7 @@ class PaymentGatewayTasks:
         try:
             transactionId = f"CFORD-{uuid.uuid4().hex[:12].upper()}"  # Cashfree-friendly ID
 
-            redirectUrl = f"{domain}/confirm-payment/{transactionId}/"
+            redirectUrl = f"{domain}/confirm-payment/"
 
             transaction_data = {
                 "transactionId": transactionId,

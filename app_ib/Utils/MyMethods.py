@@ -246,3 +246,34 @@ class MY_METHODS:
                     "hasPrev": False
                 }
             }
+        
+    async def parseDurationToDays(duration):
+        """
+        Convert a duration (int or string like '2 days', '1 month', '3 years')
+        into number of days (int).
+        """
+        # If it's already an integer, return it directly
+        if isinstance(duration, int):
+            return duration
+
+        # If it's a numeric string, return its int value
+        if isinstance(duration, str) and duration.strip().isdigit():
+            return int(duration)
+
+        # Parse string formats like "2 day", "3 days", "1 month", "2 years"
+        match = re.match(r"(\d+)\s*(day|days|month|months|year|years)?", duration.strip().lower())
+        if not match:
+            raise ValueError(f"Invalid duration format: {duration}")
+
+        value = int(match.group(1))
+        unit = match.group(2) or "days"  # Default to days if no unit specified
+
+        # Convert everything to days
+        if unit in ["day", "days"]:
+            return value
+        elif unit in ["month", "months"]:
+            return value * 30  # approximate
+        elif unit in ["year", "years"]:
+            return value * 365
+        else:
+            raise ValueError(f"Unknown time unit: {unit}")

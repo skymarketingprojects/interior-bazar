@@ -59,7 +59,7 @@ class PaymentGatewayController:
                     "customer_email": data.get("email", "test@example.com"),
                 },
                 "order_meta": {
-                    "return_url": f"{transactionData['redirectUrl']}?order_id={{order_id}}"
+                    "return_url": f"{transactionData['redirectUrl']}?transactionId={{order_id}}"
                 },
             }
 
@@ -78,7 +78,7 @@ class PaymentGatewayController:
                 data = {
                     "paymentUrl": payment_url,
                     "transactionId": transactionData["transactionId"],
-                    "orderToken": response_data.get("payment_session_id"),
+                    "se": response_data.get("payment_session_id"),
                 }
 
                 if businessPlan is None:

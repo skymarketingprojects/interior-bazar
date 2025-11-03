@@ -91,7 +91,7 @@ class PLAN_CONTROLLER:
             plan = await sync_to_async(Subscription.objects.get)(id=planId)
             data = await PLAN_TASKS.CreateBusinessPlan(plan=plan,businessId=businessId,transectionId=transectionId)
             if data:
-                #await MY_METHODS.printStatus(f'Business plan created successfully for user {userId} with plan {planId}')
+                await MY_METHODS.printStatus(f'Business plan created successfully for user {userId} with plan {planId}')
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
                     message=RESPONSE_MESSAGES.business_plan_create_success,
@@ -100,7 +100,7 @@ class PLAN_CONTROLLER:
                     )
 
             else:
-                #await MY_METHODS.printStatus(f'Failed to create business plan for user {userId} with plan {planId}')
+                await MY_METHODS.printStatus(f'Failed to create business plan for user {userId} with plan {planId}')
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.error,
                     message=RESPONSE_MESSAGES.business_plan_create_error,
