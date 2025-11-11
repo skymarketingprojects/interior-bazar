@@ -6,6 +6,7 @@ from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.models import Quate
 from app_ib.Controllers.PlanQuate.Tasks.Tasks import PLAN_QUATE_TASKS
@@ -30,7 +31,7 @@ class PLAN_QUATE_CONTROLLER:
                     message=RESPONSE_MESSAGES.Quate_generate_success,
                     code=RESPONSE_CODES.success,
                     data={
-                        'id':quate_create_resp_data
+                        NAMES.ID:quate_create_resp_data
                     })
 
             else:
@@ -46,7 +47,7 @@ class PLAN_QUATE_CONTROLLER:
                 message=RESPONSE_MESSAGES.quate_generate_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
     @classmethod
@@ -92,5 +93,5 @@ class PLAN_QUATE_CONTROLLER:
                 message=RESPONSE_MESSAGES.Quate_verify_errror,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })

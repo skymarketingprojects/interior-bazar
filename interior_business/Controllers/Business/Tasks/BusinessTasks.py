@@ -10,6 +10,31 @@ from django.db.models import Prefetch
 class BUSS_TASK:
 
     @classmethod
+    async def UpdateBusinessBannerTask(cls, business: Business,data):
+        try:
+            business.banner_image_url = data.bannerImageUrl
+            business.bannerLink = data.bannerLink
+            business.bannerText = data.bannerText
+            business.save()
+            data = await cls.GetBusinessBannerTask(business)
+            return data
+        except Exception as e:
+            await MY_METHODS.printStatus(f'Error in CreateBusinessBannerTask {e}')
+            return None
+    
+    @classmethod
+    async def GetBusinessBannerTask(cls, business: Business):
+        try:
+            return {
+                'bannerImageUrl': business.banner_image_url,
+                'bannerLink': business.bannerLink,
+                'bannerText': business.bannerText,
+            }
+        except Exception as e:
+            await MY_METHODS.printStatus(f'Error in GetBusinessBannerTask {e}')
+            return None
+
+    @classmethod
     async def GetBusinessContactInfoTask(cls, business: Business):
         try:
             # 1️⃣ Fetch Business with user + user_profile + location
@@ -96,6 +121,7 @@ class BUSS_TASK:
             business_ins = Business()
             business_ins.user = user_ins
             business_ins.business_name = getattr(data, 'businessName', "")
+            business_ins.brandName = getattr(data, 'brandName', "")
             business_ins.whatsapp = getattr(data, 'whatsapp', "")
             business_ins.gst = getattr(data, 'gst', "")
             business_ins.since = getattr(data, 'since', "")
@@ -152,6 +178,7 @@ class BUSS_TASK:
 
             # --- Simple Fields ---
             business_ins.business_name = getattr(data, 'businessName', business_ins.business_name)
+            business_ins.brandName = getattr(data, 'brandName', business_ins.brandName)
             business_ins.gst = getattr(data, 'gst', business_ins.gst)
             business_ins.since = getattr(data, 'since', business_ins.since)
             business_ins.bio = getattr(data, 'bio', business_ins.bio)
@@ -194,6 +221,7 @@ class BUSS_TASK:
 
             data = {
                 'businessName': business_ins.business_name,
+                'brandName': business_ins.brandName,
                 'segments': segment_data,
                 'categories': category_data,
                 'whatsapp': business_ins.whatsapp,
@@ -265,6 +293,7 @@ class BUSS_TASK:
             data = {
                 'id': business_ins.id,
                 'businessName': business_ins.business_name,
+                'brandName': business_ins.brandName,
                 'coverImageUrl': business_ins.cover_image_url,
                 'since': business_ins.since,
                 'businessImage': business_image,

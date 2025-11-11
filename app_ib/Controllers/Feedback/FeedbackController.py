@@ -6,6 +6,7 @@ from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.models import Feedback
 from app_ib.Controllers.Feedback.Tasks.FeedbackTasks import FEEDBACK_TASKS
@@ -43,7 +44,7 @@ class FEEDBACK_CONTROLLER:
                 message=RESPONSE_MESSAGES.feedback_generate_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
 
@@ -88,5 +89,5 @@ class FEEDBACK_CONTROLLER:
                 message=RESPONSE_MESSAGES.feedback_update_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })

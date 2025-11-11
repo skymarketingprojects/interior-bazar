@@ -7,6 +7,7 @@ from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.Controllers.Business.Tasks.BusinessTasks import BUSS_TASK
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.models import Location
 from app_ib.Controllers.ClientLocation.Tasks.ClientLocationTasks import CLIENT_LOC_TASKS
@@ -62,7 +63,7 @@ class CLIENT_LOCATION_CONTROLLER:
                 message=RESPONSE_MESSAGES.User_loc_create_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
 
@@ -98,5 +99,5 @@ class CLIENT_LOCATION_CONTROLLER:
                 message=RESPONSE_MESSAGES.User_loc_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })

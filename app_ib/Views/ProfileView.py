@@ -6,6 +6,7 @@ from asgiref.sync import sync_to_async
 from adrf.decorators import api_view
 from types import SimpleNamespace
 from app_ib.Utils.MyMethods import MY_METHODS
+from app_ib.Utils.Names import NAMES
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
@@ -40,7 +41,7 @@ async def CreateProfileView(request):
             message=RESPONSE_MESSAGES.user_profile_create_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 @api_view(['POST'])
@@ -49,7 +50,7 @@ async def CreateOrUpdateProfileImageView(request):
     try:
         # Get user instance
         user_ins = request.user
-        profile_image = request.FILES.get('profile_image_url')        
+        profile_image = request.FILES.get(NAMES.PROFILE_IMAGE_URL)        
         # Call Auth Controller to Create User
         auth_resp = await  asyncio.gather(PROFILE_CONTROLLER.CreateOrUpdateProfileImage(
             user_ins=user_ins, profile_image=profile_image))
@@ -69,7 +70,7 @@ async def CreateOrUpdateProfileImageView(request):
             message=RESPONSE_MESSAGES.user_profile_create_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 
@@ -96,7 +97,7 @@ async def GetProfileView(request):
             message=RESPONSE_MESSAGES.user_profile_create_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -121,7 +122,7 @@ async def GetProfileDashbordView(request):
             message=RESPONSE_MESSAGES.user_profile_create_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 
@@ -148,6 +149,6 @@ async def GetPlanView(request):
             message=RESPONSE_MESSAGES.user_profile_create_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             }
         )

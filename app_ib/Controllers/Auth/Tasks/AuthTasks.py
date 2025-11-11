@@ -6,6 +6,7 @@ from app_ib.serializers import MyTokenObtainPairSerializer
 from app_ib.models import CustomUser, UserProfile
 from app_ib.Utils.AppMode import APPMODE, APPMODE_URL
 from app_ib.Utils.MyMethods import MY_METHODS
+from app_ib.Utils.Names import NAMES
 from asgiref.sync import sync_to_async
 
 class AUTH_TASK:
@@ -51,17 +52,17 @@ class AUTH_TASK:
         try:
             """Generate user token"""
             token = await MyTokenObtainPairSerializer.get_token(user=user_ins)
-            access_token = token['access']
-            refresh_token = token['refresh']
+            access_token = token[NAMES.ACCESS]
+            refresh_token = token[NAMES.REFRESH]
             data = {
-                'access_token':access_token,
-                'refresh_token':refresh_token,
-                'type':user_ins.type,
-                'user_id':user_ins.id,
-                'username':user_ins.username,
-                'is_active':user_ins.is_active,
-                'is_delete':user_ins.is_delete,
-                'unique_id':user_ins.unique_id
+                NAMES.ACCESS_TOKEN:access_token,
+                NAMES.REFRESH_TOKEN:refresh_token,
+                NAMES.TYPE:user_ins.type,
+                NAMES.USERID:user_ins.id,
+                NAMES.USERNAME:user_ins.username,
+                NAMES.IS_ACTIVE:user_ins.is_active,
+                NAMES.IS_DELETE:user_ins.is_delete,
+                NAMES.UNIQUE_ID:user_ins.unique_id
             }
             return data
         except Exception as e:
@@ -107,8 +108,8 @@ class AUTH_TASK:
     async def GenerateForgotPasswordLink(self,username, timestamp):
         try:
             json_of_hash = {
-                'username':username,
-                'timestamp':timestamp
+                NAMES.USERNAME:username,
+                NAMES.TIMESTAMP:timestamp
             }
             json_of_hash = json.dumps(json_of_hash)
             encoded_hash = base64.urlsafe_b64encode(json_of_hash.encode()).decode()
@@ -138,9 +139,9 @@ class AUTH_TASK:
                 user_ins = await sync_to_async(CustomUser.objects.get)(username=username)
                 user_profile_ins = await sync_to_async(UserProfile.objects.filter(user=user_ins).first)()
                 data = {
-                    'email':user_profile_ins.email,
-                    'phone':user_profile_ins.phone,
-                    'name':user_profile_ins.name,
+                    NAMES.EMAIL:user_profile_ins.email,
+                    NAMES.PHONE:user_profile_ins.phone,
+                    NAMES.NAME:user_profile_ins.name,
                 }
                 return data 
                            
@@ -156,7 +157,7 @@ class AUTH_TASK:
     @classmethod
     async def SendForgotPasswordEmail(self,user_profile_data,link):
         try:
-            email = user_profile_data['email']
+            email = user_profile_data[NAMES.EMAIL]
             await MY_METHODS.send_email(
                 email=email,
                 subject='Forgot Password',
@@ -191,8 +192,8 @@ class AUTH_TASK:
         try:
             decoded_json_str = base64.urlsafe_b64decode(hash.encode()).decode()
             decode_hash = json.loads(decoded_json_str)
-            username = decode_hash['username']
-            timestamp = decode_hash['timestamp']
+            username = decode_hash[NAMES.USERNAME]
+            timestamp = decode_hash[NAMES.TIMESTAMP]
             time_difference =  await MY_METHODS.GetTimeDifferenceInMinutes(my_time=timestamp)
             return time_difference
         except Exception as e:
@@ -210,7 +211,7 @@ class AUTH_TASK:
 
             decoded_json_str = base64.urlsafe_b64decode(hash.encode()).decode()
             decode_hash = json.loads(decoded_json_str)
-            username = decode_hash['username']
+            username = decode_hash[NAMES.USERNAME]
             #await MY_METHODS.printStatus(f'username {username}')
             
 

@@ -7,7 +7,7 @@ from app_ib.Utils.MyMethods import MY_METHODS
 from .Tasks.productsTasks import PRODUCTS_TASKS
 from .Validators.productsValidators import PRODUCTS_VALIDATORS
 from app_ib.models import Business
-from interior_products.models import Product
+from interior_products.models import Product,ProductCategory,ProductSubCategory
 from django.db.models import Q
 
 class PRODUCTS_CONTROLLER:
@@ -40,6 +40,62 @@ class PRODUCTS_CONTROLLER:
             )
         except Exception as e:
             #await MY_METHODS.printStatus(f"Error in getProduct: {str(e)}")
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.product_fetch_error,
+                code=RESPONSE_CODES.error,
+                data={'error':str(e)}
+            )
+    
+    @classmethod
+    async def getAllProduct(self,page,size,filterType=None,id=None):
+        try:
+            productData = []
+            related_qs =[]
+            if filterType and id:
+                if filterType == "category":
+                    category = await sync_to_async(ProductCategory.objects.get)(id=int(id))
+                    related_qs = category.catProducts.all()
+                elif filterType == "subCategory":
+                    subCategory = await sync_to_async(ProductSubCategory.objects.get)(id=int(id))
+                    related_qs = subCategory.subcatProducts.all()
+            else:
+                related_qs = Product.objects.all()
+            await MY_METHODS.printStatus(f"related_qs: {related_qs}")
+
+            if related_qs.count() == 0:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.error,
+                    message=RESPONSE_MESSAGES.product_fetch_error,
+                    code=RESPONSE_CODES.error,
+                    data={'error':RESPONSE_MESSAGES.product_fetch_error}
+                )
+            paginated = await MY_METHODS.paginate_queryset(related_qs, page, size)
+            productData = []
+
+            for c in paginated["results"]:
+                data = await PRODUCTS_TASKS.getProduct(c)
+                if data:
+                    productData.append(data)
+
+            paginated['pagination']['data'] = productData
+                
+            if not productData:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.error,
+                    message=RESPONSE_MESSAGES.product_fetch_error,
+                    code=RESPONSE_CODES.error,
+                    data={'error':RESPONSE_MESSAGES.product_fetch_error}
+                )
+            
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message=RESPONSE_MESSAGES.product_fetch_success,
+                code=RESPONSE_CODES.success,
+                data=paginated['pagination']
+            )
+        except Exception as e:
+            await MY_METHODS.printStatus(f"Error in getProduct: {str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.product_fetch_error,
@@ -202,3 +258,73 @@ class PRODUCTS_CONTROLLER:
                 code=RESPONSE_CODES.error,
                 data={"error": str(e)}
             )
+        
+    @classmethod
+    async def GetProductCategories(cls):
+        try:
+            categories = await PRODUCTS_TASKS.getProductCategoriesTask()
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message="Categories fetched successfully",
+                code=RESPONSE_CODES.success,
+                data=categories
+            )
+        except Exception as e:
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message="Categories fetched Failed",
+                code=RESPONSE_CODES.error,
+                data={"error": str(e)}
+            )
+    
+    @classmethod
+    async def GetProductSubCategories(cls):
+        try:
+
+            categories = await PRODUCTS_TASKS.getProductSubCategoriesTask()
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message="Sub Categories fetched successfully",
+                code=RESPONSE_CODES.success,
+                data=categories
+            )
+        except Exception as e:
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message="Sub Categories fetched Failed",
+                code=RESPONSE_CODES.error,
+                data={"error": str(e)}
+            )
+
+
+    @classmethod
+    async def GetProductTab(cls):
+        try:
+            categorys = ProductCategory.objects.all()
+            tabData = []
+            for category in categorys:
+                if category.catProducts.all().count():
+                    categoryData = await PRODUCTS_TASKS.getCategoriesDataTask(category)
+                    if categoryData:
+                        categoryData['type']='category'
+                        tabData.append(categoryData)
+            subCategorys = ProductSubCategory.objects.all()
+            for subCategory in subCategorys:
+                if subCategory.subcatProducts.all().count():
+                    subCategoryData = await PRODUCTS_TASKS.getCategoriesDataTask(subCategory)
+                    if subCategoryData:
+                        subCategoryData['type']='subCategory'
+                        tabData.append(subCategoryData)
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message=RESPONSE_MESSAGES.product_tab_success,
+                code=RESPONSE_CODES.success,
+                data=tabData
+                )
+        except Exception as e:
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.product_tab_error,
+                code=RESPONSE_CODES.error,
+                data={'error':str(e)}
+                )

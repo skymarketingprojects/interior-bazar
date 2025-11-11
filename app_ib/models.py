@@ -6,6 +6,8 @@ import uuid
 from django.db import models,transaction
 from .Utils.ModelHelper import indexShifting
 from app_ib.Utils.MyMethods import MY_METHODS
+
+from interior_notification.signals import business_changed
 # Custom User Manager
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, password=None, **extra_fields):
@@ -65,6 +67,8 @@ class BusinessBadge(models.Model):
         return f'badge - {self.type}'
 
 class BusinessType(models.Model):
+    imageSQUrl = models.CharField(max_length=2250,null=True,blank=True)
+    imageRTUrl = models.CharField(max_length=2250,null=True,blank=True)
     value = models.CharField(max_length=250)
     lable = models.CharField(max_length=250)
     def __str__(self):
@@ -72,6 +76,8 @@ class BusinessType(models.Model):
 
 class BusinessCategory(models.Model):
     # businessType = models.ForeignKey(BusinessType, on_delete=models.CASCADE, null=True, blank=True, related_name='business_type_category')
+    imageSQUrl = models.CharField(max_length=2250,null=True,blank=True)
+    imageRTUrl = models.CharField(max_length=2250,null=True,blank=True)
     value = models.CharField(max_length=250)
     lable = models.CharField(max_length=250)
     def __str__(self):
@@ -79,7 +85,9 @@ class BusinessCategory(models.Model):
 
 class BusinessSegment(models.Model):
     businessType = models.ForeignKey(BusinessType, on_delete=models.CASCADE, null=True, blank=True, related_name='business_type_segment')
-    # businessCategory = models.ForeignKey(BusinessCategory, on_delete=models.CASCADE, null=True, blank=True, related_name='business_category_segment')
+    businessCategory = models.ManyToManyField(BusinessCategory,  null=True, blank=True, related_name='business_category_segment')
+    imageSQUrl = models.CharField(max_length=2250,null=True,blank=True)
+    imageRTUrl = models.CharField(max_length=2250,null=True,blank=True)
     value = models.CharField(max_length=250)
     lable = models.CharField(max_length=250)
     def __str__(self):
@@ -88,17 +96,20 @@ class BusinessSegment(models.Model):
 class Business(models.Model):
     user= models.OneToOneField(CustomUser,on_delete=models.CASCADE, null=True, blank=True,related_name='user_business')
     business_name= models.CharField(max_length=250)
+    brandName = models.CharField(max_length=250,null=True, blank=True)
     whatsapp= models.CharField(max_length=100,default='',null=True, blank=True)
     cover_image_url = models.TextField(default='',null=True, blank=True)
     banner_image_url = models.TextField(default='',null=True, blank=True)
+    bannerLink = models.TextField(default='',null=True, blank=True)
+    bannerText = models.TextField(default='',null=True, blank=True)
     gst= models.CharField(max_length=250,null=True, blank=True)
     since= models.CharField(max_length=250,null=True, blank=True)
 
-    segment= models.TextField() # "manufraturer"
-    catigory= models.TextField() # ["interior", "exterior","office"]
+    segment= models.TextField() # "manufraturer" #remove in version 2
+    catigory= models.TextField() # ["interior", "exterior","office"] # remove in version 2
     business_type= models.ForeignKey(BusinessType, on_delete=models.SET_NULL, null=True, blank=True)
-    businessSegment= models.ManyToManyField(BusinessSegment)
-    businessCategory= models.ManyToManyField(BusinessCategory)
+    businessSegment= models.ManyToManyField(BusinessSegment,related_name='business_segment')
+    businessCategory= models.ManyToManyField(BusinessCategory,related_name='business_category')
 
     badge = models.TextField(null=True, blank=True)
     businessBadge= models.ForeignKey(BusinessBadge, on_delete=models.SET_NULL, null=True, blank=True)
@@ -173,6 +184,20 @@ class LeadQuery(models.Model):
     remark= models.TextField(default='',null=True,blank=True)
     timestamp= models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._original_business = self.business
+
+    def save(self, *args, **kwargs):
+        business_changed_flag = self.pk is not None and self.business != self._original_business
+
+        super().save(*args, **kwargs)  # Save only once
+
+        if business_changed_flag:
+            business_changed.send(sender=self.__class__, instance=self)
+
+        self._original_business = self.business
 
     def __str__(self):
         return f'business_id {self.pk}  name: {self.name}  phone{self.phone} date {self.timestamp}'
@@ -432,3 +457,26 @@ class BusinessSocialMedia(models.Model):
 
     def __str__(self):
         return f'business social media - {self.business.pk} - {self.socialMedia.name}'
+
+class DaySchedule(models.Model):
+    DAYS_OF_WEEK = [
+        (1, 'Monday'),
+        (2, 'Tuesday'),
+        (3, 'Wednesday'),
+        (4, 'Thursday'),
+        (5, 'Friday'),
+        (6, 'Saturday'),
+        (7, 'Sunday'),
+    ]
+
+    business = models.ForeignKey(Business, on_delete=models.CASCADE, related_name="schedules")
+    day = models.PositiveSmallIntegerField(choices=DAYS_OF_WEEK)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    is_working = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['day']
+
+    def __str__(self):
+        return f"{self.business.business_name} - {self.get_day_display()}"

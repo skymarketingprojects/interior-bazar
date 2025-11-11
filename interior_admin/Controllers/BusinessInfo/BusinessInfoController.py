@@ -1,6 +1,7 @@
 from asgiref.sync import sync_to_async
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from app_ib.Utils.LocalResponse import LocalResponse
 
 from .Tasks.BusinessInfoTasks import BUSINESS_INFO_TASKS
@@ -53,13 +54,13 @@ class BUSINESS_INFO_CONTROLLER:
             businessData = await asyncio.gather(*tasks)
 
             busPaginationData={
-                "businesses": businessData,
-                "current_page": page_obj.number,
-                "hasNext": page_obj.has_next(),
-                "hasPrevious": page_obj.has_previous(),
-                "totalPages": paginator.num_pages,
-                "totalCount": len(businessesIns),
-                "pageSize": size
+                NAMES.BUSINESSES: businessData,
+                NAMES.CURRENT_PAGE: page_obj.number,
+                NAMES.HAS_NEXT: page_obj.has_next(),
+                NAMES.HAS_PREVIOUS: page_obj.has_previous(),
+                NAMES.TOTAL_PAGES: paginator.num_pages,
+                NAMES.TOTAL_COUNT: len(businessesIns),
+                NAMES.PAGE_SIZE: size
             }
             
                     
@@ -76,6 +77,6 @@ class BUSINESS_INFO_CONTROLLER:
                 message=RESPONSE_MESSAGES.business_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 }
             )

@@ -1,6 +1,7 @@
 from asgiref.sync import sync_to_async
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.models import LeadQuery
 from app_ib.Controllers.AdsQuery.Tasks.AdsQueryTasks import ADS_QUERY_TASKS
@@ -33,7 +34,7 @@ class ADS_QUERY_CONTROLLER:
                 message=RESPONSE_MESSAGES.ads_query_generate_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
 
@@ -71,5 +72,5 @@ class ADS_QUERY_CONTROLLER:
                 message=RESPONSE_MESSAGES.ads_query_update_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })

@@ -4,6 +4,7 @@ from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.LocalResponse import LocalResponse
 
 from .Tasks.catelogTasks import CATELOG_TASKS
+from interior_products.Controllers.products.Tasks.productsTasks import PRODUCTS_TASKS
 from .Validators.catelogValidators import CATELOG_VALIDATORS
 from app_ib.models import Business
 from app_ib.Utils.MyMethods import MY_METHODS
@@ -11,7 +12,7 @@ from app_ib.Utils.MyMethods import MY_METHODS
 from interior_products.models import Catelogue
 
 from django.db.models import Q
-
+from interior_products.models import ProductCategory,ProductSubCategory
 class CATELOG_CONTROLLER:
     
     @classmethod
@@ -23,6 +24,8 @@ class CATELOG_CONTROLLER:
                 data = await CATELOG_TASKS.getCatelog(catelog)
                 if data:
                     catelogData.append(data)
+            
+            await MY_METHODS.printStatus(f"catelog data: {catelogData}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.catelog_fetch_success,
@@ -31,14 +34,12 @@ class CATELOG_CONTROLLER:
                 )
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error during GetCatelogForBusiness: {e}')
+            await MY_METHODS.printStatus(f'Error during GetCatelogForBusiness: {e}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.catelog_fetch_error,
                 code=RESPONSE_CODES.error,
-                data={
-
-                })
+                data={"error":str(e)})
     
     @classmethod
     async def GetCatelog(self, catelogId):
@@ -61,6 +62,54 @@ class CATELOG_CONTROLLER:
                 data={
 
                 })
+    
+    @classmethod
+    async def GetAllCatelog(self,page,size,filterType=None,id=None):
+        try:
+            catelogData = []
+            related_qs = []
+            if filterType and id:
+                if filterType == "category":
+                    category = ProductCategory.objects.get(id=int(id))
+                    related_qs = category.catCatelogues.all()
+                elif filterType == "subCategory":
+                    subCategory = ProductSubCategory.objects.get(id=int(id))
+                    related_qs = subCategory.catSubCatelogues.all()
+            else:
+                related_qs = Catelogue.objects.all()
+            if related_qs.count() == 0:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.error,
+                    message=RESPONSE_MESSAGES.catelog_fetch_error,
+                    code=RESPONSE_CODES.error,
+                    data={'error':'No catelog found'}
+                )
+            paginated = await MY_METHODS.paginate_queryset(related_qs, page, size)
+            catelogData = []
+
+            for c in paginated["results"]:
+                data = await CATELOG_TASKS.getCatelog(c)
+                if data:
+                    catelogData.append(data)
+
+            paginated['pagination']['data'] = catelogData
+            
+
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message=RESPONSE_MESSAGES.catelog_fetch_success,
+                code=RESPONSE_CODES.success,
+                data=paginated['pagination']
+                )
+
+        except Exception as e:
+            #await MY_METHODS.printStatus(f'Error during GetCatelog: {e}')
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.catelog_fetch_error,
+                code=RESPONSE_CODES.error,
+                data={'error':str(e)})
+
     @classmethod
     async def CreateCatelog(self, business, data):
         try:
@@ -191,3 +240,37 @@ class CATELOG_CONTROLLER:
                 data={"error": str(e)}
             )
         
+    @classmethod
+    async def GetCatelougeTab(cls):
+        try:
+            categorys = ProductCategory.objects.all()
+            tabData = []
+            for category in categorys:
+                if category.catCatelogues.all().count():
+                    categoryData = await PRODUCTS_TASKS.getCategoriesDataTask(category)
+                    if categoryData:
+                        categoryData['type']='category'
+                        tabData.append(categoryData)
+            subCategorys = ProductSubCategory.objects.all()
+            for subCategory in subCategorys:
+                if subCategory.catSubCatelogues.all().count():
+                    subCategoryData = await PRODUCTS_TASKS.getCategoriesDataTask(subCategory)
+                    if subCategoryData:
+                        subCategory['type']='subCategory'
+                        tabData.append(subCategoryData)
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message=RESPONSE_MESSAGES.catelog_table_success,
+                code=RESPONSE_CODES.success,
+                data=tabData
+                )
+        except Exception as e:
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.catelog_table_error,
+                code=RESPONSE_CODES.error,
+                data={'error':str(e)}
+                )
+                    
+
+

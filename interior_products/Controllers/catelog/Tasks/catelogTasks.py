@@ -1,7 +1,8 @@
 from asgiref.sync import sync_to_async
-from interior_products.models import Catelogue,CatelogueImage
+from interior_products.models import Catelogue,CatelogueImage,ProductSubCategory,ProductCategory
 from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.models import Business,BusinessType
+from interior_products.Controllers.products.Tasks.productsTasks import PRODUCTS_TASKS
 class CATELOG_TASKS:
     @classmethod
     async def getCatelog(self, catelog:Catelogue):
@@ -28,6 +29,19 @@ class CATELOG_TASKS:
                 })
 
             time_ago = await MY_METHODS.get_time_ago(updated_at=catelog.createdAt)
+            
+            prodCategory=[]
+            for cat in catelog.catalogCategory.all():
+                tempdata = await PRODUCTS_TASKS.getCategoriesDataTask(cat)
+                prodCategory.append(tempdata)
+
+            await MY_METHODS.printStatus(f"sub category {prodCategory} ")
+            prodSubCategory=[]
+
+            for subCat in catelog.subCategory.all():
+                tempdata = await PRODUCTS_TASKS.getCategoriesDataTask(subCat)
+                prodSubCategory.append(tempdata)
+            await MY_METHODS.printStatus(f"sub category {prodSubCategory} ")
             data = {
                 "id": catelog.id,
                 "title": catelog.title,
@@ -39,11 +53,13 @@ class CATELOG_TASKS:
                 "downloads": catelog.totalDownload,
                 "ytLink": catelog.ytLink,
                 "uploadedForTime": time_ago,
-
+                "categories":prodCategory,
+                "subCategories":prodSubCategory
             }
+            await MY_METHODS.printStatus(f"data {data}")
             return data
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error in getCatelog: {str(e)}")
+            await MY_METHODS.printStatus(f"Error in getCatelog: {str(e)}")
             return False
         
     @classmethod
@@ -60,6 +76,23 @@ class CATELOG_TASKS:
                 catelogueType=catelogType,
                 ytLink=data.ytLink
             )
+            category_ids = [cat.id for cat in getattr(data, 'categories', [])]
+            if len(category_ids) > 3:
+                return None
+            categories = await sync_to_async(lambda: list(ProductCategory.objects.filter(id__in=category_ids)))()
+            if len(categories) != len(category_ids):
+                return None
+            
+
+            subCategoryIds = [cat.id for cat in getattr(data, 'subCategories', [])]
+            if len(subCategoryIds) > 3:
+                return None
+            subCategories = await sync_to_async(lambda: list(ProductSubCategory.objects.filter(id__in=subCategoryIds)))()
+            if len(subCategories) != len(subCategoryIds):
+                return None
+            
+            await sync_to_async(catelog.catalogCategory.set)(categories)
+            await sync_to_async(catelog.subCategory.set)(subCategories)
             try:
                 if data.images:
                     for image in data.images:
@@ -86,6 +119,20 @@ class CATELOG_TASKS:
             catelog.catelougePdf = data.downloadLink
             catelog.category = data.category
             catelog.ytLink = data.ytLink
+            categories = getattr(data, 'categories', None)
+            if isinstance(categories, list) and len(categories) <= 3:
+                category_ids = [c.id for c in categories]
+                category_objs = await sync_to_async(lambda: list(ProductCategory.objects.filter(id__in=category_ids)))()
+                if len(category_objs) == len(category_ids):
+                    await sync_to_async(catelog.catalogCategory.set)(category_objs)
+            
+            
+            subCategories = getattr(data, 'subCategories', None)
+            if isinstance(subCategories, list) and len(subCategories) <= 3:
+                category_ids = [c.id for c in subCategories]
+                category_objs = await sync_to_async(lambda: list(ProductSubCategory.objects.filter(id__in=category_ids)))()
+                if len(category_objs) == len(category_ids):
+                    await sync_to_async(catelog.subCategory.set)(category_objs)
             #await MY_METHODS.printStatus(f"update Catelog: {data.ytLink}")
             try:
                 if data.type:

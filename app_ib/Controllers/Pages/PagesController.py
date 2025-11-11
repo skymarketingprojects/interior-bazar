@@ -6,6 +6,7 @@ from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.models import Pages,QNA
 # from app_ib.Controllers.Pages.Tasks.PagesTasks import PAGE_TASKS
@@ -19,10 +20,10 @@ class PAGE_CONTROLLER:
             page_ins=await sync_to_async(Pages.objects.get)(page_name=page_name)
             #await MY_METHODS.printStatus(f'page ins {page_ins}')
             page_data={
-                'id':page_ins.id,
-                'page_name':page_ins.page_name,
-                'page_title':page_ins.title,
-                'page_content':page_ins.content.html,
+                NAMES.ID:page_ins.id,
+                NAMES.PAGE_NAME:page_ins.page_name,
+                NAMES.PAGE_TITLE:page_ins.title,
+                NAMES.PAGE_CONTENT:page_ins.content.html,
             }
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
@@ -35,7 +36,7 @@ class PAGE_CONTROLLER:
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.page_fetch_error,
                 code=RESPONSE_CODES.error,
-                data={}
+                data={NAMES.ERROR:str(e)}
             )
     @classmethod
     async def GetQnA(self):
@@ -44,9 +45,9 @@ class PAGE_CONTROLLER:
             qna_ins=await sync_to_async(QNA.objects.all)()
             for qna in qna_ins:
                 qna_data={
-                    'id':qna.id,
-                    'question':qna.question,
-                    'answer':qna.answer,
+                    NAMES.ID:qna.id,
+                    NAMES.QUESTION:qna.question,
+                    NAMES.ANSWER:qna.answer,
                 }
                 qna_list.append(qna_data)
             return LocalResponse(
@@ -60,5 +61,5 @@ class PAGE_CONTROLLER:
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.qna_fetch_error,
                 code=RESPONSE_CODES.error,
-                data={}
+                data={NAMES.ERROR:str(e)}
             )

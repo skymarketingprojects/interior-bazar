@@ -1,5 +1,6 @@
 from asgiref.sync import sync_to_async
 from app_ib.Utils.MyMethods import MY_METHODS
+from app_ib.Utils.Names import NAMES
 
 class OFFER_TEXT_TASKS:
     
@@ -7,9 +8,9 @@ class OFFER_TEXT_TASKS:
     async def GetOfferText(cls, offerText):
         try:
             offerData = {
-                "text": offerText.text.html,
-                "link": offerText.link,
-                "show": offerText.show
+                NAMES.TEXT: offerText.text.html,
+                NAMES.LINK: offerText.link,
+                NAMES.SHOW: offerText.show
             }
             return offerData
         except Exception as e:

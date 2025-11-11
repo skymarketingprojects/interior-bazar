@@ -10,7 +10,7 @@ from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.models import Location, Business,Country,State
 from app_ib.Controllers.BussLocation.Tasks.BusinessLocationTasks import BUSS_LOC_TASK
-
+from app_ib.Utils.Names import NAMES
 
 class BUSS_LOCATION_CONTROLLER:
   
@@ -70,7 +70,7 @@ class BUSS_LOCATION_CONTROLLER:
                 message=RESPONSE_MESSAGES.business_register_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
     @classmethod
@@ -113,7 +113,7 @@ class BUSS_LOCATION_CONTROLLER:
                 message=RESPONSE_MESSAGES.business_loc_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
     @classmethod
@@ -143,7 +143,7 @@ class BUSS_LOCATION_CONTROLLER:
                 message=RESPONSE_MESSAGES.country_list_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
     @classmethod
     async def GetStateListByCountry(self,countryId):
@@ -172,5 +172,5 @@ class BUSS_LOCATION_CONTROLLER:
                 message=RESPONSE_MESSAGES.country_list_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })

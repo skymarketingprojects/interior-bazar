@@ -9,7 +9,7 @@ from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.models import Business,BusinessType,BusinessCategory,BusinessSegment
 import asyncio
-
+from django.db.models import Count
 
 class BUSS_CONTROLLER:
 
@@ -37,6 +37,7 @@ class BUSS_CONTROLLER:
                 data={
                     'error': str(e)
                 })
+    
     @classmethod
     async def CreateBusiness(self, user_ins, data):
         try:
@@ -175,6 +176,39 @@ class BUSS_CONTROLLER:
                 })
     
     @classmethod
+    async def GetAllBusinessTab(self):
+        try:
+            categoryInstances = await sync_to_async(list)(
+                BusinessCategory.objects.annotate(num_related=Count('business_category')).filter(num_related__gt=0)
+            )
+            category_list = []
+            for categoryInstance in categoryInstances:
+                categoryData = await BUSS_TASK.GetBusinessTypeData(categoryInstance)
+                if categoryData:
+                    categoryData['type']='category'
+                    category_list.append(categoryData)
+            segmentInstances = await sync_to_async(list)(
+                BusinessSegment.objects.annotate(num_related=Count('business_segment')).filter(num_related__gt=0)
+                )
+            for segmentInstance in segmentInstances:
+                segmentData = await BUSS_TASK.GetBusinessTypeData(segmentInstance)
+                if segmentData:
+                    segmentData['type']='segment'
+                    category_list.append(segmentData)
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message=RESPONSE_MESSAGES.business_category_fetch_success,
+                code=RESPONSE_CODES.success,
+                data=category_list)
+        except Exception as e:
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.business_category_fetch_error,
+                code=RESPONSE_CODES.error,
+                data={
+                    'error': str(e)
+                })
+    @classmethod
     async def GetAllBusinessCategories(self):
         try:
             categoryInstances = await sync_to_async(list)(BusinessCategory.objects.all())
@@ -196,7 +230,6 @@ class BUSS_CONTROLLER:
                 data={
                     'error': str(e)
                 })
-    
     @classmethod
     async def GetBusinessSegmentsByType(self,typeId):
         try:
@@ -223,6 +256,89 @@ class BUSS_CONTROLLER:
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.business_category_fetch_error,
+                code=RESPONSE_CODES.error,
+                data={
+                    'error': str(e)
+                })
+        
+    @classmethod
+    async def GetExploreSections(self):
+        try:
+            categoryInstances = await sync_to_async(list)(BusinessCategory.objects.all())
+            data = []
+            for categoryInstance in categoryInstances:
+                categoryData = await BUSS_TASK.GetBusinessTypeData(categoryInstance)
+                if not categoryData:
+                    continue
+                segments = categoryInstance.business_category_segment.all()
+                segmentData = [await BUSS_TASK.GetBusinessTypeData(seg) for seg in segments]
+                categoryData['segments'] = segmentData
+                data.append(categoryData)
+            if not data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.error,
+                    message=RESPONSE_MESSAGES.explore_section_fetch_error,
+                    code=RESPONSE_CODES.error,
+                    data={})
+
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message=RESPONSE_MESSAGES.explore_section_fetch_success,
+                code=RESPONSE_CODES.success,
+                data=data
+            )
+
+        except Exception as e:
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.explore_section_fetch_error,
+                code=RESPONSE_CODES.error,
+                data={
+                    'error': str(e)
+                })
+    @classmethod
+    async def UpdateBusinessBanner(self, business_ins, data):
+        try:
+            taskResult = await BUSS_TASK.UpdateBusinessBannerTask(business=business_ins, data=data)
+            if taskResult is not None:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.business_banner_update_success,
+                    code=RESPONSE_CODES.success,
+                    data=taskResult)
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.business_banner_update_error,
+                code=RESPONSE_CODES.error,
+                data={})
+        except Exception as e:
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.business_banner_update_error,
+                code=RESPONSE_CODES.error,
+                data={
+                    'error': str(e)
+                })
+    
+    @classmethod
+    async def GetBusinessBanner(self, business_ins):
+        try:
+            taskResult = await BUSS_TASK.GetBusinessBannerTask(business=business_ins)
+            if taskResult is not None:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.business_banner_fetch_success,
+                    code=RESPONSE_CODES.success,
+                    data=taskResult)
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.business_banner_fetch_error,
+                code=RESPONSE_CODES.error,
+                data={})
+        except Exception as e:
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.business_banner_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
                     'error': str(e)

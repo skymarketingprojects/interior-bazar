@@ -4,6 +4,7 @@ from adrf.decorators import api_view
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from app_ib.Controllers.Contact.ContactController import CONTACT_CONTROLLER
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -31,6 +32,6 @@ async def CreateContactView(request):
             message=RESPONSE_MESSAGES.contact_generate_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             }
         )

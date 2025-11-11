@@ -1,6 +1,8 @@
 from asgiref.sync import sync_to_async
 from app_ib.models import Quate
 from app_ib.Utils.MyMethods import MY_METHODS
+from app_ib.Utils.Names import NAMES
+
 
 class PLAN_QUATE_TASKS:
     @classmethod
@@ -9,7 +11,7 @@ class PLAN_QUATE_TASKS:
             quate_ins = Quate()
 
             # Only set attributes that are both in the model and provided in data
-            model_fields = [field.name for field in Quate._meta.get_fields() if field.editable and field.name != "id"]
+            model_fields = [field.name for field in Quate._meta.get_fields() if field.editable and field.name != NAMES.ID]
 
             for field in model_fields:
                 value = getattr(data, field, None)
@@ -29,7 +31,7 @@ class PLAN_QUATE_TASKS:
     @classmethod
     async def VerifyQuateTask(cls, quate_ins, data):
         try:
-            model_fields = [field.name for field in Quate._meta.get_fields() if field.editable and field.name != "id"]
+            model_fields = [field.name for field in Quate._meta.get_fields() if field.editable and field.name != NAMES.ID]
 
             for field in model_fields:
                 new_value = getattr(data, field, None)

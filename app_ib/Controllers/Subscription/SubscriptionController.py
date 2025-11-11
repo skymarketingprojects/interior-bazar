@@ -2,6 +2,7 @@ from asgiref.sync import sync_to_async
 from adrf.decorators import api_view
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.models import Subscription, Business
@@ -44,7 +45,7 @@ class SUBSCRIPTION_CONTROLLER:
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.subscription_create_error,
                 code=RESPONSE_CODES.error,
-                data={'error': str(e)}
+                data={NAMES.ERROR: str(e)}
             )
 
     @classmethod
@@ -81,7 +82,7 @@ class SUBSCRIPTION_CONTROLLER:
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.subscription_update_error,
                 code=RESPONSE_CODES.error,
-                data={'error': str(e)}
+                data={NAMES.ERROR: str(e)}
             )
 
     @classmethod
@@ -119,7 +120,44 @@ class SUBSCRIPTION_CONTROLLER:
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.subscription_fetch_error,
                 code=RESPONSE_CODES.error,
-                data={'error': str(e)}
+                data={NAMES.ERROR: str(e)}
             )
 
-   
+    @classmethod
+    async def GetSubscriptionById(self,id):
+        try:
+            subscription_ins = await sync_to_async(Subscription.objects.filter)(id=id)
+            #await MY_METHODS.printStatus(f'subscription_ins {subscription_ins}')
+
+            fetch_subscription_response = []
+            for subscription in subscription_ins:
+                #await MY_METHODS.printStatus(f'subscription {subscription}')
+                subscription_response = await SUBSCRIPTION_TASKS.GetSubscriptionTask(subscription_ins=subscription)
+
+                if subscription_response:
+                    fetch_subscription_response.append(subscription_response)
+            #await MY_METHODS.printStatus(f'fetch subscription resp {fetch_subscription_response}')
+
+            if fetch_subscription_response:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.subscription_fetch_success,
+                    code=RESPONSE_CODES.success,
+                    data=fetch_subscription_response
+                )
+            else:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.error,
+                    message=RESPONSE_MESSAGES.subscription_fetch_error,
+                    code=RESPONSE_CODES.error,
+                    data={}
+                )
+
+        except Exception as e:
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.subscription_fetch_error,
+                code=RESPONSE_CODES.error,
+                data={NAMES.ERROR: str(e)}
+            )
+

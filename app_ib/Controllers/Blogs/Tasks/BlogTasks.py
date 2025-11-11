@@ -1,4 +1,5 @@
 from app_ib.Utils.MyMethods import MY_METHODS
+from app_ib.Utils.Names import NAMES
 class BLOG_TASK:
     @classmethod
     async def GetBlogData(self, blog_instance):
@@ -8,14 +9,14 @@ class BLOG_TASK:
             
 
             blog_data = {
-                "id": blog_instance.id,
-                "title": blog_instance.title,
-                "slug": blog_instance.slug,
-                "coverImageUrl": blog_instance.cover_image_url,
-                "authorName": blog_instance.author,
-                "authorImage": blog_instance.authorImageUrl,
-                "publishDate": blog_instance.timestamp.strftime("%d-%m-%Y"),
-                "readTime": await MY_METHODS.getReadTime(blog_instance.description.html),
+                NAMES.ID: blog_instance.id,
+                NAMES.TITLE: blog_instance.title,
+                NAMES.SLUG: blog_instance.slug,
+                NAMES.COVER_IMAGE_URL: blog_instance.cover_image_url,
+                NAMES.AUTHOR_NAME: blog_instance.author,
+                NAMES.AUTHOR_IMAGE: blog_instance.authorImageUrl,
+                NAMES.PUBLISH_DATE: blog_instance.timestamp.strftime(NAMES.DMY_FORMAT),
+                NAMES.READ_TIME: await MY_METHODS.getReadTime(blog_instance.description.html),
             }
             return blog_data
 
@@ -30,14 +31,14 @@ class BLOG_TASK:
                 return None
 
             blog_data = {
-                "id": blog_instance.id,
-                "title": blog_instance.title,
-                "coverImageUrl": blog_instance.cover_image_url,
-                "content": blog_instance.description.html,
-                "author": blog_instance.author,
-                "authorImage": blog_instance.authorImageUrl,
-                "publishDate": blog_instance.timestamp.strftime("%d-%m-%Y"),
-                "readTime": await MY_METHODS.getReadTime(blog_instance.description.html),
+                NAMES.ID: blog_instance.id,
+                NAMES.TITLE: blog_instance.title,
+                NAMES.COVER_IMAGE_URL: blog_instance.cover_image_url,
+                NAMES.CONTENT: blog_instance.description.html,
+                NAMES.AUTHOR: blog_instance.author,
+                NAMES.AUTHOR_IMAGE: blog_instance.authorImageUrl,
+                NAMES.PUBLISH_DATE: blog_instance.timestamp.strftime(NAMES.DMY_FORMAT),
+                NAMES.READ_TIME: await MY_METHODS.getReadTime(blog_instance.description.html),
             }
             return blog_data
 

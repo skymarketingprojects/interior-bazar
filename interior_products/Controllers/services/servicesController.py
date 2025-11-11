@@ -4,11 +4,13 @@ from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.models import Business
-from interior_products.models import Service
+from interior_products.models import Service,ProductCategory,ProductSubCategory
+from interior_products.Controllers.products.Tasks.productsTasks import PRODUCTS_TASKS
 
 from .Tasks.servicesTasks import SERVICES_TASKS
 from .Validators.servicesValidators import SERVICES_VALIDATORS
 from django.db.models import Q
+
 
 
 class SERVICES_CONTROLLER:
@@ -48,6 +50,51 @@ class SERVICES_CONTROLLER:
                 data={'error':str(e)}
             )
     
+    @classmethod
+    async def getAllService(self,page,size,filterType=None,id=None)->LocalResponse:
+        try:
+            serviceData=[]
+            related_qs = []
+            if filterType and id:
+                if filterType == "category":
+                    category = await sync_to_async(ProductCategory.objects.get)(id=int(id))
+                    related_qs = category.catServices.all()
+                elif filterType == "subCategory":
+                    subCategory = await sync_to_async(ProductSubCategory.objects.get)(id=int(id))
+                    related_qs = subCategory.subcatServices.all()
+            else:
+                related_qs = Service.objects.all()
+
+            if related_qs.count() == 0:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.error,
+                    message=RESPONSE_MESSAGES.service_fetch_error,
+                    code=RESPONSE_CODES.error,
+                    data={'error':RESPONSE_MESSAGES.service_fetch_error}
+                )
+            paginated = await MY_METHODS.paginate_queryset(related_qs, page, size)
+            serviceData = []
+
+            for c in paginated["results"]:
+                data = await SERVICES_TASKS.getService(c)
+                if data:
+                    serviceData.append(data)
+            paginated['pagination']['data'] = serviceData
+            
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message=RESPONSE_MESSAGES.service_fetch_success,
+                code=RESPONSE_CODES.success,
+                data=paginated['pagination']
+            )
+        except Exception as e:
+            #await MY_METHODS.printStatus(f"Error in getService: {str(e)}")
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.service_fetch_error,
+                code=RESPONSE_CODES.error,
+                data={'error':str(e)}
+            )
     @classmethod
     async def getServicesForBusiness(self,business:Business)->LocalResponse:
         try:
@@ -203,3 +250,35 @@ class SERVICES_CONTROLLER:
                 code=RESPONSE_CODES.error,
                 data={"error": str(e)}
             )
+        
+    @classmethod
+    async def GetServiceTab(cls):
+        try:
+            categorys = ProductCategory.objects.all()
+            tabData = []
+            for category in categorys:
+                if category.catServices.all().count():
+                    categoryData = await PRODUCTS_TASKS.getCategoriesDataTask(category)
+                    if categoryData:
+                        categoryData['type']='category'
+                        tabData.append(categoryData)
+            subCategorys = ProductSubCategory.objects.all()
+            for subCategory in subCategorys:
+                if subCategory.subcatServices.all().count():
+                    subCategoryData = await PRODUCTS_TASKS.getCategoriesDataTask(subCategory)
+                    if subCategoryData:
+                        subCategoryData['type']='subCategory'
+                        tabData.append(subCategoryData)
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message=RESPONSE_MESSAGES.service_tab_success,
+                code=RESPONSE_CODES.success,
+                data=tabData
+                )
+        except Exception as e:
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.service_tab_error,
+                code=RESPONSE_CODES.error,
+                data={'error':str(e)}
+                )

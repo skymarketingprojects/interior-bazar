@@ -1,6 +1,7 @@
 
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
+from app_ib.Utils.Names import NAMES
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.Utils.MyMethods import MY_METHODS
 from asgiref.sync import sync_to_async
@@ -10,8 +11,8 @@ class BUSS_VALIDATOR:
     @classmethod
     async def _validate_business_name(self, business_name):
         try:
-            error_msg = ''
-            if business_name==None or business_name=='':
+            error_msg = NAMES.EMPTY
+            if business_name==None or business_name==NAMES.EMPTY:
                 error_msg = "At least one character required"
             if error_msg:
                 return LocalResponse(
@@ -25,13 +26,13 @@ class BUSS_VALIDATOR:
                 message="Business name is required",
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': error_msg
+                    NAMES.ERROR: error_msg
                 })
 
     @classmethod
     async def _validate_business_phone(self, phone):
         try:
-            error_msg = ''
+            error_msg = NAMES.EMPTY
             validate_phone=MY_METHODS._validate_phone(phone)
             if validate_phone==False:
                 error_msg = "Invalid phone number"
@@ -48,7 +49,7 @@ class BUSS_VALIDATOR:
                 response=RESPONSE_MESSAGES.success,
                 message="Phone number is valid",
                 data={
-                    'phone': phone
+                    NAMES.PHONE: phone
                 })
 
         except Exception as e:
@@ -57,14 +58,14 @@ class BUSS_VALIDATOR:
                 message="Phone number is required",
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': error_msg
+                    NAMES.ERROR: error_msg
                 })
 
 
     @classmethod
     async def _validate_business_gst(self, gst):
         try:
-            error_msg = ''
+            error_msg = NAMES.EMPTY
             validate_gst=MY_METHODS._validate_gst(gst)
             if validate_gst==False:
                 error_msg = "Invalid GST number"
@@ -81,7 +82,7 @@ class BUSS_VALIDATOR:
                 response=RESPONSE_MESSAGES.success,
                 message="GST number is valid",
                 data={
-                    'gst': gst
+                    NAMES.GST: gst
                 })
         except Exception as e:
             return LocalResponse(
@@ -89,7 +90,7 @@ class BUSS_VALIDATOR:
                 message="GST number is required",
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': error_msg
+                    NAMES.ERROR: error_msg
                 })
 
         
@@ -97,7 +98,7 @@ class BUSS_VALIDATOR:
     @classmethod
     async def _validate_business_since(self, since):
         try:
-            error_msg = ''
+            error_msg = NAMES.EMPTY
             
             if error_msg:
                 return LocalResponse(
@@ -111,7 +112,7 @@ class BUSS_VALIDATOR:
                 message="Business since is required",
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': error_msg
+                    NAMES.ERROR: error_msg
                 })
 
 

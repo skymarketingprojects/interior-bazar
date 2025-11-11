@@ -2,6 +2,7 @@ from asgiref.sync import sync_to_async
 from adrf.decorators import api_view
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.Utils.LocalResponse import LocalResponse
 from .Tasks.BlogTasks import BLOG_TASK
@@ -17,7 +18,7 @@ class BLOG_CONTROLLER:
         try:
 
             all_blogs = await sync_to_async(list)(
-                Blog.objects.all().order_by("-timestamp")
+                Blog.objects.all().order_by(f'-{NAMES.TIMESTAMP}')
             )
 
             # Step 2: Paginate the evaluated list
@@ -30,13 +31,13 @@ class BLOG_CONTROLLER:
 
             # Step 4: Build and return plain dict response
             blog_data = {
-                "blogs": blog_details,
-                    "current_page": page_obj.number,
-                    "hasNext": page_obj.has_next(),
-                    "hasPrevious": page_obj.has_previous(),
-                    "totalPages": paginator.num_pages,
-                    "totalCount": len(all_blogs),
-                    "pageSize": per_page
+                NAMES.BLOGS: blog_details,
+                    NAMES.CURRENT_PAGE: page_obj.number,
+                    NAMES.HAS_NEXT: page_obj.has_next(),
+                    NAMES.HAS_PREVIOUS: page_obj.has_previous(),
+                    NAMES.TOTAL_PAGES: paginator.num_pages,
+                    NAMES.TOTAL_COUNT: len(all_blogs),
+                    NAMES.PAGE_SIZE: per_page
             }
             return LocalResponse(
                 code=RESPONSE_CODES.success,
@@ -50,7 +51,7 @@ class BLOG_CONTROLLER:
                 message=RESPONSE_MESSAGES.blog_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })  
 
     @classmethod
@@ -58,7 +59,7 @@ class BLOG_CONTROLLER:
         try:
 
             all_blogs = await sync_to_async(list)(
-                Blog.objects.all().order_by("-timestamp")
+                Blog.objects.all().order_by(f'-{NAMES.TIMESTAMP}')
             )
 
             # Step 3: Gather blog data concurrently
@@ -78,7 +79,7 @@ class BLOG_CONTROLLER:
                 message=RESPONSE_MESSAGES.blog_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
     @classmethod
@@ -98,7 +99,7 @@ class BLOG_CONTROLLER:
                 code=RESPONSE_CODES.success,
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.blog_fetch_success,
-                data={"blog":blog_data})
+                data={NAMES.BLOG:blog_data})
 
         except Exception as e:
             return LocalResponse(
@@ -106,5 +107,5 @@ class BLOG_CONTROLLER:
                 message=RESPONSE_MESSAGES.blog_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })

@@ -7,6 +7,7 @@ from asgiref.sync import sync_to_async
 from adrf.decorators import api_view
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
+from app_ib.Utils.Names import NAMES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -35,7 +36,7 @@ from app_ib.Controllers.Subscription.SubscriptionController import SUBSCRIPTION_
 #             response=RESPONSE_MESSAGES.error,
 #             message=RESPONSE_MESSAGES.subscription_create_error,
 #             code=RESPONSE_CODES.error,
-#             data={'error': str(e)}
+#             data={NAMES.ERROR: str(e)}
 #         )
 
 
@@ -62,7 +63,7 @@ from app_ib.Controllers.Subscription.SubscriptionController import SUBSCRIPTION_
 #             response=RESPONSE_MESSAGES.error,
 #             message=RESPONSE_MESSAGES.subscription_update_error,
 #             code=RESPONSE_CODES.error,
-#             data={'error': str(e)}
+#             data={NAMES.ERROR: str(e)}
 #         )
 
 
@@ -86,7 +87,7 @@ async def GetSubscriptionsView(request):
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.subscription_fetch_error,
             code=RESPONSE_CODES.error,
-            data={'error': str(e)}
+            data={NAMES.ERROR: str(e)}
         )
 
 
@@ -110,5 +111,5 @@ async def GetSubscriptionByIDView(request, id):
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.subscription_fetch_error,
             code=RESPONSE_CODES.error,
-            data={'error': str(e)}
+            data={NAMES.ERROR: str(e)}
         )

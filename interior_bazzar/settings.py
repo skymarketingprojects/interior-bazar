@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_extensions',
     'django_quill',
+    'interior_notification.apps.InteriorNotificationConfig',
     'app_ib',
     'interior_admin',
     'django.contrib.sitemaps',
@@ -73,7 +74,7 @@ INSTALLED_APPS = [
     'interior_business',
     'interior_products',
     'interior_advertisement',
-    'interior_notification',
+    # 'interior_notification',
 ]
 
 MIDDLEWARE = [
@@ -352,6 +353,10 @@ EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
 
 SNS_TOPIC_ARN = env('SNS_TOPIC_ARN')
+
+#whats app
+WHATSAPP_ACCESS_TOKEN = env('WHATSAPP_ACCESS_TOKEN')
+WHATSAPP_PHONE_NUMBER_ID = env('WHATSAPP_PHONE_NUMBER_ID')
 #payment Gateway
 
 # PHONEPE_CLIENT_ID = env('PHONEPE_CLIENT_ID')

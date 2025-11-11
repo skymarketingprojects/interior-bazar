@@ -6,6 +6,7 @@ from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from app_ib.Controllers.OfferText.OfferTextController import OFFER_TEXT_CONTROLLER
 
 @api_view(['GET'])
@@ -24,5 +25,5 @@ async def GetOfferText(request):
             message=RESPONSE_MESSAGES.OFFER_TEXT_FETCH_ERROR,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })

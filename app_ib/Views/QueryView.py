@@ -8,6 +8,7 @@ from adrf.decorators import api_view
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 from app_ib.Controllers.Query.QueryController import LEAD_QUERY_CONTROLLER
@@ -35,7 +36,7 @@ async def GetQueryView(request):
             message=RESPONSE_MESSAGES.query_fetch_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 @api_view(['POST'])
@@ -61,7 +62,7 @@ async def CreateQueryView(request):
             message=RESPONSE_MESSAGES.query_generate_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 
@@ -89,7 +90,7 @@ async def UpdateQueryByIDView(request):
             message=RESPONSE_MESSAGES.query_update_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 @api_view(['POST'])
@@ -116,7 +117,7 @@ async def UpdateQueryStatusView(request):
             message=RESPONSE_MESSAGES.query_update_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 @api_view(['POST'])
@@ -143,7 +144,7 @@ async def UpdateQueryPriorityView(request):
             message=RESPONSE_MESSAGES.query_update_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 @api_view(['POST'])
@@ -170,7 +171,7 @@ async def UpdateQueryRemarkView(request):
             message=RESPONSE_MESSAGES.query_update_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 
@@ -198,7 +199,7 @@ async def GetQueryByID(request,id):
             message=RESPONSE_MESSAGES.query_fetch_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 @api_view(['GET'])
@@ -223,7 +224,7 @@ async def GetQueryBusinessView(request):
             message=RESPONSE_MESSAGES.query_fetch_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
     
 @api_view(['POST'])
@@ -245,5 +246,5 @@ async def CreateFunnelQueryView(request):
             message=RESPONSE_MESSAGES.funnel_query_create_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })

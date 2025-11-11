@@ -7,6 +7,7 @@ from app_ib.Controllers.Auth.AuthController import AUTH_CONTROLLER
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 
@@ -36,7 +37,7 @@ async def SignupView(request):
             message=RESPONSE_MESSAGES.user_register_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 ######################################
@@ -65,7 +66,7 @@ async def LoginView(request):
             message=RESPONSE_MESSAGES.user_login_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 ######################################
@@ -95,7 +96,7 @@ async def LogoutView(request):
             message=RESPONSE_MESSAGES.user_login_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 ######################################
@@ -125,7 +126,7 @@ async def DeleteAccountView(request):
             message=RESPONSE_MESSAGES.user_login_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 ######################################
@@ -154,7 +155,7 @@ async def ForgotPasswordRequestView(request):
             message=RESPONSE_MESSAGES.user_login_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 ######################################
@@ -179,7 +180,7 @@ async def ForgotPasswordView(request,hash):
             message=RESPONSE_MESSAGES.user_login_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 ######################################
@@ -208,7 +209,7 @@ async def ChnagePasswordView(request):
             message=RESPONSE_MESSAGES.user_login_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 ######################################
@@ -240,6 +241,6 @@ async def ResetPasswordView(request):
             message=RESPONSE_MESSAGES.user_login_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 

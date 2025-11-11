@@ -6,6 +6,7 @@ from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.models import PlanQuery,BusinessPlan,CustomUser,Subscription
 from app_ib.Controllers.Plans.Tasks.PlanTasks import PLAN_TASKS
@@ -39,7 +40,7 @@ class PLAN_CONTROLLER:
                 message=RESPONSE_MESSAGES.plan_create_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
 
@@ -59,14 +60,14 @@ class PLAN_CONTROLLER:
                         response=RESPONSE_MESSAGES.success,
                         message=RESPONSE_MESSAGES.plan_verify_success,
                         code=RESPONSE_CODES.success,
-                        data={"id":plan_ins.id})
+                        data={NAMES.ID:plan_ins.id})
 
                 else:
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.error,
                         message=RESPONSE_MESSAGES.plan_verify_errror,
                         code=RESPONSE_CODES.error,
-                        data={"id":plan_ins.id})
+                        data={NAMES.ID:plan_ins.id})
             else:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.error,
@@ -80,7 +81,7 @@ class PLAN_CONTROLLER:
                 message=RESPONSE_MESSAGES.plan_verify_errror,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
     @classmethod
@@ -114,7 +115,7 @@ class PLAN_CONTROLLER:
                 message=RESPONSE_MESSAGES.business_plan_create_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
     @classmethod
     async def ActivateBusinessPlan(self,transectionId):
@@ -128,7 +129,7 @@ class PLAN_CONTROLLER:
                         response=RESPONSE_MESSAGES.success,
                         message=RESPONSE_MESSAGES.business_plan_activate_success,
                         code=RESPONSE_CODES.success,
-                        data={"id":planIns.id})
+                        data={NAMES.ID:planIns.id})
 
                 else:
                     #await MY_METHODS.printStatus(f'Failed to activate business plan for transaction id {transectionId}')
@@ -136,7 +137,7 @@ class PLAN_CONTROLLER:
                         response=RESPONSE_MESSAGES.error,
                         message=RESPONSE_MESSAGES.business_plan_activate_error,
                         code=RESPONSE_CODES.error,
-                        data={"id":planIns.id})
+                        data={NAMES.ID:planIns.id})
             else:
                 #await MY_METHODS.printStatus(f'Business plan does not exist for transaction id {transectionId}')
                 return LocalResponse(
@@ -152,7 +153,7 @@ class PLAN_CONTROLLER:
                 message=RESPONSE_MESSAGES.business_plan_activate_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
         
     @classmethod
@@ -191,5 +192,5 @@ class PLAN_CONTROLLER:
                 message=RESPONSE_MESSAGES.business_plan_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })

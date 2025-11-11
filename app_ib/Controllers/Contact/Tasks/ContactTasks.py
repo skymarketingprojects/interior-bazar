@@ -1,6 +1,7 @@
 from asgiref.sync import sync_to_async
 from app_ib.models import Contact
 from app_ib.Utils.MyMethods import MY_METHODS
+from app_ib.Utils.Names import NAMES
 class CONTACT_TASKS:
     
     @classmethod
@@ -15,7 +16,7 @@ class CONTACT_TASKS:
                 company = data.company,
                 recognisation = data.recognisation,
                 detail = data.detail,
-                attachment = getattr(data, 'attachment', None)
+                attachment = getattr(data, NAMES.ATTACHMENT, None)
             )
             #await MY_METHODS.printStatus(f'contact ins {contact_ins}')
 

@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from app_ib.models import Business, Location, BusinessProfile, UserProfile
 from app_ib.Controllers.BusinessProfile.Tasks.BusinessProfileTasks import BUSS_PROF_TASK
 from app_ib.Controllers.Profile.Tasks.Taskys import PROFILE_TASKS
@@ -39,7 +40,7 @@ class SEARCH_CONTROLLER:
                 message=RESPONSE_MESSAGES.business_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
     @classmethod
@@ -51,8 +52,8 @@ class SEARCH_CONTROLLER:
             # fetch business data:
             business_data= await SEARCH_TASKS.GetQueryData(businesses_query=businesses_query,pageNo=index)
 
-            business_data['topSeller'] = business_data['data'][:5]
-            business_data['businesses'] = business_data.pop('data')
+            business_data[NAMES.TOP_SELLER] = business_data[NAMES.DATA][:5]
+            business_data[NAMES.BUSINESSES] = business_data.pop(NAMES.DATA)
 
             return LocalResponse(
                 code=RESPONSE_CODES.success,
@@ -66,5 +67,5 @@ class SEARCH_CONTROLLER:
                 message=RESPONSE_MESSAGES.business_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })

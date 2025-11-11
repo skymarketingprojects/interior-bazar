@@ -2,7 +2,7 @@ import uuid
 from django.db import models
 from django.utils import timezone
 from decimal import Decimal
-
+from datetime import timedelta
 
 # ===== ENUM TABLES =====
 
@@ -80,6 +80,19 @@ class AdCampaign(models.Model):
 
     def __str__(self):
         return f"{self.title or 'Untitled'} ({self.status.code})"
+    
+    def getDays(self):
+        
+        if self.days and self.days > 0:
+            return self.days
+
+        if self.startDate and self.endDate:
+            try:
+                delta = self.endDate.date() - self.startDate.date()
+                return max(delta.days + 1, 0)
+            except Exception:
+                return 0
+        return 0
 
 
 class AdAsset(models.Model):
@@ -95,6 +108,7 @@ class AdAsset(models.Model):
 class AdPayment(models.Model):
     campaign = models.ForeignKey(AdCampaign, on_delete=models.CASCADE, related_name='payments')
     paymentProvider = models.TextField()
+    transactionId = models.CharField(max_length=100, unique=True, default=uuid.uuid4,null=True,blank=True)
     paymentReference = models.TextField()
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     status = models.ForeignKey(AdPaymentStatus, on_delete=models.PROTECT)
@@ -144,4 +158,4 @@ class AdStatAggregate(models.Model):
         unique_together = ('campaign', 'date')
 
     def __str__(self):
-        return f"Aggregate for {self.campaign_id} on {self.date}"
+        return f"Aggregate for {self.campaign.id} on {self.date}"

@@ -340,7 +340,34 @@ class RESPONSE_MESSAGES:
     
     service_delete_success= 'Service deleted successfully'
     service_delete_error= 'Unable to delete service'
-    
+
+
+    ############################################
+    # Business banner
+    ############################################
+    business_banner_update_success= 'Business banner updated successfully'
+    business_banner_update_error= 'Unable to update business banner'
+
+    business_banner_fetch_success= 'Business banner fetched successfully'
+    business_banner_fetch_error= 'Unable to fetch business banner'
+
+    ############################################
+    # Tabs
+    ############################################
+    catelog_table_success= 'Catelog table fetched successfully'
+    catelog_table_error= 'Unable to fetch catelog table'
+
+    product_tab_success= 'Product tab fetched successfully'
+    product_tab_error= 'Unable to fetch product tab'
+
+    service_tab_success= 'Service tab fetched successfully'
+    service_tab_error= 'Unable to fetch service tab'
+
+    ############################################
+    # Explore
+    ############################################
+    explore_section_fetch_error= 'Unable to fetch explore section'
+    explore_section_fetch_success= 'Explore section fetched successfully'
 
 class VALIDATION_MESSAGES:
     password_length= 'Password must be at least 8 characters long'

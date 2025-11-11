@@ -1,6 +1,7 @@
 from asgiref.sync import sync_to_async
 from app_ib.models import LeadQuery
 from app_ib.Utils.MyMethods import MY_METHODS
+from app_ib.Utils.Names import NAMES
 
 class ADS_QUERY_TASKS:
     @classmethod
@@ -12,7 +13,7 @@ class ADS_QUERY_TASKS:
             lead_query_ins.interested= data.interested            
             await sync_to_async(lead_query_ins.save)()
             data = {
-                'id':lead_query_ins.pk
+                NAMES.ID:lead_query_ins.pk
             }
             return data
             
@@ -21,7 +22,7 @@ class ADS_QUERY_TASKS:
             return None
   
     @classmethod
-    async def VerifyAdsQueryTask(self, lead_query_ins, data):
+    async def VerifyAdsQueryTask(self, lead_query_ins:LeadQuery, data):
         try:
             lead_query_ins.name= data.name
             lead_query_ins.email= data.email         

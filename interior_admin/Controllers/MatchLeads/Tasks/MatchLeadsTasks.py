@@ -1,6 +1,7 @@
 from asgiref.sync import sync_to_async
 from app_ib.models import Business
 from app_ib.Utils.MyMethods import MY_METHODS
+from app_ib.Utils.Names import NAMES
 from django.db.models import Q
 from django.conf import settings
 from app_ib.Utils.AppMode import APPMODE
@@ -10,29 +11,29 @@ class MATCH_LEADS_TASKS:
     @classmethod
     async def MatchLeadTask(cls, lead_query_ins):
         try:
-            interested_text = (lead_query_ins.interested or "").lower()
-            city = (lead_query_ins.city or "").lower()
-            state = (lead_query_ins.state or "").lower()
-            country = (lead_query_ins.country or "").lower()
+            interested_text = (lead_query_ins.interested or NAMES.EMPTY).lower()
+            city = (lead_query_ins.city or NAMES.EMPTY).lower()
+            state = (lead_query_ins.state or NAMES.EMPTY).lower()
+            country = (lead_query_ins.country or NAMES.EMPTY).lower()
 
             businesses = await cls.MatchingBusinesses(city, state, country)
             pre_ranked = await cls.LocationScore(businesses, city, state, country)
-            #await MY_METHODS.printStatus(f"pre_ranked {pre_ranked}")
+            #await MY_METHODS.printStatus(f'pre_ranked {pre_ranked}')
             candidates = await cls.GetBusinessesCandidate(pre_ranked, interested_text)
 
             return {
-                "id": lead_query_ins.pk,
-                "interested": lead_query_ins.interested,
-                "candidates": candidates
+                NAMES.ID: lead_query_ins.pk,
+                NAMES.INTRESTED: lead_query_ins.interested,
+                NAMES.CANDIDATE: candidates
             }
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error in MatchLeadTask: {e}")
+            #await MY_METHODS.printStatus(f'Error in MatchLeadTask: {e}')
             return None
 
     @classmethod
     async def MatchingBusinesses(cls, city, state, country):
-        """Fetch businesses matching at least one location field"""
+        '''Fetch businesses matching at least one location field'''
         businessList = []
         try:
             if settings.ENV == APPMODE.PROD:
@@ -53,23 +54,23 @@ class MATCH_LEADS_TASKS:
                     ))
                 )()
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error in MatchingBusinesses: {e}")
+            #await MY_METHODS.printStatus(f'Error in MatchingBusinesses: {e}')
             return None
 
         return 
 
     @classmethod
     async def LocationScore(cls, businesses, city, state, country):
-        """Compute location match score including swapped city/state asynchronously"""
+        '''Compute location match score including swapped city/state asynchronously'''
         pre_ranked = []
 
         for business in businesses:
-            bl = getattr(business, "business_location", None)
+            bl = getattr(business, NAMES.BUSINESS_LOCATION, None)
             location_score = 0
             if bl:
-                bl_city = (bl.city or "").lower()
-                bl_state = (bl.state or "").lower()
-                bl_country = (bl.country or "").lower()
+                bl_city = (bl.city or NAMES.EMPTY).lower()
+                bl_state = (bl.state or NAMES.EMPTY).lower()
+                bl_country = (bl.country or NAMES.EMPTY).lower()
 
                 # Exact matches
                 if city and bl_city == city:
@@ -102,7 +103,7 @@ class MATCH_LEADS_TASKS:
                     break
 
                 if interest:
-                    segment_words = (business.segment or "").lower().split()
+                    segment_words = (business.segment or NAMES.EMPTY).lower().split()
                     if interestedText and segment_words:
                         if not any(word in interestedText for word in segment_words):
                             continue
@@ -111,16 +112,16 @@ class MATCH_LEADS_TASKS:
                 if lead_count >= 4:
                     continue
 
-                bl = getattr(business, "business_location", None)
+                bl = getattr(business, NAMES.BUSINESS_LOCATION, None)
                 candidates.append({
-                    "id": business.pk,
-                    "businessName": business.business_name,
-                    "segment": business.segment,
-                    "city": getattr(bl, "city", None),
-                    "state": getattr(bl, "state", None),
-                    "country": getattr(bl, "country", None),
-                    "leadCount": lead_count,
-                    "locationScore": location_score
+                    NAMES.ID: business.pk,
+                    NAMES.BUSINESS_NAME: business.business_name,
+                    NAMES.SEGMENT: business.segment,
+                    NAMES.CITY: getattr(bl, NAMES.CITY, None),
+                    NAMES.STATE: getattr(bl, NAMES.STATE, None),
+                    NAMES.COUNTRY: getattr(bl, NAMES.COUNTRY, None),
+                    NAMES.LEAD_COUNT: lead_count,
+                    NAMES.LOCATION_SCORE: location_score
                 })
 
             # if no matches
@@ -130,5 +131,5 @@ class MATCH_LEADS_TASKS:
             return candidates
 
         except Exception as e:
-            # #await MY_METHODS.printStatus(f"Error in GetBusinessesCandidate: {e}")
+            # #await MY_METHODS.printStatus(f'Error in GetBusinessesCandidate: {e}')
             return []

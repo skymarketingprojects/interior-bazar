@@ -133,7 +133,12 @@ class ADS_TASKS:
     @classmethod
     async def CreateAdPaymentTask(cls, AdCampaignIns, Data):
         try:
-            PaymentStatusIns = await sync_to_async(AdPaymentStatus.objects.get)(code=Data.get("status", "initiated"))
+            PaymentStatusIns = None
+            if "status" in Data:
+                try:
+                    PaymentStatusIns = await sync_to_async(AdPaymentStatus.objects.get)(code=Data["status"])
+                except AdPaymentStatus.DoesNotExist:
+                    PaymentStatusIns = await sync_to_async(AdPaymentStatus.objects.create)(code=Data["status"], label=Data["status"].capitalize())
 
             AdPaymentIns = AdPayment(
                 campaign=AdCampaignIns,
@@ -141,6 +146,7 @@ class ADS_TASKS:
                 paymentReference=Data.get("paymentReference", ""),
                 amount=Decimal(Data.get("amount", "0.00")),
                 status=PaymentStatusIns,
+                transactionId=Data.get("transactionId",""),
                 paidAt=Data.get("paidAt", timezone.now()),
             )
             await sync_to_async(AdPaymentIns.save)()
@@ -153,11 +159,19 @@ class ADS_TASKS:
     @classmethod
     async def UpdateAdPaymentTask(cls, AdPaymentIns: AdPayment, Data:dict):
         try:
+            status = AdPaymentIns.status
+            if "status" in Data:
+                try:
+                    status = await sync_to_async(AdPaymentStatus.objects.get)(code=Data["status"])
+                except AdPaymentStatus.DoesNotExist:
+                    status = await sync_to_async(AdPaymentStatus.objects.create)(code=Data["status"], label=Data["status"].capitalize())
             AdPaymentIns.paymentProvider = Data.get("paymentProvider", AdPaymentIns.paymentProvider)
             AdPaymentIns.paymentReference = Data.get("paymentReference", AdPaymentIns.paymentReference)
             AdPaymentIns.amount = Decimal(Data.get("amount", AdPaymentIns.amount))
-            AdPaymentIns.status = Data.get("status", AdPaymentIns.status)
-            AdPaymentIns.paidAt = Data.get("paidAt", AdPaymentIns.paidAt)
+            AdPaymentIns.status = status
+
+            if "status" in Data and Data["status"] == "success":
+                AdPaymentIns.paidAt = timezone.now()
             await sync_to_async(AdPaymentIns.save)()
             data = await cls.GetAdPaymentTask(AdPaymentIns)
             return data

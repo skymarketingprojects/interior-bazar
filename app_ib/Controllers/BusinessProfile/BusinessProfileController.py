@@ -11,6 +11,7 @@ from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.models import BusinessProfile, Business
 from app_ib.Controllers.BusinessProfile.Tasks.BusinessProfileTasks import BUSS_PROF_TASK
 
+from app_ib.Utils.Names import NAMES
 
 class BUSS_PROFILE_CONTROLLER:
   
@@ -70,7 +71,7 @@ class BUSS_PROFILE_CONTROLLER:
                 message=RESPONSE_MESSAGES.business_prof_create_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
     @classmethod
@@ -113,7 +114,7 @@ class BUSS_PROFILE_CONTROLLER:
                 message=RESPONSE_MESSAGES.business_prof_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
     @classmethod 
@@ -154,7 +155,7 @@ class BUSS_PROFILE_CONTROLLER:
                 message=RESPONSE_MESSAGES.default_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
     @classmethod 
@@ -195,6 +196,6 @@ class BUSS_PROFILE_CONTROLLER:
                 message=RESPONSE_MESSAGES.default_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
         

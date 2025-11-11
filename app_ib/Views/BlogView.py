@@ -6,6 +6,7 @@ from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 
@@ -29,7 +30,7 @@ async def GetBlogsPaginationView(request,page):
             message=RESPONSE_MESSAGES.blog_fetch_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 @api_view(['GET'])
 async def GetAllBlogsView(request):
@@ -50,7 +51,7 @@ async def GetAllBlogsView(request):
             message=RESPONSE_MESSAGES.blog_fetch_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 @api_view(['GET'])
 async def GetBlogByIdView(request,id):
@@ -71,5 +72,5 @@ async def GetBlogByIdView(request,id):
             message=RESPONSE_MESSAGES.blog_fetch_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })

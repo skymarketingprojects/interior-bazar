@@ -1,6 +1,7 @@
 from asgiref.sync import sync_to_async
 from app_ib.models import Subscription
 from app_ib.Utils.MyMethods import MY_METHODS
+from app_ib.Utils.Names import NAMES
 class SUBSCRIPTION_TASKS:
 
     @classmethod
@@ -8,23 +9,23 @@ class SUBSCRIPTION_TASKS:
         try:
             # Creating a new subscription object
             subscription_ins = Subscription()
-            subscription_ins.type = data['type']
-            subscription_ins.title = data['title']
-            subscription_ins.subtitle = data['subtitle']
-            subscription_ins.services = data['services']
-            subscription_ins.duration = data['duration']
-            subscription_ins.tag = data['tag']
-            subscription_ins.amount = data['amount']
-            subscription_ins.discount_percentage = data['discount_percentage']
-            subscription_ins.discount_amount = data['discount_amount']
-            subscription_ins.payable_amount = data['payable_amount']
-            subscription_ins.cover_image = data.get('cover_image', None)
-            subscription_ins.fallback_image_url = data.get('fallback_image_url', None)
-            subscription_ins.video = data.get('video', None)
-            subscription_ins.video_url = data.get('video_url', None)
-            subscription_ins.plan_pdf = data.get('plan_pdf', None)
-            subscription_ins.plan_pdf_url = data.get('plan_pdf_url', None)
-            subscription_ins.is_active = data['is_active']
+            subscription_ins.type = data[NAMES.TYPE]
+            subscription_ins.title = data[NAMES.TITLE]
+            subscription_ins.subtitle = data[NAMES.SUBTITLE]
+            subscription_ins.services = data[NAMES.SERVICES]
+            subscription_ins.duration = data[NAMES.DURATION]
+            subscription_ins.tag = data[NAMES.TAG]
+            subscription_ins.amount = data[NAMES.AMOUNT]
+            subscription_ins.discount_percentage = data[NAMES.DISCOUNT_PERCENTAGE]
+            subscription_ins.discount_amount = data[NAMES.DISCOUNT_AMOUNT]
+            subscription_ins.payable_amount = data[NAMES.PAYABLE_AMOUNT]
+            subscription_ins.cover_image = data.get(NAMES.COVER_IMAGE, None)
+            subscription_ins.fallback_image_url = data.get(NAMES.FALLBACK_IMG, None)
+            subscription_ins.video = data.get(NAMES.VIDEO, None)
+            subscription_ins.video_url = data.get(NAMES.VIDEO_URL, None)
+            subscription_ins.plan_pdf = data.get(NAMES.PLAN_PDF, None)
+            subscription_ins.plan_pdf_url = data.get(NAMES.PLAN_PDF_URL, None)
+            subscription_ins.is_active = data[NAMES.IS_ACTIVE]
             
             await sync_to_async(subscription_ins.save)()
             return True
@@ -34,22 +35,22 @@ class SUBSCRIPTION_TASKS:
             return None
     
     @classmethod
-    async def UpdateSubscriptionTask(self, subscription_ins, data):
+    async def UpdateSubscriptionTask(self, subscription_ins:Subscription, data):
         try:
-            subscription_ins.title = data['title']
-            subscription_ins.subtitle = data['subtitle']
-            subscription_ins.services = data['services']
-            subscription_ins.amount = data['amount']
-            subscription_ins.discount_percentage = data['discount_percentage']
-            subscription_ins.discount_amount = data['discount_amount']
-            subscription_ins.payable_amount = data['payable_amount']
-            subscription_ins.cover_image = data.get('cover_image', None)
-            subscription_ins.fallback_image_url = data.get('fallback_image_url', None)
-            subscription_ins.video = data.get('video', None)
-            subscription_ins.video_url = data.get('video_url', None)
-            subscription_ins.plan_pdf = data.get('plan_pdf', None)
-            subscription_ins.plan_pdf_url = data.get('plan_pdf_url', None)
-            subscription_ins.is_active = data['is_active']
+            subscription_ins.title = data[NAMES.TITLE]
+            subscription_ins.subtitle = data[NAMES.SUBTITLE]
+            subscription_ins.services = data[NAMES.SERVICES]
+            subscription_ins.amount = data[NAMES.AMOUNT]
+            subscription_ins.discount_percentage = data[NAMES.DISCOUNT_PERCENTAGE]
+            subscription_ins.discount_amount = data[NAMES.DISCOUNT_AMOUNT]
+            subscription_ins.payable_amount = data[NAMES.PAYABLE_AMOUNT]
+            subscription_ins.cover_image = data.get(NAMES.COVER_IMAGE, None)
+            subscription_ins.fallback_image_url = data.get(NAMES.FALLBACK_IMG, None)
+            subscription_ins.video = data.get(NAMES.VIDEO, None)
+            subscription_ins.video_url = data.get(NAMES.VIDEO_URL, None)
+            subscription_ins.plan_pdf = data.get(NAMES.PLAN_PDF, None)
+            subscription_ins.plan_pdf_url = data.get(NAMES.PLAN_PDF_URL, None)
+            subscription_ins.is_active = data[NAMES.IS_ACTIVE]
             
             await sync_to_async(subscription_ins.save)()
             return True
@@ -59,19 +60,19 @@ class SUBSCRIPTION_TASKS:
             return None
 
     @classmethod
-    async def GetSubscriptionTask(self, subscription_ins):
+    async def GetSubscriptionTask(self, subscription_ins:Subscription):
         try:
             # Convert subscription model into a dict format matching PlanType
             data = {
-                'id': subscription_ins.id,
-                'type': subscription_ins.type,
-                'name': subscription_ins.title,  # Title as name
-                'features': subscription_ins.services.split(','),  # Assuming services are comma-separated
-                'price':subscription_ins.payable_amount,  # Convert to a float for price
-                'description': subscription_ins.subtitle,
-                'video': subscription_ins.video_url or '',  # Fallback to empty string if not present
-                'fallback': subscription_ins.fallback_image_url or '',
-                'plan_pdf': subscription_ins.plan_pdf_url or ''
+                NAMES.ID: subscription_ins.id,
+                NAMES.TYPE: subscription_ins.type,
+                NAMES.NAME: subscription_ins.title,  # Title as name
+                NAMES.FEATURES: subscription_ins.services.split(NAMES.COMMA),  # Assuming services are comma-separated
+                NAMES.PRICE:subscription_ins.payable_amount,  # Convert to a float for price
+                NAMES.DESCRIPTION: subscription_ins.subtitle,
+                NAMES.VIDEO: subscription_ins.video_url or NAMES.EMPTY,  # Fallback to empty string if not present
+                NAMES.FALLBACK: subscription_ins.fallback_image_url or NAMES.EMPTY,
+                NAMES.PLAN_PDF: subscription_ins.plan_pdf_url or NAMES.EMPTY
             }
             return data
         
@@ -85,14 +86,14 @@ class SUBSCRIPTION_TASKS:
             query_data = []
             async for subscription in Subscription.objects.all():
                 data = {
-                    'id': subscription.id,
-                    'name': subscription.title,
-                    'features': subscription.services.split(','),  # Assuming it's a comma-separated string
-                    'price': float(subscription.payable_amount),
-                    'description': subscription.subtitle,
-                    'video': subscription.video_url or '',
-                    'fallback': subscription.fallback_image_url or '',
-                    'plan_pdf': subscription.plan_pdf_url or ''
+                    NAMES.ID: subscription.id,
+                    NAMES.NAME: subscription.title,
+                    NAMES.FEATURES: subscription.services.split(NAMES.COMMA),  # Assuming it's a comma-separated string
+                    NAMES.PRICE: float(subscription.payable_amount),
+                    NAMES.DESCRIPTION: subscription.subtitle,
+                    NAMES.VIDEO: subscription.video_url or NAMES.EMPTY,
+                    NAMES.FALLBACK: subscription.fallback_image_url or NAMES.EMPTY,
+                    NAMES.PLAN_PDF: subscription.plan_pdf_url or NAMES.EMPTY
                 }
                 query_data.append(data)
 

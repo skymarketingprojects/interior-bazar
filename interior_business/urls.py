@@ -1,4 +1,4 @@
-from interior_business.Views import BusinessView, BusinessLocationView, BusinessProfileView,SearchView
+from interior_business.Views import BusinessView, BusinessLocationView, BusinessProfileView,SearchView,BusinessScheduleViews
 from django.urls import path, include
 from . import views
 urlpatterns = [
@@ -35,6 +35,7 @@ urlpatterns = [
     path('types/', BusinessView.GetAllBusinessTypesView, name='GetAllBusinessTypes'),
     path('categories/', BusinessView.GetAllBusinessCategoriesView, name='GetAllBusinessCategories'),
     path('segments/<int:typeId>/', BusinessView.GetAllBusinessSegmentsByTypeView, name='GetBusinessSegmentsByCategory'),
+    path('tab/', BusinessView.GetAllBusinessTabView, name='GetAllBusinessTab'),
 
     ######################################################
     # location
@@ -62,4 +63,13 @@ urlpatterns = [
     path('detail/header/', BusinessProfileView.GetBusinessProfileForDisplayView, name='GetBusinessProfileForDisplayView'),
     path('detail/contact/<int:businessId>/', views.GetContactView, name='GetBusinesscontact'),
 
+    ###########################################################
+    # Business Schedule: 
+    ##########################################################
+    path('working-hours/', BusinessScheduleViews.BusinessScheduleView.as_view()),
+
+    ###########################################################
+    # Business Banner :
+    ##########################################################
+    path('banner/',BusinessView.BusinessBannerView.as_view()),
 ]

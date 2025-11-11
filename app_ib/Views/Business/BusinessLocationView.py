@@ -11,6 +11,7 @@ from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from app_ib.Controllers.BussLocation.BussLocationController import BUSS_LOCATION_CONTROLLER
 
 
@@ -41,7 +42,7 @@ async def CreateOrUpdateBusinessLocationView(request):
             message=RESPONSE_MESSAGES.business_register_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 @api_view(['GET'])
@@ -66,7 +67,7 @@ async def GetBusinessLocationByBussIDView(request,id):
             message=RESPONSE_MESSAGES.business_register_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
     
 @api_view(['GET'])
@@ -89,7 +90,7 @@ async def GetCountryListView(request):
             message=RESPONSE_MESSAGES.business_register_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
     
 @api_view(['GET'])
@@ -112,5 +113,5 @@ async def GetStateListByCountryIDView(request,countryId):
             message=RESPONSE_MESSAGES.business_register_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })

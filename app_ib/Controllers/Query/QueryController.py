@@ -6,6 +6,7 @@ from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.models import LeadQuery, Business
 from app_ib.Controllers.Query.Tasks.QueryTasks import LEAD_QUERY_TASK
@@ -19,7 +20,7 @@ class LEAD_QUERY_CONTROLLER:
         try:
             lead_query_ins= None
             lead_query_ins = await sync_to_async(
-                lambda: LeadQuery.objects.filter(user=user_ins).all().order_by('-timestamp')
+                lambda: LeadQuery.objects.filter(user=user_ins).all().order_by(f'-{NAMES.TIMESTAMP}')
             )()
             #await MY_METHODS.printStatus(f'lead_query_ins {lead_query_ins}')   
             leads_data = []
@@ -40,7 +41,7 @@ class LEAD_QUERY_CONTROLLER:
                 message=RESPONSE_MESSAGES.query_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
     @classmethod
     async def CreateLeadQuery(self,data):
@@ -77,7 +78,7 @@ class LEAD_QUERY_CONTROLLER:
                 message=RESPONSE_MESSAGES.query_generate_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
     @classmethod
@@ -114,7 +115,7 @@ class LEAD_QUERY_CONTROLLER:
                 message=RESPONSE_MESSAGES.query_update_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
 
@@ -152,7 +153,7 @@ class LEAD_QUERY_CONTROLLER:
                 message=RESPONSE_MESSAGES.query_update_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
     @classmethod
@@ -189,7 +190,7 @@ class LEAD_QUERY_CONTROLLER:
                 message=RESPONSE_MESSAGES.query_update_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
     @classmethod
@@ -226,7 +227,7 @@ class LEAD_QUERY_CONTROLLER:
                 message=RESPONSE_MESSAGES.query_update_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
     @classmethod
@@ -263,7 +264,7 @@ class LEAD_QUERY_CONTROLLER:
                 message=RESPONSE_MESSAGES.query_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
     @classmethod
@@ -300,7 +301,7 @@ class LEAD_QUERY_CONTROLLER:
                 message=RESPONSE_MESSAGES.query_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
 

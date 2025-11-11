@@ -2,6 +2,7 @@ import base64
 import json
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.Controllers.Auth.Tasks.AuthTasks import AUTH_TASK
 from app_ib.Controllers.Auth.Validators.AuthValidators import AUTH_VALIDATOR
@@ -209,7 +210,7 @@ class AUTH_CONTROLLER:
                                 message=RESPONSE_MESSAGES.send_link_success,
                                 code=RESPONSE_CODES.success,
                                 data={
-                                    'link':link,
+                                    NAMES.LINK:link,
                                 })
                         else:
                             return LocalResponse(
@@ -217,7 +218,7 @@ class AUTH_CONTROLLER:
                                 message=RESPONSE_MESSAGES.send_link_error,
                                 code=RESPONSE_CODES.success,
                                 data={
-                                    'link':link,
+                                    NAMES.LINK:link,
                                 })
 
                 else:
@@ -301,11 +302,11 @@ class AUTH_CONTROLLER:
                     message=RESPONSE_MESSAGES.link_expired_error,
                     code=RESPONSE_CODES.error,
                     data={
-                        'time_difference':time_difference,
+                        NAMES.TIME_DIFFERENCE:time_difference,
                     })
             data = {
-                'key':hash,
-                'expire_in': (STATICVALUES.PASSWORD_RESET_TIME_LIMIT-time_difference),
+                NAMES.KEY:hash,
+                NAMES.EXPIRE_IN: (STATICVALUES.PASSWORD_RESET_TIME_LIMIT-time_difference),
 
             }
             

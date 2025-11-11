@@ -1,6 +1,7 @@
 from asgiref.sync import sync_to_async
 from app_ib.models import Business
 from app_ib.Utils.MyMethods import MY_METHODS
+from app_ib.Utils.Names import NAMES
 
 class BUSINESS_INFO_TASKS:
     
@@ -18,24 +19,24 @@ class BUSINESS_INFO_TASKS:
                 plans = plans.filter(isActive=True)
                 for plan in plans:
                     plan = {
-                        "id": plan.id,
-                        "name": plan.plan.title,
-                        "expiryDate": plan.expireDate.strftime("%d-%m-%Y"),
-                        "isActive": plan.isActive,
-                        "amount": plan.amount
+                        NAMES.ID: plan.id,
+                        NAMES.NAME: plan.plan.title,
+                        NAMES.EXPIRY_DATE: plan.expireDate.strftime(NAMES.DMY_FORMAT),
+                        NAMES.ISACTIVE: plan.isActive,
+                        NAMES.AMOUNT: plan.amount
                     }
                     planData.append(plan)
 
             data = {
-                'name': business.business_name,
-                "joinAt": business.timestamp.strftime("%d-%m-%Y"),
-                "id": business.id,
-                "plan": planData,
-                "assignedLeads": assignLeads,
-                "platformLeads": platformLeads,
-                "totalLeads":totalLeads
+                NAMES.NAME: business.business_name,
+                NAMES.JOIN_AT: business.timestamp.strftime(NAMES.DMY_FORMAT),
+                NAMES.ID: business.id,
+                NAMES.PLAN: planData,
+                NAMES.ASSIGNED_LEADS: assignLeads,
+                NAMES.PLATFORM_LEADS: platformLeads,
+                NAMES.TOTAL_LEADS:totalLeads
             }
             return data
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error in GetBusinessInfo: {e}")
+            #await MY_METHODS.printStatus(f'Error in GetBusinessInfo: {e}')
             return None

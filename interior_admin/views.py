@@ -3,6 +3,7 @@ from adrf.decorators import api_view
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from interior_admin.Controllers.AdminPanel.AdminPanelController import ADMIN_PANEL_CONTROLLER
 from app_ib.Controllers.FunnelQuery.FunnelQueryController import FUNNEL_QUERY_CONTROLLER
 import asyncio
@@ -15,10 +16,10 @@ async def GetBusinessTilesStatsView(request):
         # Convert request.data to dot notation object
         data = request.data
 
-        start_date = data.get('startDate', None)
-        end_date = data.get('endDate', None)
-        page_number = data.get('pageNumber', 1)
-        page_size = data.get('pageSize', 10) 
+        start_date = data.get(NAMES.START_DATE, None)
+        end_date = data.get(NAMES.END_DATE, None)
+        page_number = data.get(NAMES.PAGE_NUMBER, 1)
+        page_size = data.get(NAMES.PAGE_SIZE, 10) 
 
         # Call the controller to get business tiles data
         final_response = await asyncio.gather(
@@ -44,7 +45,7 @@ async def GetBusinessTilesStatsView(request):
             message=RESPONSE_MESSAGES.business_tile_fetch_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             }
         )
 @api_view(['GET'])
@@ -70,7 +71,7 @@ async def GetAdminDashboardStatsView(request):
             message=RESPONSE_MESSAGES.dashboard_fetch_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             }
         )
 @api_view(['GET'])
@@ -93,7 +94,7 @@ async def GetPlatformLeadsStatsView(request):
             message=RESPONSE_MESSAGES.platform_leads_fetch_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             }
         )
 @api_view(['POST'])
@@ -103,10 +104,10 @@ async def GetAssignedLeadsTilesView(request):
         # Convert request.data to dot notation object
         data = request.data
 
-        start_date = data.get('start_date', None)
-        end_date = data.get('end_date', None)
-        page_number = data.get('page_number', 1)  # Default to page 1
-        page_size = data.get('page_size', 10)  # Default to 10 items per page
+        start_date = data.get(NAMES.START_DATE, None)
+        end_date = data.get(NAMES.END_DATE, None)
+        page_number = data.get(NAMES.PAGE_NUMBER, 1)  # Default to page 1
+        page_size = data.get(NAMES.PAGE_SIZE, 10)  # Default to 10 items per page
 
         # Call the controller to get assigned leads data (paginated)
         final_response = await asyncio.gather(
@@ -133,7 +134,7 @@ async def GetAssignedLeadsTilesView(request):
             message=RESPONSE_MESSAGES.assigned_leads_fetch_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             }
         )
 
@@ -154,7 +155,7 @@ async def GetDashboardDataView(request):
             response=RESPONSE_MESSAGES.error,
             message="Failed to fetch dashboard data.",
             code=RESPONSE_CODES.error,
-            data={"error": str(e)}
+            data={NAMES.ERROR: str(e)}
         )
 @api_view(['GET'])
 #@permission_classes([IsAuthenticated])
@@ -176,7 +177,7 @@ async def GetAllUserBusinessStatsView(request):
             response=RESPONSE_MESSAGES.error,
             message="Failed to fetch user/business stats.",
             code=RESPONSE_CODES.error,
-            data={"error": str(e)}
+            data={NAMES.ERROR: str(e)}
         )
 
 @api_view(['GET'])
@@ -197,7 +198,7 @@ async def GetDailyUsersStatsView(request):
             response=RESPONSE_MESSAGES.error,
             message="Failed to fetch daily users.",
             code=RESPONSE_CODES.error,
-            data={"error": str(e)}
+            data={NAMES.ERROR: str(e)}
         )
 
 @api_view(['GET'])
@@ -220,7 +221,7 @@ async def GetTodaySignupsStatsView(request):
             response=RESPONSE_MESSAGES.error,
             message="Failed to fetch today signups.",
             code=RESPONSE_CODES.error,
-            data={"error": str(e)}
+            data={NAMES.ERROR: str(e)}
         )
 
 
@@ -246,7 +247,7 @@ async def GetChartsStatsView(request):
             response=RESPONSE_MESSAGES.error,
             message="Failed to fetch charts.",
             code=RESPONSE_CODES.error,
-            data={"error": str(e)}
+            data={NAMES.ERROR: str(e)}
         )
     
 @api_view(['GET'])
@@ -268,7 +269,7 @@ async def GetFunnelQueriesView(request,pageNumber, pageSize):
             message=RESPONSE_MESSAGES.query_fetch_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 @api_view(['GET'])
@@ -291,6 +292,6 @@ async def GetTotalUsersView(request):
             message="Failed to fetch total users.",
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             }
         )

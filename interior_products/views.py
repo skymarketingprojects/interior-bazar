@@ -10,6 +10,7 @@ from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.models import Business
 from django.http import HttpRequest
+
 class ProductView(AsyncAPIView):
     """
     Async class-based view handling GET, POST, PUT, DELETE
@@ -100,6 +101,7 @@ class ProductView(AsyncAPIView):
                 code=RESPONSE_CODES.error,
                 data={'error': str(e)}
             )
+
 class ServiceView(AsyncAPIView):
     """
     Async class-based view handling GET, POST, PUT, DELETE
@@ -215,6 +217,8 @@ class CatelogView(AsyncAPIView):
                 catelogResponse = await CATELOG_CONTROLLER.GetCatelogForBusiness(business)
             else:
                 catelogResponse = await CATELOG_CONTROLLER.GetCatelog(catelogueId)
+            
+            await MY_METHODS.printStatus(f" last data = {catelogResponse}")
             return ServerResponse(
                 response=catelogResponse.response,
                 message=catelogResponse.message,
@@ -346,6 +350,7 @@ async def GetBusinessProducts(request, businessId: int)->ServerResponse:
             code=RESPONSE_CODES.error,
             data={'error': str(e)}
         )
+
 @api_view(['GET'])
 async def GetBusinessServices(request, businessId: int)->ServerResponse:
     """Get all products for a given business."""
@@ -425,6 +430,138 @@ async def GetRelatedServices(request, serviceId: int)->ServerResponse:
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message="Error fetching related services",
+            code=RESPONSE_CODES.error,
+            data={'error': str(e)}
+        )
+
+# get all
+@api_view(['GET'])
+async def GetAllCatelogsView(request:HttpRequest):
+    try:
+        pageNo= int(request.GET.get("pageNo",1))
+        pageSize = int(request.GET.get('pageSize',10))
+        filterType = request.GET.get('type',None)
+        filterId = request.GET.get('tabId',None)
+        catelogResponse = await CATELOG_CONTROLLER.GetAllCatelog(page=pageNo,size=pageSize,filterType=filterType,id=filterId)
+        return ServerResponse(
+            response=catelogResponse.response,
+            message=catelogResponse.message,
+            code=catelogResponse.code,
+            data=catelogResponse.data
+        )
+    except Exception as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message="Error fetching catelogues",
+            code=RESPONSE_CODES.error,
+            data={'error': str(e)}
+        )
+
+@api_view(['GET'])
+async def GetAllProductView(request:HttpRequest):
+    try:
+        pageNo= int(request.GET.get("pageNo",1))
+        pageSize = int(request.GET.get('pageSize',10))
+        filterType = request.GET.get('type',None)
+        filterId = request.GET.get('tabId',None)
+        catelogResponse = await PRODUCTS_CONTROLLER.getAllProduct(page=pageNo,size=pageSize,filterType=filterType,id=filterId)
+        return ServerResponse(
+            response=catelogResponse.response,
+            message=catelogResponse.message,
+            code=catelogResponse.code,
+            data=catelogResponse.data
+        )
+    except Exception as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message="Error fetching product",
+            code=RESPONSE_CODES.error,
+            data={'error': str(e)}
+        )
+
+@api_view(['GET'])
+async def GetAllServiceView(request:HttpRequest):
+    try:
+        pageNo= int(request.GET.get("pageNo",1))
+        pageSize = int(request.GET.get('pageSize',10))
+        filterType = request.GET.get('type',None)
+        filterId = request.GET.get('tabId',None)
+        catelogResponse = await SERVICES_CONTROLLER.getAllService(page=pageNo,size=pageSize,filterType=filterType,id=filterId)
+        return ServerResponse(
+            response=catelogResponse.response,
+            message=catelogResponse.message,
+            code=catelogResponse.code,
+            data=catelogResponse.data
+        )
+    except Exception as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message="Error fetching Services",
+            code=RESPONSE_CODES.error,
+            data={'error': str(e)}
+        )
+
+# categories
+@api_view(['GET'])
+async def GetProductCategoriesView(request):
+    try:
+        resp = await PRODUCTS_CONTROLLER.GetProductCategories()
+        return ServerResponse(
+            response=resp.response,
+            message=resp.message,
+            code=resp.code,
+            data=resp.data
+        )
+    except Exception as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message="Error fetching Categories",
+            code=RESPONSE_CODES.error,
+            data={'error': str(e)}
+        )
+
+@api_view(['GET'])
+async def GetProductSubCategoriesView(request):
+    try:
+        resp = await PRODUCTS_CONTROLLER.GetProductSubCategories()
+        return ServerResponse(
+            response=resp.response,
+            message=resp.message,
+            code=resp.code,
+            data=resp.data
+        )
+    except Exception as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message="Error fetching Sub Categories",
+            code=RESPONSE_CODES.error,
+            data={'error': str(e)}
+        )
+    
+@api_view(['GET'])
+async def GetTabsView(request):
+    try:
+        filterFor= request.GET.get('type')
+        resp=None
+        if filterFor=='product':
+            resp= await PRODUCTS_CONTROLLER.GetProductTab()
+        elif filterFor=='service':
+            resp= await SERVICES_CONTROLLER.GetServiceTab()
+        elif filterFor=='catelouge':
+            resp= await CATELOG_CONTROLLER.GetCatelougeTab()
+        else:
+            resp= await CATELOG_CONTROLLER.GetCatelougeTab()
+
+        return ServerResponse(
+            response=resp.response,
+            message=resp.message,
+            code=resp.code,
+            data=resp.data
+        )
+    except Exception as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message="Error fetching Tabs",
             code=RESPONSE_CODES.error,
             data={'error': str(e)}
         )

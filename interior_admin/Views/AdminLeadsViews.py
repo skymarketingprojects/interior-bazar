@@ -3,6 +3,7 @@ from adrf.decorators import api_view
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 
 import asyncio
 from rest_framework.decorators import permission_classes
@@ -32,7 +33,7 @@ async def GetAdminQueryView(request,pageNo,pageSize):
             message=RESPONSE_MESSAGES.query_fetch_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 @api_view(['POST'])
@@ -41,8 +42,8 @@ async def AssignQueryView(request):
     try:
         user = request.user
         data = request.data
-        businessId = data.get('businessId',None)
-        leadId = data.get('leadId',None)
+        businessId = data.get(NAMES.BUSINESS_ID,None)
+        leadId = data.get(NAMES.LEAD_ID,None)
         #await MY_METHODS.printStatus(status=f"businessId {businessId}--lead {leadId}")
         assignResponse = await ADMIN_LEADS_CONTROLLER.AssignLeadQuery(user_ins=user,businessId=businessId,leadId=leadId)
         return ServerResponse(
@@ -58,5 +59,5 @@ async def AssignQueryView(request):
             message=RESPONSE_MESSAGES.query_fetch_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })

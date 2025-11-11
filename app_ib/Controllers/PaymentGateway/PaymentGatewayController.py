@@ -7,23 +7,28 @@ import requests
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
+from app_ib.Utils.Names import NAMES
 from app_ib.Controllers.PaymentGateway.Tasks.PaymentGatewayTasks import PaymentGatewayTasks
 from app_ib.Utils.CashfreeClient import CashfreeClientWrapper
 from app_ib.Controllers.Plans.PlanController import PLAN_CONTROLLER
+from interior_advertisement.Controllers.Ads.Tasks.AdsTasks import ADS_TASKS
 from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.models import Subscription
-
+from interior_advertisement.models import AdCampaign,AdPayment,AdPaymentStatus
+from interior_advertisement.Controllers.Ads.Tasks.AdsTasks import ADS_TASKS
 
 class PaymentGatewayController:
 
+    
+   
     @classmethod
-    async def InitiatePayment(cls, data, userId):
+    async def InitiatePlanPayment(cls, data, user, redirectUrl):
         """
         Create a Cashfree payment order using REST API.
         """
         try:
-            planId = data['planId']
-            domain = data['domain']
+            planId = data[NAMES.PLAN_ID]
+            domain = redirectUrl
 
             is_plan_exist = await sync_to_async(Subscription.objects.filter(id=planId).exists)()
             if not is_plan_exist:
@@ -39,46 +44,25 @@ class PaymentGatewayController:
             amount = float(planAmount)
 
             # Generate transaction data
-            transactionData = await PaymentGatewayTasks.GenerateTransactionData(userId, amount, domain)
-            if not transactionData:
-                return LocalResponse(
-                    response=RESPONSE_MESSAGES.error,
-                    message="Failed to generate transaction data",
-                    code=RESPONSE_CODES.error,
-                    data={}
-                )
-
-            # Prepare payload for Cashfree REST API
-            payload = {
-                "order_id": transactionData["transactionId"],
-                "order_amount": amount,
-                "order_currency": "INR",
-                "customer_details": {
-                    "customer_id": str(userId),
-                    "customer_phone": data.get("phone", "9999999999"),
-                    "customer_email": data.get("email", "test@example.com"),
-                },
-                "order_meta": {
-                    "return_url": f"{transactionData['redirectUrl']}?transactionId={{order_id}}"
-                },
-            }
-
-            response_data = await sync_to_async(CashfreeClientWrapper.create_order)(payload)
-
-            if response_data and response_data.get("payment_session_id"):
+            response_data,transactionData = await PaymentGatewayTasks.CreateTransection(
+                user=user,
+                redirectUrl=domain,
+                amount=amount
+            )
+            if response_data and response_data.get(NAMES.PAYMENT_SESSION_ID):
                 payment_url = f"https://payments.cashfree.com/pgui/v2/checkout?payment_session_id={response_data['payment_session_id']}"
 
                 # Create Business Plan
                 businessPlan = await PLAN_CONTROLLER.CreateBusinessPlan(
                     planId=plan.id,
-                    userId=userId,
-                    transectionId=transactionData["transactionId"]
+                    userId=user.id,
+                    transectionId=transactionData[NAMES.TRANSACTION]
                 )
 
                 data = {
-                    "paymentUrl": payment_url,
-                    "transactionId": transactionData["transactionId"],
-                    "sessionId": response_data.get("payment_session_id"),
+                    NAMES.PAYMENT_URL: payment_url,
+                    NAMES.TRANSACTION: transactionData[NAMES.TRANSACTION],
+                    NAMES.SESSION_ID: response_data.get(NAMES.PAYMENT_SESSION_ID),
                 }
 
                 if businessPlan is None:
@@ -108,26 +92,107 @@ class PaymentGatewayController:
                 response=RESPONSE_MESSAGES.error,
                 message="Exception during payment initiation",
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
 
     @classmethod
-    async def CheckPaymentStatus(cls, transactionId):
+    async def InitiateADSPayment(cls, data, user, redirectUrl):
+        try:
+            campainId = data[NAMES.CAMPAIN_ID]
+            domain = redirectUrl
+            is_campain_exist = await sync_to_async(AdCampaign.objects.filter(id=campainId).exists)()
+            if not is_campain_exist:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.error,
+                    message="Invalid campaign ID",
+                    code=RESPONSE_CODES.error,
+                    data={}
+                )
+
+            campain = await sync_to_async(AdCampaign.objects.get)(id=campainId)
+            campainAmount = await MY_METHODS.formatAmount(campain.placement.dailyPrice)
+
+            days = campain.getDays()
+            # await MY_METHODS.printStatus(f"campainAmount: {campainAmount}, days: {days}")
+            amount = float(campainAmount) * days
+            # return LocalResponse(
+            #     response=RESPONSE_MESSAGES.error,
+            #     message="Exception during advertisement payment initiation",
+            #     code=RESPONSE_CODES.error,
+            #     data={}
+            # )
+            
+            response_data,transactionData = await PaymentGatewayTasks.CreateTransection(
+                user=user,
+                redirectUrl=domain,
+                amount=amount
+            )
+            data[NAMES.AMOUNT] = amount
+            data[NAMES.TRANSACTION] = transactionData[NAMES.TRANSACTION]
+
+            adsresult = await ADS_TASKS.CreateAdPaymentTask(AdCampaignIns=campain,Data=data)
+            
+            await MY_METHODS.printStatus(f"Advertisement payment initiated: {response_data}")
+            payment_url = f"https://payments.cashfree.com/pgui/v2/checkout?payment_session_id={response_data['payment_session_id']}"
+
+            data = {
+                NAMES.PAYMENT_URL: payment_url,
+                NAMES.TRANSACTION: transactionData[NAMES.TRANSACTION],
+                NAMES.SESSION_ID: response_data.get(NAMES.PAYMENT_SESSION_ID),
+            }
+
+            if adsresult is None:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.warning,
+                    message="Failed to create advertisement payment",
+                    code=RESPONSE_CODES.warning,
+                    data=data
+                )
+            
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message="Advertisement payment initiated successfully",
+                code=RESPONSE_CODES.success,
+                data=data
+            )
+        except Exception as e:
+            await MY_METHODS.printStatus(f"Error in InitiateADSPayment: {e}")
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message="Exception during advertisement payment initiation",
+                code=RESPONSE_CODES.error,
+                data={NAMES.ERROR: str(e)}
+            )
+    @classmethod
+    async def CheckPaymentStatus(cls, transactionId,data):
         """
         Check payment status using Cashfree REST API.
         """
         try:
             response_data = await sync_to_async(CashfreeClientWrapper.fetch_order)(transactionId)
-            status = response_data.get("order_status", "UNKNOWN")
-
-            if status == "PAID":
-                await PLAN_CONTROLLER.ActivateBusinessPlan(transactionId)
-
+            status = response_data.get(NAMES.ORDER_STATUS, NAMES.CF_UNKNOWN)
+            serviceType = data.get(NAMES.PAYMENT_FOR,NAMES.EMPTY)
+            serviceActivated = None
+            if serviceType == NAMES.PLAN and status == NAMES.CF_PAID:
+                serviceActivated=await PLAN_CONTROLLER.ActivateBusinessPlan(transactionId)
+            elif serviceType == NAMES.ADS and status == NAMES.CF_PAID:
+                adPayment = await sync_to_async(AdPayment.objects.get)(transactionId=transactionId)
+                data[NAMES.STATUS] = status.lower()
+                serviceActivated=await ADS_TASKS.UpdateAdPaymentTask(AdPaymentIns=adPayment,Data=data)
+            
             data = {
-                "status": status,
-                "transactionId": transactionId,
+                NAMES.STATUS: status,
+                NAMES.TRANSACTION: transactionId,
             }
 
+            if serviceActivated is None and status == NAMES.CF_PAID:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.warning,
+                    message="Failed to activate service after payment",
+                    code=RESPONSE_CODES.warning,
+                    data=data
+                )
+        
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message="Payment status fetched",
@@ -140,7 +205,7 @@ class PaymentGatewayController:
                 response=RESPONSE_MESSAGES.error,
                 message="Failed to check payment status",
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
 
     @classmethod
@@ -151,9 +216,9 @@ class PaymentGatewayController:
         try:
             refund_id = f"RFND-{uuid4().hex[:10]}"
             refund_payload = {
-                "refund_amount": float(amount),
-                "refund_id": refund_id,
-                "refund_note": "Customer requested refund",
+                NAMES.REFUND_AMOUNT: float(amount),
+                NAMES.REFUND_ID: refund_id,
+                NAMES.REFUND_NOTE: "Customer requested refund",
             }
 
             response_data = await sync_to_async(CashfreeClientWrapper.create_refund)(transaction_id, refund_payload)
@@ -163,9 +228,9 @@ class PaymentGatewayController:
                 "Refund initiated",
                 RESPONSE_CODES.success,
                 {
-                    "refund_id": refund_id,
-                    "status": response_data.get("refund_status", "UNKNOWN"),
-                    "response": response_data,
+                    NAMES.REFUND_ID: refund_id,
+                    NAMES.STATUS: response_data.get(NAMES.REFUND_STATUS, NAMES.CF_UNKNOWN),
+                    NAMES.RESPONSE: response_data,
                 }
             )
 
@@ -174,5 +239,7 @@ class PaymentGatewayController:
                 RESPONSE_MESSAGES.error,
                 "Refund failed",
                 RESPONSE_CODES.error,
-                {"error": str(e)}
+                {NAMES.ERROR: str(e)}
             )
+
+

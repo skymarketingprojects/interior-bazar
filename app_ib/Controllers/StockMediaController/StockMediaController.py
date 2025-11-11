@@ -6,6 +6,7 @@ from app_ib.models import StockMedia, Page, Section
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from app_ib.Utils.MyMethods import MY_METHODS
 
 from .Tasks.StockData import getStockData  # Should be async or wrapped
@@ -20,7 +21,7 @@ class StockMediaController:
 
             # Query related StockMedia
             stock_media_qs = await sync_to_async(list)(
-                StockMedia.objects.filter(page=page, section=section).order_by("index")
+                StockMedia.objects.filter(page=page, section=section).order_by(NAMES.INDEX)
             )
 
             if not stock_media_qs:
@@ -53,19 +54,19 @@ class StockMediaController:
                 response=RESPONSE_MESSAGES.error,
                 code=RESPONSE_CODES.error,
                 message=RESPONSE_MESSAGES.stock_media_not_found,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
 
     @staticmethod
-    async def saveStockMedia(data):
+    async def saveStockMedia(data:dict):
         try:
             # Start atomic transaction safely in async
             @sync_to_async
             @transaction.atomic
             def save_media_sync():
                 stockMedia = StockMedia()
-                pageName = data.get("page")
-                sectionName = data.get("section")
+                pageName = data.get(NAMES.PAGE)
+                sectionName = data.get(NAMES.SECTION)
                 
                 page, _ = Page.objects.get_or_create(name=pageName.lower())
                 section, _ = Section.objects.get_or_create(name=sectionName.lower())
@@ -73,13 +74,13 @@ class StockMediaController:
                 stockMedia.page = page
                 stockMedia.section = section
 
-                if "image" in data:
-                    stockMedia.image = data["image"]
-                elif "video" in data:
-                    stockMedia.video = data["video"]
+                if NAMES.IMAGE in data:
+                    stockMedia.image = data[NAMES.IMAGE]
+                elif NAMES.VIDEO in data:
+                    stockMedia.video = data[NAMES.VIDEO]
 
-                if "index" in data:
-                    stockMedia.index = data["index"]
+                if NAMES.INDEX in data:
+                    stockMedia.index = data[NAMES.INDEX]
 
                 stockMedia.save()
                 return stockMedia
@@ -102,5 +103,5 @@ class StockMediaController:
                 response=RESPONSE_MESSAGES.error,
                 code=RESPONSE_CODES.error,
                 message=RESPONSE_MESSAGES.stock_media_not_saved,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )

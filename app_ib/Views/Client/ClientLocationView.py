@@ -6,6 +6,7 @@ from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from app_ib.Controllers.ClientLocation.ClientLocationController import CLIENT_LOCATION_CONTROLLER
 
 
@@ -36,7 +37,7 @@ async def CreateOrUpdateClientLocationView(request):
             message=RESPONSE_MESSAGES.user_register_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 
@@ -62,5 +63,5 @@ async def GetClientLocationByIDView(request,id):
             message=RESPONSE_MESSAGES.client_register_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })

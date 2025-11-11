@@ -3,18 +3,18 @@ from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from asgiref.sync import sync_to_async
+from app_ib.Utils.Names import NAMES
 
-
-def getStockData(stockMedia):
+def getStockData(stockMedia:StockMedia):
     try:
         stockData = {
-            "id": stockMedia.id,
-            "index": stockMedia.index
+            NAMES.ID: stockMedia.id,
+            NAMES.INDEX: stockMedia.index
         }
         if stockMedia.image:
-            stockData["image"] = stockMedia.image
+            stockData[NAMES.IMAGE] = stockMedia.image
         if stockMedia.video:
-            stockData["video"] = stockMedia.video
+            stockData[NAMES.VIDEO] = stockMedia.video
         return LocalResponse(
             response=RESPONSE_MESSAGES.success,
             code=RESPONSE_CODES.success,
@@ -26,5 +26,5 @@ def getStockData(stockMedia):
             response=RESPONSE_MESSAGES.success,
             code=RESPONSE_CODES.error,
             message=RESPONSE_MESSAGES.stock_media_not_found,
-            data={"error": str(e)}
+            data={NAMES.ERROR: str(e)}
         )

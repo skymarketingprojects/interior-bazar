@@ -1,6 +1,7 @@
 from asgiref.sync import sync_to_async
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from app_ib.Utils.LocalResponse import LocalResponse
 
 from .Tasks.MatchLeadsTasks import MATCH_LEADS_TASKS
@@ -52,7 +53,7 @@ class MATCH_LEADS_CONTROLLER:
                 response=RESPONSE_MESSAGES.success,
                 message="Business candidates fetched successfully",
                 code=RESPONSE_CODES.success,
-                data={"lead_candidates": leadData}
+                data={NAMES.LEAD_CANDIDATE: leadData}
             )
 
         except Exception as e:
@@ -61,5 +62,5 @@ class MATCH_LEADS_CONTROLLER:
                 response=RESPONSE_MESSAGES.error,
                 message="Error while fetching candidates",
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )

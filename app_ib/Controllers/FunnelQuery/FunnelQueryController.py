@@ -1,6 +1,7 @@
 from asgiref.sync import sync_to_async
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from app_ib.Utils.LocalResponse import LocalResponse
 
 from .Tasks.FunnelQueryTasks import FUNNEL_QUERY_TASKS
@@ -47,7 +48,7 @@ class FUNNEL_QUERY_CONTROLLER:
     @classmethod
     async def GetFunnelQueries(cls,pageNumber, pageSize):
         try:
-            forms = await sync_to_async(list)(FunnelForm.objects.all().order_by('-timestamp'))
+            forms = await sync_to_async(list)(FunnelForm.objects.all().order_by(f"-{NAMES.TIMESTAMP}"))
             paginator = Paginator(forms, pageSize)
             page_obj = await sync_to_async(paginator.get_page)(pageNumber)
             forms_list = page_obj.object_list
@@ -59,12 +60,12 @@ class FUNNEL_QUERY_CONTROLLER:
                     funnel_queries.append(formData)
             
             response_data = {
-                "leads": funnel_queries,
-                "totalPages": paginator.num_pages,
-                "currentPage": page_obj.number,
-                "hasNext": page_obj.has_next(),
-                "hasPrevious": page_obj.has_previous(),
-                "totalItems": paginator.count
+                NAMES.LEADS: funnel_queries,
+                NAMES.TOTAL_PAGES: paginator.num_pages,
+                NAMES.CURRENT_PAGE: page_obj.number,
+                NAMES.HAS_NEXT: page_obj.has_next(),
+                NAMES.HAS_PREVIOUS: page_obj.has_previous(),
+                NAMES.TOTAL_ITEMS: paginator.count
             }
             
             return LocalResponse(

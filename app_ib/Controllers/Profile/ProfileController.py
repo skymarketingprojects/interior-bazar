@@ -1,6 +1,7 @@
 from asgiref.sync import sync_to_async
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.models import UserProfile
 from app_ib.Controllers.Profile.Tasks.Taskys import PROFILE_TASKS
@@ -67,7 +68,7 @@ class PROFILE_CONTROLLER:
                 message=RESPONSE_MESSAGES.user_profile_create_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
             
  ###########################################
@@ -100,7 +101,7 @@ class PROFILE_CONTROLLER:
                         message=RESPONSE_MESSAGES.user_profile_update_error,
                         code=RESPONSE_CODES.error,
                         data={
-                            'msg':"update task error"
+                            NAMES.ERROR:"update task error"
                         })
             # Create Profile Image if not exist : 
             else:
@@ -119,7 +120,7 @@ class PROFILE_CONTROLLER:
                         message=RESPONSE_MESSAGES.user_profile_update_error,
                         code=RESPONSE_CODES.error,
                         data={
-                            'msg':"create task error"
+                            NAMES.ERROR:"create task error"
                         })
 
         except Exception as e:
@@ -128,7 +129,7 @@ class PROFILE_CONTROLLER:
                 message=RESPONSE_MESSAGES.user_profile_update_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
 
@@ -142,9 +143,9 @@ class PROFILE_CONTROLLER:
             is_user_profile_created = await sync_to_async(UserProfile.objects.filter(user=userIns).exists)()
             
             user_data = {
-                "username": userIns.username,
-                "role": userIns.type,
-                "id": userIns.id
+                NAMES.USERNAME: userIns.username,
+                NAMES.ROLE: userIns.type,
+                NAMES.ID: userIns.id
             }
 
             if is_user_profile_created:
@@ -160,8 +161,8 @@ class PROFILE_CONTROLLER:
                         message=RESPONSE_MESSAGES.user_profile_fetch_success,
                         code=RESPONSE_CODES.success,
                         data={
-                            "user": user_profile_data,
-                            "plan": plan_data.data
+                            NAMES.USER: user_profile_data,
+                            NAMES.PLAN: plan_data.data
                         }
                     )
                 else:
@@ -185,7 +186,7 @@ class PROFILE_CONTROLLER:
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.user_profile_fetch_error,
                 code=RESPONSE_CODES.error,
-                data={'error': str(e)}
+                data={NAMES.ERROR: str(e)}
             )
 
     @classmethod

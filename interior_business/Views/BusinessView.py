@@ -11,7 +11,7 @@ from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
-
+from adrf.views import APIView
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -144,6 +144,29 @@ async def GetAllBusinessTypesView(request):
                 'error': str(e)
             })
     
+
+@api_view(['GET'])
+async def GetAllBusinessTabView(request):
+    try:
+        # Call Auth Controller to Create User
+        final_response = await BUSS_CONTROLLER.GetAllBusinessTab()
+        #await MY_METHODS.printStatus(f'final_response {final_response}')
+
+        return ServerResponse(
+            response=final_response.response,
+            code=final_response.code,
+            message=final_response.message,
+            data=final_response.data)
+
+    except Exception as e:
+        # #await MY_METHODS.printStatus(f'Error: {e}')
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message=RESPONSE_MESSAGES.business_category_fetch_error,
+            code=RESPONSE_CODES.error,
+            data={
+                'error': str(e)
+            })
 @api_view(['GET'])
 async def GetAllBusinessCategoriesView(request):
     try:
@@ -189,3 +212,53 @@ async def GetAllBusinessSegmentsByTypeView(request,typeId):
             data={
                 'error': str(e)
             })
+    
+
+class BusinessBannerView(APIView):
+    permission_classes = [IsAuthenticated]
+    async def post(self, request):
+        try:
+            # Convert request.data to dot notation object
+            data = MY_METHODS.json_to_object(request.data)
+            user = request.user
+
+            # Call Auth Controller to Create User
+            final_response = await BUSS_CONTROLLER.UpdateBusinessBanner(business_ins=user.user_business, data=data)
+            #await MY_METHODS.printStatus(f'final_response {final_response}')
+
+            return ServerResponse(
+                response=final_response.response,
+                code=final_response.code,
+                message=final_response.message,
+                data=final_response.data)
+
+        except Exception as e:
+            # #await MY_METHODS.printStatus(f'Error: {e}')
+            return ServerResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.business_register_error,
+                code=RESPONSE_CODES.error,
+                data={
+                    'error': str(e)
+                })
+    async def get(self, request):
+        try:
+            # Call Auth Controller to Create User
+            final_response = await BUSS_CONTROLLER.GetBusinessBanner(business_ins=request.user.user_business)
+            #await MY_METHODS.printStatus(f'final_response {final_response}')
+
+            return ServerResponse(
+                response=final_response.response,
+                code=final_response.code,
+                message=final_response.message,
+                data=final_response.data)
+
+        except Exception as e:
+            # #await MY_METHODS.printStatus(f'Error: {e}')
+            return ServerResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.business_register_error,
+                code=RESPONSE_CODES.error,
+                data={
+                    'error': str(e)
+                })

@@ -161,16 +161,17 @@ class MY_METHODS:
     @staticmethod
     async def send_email(email, subject, message):
         """Send email using SMTP"""
-        send_mail(
-            subject=subject,
-            message=message,
-            from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[email],
-        )
         try:
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[email],
+            )
+            await MY_METHODS.printStatus('Email sent successfully!')
             return True
         except Exception as e:
-            print(f'Error in send_email {e}')
+            await MY_METHODS.printStatus(f'Error sending email: {e}')
             return False
         
     @staticmethod
@@ -247,6 +248,7 @@ class MY_METHODS:
                 }
             }
         
+    @staticmethod
     async def parseDurationToDays(duration):
         """
         Convert a duration (int or string like '2 days', '1 month', '3 years')
@@ -277,3 +279,58 @@ class MY_METHODS:
             return value * 365
         else:
             raise ValueError(f"Unknown time unit: {unit}")
+
+
+    import re
+
+    @staticmethod
+    async def formatPhone(phone: str, country_code: str) -> str | None:
+        """
+        Cleans, formats, and validates a phone number into international (E.164) format.
+        
+        Args:
+            phone (str): The input phone number (can be messy or local format).
+            country_code (str): Country code, with or without '+' (e.g. '91' or '+91').
+
+        Returns:
+            str | None: Formatted international phone number (e.g. '+919090407368')
+                        or None if invalid.
+        """
+        if not phone or not isinstance(phone, str):
+            return None
+
+        try:
+            # Normalize country_code (remove '+' if present)
+            country_code = re.sub(r"[^\d]", "", country_code or "")
+
+            phone = phone.strip()
+
+            # Already in international format
+            if re.match(r"^\+\d{10,15}$", phone):
+                return phone
+
+            # Remove all non-digit characters
+            cleaned = re.sub(r"[^\d]", "", phone)
+
+            # Handle '00' prefix
+            if cleaned.startswith("00"):
+                cleaned = cleaned[2:]
+
+            # Remove leading zeros (common in local formats)
+            cleaned = cleaned.lstrip("0")
+
+            # Prepend country code if missing
+            if not cleaned.startswith(country_code):
+                cleaned = f"{country_code}{cleaned}"
+
+            # Add '+' prefix
+            formatted = f"+{cleaned}"
+
+            # Validate final format (E.164)
+            if re.match(r"^\+\d{10,15}$", formatted):
+                return formatted
+
+            return None
+
+        except Exception:
+            return None

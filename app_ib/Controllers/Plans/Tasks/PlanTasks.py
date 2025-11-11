@@ -4,6 +4,7 @@ from app_ib.Utils.MyMethods import MY_METHODS
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
 import time
+from app_ib.Utils.Names import NAMES
 
 class PLAN_TASKS:
     @classmethod
@@ -19,13 +20,13 @@ class PLAN_TASKS:
             plan_query.state= data.state
             plan_query.country= data.country
             # plan_query.address= data.address
-            plan_query.stage= "pending"
+            plan_query.stage= NAMES.PENDING
             plan_query.attachment_url= payment_proof
-            plan_query.transaction_id= getattr(data, 'transactionId', '')
+            plan_query.transaction_id= getattr(data, NAMES.TRANSACTION, '')
 
             await sync_to_async(plan_query.save)()
 
-            return {"id":plan_query.id}
+            return {NAMES.ID:plan_query.id}
 
         except Exception as e:
             #await MY_METHODS.printStatus(f'Error in CreatePlanTask {e}')
@@ -33,20 +34,20 @@ class PLAN_TASKS:
 
 
     @classmethod
-    async def VerifyPlanTask(self, plan_ins,data):
+    async def VerifyPlanTask(self, plan_ins:PlanQuery,data):
         try:
             #await MY_METHODS.printStatus(f'Task {plan_ins}')
-            plan_ins.stage= 'confirm'
-            plan_ins.plan= getattr(data, 'plan', plan_ins.plan)
-            plan_ins.name= getattr(data, 'name', plan_ins.name)
-            plan_ins.email= getattr(data, 'email', plan_ins.email)
-            plan_ins.phone= getattr(data, 'phone', plan_ins.phone)
-            plan_ins.state= getattr(data, 'state', plan_ins.state)
-            plan_ins.country= getattr(data, 'country', plan_ins.country)
+            plan_ins.stage= NAMES.CONFIRM
+            plan_ins.plan= getattr(data, NAMES.PLAN, plan_ins.plan)
+            plan_ins.name= getattr(data, NAMES.NAME, plan_ins.name)
+            plan_ins.email= getattr(data, NAMES.EMAIL, plan_ins.email)
+            plan_ins.phone= getattr(data, NAMES.PHONE, plan_ins.phone)
+            plan_ins.state= getattr(data, NAMES.STATE, plan_ins.state)
+            plan_ins.country= getattr(data, NAMES.COUNTRY, plan_ins.country)
             # plan_query.address= getattr(data, 'address', plan_ins.address)
-            plan_ins.stage= getattr(data, 'stage', plan_ins.stage)
-            plan_ins.attachment_url= getattr(data, 'attachment_url', plan_ins.attachment_url)
-            plan_ins.transaction_id= getattr(data, 'transactionId', plan_ins.transaction_id)
+            plan_ins.stage= getattr(data, NAMES.STAGE, plan_ins.stage)
+            plan_ins.attachment_url= getattr(data, NAMES.ATTACHMENT_URL, plan_ins.attachment_url)
+            plan_ins.transaction_id= getattr(data, NAMES.TRANSACTION, plan_ins.transaction_id)
             await sync_to_async(plan_ins.save)()
             return True
             
@@ -81,7 +82,7 @@ class PLAN_TASKS:
             return None
         
     @classmethod
-    async def ActivateBusinessPlan(self,businessPlanIns):
+    async def ActivateBusinessPlan(self,businessPlanIns:BusinessPlan):
         try:
 
             businessPlanIns.isActive= True
@@ -93,7 +94,7 @@ class PLAN_TASKS:
             return None
     
     @classmethod
-    async def DeactivateBusinessPlan(self,businessPlanIns):
+    async def DeactivateBusinessPlan(self,businessPlanIns:BusinessPlan):
         try:
             businessPlanIns.isActive= False
             await sync_to_async(businessPlanIns.save)()
@@ -103,21 +104,21 @@ class PLAN_TASKS:
             return None
     
     @classmethod
-    async def GetBusinessPlanData(self,businessPlan):
+    async def GetBusinessPlanData(self,businessPlan:BusinessPlan):
         try:
             data = {
-                "id": businessPlan.id,
-                "businessId": businessPlan.business.id if businessPlan.business else None,
-                "services": businessPlan.services,
-                "amount": businessPlan.amount,
-                "planId": businessPlan.plan.id if businessPlan.plan else None,
-                "planName": businessPlan.plan.title if businessPlan.plan else None,
-                "isActive": businessPlan.isActive,
-                "transactionId": businessPlan.transactionId,
-                "lastActivate": businessPlan.lastActivate.strftime("%Y-%m-%d") if businessPlan.lastActivate else None,
-                "expireDate": businessPlan.expireDate.strftime("%Y-%m-%d") if businessPlan.expireDate else None,
-                "timestamp": businessPlan.timestamp.strftime("%Y-%m-%d") if businessPlan.timestamp else None,
-                "updatedAt": businessPlan.updatedAt.strftime("%Y-%m-%d") if businessPlan.updatedAt else None
+                NAMES.ID: businessPlan.id,
+                NAMES.BUSINESS_ID: businessPlan.business.id if businessPlan.business else None,
+                NAMES.SERVICES: businessPlan.services,
+                NAMES.AMOUNT: businessPlan.amount,
+                NAMES.PLAN_ID: businessPlan.plan.id if businessPlan.plan else None,
+                NAMES.PLAN_NAME: businessPlan.plan.title if businessPlan.plan else None,
+                NAMES.ISACTIVE: businessPlan.isActive,
+                NAMES.TRANSACTION: businessPlan.transactionId,
+                NAMES.LAST_ACTIVATE: businessPlan.lastActivate.strftime(NAMES.YMD_FORMAT) if businessPlan.lastActivate else None,
+                NAMES.EXPIRE_DATE: businessPlan.expireDate.strftime(NAMES.YMD_FORMAT) if businessPlan.expireDate else None,
+                NAMES.TIMESTAMP: businessPlan.timestamp.strftime(NAMES.YMD_FORMAT) if businessPlan.timestamp else None,
+                NAMES.UPDATED_AT: businessPlan.updatedAt.strftime(NAMES.YMD_FORMAT) if businessPlan.updatedAt else None
             }
             return data
         except Exception as e:

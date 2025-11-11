@@ -3,6 +3,7 @@ from adrf.decorators import api_view
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from interior_admin.Controllers.PanelSearch.PanelSearchController import PANEL_SEARCH_CONTROLLER
 
 import asyncio
@@ -28,7 +29,7 @@ async def SearchQueryView(request,query):
             response= RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.business_fetch_error,
             code=RESPONSE_CODES.error,
-            data={'error':str(e)}
+            data={NAMES.ERROR:str(e)}
 
         )
     
@@ -49,6 +50,6 @@ async def GetBusinessByIdView(request,Id):
             response= RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.business_fetch_error,
             code=RESPONSE_CODES.error,
-            data={'error':str(e)}
+            data={NAMES.ERROR:str(e)}
 
         )

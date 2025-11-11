@@ -6,6 +6,7 @@ from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from app_ib.Controllers.BusinessProfile.BusinessProfileController import BUSS_PROFILE_CONTROLLER
 
 
@@ -38,7 +39,7 @@ async def CreateOrUpdateBusinessProfileView(request):
             message=RESPONSE_MESSAGES.business_register_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
             
@@ -64,7 +65,7 @@ async def GetBusinessProfileByBussIDView(request,id):
             message=RESPONSE_MESSAGES.business_fetch_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 
@@ -74,7 +75,7 @@ async def CreateOrUpdatePrimaryImageView(request):
     try:
         # Get user instance
         user_ins = request.user
-        primary_image = request.FILES.get('primary_image')  
+        primary_image = request.FILES.get(NAMES.PRIMARY_IMAGE)  
         #await MY_METHODS.printStatus(f'primary image {primary_image}')
 
         # Call Auth Controller to Create User
@@ -95,7 +96,7 @@ async def CreateOrUpdatePrimaryImageView(request):
             message=RESPONSE_MESSAGES.user_profile_create_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 
@@ -105,7 +106,7 @@ async def CreateOrUpdateSecondaryImageView(request):
     try:
         # Get user instance
         user_ins = request.user
-        secondary_image = request.FILES.get('secondary_image')  
+        secondary_image = request.FILES.get(NAMES.SECONDARY_IMAGE)  
         #await MY_METHODS.printStatus(f'secondary image  {secondary_image}')
 
         # Call Auth Controller to Create User
@@ -125,5 +126,5 @@ async def CreateOrUpdateSecondaryImageView(request):
             message=RESPONSE_MESSAGES.default_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })

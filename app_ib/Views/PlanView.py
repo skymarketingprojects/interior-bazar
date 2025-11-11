@@ -6,6 +6,7 @@ from adrf.decorators import api_view
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from app_ib.Controllers.Plans.PlanController import PLAN_CONTROLLER
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -18,11 +19,11 @@ async def CreatePlanView(request):
         # Convert request.data to dot notation object
         user_ins= request.user
         data= request.data        
-        payment_proof= request.FILES.get('attachment_url')
+        payment_proof= request.FILES.get(NAMES.ATTACHMENT_URL)
         data = MY_METHODS.json_to_object(data)
         final_response = None
         # Call Auth Controller to Create User
-        if getattr(data, 'id', None):
+        if getattr(data, NAMES.ID, None):
             if data.id!='':
                 print('verifying plan')
                 final_response = await PLAN_CONTROLLER.VerifyPlan(data=data)
@@ -39,7 +40,7 @@ async def CreatePlanView(request):
                 message=RESPONSE_MESSAGES.plan_create_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': 'No Response'
+                    NAMES.ERROR: 'No Response'
                 }
             )
 
@@ -56,7 +57,7 @@ async def CreatePlanView(request):
             message=RESPONSE_MESSAGES.plan_create_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 
@@ -83,5 +84,5 @@ async def VerifyPaymentView(request):
             message=RESPONSE_MESSAGES.plan_verify_errror,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })

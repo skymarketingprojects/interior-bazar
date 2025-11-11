@@ -4,6 +4,7 @@ from adrf.decorators import api_view
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from app_ib.Controllers.Pages.PagesController import PAGE_CONTROLLER
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -30,7 +31,7 @@ async def GetPagesView(request,page_name):
             message=RESPONSE_MESSAGES.page_fetch_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             }
         )
     
@@ -54,6 +55,6 @@ async def GetQnAView(request):
             message=RESPONSE_MESSAGES.qna_fetch_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             }
         )
