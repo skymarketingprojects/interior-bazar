@@ -23,7 +23,7 @@ class LEAD_QUERY_TASK:
             return True
             
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in CreateLeadQueryTask {e}')
+            await MY_METHODS.printStatus(f'Error in CreateLeadQueryTask {e}')
             return None
   
     @classmethod
@@ -45,7 +45,7 @@ class LEAD_QUERY_TASK:
             return True
             
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in CreateLeadQueryTask {e}')
+            await MY_METHODS.printStatus(f'Error in CreateLeadQueryTask {e}')
             return None
 
     @classmethod
@@ -56,7 +56,7 @@ class LEAD_QUERY_TASK:
             return True
             
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in CreateLeadQueryTask {e}')
+            await MY_METHODS.printStatus(f'Error in CreateLeadQueryTask {e}')
             return None
 
     @classmethod
@@ -67,7 +67,7 @@ class LEAD_QUERY_TASK:
             return True
             
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in CreateLeadQueryTask {e}')
+            await MY_METHODS.printStatus(f'Error in CreateLeadQueryTask {e}')
             return None
 
     @classmethod
@@ -78,7 +78,7 @@ class LEAD_QUERY_TASK:
             return True
             
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in CreateLeadQueryTask {e}')
+            await MY_METHODS.printStatus(f'Error in CreateLeadQueryTask {e}')
             return None
 
 
@@ -107,7 +107,7 @@ class LEAD_QUERY_TASK:
             return data
             
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in CreateLeadQueryTask {e}')
+            await MY_METHODS.printStatus(f'Error in CreateLeadQueryTask {e}')
             return None
 
 
@@ -135,7 +135,7 @@ class LEAD_QUERY_TASK:
             return query_data
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in GetLeadQueryTask: {e}')
+            await MY_METHODS.printStatus(f'Error in GetLeadQueryTask: {e}')
             return None
 
     @classmethod
@@ -146,5 +146,5 @@ class LEAD_QUERY_TASK:
             leadData = await self.GetLeadQueryTask(leadQueryIns)
             return leadData
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in  AssignLeadQueryTask- {e}')
+            await MY_METHODS.printStatus(f'Error in  AssignLeadQueryTask- {e}')
             return False

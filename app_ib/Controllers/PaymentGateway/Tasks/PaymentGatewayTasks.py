@@ -65,7 +65,7 @@ class PaymentGatewayTasks:
             }
 
             response_data = await sync_to_async(CashfreeClientWrapper.create_order)(payload)
-            # await MY_METHODS.printStatus(f"Cashfree Create Order Response: {response_data}")
+            await MY_METHODS.printStatus(f"Cashfree Create Order Response: {response_data}")
             return response_data, transactionData
         except Exception as e:
             await MY_METHODS.printStatus(f"Error in CreateTransection: {e}")

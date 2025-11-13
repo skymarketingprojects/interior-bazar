@@ -12,7 +12,7 @@ class SERVICES_TASKS:
             service.delete()
             return True
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error in deleteservice: {str(e)}")
+            await MY_METHODS.printStatus(f"Error in deleteservice: {str(e)}")
             return False
     
     @classmethod
@@ -58,12 +58,12 @@ class SERVICES_TASKS:
                                 link=image.link
                             )
             except Exception as e:
-                #await MY_METHODS.printStatus(f"Error in updateservice: {str(e)}")
+                await MY_METHODS.printStatus(f"Error in updateservice: {str(e)}")
                 pass
             data = await self.getService(service)
             return data
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error in updateservice: {str(e)}")
+            await MY_METHODS.printStatus(f"Error in updateservice: {str(e)}")
             return False
     
     @classmethod
@@ -106,12 +106,12 @@ class SERVICES_TASKS:
                             link=image.link
                         )
             except Exception as e:
-                #await MY_METHODS.printStatus(f"Error in createService: {str(e)}")
+                await MY_METHODS.printStatus(f"Error in createService: {str(e)}")
                 pass
             data = await self.getService(service)
             return data
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error in createService: {str(e)}")
+            await MY_METHODS.printStatus(f"Error in createService: {str(e)}")
             return False
         
     @classmethod
@@ -154,5 +154,5 @@ class SERVICES_TASKS:
             }
             return serviceData
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error in getservice: {str(e)}")
+            await MY_METHODS.printStatus(f"Error in getservice: {str(e)}")
             return False

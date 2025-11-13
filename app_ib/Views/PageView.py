@@ -13,10 +13,10 @@ from rest_framework.permissions import IsAuthenticated
 async def GetPagesView(request,page_name):
     try:
         data = MY_METHODS.json_to_object(request.data)
-        #await MY_METHODS.printStatus(f'get page view data {data}')
+        await MY_METHODS.printStatus(f'get page view data {data}')
 
         get_page_resp = await PAGE_CONTROLLER.GetPages(page_name=page_name)
-        #await MY_METHODS.printStatus(f'get page resp {get_page_resp}')
+        await MY_METHODS.printStatus(f'get page resp {get_page_resp}')
 
         return ServerResponse(
             response=get_page_resp.response,
@@ -40,7 +40,7 @@ async def GetQnAView(request):
     try:
 
         get_qna_resp = await PAGE_CONTROLLER.GetQnA()
-        #await MY_METHODS.printStatus(f'get qna resp {get_qna_resp}')
+        await MY_METHODS.printStatus(f'get qna resp {get_qna_resp}')
 
         return ServerResponse(
             response=get_qna_resp.response,

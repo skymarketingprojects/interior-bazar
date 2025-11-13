@@ -41,7 +41,7 @@ class ProductView(AsyncAPIView):
                 data=productsResponse.data
             )
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in GET: {e}')
+            await MY_METHODS.printStatus(f'Error in GET: {e}')
             return ServerResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.product_fetch_error,
@@ -59,7 +59,7 @@ class ProductView(AsyncAPIView):
                 data=productsResponse.data
             )
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in POST: {e}')
+            await MY_METHODS.printStatus(f'Error in POST: {e}')
             return ServerResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.product_fetch_error,
@@ -77,7 +77,7 @@ class ProductView(AsyncAPIView):
                 data=productsResponse.data
             )
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in PUT: {e}')
+            await MY_METHODS.printStatus(f'Error in PUT: {e}')
             return ServerResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.catelog_fetch_error,
@@ -94,7 +94,7 @@ class ProductView(AsyncAPIView):
                 data=productsResponse.data
             )
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in DELETE: {e}')
+            await MY_METHODS.printStatus(f'Error in DELETE: {e}')
             return ServerResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.catelog_fetch_error,
@@ -132,7 +132,7 @@ class ServiceView(AsyncAPIView):
                 data=servicesResponse.data
             )
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in GET: {e}')
+            await MY_METHODS.printStatus(f'Error in GET: {e}')
             return ServerResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.service_fetch_error,
@@ -150,7 +150,7 @@ class ServiceView(AsyncAPIView):
                 data=servicesResponse.data
             )
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in POST: {e}')
+            await MY_METHODS.printStatus(f'Error in POST: {e}')
             return ServerResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.product_fetch_error,
@@ -168,7 +168,7 @@ class ServiceView(AsyncAPIView):
                 data=servicesResponse.data
             )
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in PUT: {e}')
+            await MY_METHODS.printStatus(f'Error in PUT: {e}')
             return ServerResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.service_fetch_error,
@@ -185,7 +185,7 @@ class ServiceView(AsyncAPIView):
                 data=servicesResponse.data
             )
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in DELETE: {e}')
+            await MY_METHODS.printStatus(f'Error in DELETE: {e}')
             return ServerResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.catelog_fetch_error,
@@ -275,7 +275,7 @@ class CatelogView(AsyncAPIView):
                 data=auth_resp.data
             )
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in PUT: {e}')
+            await MY_METHODS.printStatus(f'Error in PUT: {e}')
             return ServerResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.user_catelog_update_error,
@@ -298,7 +298,7 @@ class CatelogView(AsyncAPIView):
                 data=auth_resp.data
             )
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in DELETE: {e}')
+            await MY_METHODS.printStatus(f'Error in DELETE: {e}')
             return ServerResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.catelog_deleted_error,
@@ -309,9 +309,9 @@ class CatelogView(AsyncAPIView):
 async def GetBusinessCatelogs(request, businessId: int)->ServerResponse:
     """Get all catalogs for a given business."""
     try:
-        #await MY_METHODS.printStatus(f'GetBusinessCatelogs: {businessId} type: {type(businessId)}')
+        await MY_METHODS.printStatus(f'GetBusinessCatelogs: {businessId} type: {type(businessId)}')
         business = Business.objects.get(id=businessId)
-        #await MY_METHODS.printStatus(f'Business fetched: {business}')
+        await MY_METHODS.printStatus(f'Business fetched: {business}')
         catelogResponse = await CATELOG_CONTROLLER.GetCatelogForBusiness(business)
         return ServerResponse(
             response=catelogResponse.response,
@@ -320,7 +320,7 @@ async def GetBusinessCatelogs(request, businessId: int)->ServerResponse:
             data=catelogResponse.data
         )
     except Exception as e:
-        #await MY_METHODS.printStatus(f'Error in catelog GET: {e}')
+        await MY_METHODS.printStatus(f'Error in catelog GET: {e}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.catelog_fetch_error,
@@ -335,7 +335,7 @@ async def GetBusinessProducts(request, businessId: int)->ServerResponse:
         
         business = Business.objects.get(id=businessId)
         productsResponse = await PRODUCTS_CONTROLLER.getProductsForBusiness(business)
-        #await MY_METHODS.printStatus(f'Products fetched: {productsResponse}')
+        await MY_METHODS.printStatus(f'Products fetched: {productsResponse}')
         return ServerResponse(
             response=productsResponse.response,
             message=productsResponse.message,
@@ -343,7 +343,7 @@ async def GetBusinessProducts(request, businessId: int)->ServerResponse:
             data=productsResponse.data
         )
     except Exception as e:
-        #await MY_METHODS.printStatus(f'Error in product GET: {e}')
+        await MY_METHODS.printStatus(f'Error in product GET: {e}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.product_fetch_error,
@@ -365,7 +365,7 @@ async def GetBusinessServices(request, businessId: int)->ServerResponse:
             data=servicesResponse.data
         )
     except Exception as e:
-        #await MY_METHODS.printStatus(f'Error in service GET: {e}')
+        await MY_METHODS.printStatus(f'Error in service GET: {e}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.product_fetch_error,

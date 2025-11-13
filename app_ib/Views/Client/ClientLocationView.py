@@ -17,11 +17,11 @@ async def CreateOrUpdateClientLocationView(request):
         # Convert request.data to dot notation object
         data = MY_METHODS.json_to_object(request.data)
         user_ins = request.user
-        #await MY_METHODS.printStatus(f'user_ins {user_ins}')
+        await MY_METHODS.printStatus(f'user_ins {user_ins}')
         # Call Auth Controller to Create User
         final_response = await  asyncio.gather(
             CLIENT_LOCATION_CONTROLLER.CreateOrUpdateClientLocation(user_ins=user_ins, data=data))
-        #await MY_METHODS.printStatus(f'final_response {final_response}')
+        await MY_METHODS.printStatus(f'final_response {final_response}')
         final_response = final_response[0]
 
         return ServerResponse(
@@ -31,7 +31,7 @@ async def CreateOrUpdateClientLocationView(request):
             data=final_response.data)
 
     except Exception as e:
-        # #await MY_METHODS.printStatus(f'Error: {e}')
+        await MY_METHODS.printStatus(f'Error: {e}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.user_register_error,
@@ -47,7 +47,7 @@ async def GetClientLocationByIDView(request,id):
         # Call Auth Controller to Create User
         final_response = await  asyncio.gather(CLIENT_LOCATION_CONTROLLER.GetClientLocByUserIns(id=id))
         
-        #await MY_METHODS.printStatus(f'final_response {final_response}')
+        await MY_METHODS.printStatus(f'final_response {final_response}')
         final_response = final_response[0]
 
         return ServerResponse(
@@ -57,7 +57,7 @@ async def GetClientLocationByIDView(request,id):
             data=final_response.data)
 
     except Exception as e:
-        # #await MY_METHODS.printStatus(f'Error: {e}')
+        await MY_METHODS.printStatus(f'Error: {e}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.client_register_error,

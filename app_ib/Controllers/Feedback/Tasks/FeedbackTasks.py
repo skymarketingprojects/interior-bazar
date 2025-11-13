@@ -14,7 +14,7 @@ class FEEDBACK_TASKS:
             return True
             
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in CreateFeedback {e}')
+            await MY_METHODS.printStatus(f'Error in CreateFeedback {e}')
             return None
 
     @classmethod
@@ -25,5 +25,5 @@ class FEEDBACK_TASKS:
             return True
             
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in UdpateFeedbackTask {e}')
+            await MY_METHODS.printStatus(f'Error in UdpateFeedbackTask {e}')
             return None

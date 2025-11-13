@@ -80,7 +80,7 @@ class SEARCH_TASKS:
             return final_data
             
         except Exception as e:
-            #await MY_METHODS.printStatus(f' Error runing pagination {e}')
+            await MY_METHODS.printStatus(f' Error runing pagination {e}')
             return None
 
 
@@ -88,7 +88,7 @@ class SEARCH_TASKS:
     async def FetchBusiness(self, business):
         try:
             final_data = {}
-            #await MY_METHODS.printStatus(f'business {business}')
+            await MY_METHODS.printStatus(f'business {business}')
             user_ins = business.user
 
             # Use asyncio.gather to fetch data in parallel for faster performance
@@ -96,13 +96,13 @@ class SEARCH_TASKS:
                 BUSS_TASK.GetBusinessInfo(id=business.pk),
                 BUSS_LOC_TASK.GetBusinessLocTask(business_loc_ins=await sync_to_async(Location.objects.get)(business=business) if await sync_to_async(Location.objects.filter(business=business).exists)() else None)
             )
-            #await MY_METHODS.printStatus(f'\nbusiness_data {business_data}\n')
+            await MY_METHODS.printStatus(f'\nbusiness_data {business_data}\n')
 
             # Handle time ago logic
             timestamp = business_data.get('timestamp', None)
             time_ago = await self.get_time_ago(updated_at=timestamp)
             
-            #await MY_METHODS.printStatus(f"time_ago {time_ago}, timestamp {timestamp}")
+            await MY_METHODS.printStatus(f"time_ago {time_ago}, timestamp {timestamp}")
 
             # Assign the required fields to final_data in camelCase format
             final_data['id'] = business.pk
@@ -127,17 +127,17 @@ class SEARCH_TASKS:
             city = f"{location_data.get('city', None)} ," if location_data.get('city') else None 
             state = f"{location_data.get('state', None)['name']} ," if location_data.get('state') else None
             country = f"{location_data.get('country', None)['name']}" if location_data.get('country') else None
-            #await MY_METHODS.printStatus(f'state {state} country {country}')
+            await MY_METHODS.printStatus(f'state {state} country {country}')
             final_data['location'] = f"{city if city else ''}{state if state else ''}{country if country else ''}"
             # Handle rating - assuming you still want a random rating for the example
             rating = await MY_METHODS.get_random_rating()
             final_data['rating'] = f"{rating}"
             final_data['ratingValue'] = float(rating)
-            #await MY_METHODS.printStatus(f'final_data {final_data}')
+            await MY_METHODS.printStatus(f'final_data {final_data}')
 
             return final_data
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error while fetching business {e}')
+            await MY_METHODS.printStatus(f'Error while fetching business {e}')
             return None
 
     @staticmethod
@@ -145,7 +145,7 @@ class SEARCH_TASKS:
         if updated_at:
             # Calculate the time difference between now and updated_at
             time_diff = timezone.now() - updated_at
-            #await MY_METHODS.printStatus(f'time_diff {time_diff}')
+            await MY_METHODS.printStatus(f'time_diff {time_diff}')
 
             # Determine the number of seconds, minutes, hours, and days
             if time_diff < timedelta(minutes=1):
@@ -183,7 +183,7 @@ class SEARCH_TASKS:
             return await self.GetQueryData(businesses_query=related_query, pageNo=pageNo)
         
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error while fetching business {e}')
+            await MY_METHODS.printStatus(f'Error while fetching business {e}')
             return None
     @classmethod
     async def GetNearbyBusinesses(self, business_id, pageNo=1):
@@ -198,5 +198,5 @@ class SEARCH_TASKS:
 
             return await self.GetQueryData(businesses_query=nearby_query, pageNo=pageNo)
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error while fetching business {e}')
+            await MY_METHODS.printStatus(f'Error while fetching business {e}')
             return None

@@ -14,6 +14,6 @@ class OFFER_TEXT_TASKS:
             }
             return offerData
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in GetOfferText {e}')
+            await MY_METHODS.printStatus(f'Error in GetOfferText {e}')
             return None
 

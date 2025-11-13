@@ -13,12 +13,12 @@ class PLAN_TASKS:
             
             plan_query = PlanQuery()
             # plan_query.user= user_ins
-            plan_query.plan= data.plan     
-            plan_query.name= data.name
-            plan_query.email= data.email
-            plan_query.phone= data.phone
-            plan_query.state= data.state
-            plan_query.country= data.country
+            plan_query.plan= getattr(data, NAMES.PLAN, NAMES.EMPTY)
+            plan_query.name= getattr(data, NAMES.NAME, NAMES.EMPTY)
+            plan_query.email= getattr(data, NAMES.EMAIL, NAMES.EMPTY)
+            plan_query.phone= getattr(data, NAMES.PHONE, NAMES.EMPTY)
+            plan_query.state= getattr(data, NAMES.STATE, NAMES.EMPTY)
+            plan_query.country= getattr(data, NAMES.COUNTRY, NAMES.EMPTY)
             # plan_query.address= data.address
             plan_query.stage= NAMES.PENDING
             plan_query.attachment_url= payment_proof
@@ -29,14 +29,14 @@ class PLAN_TASKS:
             return {NAMES.ID:plan_query.id}
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in CreatePlanTask {e}')
+            await MY_METHODS.printStatus(f'Error in CreatePlanTask {e}')
             return None
 
 
     @classmethod
     async def VerifyPlanTask(self, plan_ins:PlanQuery,data):
         try:
-            #await MY_METHODS.printStatus(f'Task {plan_ins}')
+            await MY_METHODS.printStatus(f'Task {plan_ins}')
             plan_ins.stage= NAMES.CONFIRM
             plan_ins.plan= getattr(data, NAMES.PLAN, plan_ins.plan)
             plan_ins.name= getattr(data, NAMES.NAME, plan_ins.name)
@@ -52,7 +52,7 @@ class PLAN_TASKS:
             return True
             
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in VerifyPlanTask {e}')
+            await MY_METHODS.printStatus(f'Error in VerifyPlanTask {e}')
             return None
         
 
@@ -90,7 +90,7 @@ class PLAN_TASKS:
             await sync_to_async(businessPlanIns.save)()
             return True
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in ActivateBusinessPlan {e}')
+            await MY_METHODS.printStatus(f'Error in ActivateBusinessPlan {e}')
             return None
     
     @classmethod
@@ -100,7 +100,7 @@ class PLAN_TASKS:
             await sync_to_async(businessPlanIns.save)()
             return True
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in DeactivateBusinessPlan {e}')
+            await MY_METHODS.printStatus(f'Error in DeactivateBusinessPlan {e}')
             return None
     
     @classmethod
@@ -122,5 +122,5 @@ class PLAN_TASKS:
             }
             return data
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in GetBusinessPlanData {e}')
+            await MY_METHODS.printStatus(f'Error in GetBusinessPlanData {e}')
             return None

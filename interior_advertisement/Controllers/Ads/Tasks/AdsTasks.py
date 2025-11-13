@@ -74,7 +74,7 @@ class ADS_TASKS:
     @classmethod
     async def CreateAdAssetTask(cls, AdCampaignIns, Data:dict):
         try:
-            #await MY_METHODS.printStatus(f"Data: {Data}")
+            await MY_METHODS.printStatus(f"Data: {Data}")
             AssetTypeIns = await sync_to_async(AdAssetType.objects.get)(code=Data.get("assetType", "image"))
 
             AdAssetIns = AdAsset(
@@ -88,7 +88,7 @@ class ADS_TASKS:
             return True, AdAssetIns
 
         except Exception as E:
-            #await MY_METHODS.printStatus(f"Error in CreateAdAssetTask: {E}")
+            await MY_METHODS.printStatus(f"Error in CreateAdAssetTask: {E}")
             return None, str(E)
 
     @classmethod
@@ -303,7 +303,7 @@ class ADS_TASKS:
             AssetsQS = await sync_to_async(list)(AdAsset.objects.filter(campaign=AdCampaignIns).values(
                 "id", "assetType__code", "s3Key", "meta"
             ))
-            #await MY_METHODS.printStatus(f"AssetsQS: {AssetsQS}")
+            await MY_METHODS.printStatus(f"AssetsQS: {AssetsQS}")
             AssetsQS = [
                 {"fileUrl": Item["s3Key"],"assetType": Item["assetType__code"],
                 **{k: v for k, v in Item.items() if k != "assetType__code" and k != "s3Key"}
@@ -368,7 +368,7 @@ class ADS_TASKS:
             
             return True, PlacementsQS
         except Exception as E:
-            #await MY_METHODS.printStatus(f"Error in GetAdPlacementsTask: {E}")
+            await MY_METHODS.printStatus(f"Error in GetAdPlacementsTask: {E}")
             return False, str(E)
         
     # ---------------- Ad Persona ----------------
@@ -376,13 +376,13 @@ class ADS_TASKS:
     @classmethod
     async def GetAdPersonasTask(cls, AdCampaignIns):
         try:
-            #await MY_METHODS.printStatus(f"AdCampaignIns: {AdCampaignIns}")
+            await MY_METHODS.printStatus(f"AdCampaignIns: {AdCampaignIns}")
             PersonasQS = await sync_to_async(lambda: AdPersona.objects.filter(campaign=AdCampaignIns).first())()
             personaCategory = PersonasQS.categories.all()
             categoryData = [await BUSS_TASK.GetBusinessTypeData(cat) for cat in personaCategory]
             segment = PersonasQS.segment
             segmentData = await BUSS_TASK.GetBusinessTypeData(segment)
-            #await MY_METHODS.printStatus(f"segmentData: {segmentData}")
+            await MY_METHODS.printStatus(f"segmentData: {segmentData}")
             PersonasData = {
                 "gender": PersonasQS.gender,
                 "ageBetween": PersonasQS.ageBetween,
@@ -390,7 +390,7 @@ class ADS_TASKS:
                 "categories": categoryData,
                 "segment": segmentData
             }
-            #await MY_METHODS.printStatus(f"PersonasData: {PersonasData}")
+            await MY_METHODS.printStatus(f"PersonasData: {PersonasData}")
             return True, PersonasData
         except Exception as E:
             return False, str(E)
@@ -429,7 +429,7 @@ class ADS_TASKS:
     async def CreateAdPersonaTask(cls, AdPersonaIns: AdPersona, Data:dict):
         try:
             
-            #await MY_METHODS.printStatus(f"AdPersonaIns")
+            await MY_METHODS.printStatus(f"AdPersonaIns")
             AdPersonaIns.gender = Data.get("gender")
             AdPersonaIns.ageBetween = Data.get("ageBetween")
             AdPersonaIns.personaType = Data.get("personaType")
@@ -443,7 +443,7 @@ class ADS_TASKS:
             segment = Data.get("segment")
             segmentIns = await sync_to_async(BusinessSegment.objects.get)(id=segment.get("id"))
             AdPersonaIns.segment = segmentIns
-            #await MY_METHODS.printStatus(f"AdPersonaIns:{AdPersonaIns}")
+            await MY_METHODS.printStatus(f"AdPersonaIns:{AdPersonaIns}")
             await sync_to_async(AdPersonaIns.save)()
             status,data = await cls.GetAdPersonasTask(AdPersonaIns.campaign)
             return True, data

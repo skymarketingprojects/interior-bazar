@@ -65,7 +65,7 @@ class ADS_CONTROLLER:
             )
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error fetching user campaigns: {str(e)}")
+            await MY_METHODS.printStatus(f"Error fetching user campaigns: {str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Error fetching user campaigns",
@@ -118,7 +118,7 @@ class ADS_CONTROLLER:
             )
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
+            await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Error fetching ad campaign details",
@@ -138,7 +138,7 @@ class ADS_CONTROLLER:
                 IsSuccess, campaignData = result
                 if IsSuccess:
                     campaigns.append(campaignData)
-                #await MY_METHODS.printStatus(f"Error fetching campaign data: {campaignData}")
+                await MY_METHODS.printStatus(f"Error fetching campaign data: {campaignData}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message="Ad campaigns fetched successfully",
@@ -147,7 +147,7 @@ class ADS_CONTROLLER:
             )
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
+            await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Error fetching ad campaigns",
@@ -176,7 +176,7 @@ class ADS_CONTROLLER:
             )
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error creating ad campaign: {str(e)}")
+            await MY_METHODS.printStatus(f"Error creating ad campaign: {str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Error creating ad campaign",
@@ -216,7 +216,7 @@ class ADS_CONTROLLER:
             )
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error  updating ad campaign: {str(e)}")
+            await MY_METHODS.printStatus(f"Error  updating ad campaign: {str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Error updating ad campaign",
@@ -229,20 +229,20 @@ class ADS_CONTROLLER:
     async def CreateAdAsset(cls, AdCampaignId, Data):
         try:
             adCampaign = await sync_to_async(AdCampaign.objects.get)(id=AdCampaignId)
-            #await MY_METHODS.printStatus(f"adCampaign: {adCampaign}")
+            await MY_METHODS.printStatus(f"adCampaign: {adCampaign}")
             isAssetExist = await sync_to_async(AdAsset.objects.filter(campaign=adCampaign).exists)()
-            #await MY_METHODS.printStatus(f"isAssetExist: {isAssetExist}")
+            await MY_METHODS.printStatus(f"isAssetExist: {isAssetExist}")
             IsSuccess= False
             AdAssetIns = None
             if isAssetExist:
-                #await MY_METHODS.printStatus(f"AdAsset exist: {isAssetExist}")
+                await MY_METHODS.printStatus(f"AdAsset exist: {isAssetExist}")
                 adAssetIns = await sync_to_async(AdAsset.objects.get)(campaign=adCampaign)
-                #await MY_METHODS.printStatus(f"AdAssetIns: {adAssetIns}")
+                await MY_METHODS.printStatus(f"AdAssetIns: {adAssetIns}")
                 IsSuccess, AdAssetIns = await ADS_TASKS.UpdateAdAssetTask(AdAssetIns=adAssetIns, Data=Data)
 
             else:
                 IsSuccess, AdAssetIns = await ADS_TASKS.CreateAdAssetTask(AdCampaignIns=adCampaign, Data=Data)
-            #await MY_METHODS.printStatus(f"AdAssetIns: {AdAssetIns}; IsSuccess: {IsSuccess}")
+            await MY_METHODS.printStatus(f"AdAssetIns: {AdAssetIns}; IsSuccess: {IsSuccess}")
             if IsSuccess:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
@@ -259,7 +259,7 @@ class ADS_CONTROLLER:
             )
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error Creating ad asset: {str(e)}")
+            await MY_METHODS.printStatus(f"Error Creating ad asset: {str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Error creating ad asset",
@@ -298,7 +298,7 @@ class ADS_CONTROLLER:
             )
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error  updating ad asset: {str(e)}")
+            await MY_METHODS.printStatus(f"Error  updating ad asset: {str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Error updating ad asset",
@@ -337,7 +337,7 @@ class ADS_CONTROLLER:
             )
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error deleting ad asset: {str(e)}")
+            await MY_METHODS.printStatus(f"Error deleting ad asset: {str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Error deleting ad asset",
@@ -365,7 +365,7 @@ class ADS_CONTROLLER:
             )
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error getting ad asset: {str(e)}")
+            await MY_METHODS.printStatus(f"Error getting ad asset: {str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Error getting ad asset",
@@ -383,7 +383,7 @@ class ADS_CONTROLLER:
                 status,response = await ADS_TASKS.GetAdAssetsTask(AdCampaignIns=campaign)
                 if status:
                     data.append(response[0])
-            #await MY_METHODS.printStatus(f"AdAssets: {data}")
+            await MY_METHODS.printStatus(f"AdAssets: {data}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message="Ad assets fetched successfully",
@@ -392,7 +392,7 @@ class ADS_CONTROLLER:
             )
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error getting ad assets: {str(e)}")
+            await MY_METHODS.printStatus(f"Error getting ad assets: {str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Error getting ad assets",
@@ -406,7 +406,7 @@ class ADS_CONTROLLER:
         try:
             AdCampaignIns = await sync_to_async(AdCampaign.objects.get)(id=AdCampaignId)
             IsSuccess, AdPaymentIns = await ADS_TASKS.CreateAdPaymentTask(AdCampaignIns=AdCampaignIns, Data=Data)
-            #await MY_METHODS.printStatus(f"AdPaymentIns: {AdPaymentIns}")
+            await MY_METHODS.printStatus(f"AdPaymentIns: {AdPaymentIns}")
             if IsSuccess:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
@@ -423,7 +423,7 @@ class ADS_CONTROLLER:
             )
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error Creating ad payment: {str(e)}")
+            await MY_METHODS.printStatus(f"Error Creating ad payment: {str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Error creating ad payment",
@@ -453,7 +453,7 @@ class ADS_CONTROLLER:
             )
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error Creating ad event: {str(e)}")
+            await MY_METHODS.printStatus(f"Error Creating ad event: {str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Error creating ad event",
@@ -482,7 +482,7 @@ class ADS_CONTROLLER:
             )
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error fetching enum json: {str(e)}")
+            await MY_METHODS.printStatus(f"Error fetching enum json: {str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Error fetching enums",
@@ -502,7 +502,7 @@ class ADS_CONTROLLER:
                     code=RESPONSE_CODES.success,
                     data=PlacementList
                 )
-            #await MY_METHODS.printStatus(f"PlacementList: {PlacementList}")
+            await MY_METHODS.printStatus(f"PlacementList: {PlacementList}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Failed to fetch placement list",
@@ -511,7 +511,7 @@ class ADS_CONTROLLER:
             )
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error fetching placement list: {str(e)}")
+            await MY_METHODS.printStatus(f"Error fetching placement list: {str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Error fetching placement list",
@@ -548,7 +548,7 @@ class ADS_CONTROLLER:
             )
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error creating persona: {str(e)}")
+            await MY_METHODS.printStatus(f"Error creating persona: {str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Error creating persona",
@@ -576,7 +576,7 @@ class ADS_CONTROLLER:
                 data=personaData
             )
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error fetching persona list: {str(e)}")
+            await MY_METHODS.printStatus(f"Error fetching persona list: {str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Error fetching persona list",

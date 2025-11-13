@@ -18,7 +18,7 @@ async def CreatePlanView(request):
     try:
         # Convert request.data to dot notation object
         user_ins= request.user
-        data= request.data        
+        data= request.data.get('data')     
         payment_proof= request.FILES.get(NAMES.ATTACHMENT_URL)
         data = MY_METHODS.json_to_object(data)
         final_response = None

@@ -39,7 +39,7 @@ class PRODUCTS_CONTROLLER:
                 data=productData
             )
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error in getProduct: {str(e)}")
+            await MY_METHODS.printStatus(f"Error in getProduct: {str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.product_fetch_error,
@@ -109,7 +109,7 @@ class PRODUCTS_CONTROLLER:
             products = await sync_to_async(
             lambda: business.products.all().order_by('index')
         )()
-            #await MY_METHODS.printStatus(f'Products found: {products.count()} for business: {business.id}')
+            await MY_METHODS.printStatus(f'Products found: {products.count()} for business: {business.id}')
             productsData = []
             for product in products:
                 productData = await PRODUCTS_TASKS.getProduct(product)
@@ -122,7 +122,7 @@ class PRODUCTS_CONTROLLER:
                 data=productsData
             )
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error in getProducts: {str(e)}")
+            await MY_METHODS.printStatus(f"Error in getProducts: {str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.products_fetch_error,
@@ -148,7 +148,7 @@ class PRODUCTS_CONTROLLER:
                 data=product
             )
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error in createProduct: {str(e)}")
+            await MY_METHODS.printStatus(f"Error in createProduct: {str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.product_create_error,
@@ -183,7 +183,7 @@ class PRODUCTS_CONTROLLER:
             )
             
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error in updateProduct: {str(e)}")
+            await MY_METHODS.printStatus(f"Error in updateProduct: {str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.product_update_error,
@@ -217,7 +217,7 @@ class PRODUCTS_CONTROLLER:
                 data=product
             )
         except Exception as e:
-            #await MY_METHODS.printStatus(f"Error in deleteProduct: {str(e)}")
+            await MY_METHODS.printStatus(f"Error in deleteProduct: {str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.product_delete_error,

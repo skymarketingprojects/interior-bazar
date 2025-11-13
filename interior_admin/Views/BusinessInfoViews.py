@@ -12,9 +12,9 @@ from app_ib.Utils.MyMethods import MY_METHODS
 async def GetAdminBusinessDataView(request,pageNo,pageSize):
     try:
         # Call Auth Controller to Create User
-        #await MY_METHODS.printStatus(f'GetAdminBusinessDataView called with pageNo,pageSize:-{pageNo},{pageSize}')
+        await MY_METHODS.printStatus(f'GetAdminBusinessDataView called with pageNo,pageSize:-{pageNo},{pageSize}')
         final_response = await BUSINESS_INFO_CONTROLLER.GetBusinessInfo( pageNo=pageNo,size=pageSize)
-        #await MY_METHODS.printStatus(f'GetAdminBusinessDataView final response:-{final_response}')
+        await MY_METHODS.printStatus(f'GetAdminBusinessDataView final response:-{final_response}')
 
 
         return ServerResponse(
@@ -24,7 +24,7 @@ async def GetAdminBusinessDataView(request,pageNo,pageSize):
             data=final_response.data)
 
     except Exception as e:
-        #await MY_METHODS.printStatus(f'GetAdminBusinessDataView{str(e)}')
+        await MY_METHODS.printStatus(f'GetAdminBusinessDataView{str(e)}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.business_fetch_error,

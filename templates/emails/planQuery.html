@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Your Plan Query – InteriorBazzar</title>
+    <style>
+      body {
+        font-family: "Poppins", "Helvetica Neue", Arial, sans-serif;
+        background-color: #f5f5f5;
+        color: #333;
+        margin: 0;
+        padding: 0;
+      }
+
+      .container {
+        max-width: 650px;
+        margin: 40px auto;
+        background-color: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+      }
+
+      .header {
+        background-color: #19472d;
+        color: #ffffff;
+        text-align: center;
+        padding: 40px 20px;
+      }
+
+      .header h1 {
+        margin: 0;
+        font-size: 26px;
+        font-weight: 600;
+      }
+
+      .content {
+        padding: 35px 45px;
+        line-height: 1.7;
+        color: #444;
+      }
+
+      .content h2 {
+        color: #19472d;
+        font-weight: 600;
+        font-size: 20px;
+        margin-top: 0;
+      }
+
+      .info-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 25px 0;
+      }
+
+      .info-table td {
+        padding: 8px 5px;
+        border-bottom: 1px solid #f0f0f0;
+        vertical-align: top;
+      }
+
+      .info-table td.label {
+        font-weight: 600;
+        color: #19472d;
+        width: 35%;
+      }
+
+      .button {
+        display: inline-block;
+        background-color: #19472d;
+        color: #ffffff !important;
+        padding: 12px 28px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 600;
+        margin-top: 20px;
+        transition: background-color 0.3s ease;
+      }
+
+      .button:hover {
+        background-color: #145b39;
+      }
+
+      .footer {
+        text-align: center;
+        background-color: #f8faf8;
+        color: #666;
+        font-size: 13px;
+        padding: 25px;
+        border-top: 1px solid #e8e8e8;
+      }
+
+      .footer a {
+        color: #19472d;
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      @media (max-width: 600px) {
+        .content {
+          padding: 25px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>We’ve Received Your Query</h1>
+      </div>
+
+      <div class="content">
+        <p>
+          {% if name %} Hi {{ plan.user.user_profile }}, {% else %} Hi there, {% endif %}
+        </p>
+
+        <p>
+          Thank you for your interest in <strong>{{ plan.plan }}</strong> at
+          <strong>InteriorBazzar</strong>. We’ve successfully received your
+          query and will get back to you soon.
+        </p>
+
+        <h2>Your Submitted Details</h2>
+
+        <table class="info-table">
+          {% if plan.plan %}
+          <tr>
+            <td class="label">Name:</td>
+            <td>{{ plan.plan }}</td>
+          </tr>
+          {% endif %} {% if plan.email %}
+          <tr>
+            <td class="label">Email:</td>
+            <td>{{ plan.email }}</td>
+          </tr>
+          {% endif %} {% if plan.phone %}
+          <tr>
+            <td class="label">Phone:</td>
+            <td>{{ plan.phone }}</td>
+          </tr>
+          {% endif %} {% if plan.state %}
+          <tr>
+            <td class="label">State:</td>
+            <td>{{ plan.state }}</td>
+          </tr>
+          {% endif %} {% if plan.country %}
+          <tr>
+            <td class="label">Country:</td>
+            <td>{{ plan.country }}</td>
+          </tr>
+          {% endif %} {% if plan.address %}
+          <tr>
+            <td class="label">Address:</td>
+            <td>{{ plan.address }}</td>
+          </tr>
+          {% endif %} {% if plan.transaction_id %}
+          <tr>
+            <td class="label">Transaction ID:</td>
+            <td>{{ plan.transaction_id }}</td>
+          </tr>
+          {% endif %} {% if plan.attachment_url %}
+          <tr>
+            <td class="label">Attachment:</td>
+            <td>
+              <a href="{{ plan.attachment_url }}" target="_blank">View File</a>
+            </td>
+          </tr>
+          {% endif %}
+        </table>
+
+        <p>
+          Our representative will reach out soon to discuss the next steps and
+          provide any additional details. In the meantime, you can explore more
+          about our services below.
+        </p>
+
+        <a href="https://interiorbazzar.com" class="button" target="_blank">
+          Visit InteriorBazzar
+        </a>
+      </div>
+
+      <div class="footer">
+        <p>
+          Best regards,<br />
+          <strong>The InteriorBazzar Team</strong><br />
+          <a href="https://interiorbazzar.com" target="_blank"
+            >interiorbazzar.com</a
+          >
+        </p>
+        <p>© InteriorBazzar. All rights reserved.</p>
+      </div>
+    </div>
+  </body>
+</html>

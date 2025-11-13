@@ -1,19 +1,25 @@
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.utils import timezone
+from datetime import timedelta
+
 from asgiref.sync import sync_to_async,async_to_sync
-from app_ib.models import UserProfile,BusinessPlan,LeadQuery,FunnelForm,PlanQuery
+from app_ib.models import UserProfile,BusinessPlan,LeadQuery,FunnelForm,PlanQuery,BusinessProfile
 from app_ib.Utils.MyMethods import MY_METHODS
 
 from .Controllers.Publish import publishEmailToUser,WhatsappMessage,publishToUser
 from .Controllers.Subscription import subscribeEmail,subscribeSMS
 import asyncio
-from interior_notification.signals import business_changed
+from interior_notification.signals import *
 
-@receiver(post_save, sender=UserProfile)
+@receiver(userSignupSignal)
+# @receiver(post_save, sender=UserProfile)
 def sendSignupNotification(sender, instance:UserProfile, created, **kwargs):
     try:
-        print("sendSignupNotification")
+        async_to_sync(MY_METHODS.printStatus)("sendSignupNotification")
         email = instance.email
         phone = instance.phone
         countryCode = instance.countryCode
@@ -21,14 +27,14 @@ def sendSignupNotification(sender, instance:UserProfile, created, **kwargs):
         if not email or not phone:
             return
         
-        subscribeEmail(email)
-        subscribeSMS(internationalPhone)
         if created:
+            name = instance.name
 
             sender_email = "hello@interiorbazzar.com"
-            htmlBody=f"Hello {email} <br> Your account has been created successfully.<br> Your phone number is {phone}"
-            text = f"Hello {email} Your account has been created successfully. Your phone number is {phone}"
-            whatsappTxt = f"Hello {phone} Your account has been created successfully. Your email is {email}"
+            htmlBody= render_to_string('emails/welcomeUser.html',{'name':name})
+
+            if instance.user.type == "business":
+                return 0
 
             # publishEmailToUser(
             #     sender_email=sender_email,
@@ -37,19 +43,59 @@ def sendSignupNotification(sender, instance:UserProfile, created, **kwargs):
             #     html_body=htmlBody,
             #     text_body=text
             # )
-            publishEmailToUser(senderEmail=sender_email,recipientEmail=email,subject="New signup",body=text)
-            WhatsappMessage(
-                receiver_phone=internationalPhone,
-                body_text=whatsappTxt
-            )
+            subscribeEmail(email)
+            subscribeSMS(internationalPhone)
+            publishEmailToUser(senderEmail=sender_email,recipientEmail=email,subject="New signup",htmlBody=htmlBody)
 
     except Exception as e:
-        print(f"Error in sendSignupNotification {e}")
+        async_to_sync(MY_METHODS.printStatus)(f"Error in sendSignupNotification {e}")
+        pass
+@receiver(businessSignupSignal)
+# @receiver(post_save, sender=BusinessProfile)
+def sendSignupNotificationBusiness(sender, instance:BusinessProfile, created, **kwargs):
+    try:
+        async_to_sync(MY_METHODS.printStatus)("sendSignupNotificationBusiness")
+        user = instance.business.user.user_profile
+        email = user.email
+        phone = user.phone
+        countryCode = user.countryCode
+        internationalPhone= async_to_sync(MY_METHODS.formatPhone)(country_code=str(countryCode), phone=str(phone))
+        if not email or not phone:
+            return
+        
+        subscribeEmail(email)
+        subscribeSMS(internationalPhone)
+        business= instance.business
+        
+        busType=business.business_type.lable
+        businessName=business.business_name
+        name = user.name
+
+        sender_email = "hello@interiorbazzar.com"
+        htmlBody= render_to_string('emails/welcomeMerchant.html',{'name':name,'businessType':busType,'businessName':businessName})
+
+        # publishEmailToUser(
+        #     sender_email=sender_email,
+        #     recipient_email=email,
+        #     subject="New signup",
+        #     html_body=htmlBody,
+        #     text_body=text
+        # )
+        publishEmailToUser(senderEmail=sender_email,recipientEmail=email,subject="New signup",htmlBody=htmlBody)
+
+    except Exception as e:
+        async_to_sync(MY_METHODS.printStatus)(f"Error in sendSignupNotification {e}")
         pass
 
-@receiver(post_save, sender=BusinessPlan)
-def sendPlanNotification(sender, instance:BusinessPlan, created, **kwargs):
+@receiver(planSignal)
+# @receiver(post_save, sender=BusinessPlan)
+def sendPlanNotification(sender, instance:BusinessPlan, **kwargs):
     try:
+        timestamp = instance.timestamp
+        now = timezone.now()
+        if now - timestamp > timedelta(days=1):
+            return
+        
         if instance.isActive:
             business = instance.business
             if not business:
@@ -66,12 +112,22 @@ def sendPlanNotification(sender, instance:BusinessPlan, created, **kwargs):
             amount = instance.amount
             planName = instance.plan.title
             transectionId = instance.transactionId
+            businessName= instance.business.business_name
+            amount=instance.amount
+            expiryDate=instance.expireDate
+
             
             #creatig messages to send
 
-            htmlBody=f"Thank You {user.name} for choosing our plan. <br> Your plan is {planName} <br> Your transaction id is {transectionId} <br> Your amount is {amount}"
-            text = f" Thank You {user.name} for choosing our plan. Your plan is {planName} Your transaction id is {transectionId} Your amount is {amount}"
-            whatsappTxt = f" Thank You {user.name} for choosing our plan. Your plan is {planName} Your transaction id is {transectionId} Your amount is {amount}"
+            htmlBody= render_to_string('emails/planConfirmation.html',{
+                'businessName':businessName,
+                'planName':planName,
+                'transectionId':transectionId,
+                'amount':amount,
+                'expireDate':expiryDate
+                })
+            text=f"transaction for plan {planName} was successful with transaction id {transectionId} and amount {amount}"
+
             internationalPhone=  async_to_sync(MY_METHODS.formatPhone)(country_code=str(countryCode), phone=str(phone))
             
             # calling notifiers
@@ -80,11 +136,10 @@ def sendPlanNotification(sender, instance:BusinessPlan, created, **kwargs):
                 recipientEmail=email,
                 subject="New Lead",
                 html_body=htmlBody,
-                text_body=text
             )
             WhatsappMessage(
                 receiver_phone=internationalPhone,
-                body_text=whatsappTxt
+                body_text=text
             )
             publishToUser(
                 phone_number=internationalPhone,
@@ -92,47 +147,53 @@ def sendPlanNotification(sender, instance:BusinessPlan, created, **kwargs):
             )
             
     except Exception as e:
+        async_to_sync(MY_METHODS.printStatus)(f"Error in sendPlanNotification {e}")
         pass
 
 @receiver(post_save, sender=FunnelForm)
 def sendFunnelFormNotification(sender, instance:FunnelForm, created, **kwargs):
     try:
-        print("sendFunnelFormNotification")
+        async_to_sync(MY_METHODS.printStatus)("sendFunnelFormNotification")
         email = instance.email
         subject= "Interior Bazzar form submission"
-        text= f"Name: {instance.name} \n Email: {instance.email} \n Your form has been submitted successfully.\n Our team will get back to you soon."
+        text= render_to_string('emails/funnel.html',{'name':instance.name})
         # publishEmailToUser(
         #     sender_email="hello@interiorbazzar.com",
         #     recipient_email=email,
         #     subject=subject,
         #     text_body=text
         # )
-        # publishEmailToUser(
-        #     senderEmail="hello@interiorbazzar.com",
-        #     recipientEmail=email,
-        #     subject=subject,
-        #     body=text
-        # )
-        async_to_sync(MY_METHODS.send_email)(message=text,email=email,subject=subject)
+        publishEmailToUser(
+            senderEmail="hello@interiorbazzar.com",
+            recipientEmail=email,
+            subject=subject,
+            htmlBody=text
+        )
+        # async_to_sync(MY_METHODS.send_email)(message=text,email=email,subject=subject)
     except Exception as e:
-        print(e)
+        async_to_sync(MY_METHODS.printStatus)(f"Error in sendFunnelFormNotification {e}")
         pass
 
 @receiver(post_save, sender=PlanQuery)
 def sendPlanQueryNotification(sender, instance:PlanQuery, created, **kwargs):
     try:
-        email = instance.email
-        subject= "Interior Bazzar plan"
-        planName = instance.plan.title
-        htmlText = f"Name: {instance.name} <br> Email: {instance.email} <br> Your form for plan <strong>{planName}</strong> has been submitted successfully.<br> Our team will get back to you soon."
-        publishEmailToUser(
-            sender_email="hello@interiorbazzar.com",
-            recipient_email=email,
-            subject=subject,
-            html_body=htmlText
-        )
+        if created:
+            async_to_sync(MY_METHODS.printStatus)("sendPlanQueryNotification")
+            email = instance.email
+            async_to_sync(MY_METHODS.printStatus)(f"email: {email} instance: {instance}")
+            
+            subject= "Interior Bazzar plan"
+            planName = instance.plan
+            htmlText = render_to_string('emails/planQuery.html',{'plan':instance})
+            publishEmailToUser(
+                senderEmail="hello@interiorbazzar.com",
+                recipientEmail=email,
+                subject=subject,
+                htmlBody=htmlText
+            )
+        return
     except Exception as e:
-        print(e)
+        async_to_sync(MY_METHODS.printStatus)(f"Error in sendFunnelFormNotification {e}")
         pass
 
 @receiver(business_changed)
@@ -148,24 +209,29 @@ def leadqueryReceiver(sender, instance:LeadQuery, **kwargs):
         phone = user.phone
         countryCode = user.countryCode
         sender_email = "hello@interiorbazzar.com"
+        context={
+            "businessName":business.business_name,
+            'lead':instance,
+        }
+
+
         htmlBody=f"Hello {user.name} <br> You have a new lead for your business."
-        text = f"Hello {user.name} \n You have a new lead for your business."
-        whatsappTxt = f"Hello {user.name} \n You have a new lead for your business."
-        internationalPhone= MY_METHODS.formatPhone(country_code=str(countryCode), phone=str(phone))
-        tasks = [
-            asyncio.create_task(publishEmailToUser(
-                sender_email=sender_email,
-                recipient_email=email,
+        text = render_to_string('emails/leadQuery.txt',context)
+        
+        internationalPhone= async_to_sync(MY_METHODS.formatPhone)(country_code=str(countryCode), phone=str(phone))
+        
+        publishEmailToUser(
+                senderEmail=sender_email,
+                recipientEmail=email,
                 subject="New Lead",
-                html_body=htmlBody,
-                text_body=text
-                )),
-            asyncio.create_task(WhatsappMessage(
+                textBody=text
+                )
+        WhatsappMessage(
                 receiver_phone=internationalPhone,
-                body_text=whatsappTxt
-                ))
-        ]
-        asyncio.gather(*tasks)
+                body_text=text
+                )
+        
     except Exception as e:
+        async_to_sync(MY_METHODS.printStatus)(f"Error in leadqueryReceiver {e}")
         pass
  

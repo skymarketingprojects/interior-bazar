@@ -144,6 +144,7 @@ class BUSS_TASK:
             return True
 
         except Exception as e:
+            await MY_METHODS.printStatus(f'Error in CreateBusinessTask {e}')
             return None
     @classmethod
     async def UpdateBusinessTask(cls, business_ins:Business, data):
@@ -200,7 +201,7 @@ class BUSS_TASK:
             return await cls.GetBusinessInfo(business_ins.id)
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in UpdateBusinessTask: {e}')
+            await MY_METHODS.printStatus(f'Error in UpdateBusinessTask: {e}')
             return None
 
     @classmethod
@@ -217,7 +218,7 @@ class BUSS_TASK:
             # Serialize them
             segment_data = [await cls.GetBusinessTypeData(seg) for seg in segments]
             category_data = [await cls.GetBusinessTypeData(cat) for cat in categories]
-            #await MY_METHODS.printStatus(f"category {category_data},categories {categories}")
+            await MY_METHODS.printStatus(f"category {category_data},categories {categories}")
 
             data = {
                 'businessName': business_ins.business_name,
@@ -305,7 +306,7 @@ class BUSS_TASK:
             return data
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in GetBusinessInfoForSearch: {e}')
+            await MY_METHODS.printStatus(f'Error in GetBusinessInfoForSearch: {e}')
             return None
 
     @classmethod
@@ -319,5 +320,5 @@ class BUSS_TASK:
 
             return typeData
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in GetAllBusinessTypes: {e}')
+            await MY_METHODS.printStatus(f'Error in GetAllBusinessTypes: {e}')
             return None

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Your Subscription is Active!</title>
+    <style>
+      body {
+        font-family: "Poppins", "Helvetica Neue", Arial, sans-serif;
+        background-color: #f5f5f5; /* smokewhite */
+        color: #333;
+        margin: 0;
+        padding: 0;
+      }
+
+      .container {
+        max-width: 650px;
+        margin: 40px auto;
+        background-color: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+      }
+
+      .header {
+        background-color: #19472d;
+        color: #ffffff;
+        text-align: center;
+        padding: 40px 20px;
+      }
+
+      .header h1 {
+        margin: 0;
+        font-size: 26px;
+        font-weight: 600;
+      }
+
+      .content {
+        padding: 35px 45px;
+        line-height: 1.7;
+        color: #444;
+      }
+
+      .plan-details {
+        background-color: #f8faf8;
+        border: 1px solid #e5e5e5;
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 15px;
+      }
+
+      .plan-details p {
+        margin: 8px 0;
+      }
+
+      .button {
+        display: inline-block;
+        background-color: #19472d;
+        color: #ffffff !important;
+        padding: 12px 28px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 600;
+        margin-top: 20px;
+        transition: background-color 0.3s ease;
+      }
+
+      .button:hover {
+        background-color: #145b39;
+      }
+
+      .footer {
+        text-align: center;
+        background-color: #f8faf8;
+        color: #666;
+        font-size: 13px;
+        padding: 25px;
+        border-top: 1px solid #e8e8e8;
+      }
+
+      @media (max-width: 600px) {
+        .content {
+          padding: 25px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Your Subscription is Now Active </h1>
+      </div>
+      <div class="content">
+        <p>Hi <strong>{{ businessName }}</strong>,</p>
+        <p>
+          Thank you for subscribing to <strong>{{ planName }}</strong> on
+          Interior Bazzar! We’re excited to have your business continue growing
+          with us.
+        </p>
+
+        <div class="plan-details">
+          <p><strong>Plan:</strong> {{ planName }}</p>
+          <p><strong>Amount Paid:</strong> ₹{{ amount }}</p>
+          {% if expireDate %}
+          <p><strong>Expires On:</strong> {{ expireDate|date:"F j, Y" }}</p>
+          {% endif %} {% if transactionId %}
+          <p><strong>Transaction ID:</strong> {{ transactionId }}</p>
+          {% endif %}
+        </div>
+
+        {% comment %}
+        <p style="margin-top: 25px">
+          You can view or manage your subscription anytime from your dashboard.
+        </p>
+
+        {% endcomment %}
+        <a
+          href="https://interiorbazzar.com/"
+          class="button"
+        >
+          Manage Subscription
+        </a>
+
+        <p style="margin-top: 35px">
+          We appreciate your trust in us and look forward to helping your
+          business reach new heights.
+        </p>
+
+        <p>Warm regards,<br /><strong>The Interior Bazzar Team</strong></p>
+      </div>
+
+      <div class="footer">© Interior Bazzar. All rights reserved.</div>
+    </div>
+  </body>
+</html>

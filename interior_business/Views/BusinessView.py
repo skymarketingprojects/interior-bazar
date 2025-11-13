@@ -12,9 +12,13 @@ from rest_framework.permissions import IsAuthenticated
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from adrf.views import APIView
+from django.views.decorators.csrf import csrf_exempt
+
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@csrf_exempt
 async def CreateBusinessView(request):
     try:
         # Convert request.data to dot notation object
@@ -23,7 +27,7 @@ async def CreateBusinessView(request):
 
         # Call Auth Controller to Create User
         final_response = await  asyncio.gather(BUSS_CONTROLLER.CreateBusiness(user_ins=user_ins, data=data))
-        #await MY_METHODS.printStatus(f'final_response {final_response}')
+        await MY_METHODS.printStatus(f'final_response {final_response}')
         final_response = final_response[0]
 
         return ServerResponse(
@@ -33,7 +37,7 @@ async def CreateBusinessView(request):
             data=final_response.data)
 
     except Exception as e:
-        # #await MY_METHODS.printStatus(f'Error: {e}')
+        await MY_METHODS.printStatus(f'Error: {e}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.business_register_error,
@@ -52,7 +56,7 @@ async def UpdateBusinessView(request):
 
         # Call Auth Controller to Create User
         final_response = await  asyncio.gather(BUSS_CONTROLLER.UpdateeBusiness(user_ins=user_ins, data=data))
-        #await MY_METHODS.printStatus(f'final_response {final_response}')
+        await MY_METHODS.printStatus(f'final_response {final_response}')
         final_response = final_response[0]
 
         return ServerResponse(
@@ -62,7 +66,7 @@ async def UpdateBusinessView(request):
             data=final_response.data)
 
     except Exception as e:
-        # #await MY_METHODS.printStatus(f'Error: {e}')
+        await MY_METHODS.printStatus(f'Error: {e}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.business_register_error,
@@ -76,7 +80,7 @@ async def GetBusinessByIdView(request,id):
     try:
         # Call Auth Controller to Create User
         final_response = await  asyncio.gather(BUSS_CONTROLLER.GetBusinessById(id=id))
-        #await MY_METHODS.printStatus(f'final_response {final_response}')
+        await MY_METHODS.printStatus(f'final_response {final_response}')
         final_response = final_response[0]
 
         return ServerResponse(
@@ -86,7 +90,7 @@ async def GetBusinessByIdView(request,id):
             data=final_response.data)
 
     except Exception as e:
-        # #await MY_METHODS.printStatus(f'Error: {e}')
+        await MY_METHODS.printStatus(f'Error: {e}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.business_register_error,
@@ -112,7 +116,7 @@ async def GetBusinessByUser(request):
             data=final_response.data)
 
     except Exception as e:
-        # #await MY_METHODS.printStatus(f'Error: {e}')
+        await MY_METHODS.printStatus(f'Error: {e}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.business_register_error,
@@ -126,7 +130,7 @@ async def GetAllBusinessTypesView(request):
     try:
         # Call Auth Controller to Create User
         final_response = await BUSS_CONTROLLER.GetAllBusinessTypes()
-        #await MY_METHODS.printStatus(f'final_response {final_response}')
+        await MY_METHODS.printStatus(f'final_response {final_response}')
 
         return ServerResponse(
             response=final_response.response,
@@ -135,7 +139,7 @@ async def GetAllBusinessTypesView(request):
             data=final_response.data)
 
     except Exception as e:
-        # #await MY_METHODS.printStatus(f'Error: {e}')
+        await MY_METHODS.printStatus(f'Error: {e}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.business_type_fetch_error,
@@ -150,7 +154,7 @@ async def GetAllBusinessTabView(request):
     try:
         # Call Auth Controller to Create User
         final_response = await BUSS_CONTROLLER.GetAllBusinessTab()
-        #await MY_METHODS.printStatus(f'final_response {final_response}')
+        await MY_METHODS.printStatus(f'final_response {final_response}')
 
         return ServerResponse(
             response=final_response.response,
@@ -159,7 +163,7 @@ async def GetAllBusinessTabView(request):
             data=final_response.data)
 
     except Exception as e:
-        # #await MY_METHODS.printStatus(f'Error: {e}')
+        await MY_METHODS.printStatus(f'Error: {e}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.business_category_fetch_error,
@@ -172,7 +176,7 @@ async def GetAllBusinessCategoriesView(request):
     try:
         # Call Auth Controller to Create User
         final_response = await BUSS_CONTROLLER.GetAllBusinessCategories()
-        #await MY_METHODS.printStatus(f'final_response {final_response}')
+        await MY_METHODS.printStatus(f'final_response {final_response}')
 
         return ServerResponse(
             response=final_response.response,
@@ -181,7 +185,7 @@ async def GetAllBusinessCategoriesView(request):
             data=final_response.data)
 
     except Exception as e:
-        # #await MY_METHODS.printStatus(f'Error: {e}')
+        await MY_METHODS.printStatus(f'Error: {e}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.business_category_fetch_error,
@@ -195,7 +199,7 @@ async def GetAllBusinessSegmentsByTypeView(request,typeId):
     try:
         # Call Auth Controller to Create User
         final_response = await BUSS_CONTROLLER.GetBusinessSegmentsByType(typeId=typeId)
-        #await MY_METHODS.printStatus(f'final_response {final_response}')
+        await MY_METHODS.printStatus(f'final_response {final_response}')
 
         return ServerResponse(
             response=final_response.response,
@@ -204,7 +208,7 @@ async def GetAllBusinessSegmentsByTypeView(request,typeId):
             data=final_response.data)
 
     except Exception as e:
-        # #await MY_METHODS.printStatus(f'Error: {e}')
+        await MY_METHODS.printStatus(f'Error: {e}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.business_category_fetch_error,
@@ -224,7 +228,7 @@ class BusinessBannerView(APIView):
 
             # Call Auth Controller to Create User
             final_response = await BUSS_CONTROLLER.UpdateBusinessBanner(business_ins=user.user_business, data=data)
-            #await MY_METHODS.printStatus(f'final_response {final_response}')
+            await MY_METHODS.printStatus(f'final_response {final_response}')
 
             return ServerResponse(
                 response=final_response.response,
@@ -233,7 +237,7 @@ class BusinessBannerView(APIView):
                 data=final_response.data)
 
         except Exception as e:
-            # #await MY_METHODS.printStatus(f'Error: {e}')
+            await MY_METHODS.printStatus(f'Error: {e}')
             return ServerResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.business_register_error,
@@ -245,7 +249,7 @@ class BusinessBannerView(APIView):
         try:
             # Call Auth Controller to Create User
             final_response = await BUSS_CONTROLLER.GetBusinessBanner(business_ins=request.user.user_business)
-            #await MY_METHODS.printStatus(f'final_response {final_response}')
+            await MY_METHODS.printStatus(f'final_response {final_response}')
 
             return ServerResponse(
                 response=final_response.response,
@@ -254,7 +258,7 @@ class BusinessBannerView(APIView):
                 data=final_response.data)
 
         except Exception as e:
-            # #await MY_METHODS.printStatus(f'Error: {e}')
+            await MY_METHODS.printStatus(f'Error: {e}')
             return ServerResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.business_register_error,

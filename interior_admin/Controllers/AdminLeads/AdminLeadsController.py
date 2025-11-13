@@ -78,7 +78,7 @@ class ADMIN_LEADS_CONTROLLER:
                 businessIns = await sync_to_async(Business.objects.get)(pk=businessId)
                 leadIns = await sync_to_async(LeadQuery.objects.get)(pk=leadId)
                 assignResult = await LEAD_QUERY_TASK.AssignLeadQueryTask(leadQueryIns=leadIns,business=businessIns)
-                #await MY_METHODS.printStatus(f"assigned {assignResult}")
+                await MY_METHODS.printStatus(f"assigned {assignResult}")
                 if assignResult:
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.success,
@@ -104,7 +104,7 @@ class ADMIN_LEADS_CONTROLLER:
                         code=RESPONSE_CODES.error,
                         data={"error":data})
         except Exception as e:
-            #await MY_METHODS.printStatus(f'fetch quries error {e}')
+            await MY_METHODS.printStatus(f'fetch quries error {e}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.query_assigned_faliure,

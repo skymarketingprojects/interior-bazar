@@ -291,9 +291,6 @@ if(ENV == APPMODE.PROD):
     # r"^https://\w+\.granthamapi\.store$",
     # ]
     
-    AWS_ACCESS_KEY_ID = env('AWS_KEY')
-    AWS_SECRET_ACCESS_KEY = env('AWS_SECRETE_KEY')
-    
     # DB
     DATABASES = {
         'default': {

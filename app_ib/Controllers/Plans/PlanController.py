@@ -11,6 +11,8 @@ from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.models import PlanQuery,BusinessPlan,CustomUser,Subscription
 from app_ib.Controllers.Plans.Tasks.PlanTasks import PLAN_TASKS
 
+from interior_notification.signals import planSignal
+import asyncio
 
 class PLAN_CONTROLLER:
     @classmethod
@@ -50,10 +52,10 @@ class PLAN_CONTROLLER:
             is_plan_exist= await sync_to_async(PlanQuery.objects.filter(id=data.id).exists)()
             if(is_plan_exist):
                 plan_ins=await sync_to_async(PlanQuery.objects.get)(id=data.id)
-                #await MY_METHODS.printStatus(f'plan ins {plan_ins}')
+                await MY_METHODS.printStatus(f'plan ins {plan_ins}')
 
                 verify_plan_response = await  PLAN_TASKS.VerifyPlanTask(plan_ins=plan_ins,data=data)
-                #await MY_METHODS.printStatus(f'verift plan resp {verify_plan_response}')
+                await MY_METHODS.printStatus(f'verift plan resp {verify_plan_response}')
 
                 if verify_plan_response:
                     return LocalResponse(
@@ -109,7 +111,7 @@ class PLAN_CONTROLLER:
                     data={})
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in CreateBusinessPlan: {e}')
+            await MY_METHODS.printStatus(f'Error in CreateBusinessPlan: {e}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.business_plan_create_error,
@@ -125,6 +127,8 @@ class PLAN_CONTROLLER:
                 planIns=await sync_to_async(BusinessPlan.objects.get)(transactionId=transectionId)
                 activate_plan_response = await  PLAN_TASKS.ActivateBusinessPlan(planIns)
                 if activate_plan_response:
+                    asyncio.create_task(sync_to_async(planSignal)(sender=planIns.__class__,instance=planIns))
+
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.success,
                         message=RESPONSE_MESSAGES.business_plan_activate_success,
@@ -132,14 +136,14 @@ class PLAN_CONTROLLER:
                         data={NAMES.ID:planIns.id})
 
                 else:
-                    #await MY_METHODS.printStatus(f'Failed to activate business plan for transaction id {transectionId}')
+                    await MY_METHODS.printStatus(f'Failed to activate business plan for transaction id {transectionId}')
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.error,
                         message=RESPONSE_MESSAGES.business_plan_activate_error,
                         code=RESPONSE_CODES.error,
                         data={NAMES.ID:planIns.id})
             else:
-                #await MY_METHODS.printStatus(f'Business plan does not exist for transaction id {transectionId}')
+                await MY_METHODS.printStatus(f'Business plan does not exist for transaction id {transectionId}')
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.error,
                     message=RESPONSE_MESSAGES.business_plan_activate_error,
@@ -147,7 +151,7 @@ class PLAN_CONTROLLER:
                     data={})
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in ActivateBusinessPlan: {e}')
+            await MY_METHODS.printStatus(f'Error in ActivateBusinessPlan: {e}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.business_plan_activate_error,

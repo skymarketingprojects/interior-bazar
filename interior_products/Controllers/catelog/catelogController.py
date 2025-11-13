@@ -54,7 +54,7 @@ class CATELOG_CONTROLLER:
                 )
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error during GetCatelog: {e}')
+            await MY_METHODS.printStatus(f'Error during GetCatelog: {e}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.catelog_fetch_error,
@@ -103,7 +103,7 @@ class CATELOG_CONTROLLER:
                 )
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error during GetCatelog: {e}')
+            await MY_METHODS.printStatus(f'Error during GetCatelog: {e}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.catelog_fetch_error,
@@ -165,7 +165,7 @@ class CATELOG_CONTROLLER:
                 )
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error during UpdateCatelog: {e}')
+            await MY_METHODS.printStatus(f'Error during UpdateCatelog: {e}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.catelog_update_error,
@@ -200,7 +200,7 @@ class CATELOG_CONTROLLER:
                 )
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error during DeleteCatelog: {e}')
+            await MY_METHODS.printStatus(f'Error during DeleteCatelog: {e}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.catelog_delete_error,

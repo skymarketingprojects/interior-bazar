@@ -19,7 +19,7 @@ class BUSINESS_INFO_CONTROLLER:
     @classmethod
     async def GetBusinessInfo(cls,pageNo=1,size=10):
         try:
-            #await MY_METHODS.printStatus(f'pageNo {pageNo}')
+            await MY_METHODS.printStatus(f'pageNo {pageNo}')
             businessesIns = None
             if settings.ENV == APPMODE.PROD:
                 businessesIns = await sync_to_async(lambda: Business.objects.filter(selfCreated=False).select_related('business_profile').only(
@@ -45,7 +45,7 @@ class BUSINESS_INFO_CONTROLLER:
                         'business_lead_query__id'
                     ).order_by('-timestamp')
                 )()
-            #await MY_METHODS.printStatus(f'pageNo {pageNo}')
+            await MY_METHODS.printStatus(f'pageNo {pageNo}')
 
             paginator = Paginator(businessesIns, size)
             page_obj = paginator.get_page(pageNo)
@@ -71,7 +71,7 @@ class BUSINESS_INFO_CONTROLLER:
                 data=busPaginationData
             )
         except Exception as e:
-            #await MY_METHODS.printStatus(f'GetBusinessInfo:{str(e)}')
+            await MY_METHODS.printStatus(f'GetBusinessInfo:{str(e)}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.business_fetch_error,

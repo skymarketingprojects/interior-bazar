@@ -186,7 +186,7 @@ class MY_METHODS:
         if updated_at:
             # Calculate the time difference between now and updated_at
             time_diff = timezone.now() - updated_at
-            #await MY_METHODS.printStatus(f'time_diff {time_diff}')
+            await MY_METHODS.printStatus(f'time_diff {time_diff}')
 
             # Determine the number of seconds, minutes, hours, and days
             if time_diff < timedelta(minutes=1):
@@ -285,6 +285,57 @@ class MY_METHODS:
 
     @staticmethod
     async def formatPhone(phone: str, country_code: str) -> str | None:
+        """
+        Cleans, formats, and validates a phone number into international (E.164) format.
+        
+        Args:
+            phone (str): The input phone number (can be messy or local format).
+            country_code (str): Country code, with or without '+' (e.g. '91' or '+91').
+
+        Returns:
+            str | None: Formatted international phone number (e.g. '+919090407368')
+                        or None if invalid.
+        """
+        if not phone or not isinstance(phone, str):
+            return None
+
+        try:
+            # Normalize country_code (remove '+' if present)
+            country_code = re.sub(r"[^\d]", "", country_code or "")
+
+            phone = phone.strip()
+
+            # Already in international format
+            if re.match(r"^\+\d{10,15}$", phone):
+                return phone
+
+            # Remove all non-digit characters
+            cleaned = re.sub(r"[^\d]", "", phone)
+
+            # Handle '00' prefix
+            if cleaned.startswith("00"):
+                cleaned = cleaned[2:]
+
+            # Remove leading zeros (common in local formats)
+            cleaned = cleaned.lstrip("0")
+
+            # Prepend country code if missing
+            if not cleaned.startswith(country_code):
+                cleaned = f"{country_code}{cleaned}"
+
+            # Add '+' prefix
+            formatted = f"+{cleaned}"
+
+            # Validate final format (E.164)
+            if re.match(r"^\+\d{10,15}$", formatted):
+                return formatted
+
+            return None
+
+        except Exception:
+            return None
+    @staticmethod
+    def formatPhoneInternational(phone: str, country_code: str) -> str | None:
         """
         Cleans, formats, and validates a phone number into international (E.164) format.
         

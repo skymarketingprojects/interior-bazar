@@ -21,7 +21,7 @@ class BLOG_TASK:
             return blog_data
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in GetBlogData: {e}')
+            await MY_METHODS.printStatus(f'Error in GetBlogData: {e}')
             return None
         
     @classmethod
@@ -43,5 +43,5 @@ class BLOG_TASK:
             return blog_data
 
         except Exception as e:
-            #await MY_METHODS.printStatus(f'Error in GetBlogDetailData: {e}')
+            await MY_METHODS.printStatus(f'Error in GetBlogDetailData: {e}')
             return None

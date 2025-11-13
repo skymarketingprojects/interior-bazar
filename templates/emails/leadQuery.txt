@@ -1,0 +1,16 @@
+📩 *New Lead Alert!*
+
+Hello {{ businessName|default:"Partner" }},  
+You’ve received a new lead through *InteriorBazzar*.
+
+Here are the details:
+
+👤 *Name:* {{ lead.name }}
+📞 *Phone:* {{ lead.phone }}
+📧 *Email:* {{ lead.email }}
+🏙️ *From:* {{ lead.city|default:''}},{{ lead.state|default:'' }},{{ lead.country|default:'' }}
+
+Please reach out to the lead as soon as possible.  
+You can also check this lead inside your *InteriorBazzar Business Dashboard*.
+
+— *InteriorBazzar Lead System*

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Welcome to Interior Bazzar</title>
+    <style>
+      body {
+        font-family: "Poppins", "Helvetica Neue", Arial, sans-serif;
+        background-color: #f5f5f5; /* soft smokewhite tone */
+        color: #333;
+        margin: 0;
+        padding: 0;
+      }
+
+      .container {
+        max-width: 650px;
+        margin: 40px auto;
+        background-color: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+      }
+
+      .header {
+        background-color: #19472d;
+        color: #ffffff;
+        text-align: center;
+        padding: 40px 20px;
+      }
+
+      .header h1 {
+        margin: 0;
+        font-size: 26px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+      }
+
+      .content {
+        padding: 35px 45px;
+        line-height: 1.7;
+        color: #444;
+      }
+
+      .content h2 {
+        color: #19472d;
+        font-weight: 600;
+        font-size: 20px;
+      }
+
+      .button {
+        display: inline-block;
+        background-color: #19472d;
+        color: #ffffff !important;
+        padding: 12px 28px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 600;
+        margin-top: 20px;
+        transition: background-color 0.3s ease;
+      }
+
+      .button:hover {
+        background-color: #145b39;
+      }
+
+      .footer {
+        text-align: center;
+        background-color: #f8faf8;
+        color: #666;
+        font-size: 13px;
+        padding: 25px;
+        border-top: 1px solid #e8e8e8;
+      }
+
+      @media (max-width: 600px) {
+        .content {
+          padding: 25px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Welcome to Interior Bazzar</h1>
+      </div>
+      <div class="content">
+        <h2>Hello {{ name|default:"there" }},</h2>
+        <p>
+          We’re thrilled to welcome you to the
+          <strong>Interior Bazzar</strong> family! Your journey toward elegant,
+          sustainable interiors starts here.
+        </p>
+        <p>
+          Discover curated design inspiration, explore premium products, and
+          bring your dream spaces to life with us.
+        </p>
+        <a href="https://interiorbazzar.com/" class="button">Start Exploring</a>
+        <p style="margin-top: 30px">
+          Warm regards,<br /><strong>The Interior Bazzar Team</strong>
+        </p>
+      </div>
+      <div class="footer">© Interior Bazzar. All rights reserved.</div>
+    </div>
+  </body>
+</html>
