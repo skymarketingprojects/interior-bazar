@@ -87,7 +87,12 @@ def publishEmailToUser(
     """
 
     try:
-        ses = boto3.client("ses")
+        ses = boto3.client(
+            "ses",
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            region_name=regionName
+            )
 
         # Root MIME message
         msg_root = MIMEMultipart("mixed")
