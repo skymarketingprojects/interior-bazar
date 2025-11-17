@@ -51,19 +51,27 @@ class SERVICES_CONTROLLER:
             )
     
     @classmethod
-    async def getAllService(self,page,size,filterType=None,id=None)->LocalResponse:
+    async def getAllService(self,page,size,filterType=None,id=None,state=None,query=None)->LocalResponse:
         try:
             serviceData=[]
             related_qs = []
+            filterQuery=Q()
+            if state:
+                filterQuery |= Q(business__business_location__locationState__value__iexact=state)
+            if query:
+                filterQuery |= Q(value__icontains=query)
+                filterQuery |= Q(lable__icontains=query)
+            
             if filterType and id:
                 if filterType == "category":
-                    category = await sync_to_async(ProductCategory.objects.get)(id=int(id))
-                    related_qs = category.catServices.all()
+                    filterQuery |= Q(catServices__id=int(id))
                 elif filterType == "subCategory":
-                    subCategory = await sync_to_async(ProductSubCategory.objects.get)(id=int(id))
-                    related_qs = subCategory.subcatServices.all()
+                    filterQuery |= Q(subcatServices__id=int(id))
+
+            if filterQuery:
+                related_qs = Service.objects.filter(filterQuery).order_by('index')
             else:
-                related_qs = Service.objects.all()
+                related_qs = Service.objects.all().order_by('index')
 
             if related_qs.count() == 0:
                 return LocalResponse(

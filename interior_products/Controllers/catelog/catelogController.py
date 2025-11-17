@@ -68,15 +68,23 @@ class CATELOG_CONTROLLER:
         try:
             catelogData = []
             related_qs = []
+            filterQuery=Q()
+            if state:
+                filterQuery |= Q(business__business_location__locationState__value__iexact=state)
+            if query:
+                filterQuery |= Q(value__icontains=query)
+                filterQuery |= Q(lable__icontains=query)
+            
             if filterType and id:
                 if filterType == "category":
-                    category = ProductCategory.objects.get(id=int(id))
-                    related_qs = category.catCatelogues.all()
+                    filterQuery |= Q(catCatelogues__id=int(id))
                 elif filterType == "subCategory":
-                    subCategory = ProductSubCategory.objects.get(id=int(id))
-                    related_qs = subCategory.catSubCatelogues.all()
+                    filterQuery |= Q(catSubCatelogues__id=int(id))
+
+            if filterQuery:
+                related_qs = Catelogue.objects.filter(filterQuery).order_by('index')
             else:
-                related_qs = Catelogue.objects.all()
+                related_qs = Catelogue.objects.all().order_by('index')
             if related_qs.count() == 0:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.error,

@@ -48,22 +48,31 @@ class PRODUCTS_CONTROLLER:
             )
     
     @classmethod
-    async def getAllProduct(self,page,size,filterType=None,id=None):
+    async def getAllProduct(self,page,size,filterType=None,id=None,state=None,query=None):
         try:
             productData = []
-            related_qs =[]
+            related_qs = []
+            filterQuery=Q()
+            
+            if state:
+                filterQuery |= Q(business__business_location__locationState__value__iexact=state)
+            if query:
+                filterQuery |= Q(value__icontains=query)
+                filterQuery |= Q(lable__icontains=query)
+            
             if filterType and id:
                 if filterType == "category":
-                    category = await sync_to_async(ProductCategory.objects.get)(id=int(id))
-                    related_qs = category.catProducts.all()
+                    filterQuery |= Q(catProducts__id=int(id))
                 elif filterType == "subCategory":
-                    subCategory = await sync_to_async(ProductSubCategory.objects.get)(id=int(id))
-                    related_qs = subCategory.subcatProducts.all()
+                    filterQuery |= Q(subcatProducts__id=int(id))
+
+            if filterQuery:
+                related_qs = Product.objects.filter(filterQuery).order_by('index')
             else:
-                related_qs = Product.objects.all()
+                related_qs = Product.objects.all().order_by('index')
             # await MY_METHODS.printStatus(f"related_qs: {related_qs}")
 
-            if related_qs.count() == 0:
+            if not related_qs.count():
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.error,
                     message=RESPONSE_MESSAGES.product_fetch_error,

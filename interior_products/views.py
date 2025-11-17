@@ -467,7 +467,9 @@ async def GetAllProductView(request:HttpRequest):
         pageSize = int(request.GET.get('pageSize',10))
         filterType = request.GET.get('type',None)
         filterId = request.GET.get('tabId',None)
-        catelogResponse = await PRODUCTS_CONTROLLER.getAllProduct(page=pageNo,size=pageSize,filterType=filterType,id=filterId)
+        state = request.GET.get('state',None)
+        query = request.GET.get('query',None)
+        catelogResponse = await PRODUCTS_CONTROLLER.getAllProduct(page=pageNo,size=pageSize,filterType=filterType,id=filterId,state=state,query=query)
         return ServerResponse(
             response=catelogResponse.response,
             message=catelogResponse.message,
@@ -489,7 +491,9 @@ async def GetAllServiceView(request:HttpRequest):
         pageSize = int(request.GET.get('pageSize',10))
         filterType = request.GET.get('type',None)
         filterId = request.GET.get('tabId',None)
-        catelogResponse = await SERVICES_CONTROLLER.getAllService(page=pageNo,size=pageSize,filterType=filterType,id=filterId)
+        state = request.GET.get('state',None)
+        query = request.GET.get('query',None)
+        catelogResponse = await SERVICES_CONTROLLER.getAllService(page=pageNo,size=pageSize,filterType=filterType,id=filterId,state=state,query=query)
         return ServerResponse(
             response=catelogResponse.response,
             message=catelogResponse.message,
