@@ -38,7 +38,7 @@ class StockMediaController:
             for media in stock_media_qs:
                 # Wrap getStockData if it's not async
                 mediadataresp = await sync_to_async(getStockData)(media)
-                await MY_METHODS.printStatus(f"mediadataresp {mediadataresp}")
+                # await MY_METHODS.printStatus(f"mediadataresp {mediadataresp}")
                 if mediadataresp.response == RESPONSE_MESSAGES.success:
                     data.append(mediadataresp.data)
 

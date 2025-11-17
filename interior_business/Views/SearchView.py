@@ -14,9 +14,16 @@ from interior_business.Controllers.Search.SearchController import SEARCH_CONTROL
 # 5. Add additional data {reviews, join_date} 
 # #########################################
 @api_view(['GET'])
-async def GetBusinessByPaginationView(request,index):
+async def GetBusinessByPaginationView(request):
     try:
-        final_response= await SEARCH_CONTROLLER.GetBusinessUsingPagination(pageNo=index)
+        index = request.GET.get('pageNo', 1)
+        pageSize = request.GET.get('pageSize', 1)
+        tabId = request.GET.get('tabId', None)
+        tabType= request.GET.get('type', None)
+        state = request.GET.get('state', None)
+        query = request.GET.get('query', None)
+        
+        final_response= await SEARCH_CONTROLLER.GetBusinessUsingPagination(pageNo=index,pageSize=pageSize,tabId=tabId,tabType=tabType,state=state,query=query)
         return ServerResponse(
             response=final_response.response,
             code=final_response.code,
@@ -68,11 +75,16 @@ async def GetRelatedBusinessView(request, businessId):
         )
 
 @api_view(['GET'])
-async def GetNearbyBusinessView(request, businessId):
+async def GetNearbyBusinessView(request, businessId=None):
     try:
         pageNo = request.GET.get('pageNo', 1)
+        if not businessId:
+            city = request.GET.get('city', None)
+            state = request.GET.get('state', None)
         
-        final_response = await SEARCH_CONTROLLER.GetNearbyBusiness(businessId=businessId, pageNo=pageNo)
+            final_response = await SEARCH_CONTROLLER.GetNearbyBusiness(city=city,state=state, pageNo=pageNo)
+        else:
+            final_response = await SEARCH_CONTROLLER.GetNearbyBusiness(businessId=businessId, pageNo=pageNo)
         return ServerResponse(
             response=final_response.response,
             code=final_response.code,

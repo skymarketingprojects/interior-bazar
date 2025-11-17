@@ -27,7 +27,7 @@ async def CreateFeedbackView(request):
             data=final_response.data)
 
     except Exception as e:
-        await MY_METHODS.printStatus(f'Error: {e}')
+        # await MY_METHODS.printStatus(f'Error: {e}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.feedback_generate_error,
@@ -54,7 +54,7 @@ async def UpdateFeedbackStatusView(request):
             data=final_response.data)
 
     except Exception as e:
-        await MY_METHODS.printStatus(f'Error: {e}')
+        # await MY_METHODS.printStatus(f'Error: {e}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.feedback_generate_error,

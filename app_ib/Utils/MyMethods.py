@@ -168,10 +168,10 @@ class MY_METHODS:
                 from_email=settings.EMAIL_HOST_USER,
                 recipient_list=[email],
             )
-            await MY_METHODS.printStatus('Email sent successfully!')
+            # await MY_METHODS.printStatus('Email sent successfully!')
             return True
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error sending email: {e}')
+            # await MY_METHODS.printStatus(f'Error sending email: {e}')
             return False
         
     @staticmethod
@@ -186,7 +186,7 @@ class MY_METHODS:
         if updated_at:
             # Calculate the time difference between now and updated_at
             time_diff = timezone.now() - updated_at
-            await MY_METHODS.printStatus(f'time_diff {time_diff}')
+            # await MY_METHODS.printStatus(f'time_diff {time_diff}')
 
             # Determine the number of seconds, minutes, hours, and days
             if time_diff < timedelta(minutes=1):

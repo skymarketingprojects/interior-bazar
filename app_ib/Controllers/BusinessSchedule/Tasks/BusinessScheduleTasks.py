@@ -7,7 +7,7 @@ class BUSINESS_SCHEDULE_TASKS:
     @classmethod
     async def CreateOrUpdateDaySchedule(cls, business:Business, day_number, start_time, end_time, is_working):
         try:
-            await MY_METHODS.printStatus(f"day - {day_number}\n start_time - {start_time}\n end_time - {end_time}\n is_working - {is_working}")
+            # await MY_METHODS.printStatus(f"day - {day_number}\n start_time - {start_time}\n end_time - {end_time}\n is_working - {is_working}")
             # update_or_create logic
             await sync_to_async(DaySchedule.objects.update_or_create)(
                 business=business,
@@ -22,7 +22,7 @@ class BUSINESS_SCHEDULE_TASKS:
             data = await cls.GetScheduleByBusiness(business)
             return data
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in CreateOrUpdateDaySchedule {e}')
+            # await MY_METHODS.printStatus(f'Error in CreateOrUpdateDaySchedule {e}')
             return None
 
     @classmethod
@@ -38,7 +38,7 @@ class BUSINESS_SCHEDULE_TASKS:
                 }
             return result
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in GetScheduleByBusiness {e}')
+            # await MY_METHODS.printStatus(f'Error in GetScheduleByBusiness {e}')
             return None
 
     @classmethod
@@ -69,5 +69,5 @@ class BUSINESS_SCHEDULE_TASKS:
             return data
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in UpdateUserSchedule {e}')
+            # await MY_METHODS.printStatus(f'Error in UpdateUserSchedule {e}')
             return None

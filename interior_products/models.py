@@ -6,6 +6,9 @@ from django_quill.fields import QuillField
 class ProductCategory(models.Model):
     value = models.CharField(max_length=250)
     lable = models.CharField(max_length=250)
+    imageSQUrl = models.CharField(max_length=2250,null=True,blank=True)
+    imageRTUrl = models.CharField(max_length=2250,null=True,blank=True)
+   
     def __str__(self):
         return f'product category - {self.lable}'
 
@@ -13,6 +16,9 @@ class ProductSubCategory(models.Model):
     category = models.ForeignKey(ProductCategory,on_delete=models.CASCADE,related_name="prodsubcat")
     value = models.CharField(max_length=250)
     lable = models.CharField(max_length=250)
+    imageSQUrl = models.CharField(max_length=2250,null=True,blank=True)
+    imageRTUrl = models.CharField(max_length=2250,null=True,blank=True)
+   
     def __str__(self):
         return f'product sub category - {self.lable}'
 

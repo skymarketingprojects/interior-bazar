@@ -79,7 +79,7 @@ class SEARCH_TASKS:
             return final_data
             
         except Exception as e:
-            await MY_METHODS.printStatus(f' Error runing pagination {e}')
+            # await MY_METHODS.printStatus(f' Error runing pagination {e}')
             return None
 
 
@@ -87,7 +87,7 @@ class SEARCH_TASKS:
     async def FetchBusiness(self, business):
         try:
             final_data = {}
-            await MY_METHODS.printStatus(f'business {business}')
+            # await MY_METHODS.printStatus(f'business {business}')
             user_ins = business.user
 
             # Use asyncio.gather to fetch data in parallel for faster performance
@@ -95,13 +95,13 @@ class SEARCH_TASKS:
                 BUSS_TASK.GetBusinessInfo(id=business.pk),
                 BUSS_LOC_TASK.GetBusinessLocTask(business_loc_ins=await sync_to_async(Location.objects.get)(business=business) if await sync_to_async(Location.objects.filter(business=business).exists)() else None)
             )
-            await MY_METHODS.printStatus(f'\nbusiness_data {business_data}\n')
+            # await MY_METHODS.printStatus(f'\nbusiness_data {business_data}\n')
 
             # Handle time ago logic
             timestamp = business_data.get(NAMES.TIMESTAMP, None)
             time_ago = await MY_METHODS.get_time_ago(updated_at=timestamp)
             
-            await MY_METHODS.printStatus(f"time_ago {time_ago}, timestamp {timestamp}")
+            # await MY_METHODS.printStatus(f"time_ago {time_ago}, timestamp {timestamp}")
 
             # Assign the required fields to final_data in camelCase format
             final_data[NAMES.ID] = business.pk
@@ -126,15 +126,15 @@ class SEARCH_TASKS:
             city = f"{location_data.get(NAMES.CITY, None)} ," if location_data.get(NAMES.CITY) else None 
             state = f"{location_data.get(NAMES.STATE, None)[NAMES.NAME]} ," if location_data.get(NAMES.STATE) else None
             country = f"{location_data.get(NAMES.COUNTRY, None)[NAMES.NAME]}" if location_data.get(NAMES.COUNTRY) else None
-            await MY_METHODS.printStatus(f'state {state} country {country}')
+            # await MY_METHODS.printStatus(f'state {state} country {country}')
             final_data[NAMES.LOCATION] = f"{city if city else NAMES.EMPTY}{state if state else NAMES.EMPTY}{country if country else NAMES.EMPTY}"
             # Handle rating - assuming you still want a random rating for the example
             rating = await MY_METHODS.get_random_rating()
             final_data[NAMES.RATING] = f"{rating}"
             final_data[NAMES.RATING_VALUE] = float(rating)
-            await MY_METHODS.printStatus(f'final_data {final_data}')
+            # await MY_METHODS.printStatus(f'final_data {final_data}')
 
             return final_data
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error while fetching business {e}')
+            # await MY_METHODS.printStatus(f'Error while fetching business {e}')
             return None

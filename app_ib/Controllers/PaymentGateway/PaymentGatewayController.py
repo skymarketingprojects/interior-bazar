@@ -113,7 +113,7 @@ class PaymentGatewayController:
             campainAmount = await MY_METHODS.formatAmount(campain.placement.dailyPrice)
 
             days = campain.getDays()
-            await MY_METHODS.printStatus(f"campainAmount: {campainAmount}, days: {days}")
+            # await MY_METHODS.printStatus(f"campainAmount: {campainAmount}, days: {days}")
             amount = float(campainAmount) * days
             # return LocalResponse(
             #     response=RESPONSE_MESSAGES.error,
@@ -132,7 +132,7 @@ class PaymentGatewayController:
 
             adsresult = await ADS_TASKS.CreateAdPaymentTask(AdCampaignIns=campain,Data=data)
             
-            await MY_METHODS.printStatus(f"Advertisement payment initiated: {response_data}")
+            # await MY_METHODS.printStatus(f"Advertisement payment initiated: {response_data}")
             payment_url = f"https://payments.cashfree.com/pgui/v2/checkout?payment_session_id={response_data['payment_session_id']}"
 
             data = {
@@ -156,7 +156,7 @@ class PaymentGatewayController:
                 data=data
             )
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in InitiateADSPayment: {e}")
+            # await MY_METHODS.printStatus(f"Error in InitiateADSPayment: {e}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Exception during advertisement payment initiation",

@@ -26,7 +26,7 @@ class ANALYTICS_TASKS:
                 )()
             return clients_count
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in GetTotalClients: {e}")
+            # await MY_METHODS.printStatus(f"Error in GetTotalClients: {e}")
             return None
 
     # 2. Total Business
@@ -44,7 +44,7 @@ class ANALYTICS_TASKS:
                 )()
             return business_count
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in GetTotalBusiness: {e}")
+            # await MY_METHODS.printStatus(f"Error in GetTotalBusiness: {e}")
             return None
 
     # 3. Total Users
@@ -62,7 +62,7 @@ class ANALYTICS_TASKS:
                 )()
             return users_count
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in GetTotalUsers: {e}")
+            # await MY_METHODS.printStatus(f"Error in GetTotalUsers: {e}")
             return None
 
     # 4. Today Signups (Clients / Business / Users)
@@ -104,7 +104,7 @@ class ANALYTICS_TASKS:
                 "users": users_today
             }
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in GetTodaySignups: {e}")
+            # await MY_METHODS.printStatus(f"Error in GetTodaySignups: {e}")
             return None
     @classmethod
     async def GetTodayUserSignups(cls):
@@ -123,7 +123,7 @@ class ANALYTICS_TASKS:
 
             return users_today
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in GetTodaySignups: {e}")
+            # await MY_METHODS.printStatus(f"Error in GetTodaySignups: {e}")
             return None
     # 5. Business Active / Inactive (daily-weekly-monthly)
     @classmethod
@@ -165,7 +165,7 @@ class ANALYTICS_TASKS:
             }
             return data
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in GetBusinessStatus: {e}")
+            # await MY_METHODS.printStatus(f"Error in GetBusinessStatus: {e}")
             return None
 
     # 6. Chart Data (generic function for clients, businesses, users)
@@ -186,7 +186,7 @@ class ANALYTICS_TASKS:
 
     @classmethod
     async def GetGroupedChartData(cls, model_map: dict, date_field="timestamp"):
-        await MY_METHODS.printStatus("Entering GetGroupedChartData...")
+        # await MY_METHODS.printStatus("Entering GetGroupedChartData...")
 
         periods = {
             "daily": TruncDate,
@@ -207,7 +207,7 @@ class ANALYTICS_TASKS:
             for model_label, queryset in model_map.items():
                 data = await cls.GetChartData(queryset, trunc_func, date_field)
                 for item in data:
-                    await MY_METHODS.printStatus(f"[{model_label} - {period_label}]: {item}")
+                    # await MY_METHODS.printStatus(f"[{model_label} - {period_label}]: {item}")
                     period_str = item["period"].isoformat()
                     period_counts[period_str][model_label] = item["count"]
 
@@ -221,7 +221,7 @@ class ANALYTICS_TASKS:
 
             results[period_label] = merged_data
 
-        await MY_METHODS.printStatus("Exiting GetGroupedChartData...")
+        # await MY_METHODS.printStatus("Exiting GetGroupedChartData...")
 
         return results["daily"]
     # 6.a Chart for Clients
@@ -293,5 +293,5 @@ class ANALYTICS_TASKS:
 
         except Exception as e:
             # Log or handle error if needed
-            await MY_METHODS.printStatus(f"Error in GetUsersDataTask: {e}")
+            # await MY_METHODS.printStatus(f"Error in GetUsersDataTask: {e}")
             return None

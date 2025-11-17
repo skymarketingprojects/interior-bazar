@@ -11,7 +11,7 @@ from django.http import JsonResponse
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
-from app_ib.models import Business, Location, BusinessProfile, UserProfile
+from app_ib.models import Business, Location, BusinessProfile, UserProfile,State
 from app_ib.Controllers.BusinessProfile.Tasks.BusinessProfileTasks import BUSS_PROF_TASK
 from app_ib.Controllers.Profile.Tasks.Taskys import PROFILE_TASKS
 from app_ib.Controllers.Business.Tasks.BusinessTasks import BUSS_TASK
@@ -25,9 +25,9 @@ from django.db.models import Q
 class SEARCH_TASKS:
     
     @classmethod
-    async def PaginateQuery(self,businesses_query,PageNo):
+    async def PaginateQuery(self,businesses_query,PageNo,pageSize=6):
         page_number = PageNo
-        page_size = 6 # for production 3 for testing
+        page_size = pageSize # for production 3 for testing
 
         # Fetch the user data asynchronously
         businesses = await sync_to_async(list)(businesses_query)
@@ -50,13 +50,13 @@ class SEARCH_TASKS:
 
 
     @classmethod
-    async def GetQueryData(self,businesses_query,pageNo):
+    async def GetQueryData(self,businesses_query,pageNo,pageSize=10):
         try:
             lawyres_data = []
             business_list = []
             
             # pagination : 
-            pageingate_lawers = await asyncio.gather(self.PaginateQuery(businesses_query=businesses_query,PageNo=pageNo))
+            pageingate_lawers = await asyncio.gather(self.PaginateQuery(businesses_query=businesses_query,PageNo=pageNo,pageSize=pageSize))
             pageingate_lawers = pageingate_lawers[0]
 
             
@@ -80,7 +80,7 @@ class SEARCH_TASKS:
             return final_data
             
         except Exception as e:
-            await MY_METHODS.printStatus(f' Error runing pagination {e}')
+            # await MY_METHODS.printStatus(f' Error runing pagination {e}')
             return None
 
 
@@ -88,7 +88,7 @@ class SEARCH_TASKS:
     async def FetchBusiness(self, business):
         try:
             final_data = {}
-            await MY_METHODS.printStatus(f'business {business}')
+            # await MY_METHODS.printStatus(f'business {business}')
             user_ins = business.user
 
             # Use asyncio.gather to fetch data in parallel for faster performance
@@ -96,48 +96,59 @@ class SEARCH_TASKS:
                 BUSS_TASK.GetBusinessInfo(id=business.pk),
                 BUSS_LOC_TASK.GetBusinessLocTask(business_loc_ins=await sync_to_async(Location.objects.get)(business=business) if await sync_to_async(Location.objects.filter(business=business).exists)() else None)
             )
-            await MY_METHODS.printStatus(f'\nbusiness_data {business_data}\n')
+            # await MY_METHODS.printStatus(f'\nbusiness_data {business_data}\n')
 
             # Handle time ago logic
             timestamp = business_data.get('timestamp', None)
             time_ago = await self.get_time_ago(updated_at=timestamp)
             
-            await MY_METHODS.printStatus(f"time_ago {time_ago}, timestamp {timestamp}")
+            # await MY_METHODS.printStatus(f"time_ago {time_ago}, timestamp {timestamp}")
 
             # Assign the required fields to final_data in camelCase format
-            final_data['id'] = business.pk
-            final_data['businessName'] = business_data.get('businessName', '')
-            final_data['companyName'] = business_data.get('businessName', '')
-            final_data['membershipId'] = business.pk
-            final_data['badge'] = business_data.get('badge', '')
-            final_data['timeAgo'] = str(time_ago)  # Add the timeAgo field
-            final_data['since'] = business_data.get('since', '')
-            # final_data['category'] = business_data.get('category', '')
-            final_data['businessImage'] = business_data.get('coverImageUrl', '')
-            final_data['city'] = business_location_data.get('city', '')
-            final_data['state'] = business_location_data.get('state', '')
-            final_data['country'] = business_location_data.get('country', '')
-            final_data['pincode'] = business_location_data.get('pin_code', '')
-            # final_data['category'] = business_data.get('categories', [])
+            try:
+                final_data['id'] = business.pk
+                final_data['businessName'] = business_data.get('businessName', '')
+                final_data['companyName'] = business_data.get('businessName', '')
+                final_data['membershipId'] = business.pk
+                final_data['badge'] = business_data.get('badge', '')
+                final_data['timeAgo'] = str(time_ago)  # Add the timeAgo field
+                final_data['since'] = business_data.get('since', '')
+                # final_data['category'] = business_data.get('category', '')
+                final_data['businessImage'] = business_data.get('coverImageUrl', '')
+                final_data['city'] = business_location_data.get('city', '')
+                final_data['state'] = business_location_data.get('state', '')
+                final_data['country'] = business_location_data.get('country', '')
+                final_data['pincode'] = business_location_data.get('pin_code', '')
+                # final_data['category'] = business_data.get('categories', [])
+            except Exception as e:
+                # await MY_METHODS.printStatus(f'Error while assigning data {e}')
+                pass
+
 
 
 
             # Handle location
-            location_data = business_location_data if business_location_data else {}
-            city = f"{location_data.get('city', None)} ," if location_data.get('city') else None 
-            state = f"{location_data.get('state', None)['name']} ," if location_data.get('state') else None
-            country = f"{location_data.get('country', None)['name']}" if location_data.get('country') else None
-            await MY_METHODS.printStatus(f'state {state} country {country}')
-            final_data['location'] = f"{city if city else ''}{state if state else ''}{country if country else ''}"
+            loc = ""
+            try:
+                location_data = business_location_data if business_location_data else {}
+                city = f"{location_data.get('city', None)} ," if location_data.get('city') else None 
+                state = f"{location_data.get('state', None)['name']} ," if location_data.get('state') else None
+                country = f"{location_data.get('country', None)['name']}" if location_data.get('country') else None
+                # await MY_METHODS.printStatus(f'state {state} country {country}')
+                loc = f"{city if city else ''}{state if state else ''}{country if country else ''}"
+            except Exception as e:
+                # await MY_METHODS.printStatus(f'Error while fetching location {e}')
+                pass
+            final_data['location'] = loc
             # Handle rating - assuming you still want a random rating for the example
             rating = await MY_METHODS.get_random_rating()
             final_data['rating'] = f"{rating}"
             final_data['ratingValue'] = float(rating)
-            await MY_METHODS.printStatus(f'final_data {final_data}')
+            # await MY_METHODS.printStatus(f'final_data {final_data}')
 
             return final_data
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error while fetching business {e}')
+            # await MY_METHODS.printStatus(f'Error while fetching business {e}')
             return None
 
     @staticmethod
@@ -145,7 +156,7 @@ class SEARCH_TASKS:
         if updated_at:
             # Calculate the time difference between now and updated_at
             time_diff = timezone.now() - updated_at
-            await MY_METHODS.printStatus(f'time_diff {time_diff}')
+            # await MY_METHODS.printStatus(f'time_diff {time_diff}')
 
             # Determine the number of seconds, minutes, hours, and days
             if time_diff < timedelta(minutes=1):
@@ -183,20 +194,29 @@ class SEARCH_TASKS:
             return await self.GetQueryData(businesses_query=related_query, pageNo=pageNo)
         
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error while fetching business {e}')
+            # await MY_METHODS.printStatus(f'Error while fetching business {e}')
             return None
     @classmethod
-    async def GetNearbyBusinesses(self, business_id, pageNo=1):
+    async def GetNearbyBusinesses(self,city:str=None,state:str=None,locationState:State=None,businessId:int = None, pageNo=1):
         try:
-            business_location = await sync_to_async(Location.objects.get)(business__id=business_id)
+            nearby_query=[]
+            query=(Q(business_location__city__iexact=city))
+            if not city and not state and not locationState:
+                return None
+            if state:
+                query |=Q(business_location__state__iexact=state)
+            if locationState:
+                query |=Q(business_location__locationState=locationState)
 
+
+            if businessId:
             # Use Q to check city OR state
-            nearby_query = Business.objects.filter(
-                Q(business_location__city=business_location.city) |
-                Q(business_location__state=business_location.locationState)
-            ).exclude(id=business_id)
+                nearby_query = Business.objects.filter(query).exclude(id=businessId)
+            else:
+                nearby_query = Business.objects.filter(query)
 
+            # await MY_METHODS.printStatus(f'nearby_query {nearby_query}')
             return await self.GetQueryData(businesses_query=nearby_query, pageNo=pageNo)
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error while fetching business {e}')
+            # await MY_METHODS.printStatus(f'Error while fetching business {e}')
             return None

@@ -25,7 +25,7 @@ class CATELOG_CONTROLLER:
                 if data:
                     catelogData.append(data)
             
-            await MY_METHODS.printStatus(f"catelog data: {catelogData}")
+            # await MY_METHODS.printStatus(f"catelog data: {catelogData}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.catelog_fetch_success,
@@ -34,7 +34,7 @@ class CATELOG_CONTROLLER:
                 )
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error during GetCatelogForBusiness: {e}')
+            # await MY_METHODS.printStatus(f'Error during GetCatelogForBusiness: {e}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.catelog_fetch_error,
@@ -54,7 +54,7 @@ class CATELOG_CONTROLLER:
                 )
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error during GetCatelog: {e}')
+            # await MY_METHODS.printStatus(f'Error during GetCatelog: {e}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.catelog_fetch_error,
@@ -64,7 +64,7 @@ class CATELOG_CONTROLLER:
                 })
     
     @classmethod
-    async def GetAllCatelog(self,page,size,filterType=None,id=None):
+    async def GetAllCatelog(self,page,size,filterType=None,id=None,query=None,state=None):
         try:
             catelogData = []
             related_qs = []
@@ -103,7 +103,7 @@ class CATELOG_CONTROLLER:
                 )
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error during GetCatelog: {e}')
+            # await MY_METHODS.printStatus(f'Error during GetCatelog: {e}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.catelog_fetch_error,
@@ -129,7 +129,7 @@ class CATELOG_CONTROLLER:
                 )
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error during CreateCatelog: {e}')
+            # await MY_METHODS.printStatus(f'Error during CreateCatelog: {e}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.catelog_create_error,
@@ -165,7 +165,7 @@ class CATELOG_CONTROLLER:
                 )
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error during UpdateCatelog: {e}')
+            # await MY_METHODS.printStatus(f'Error during UpdateCatelog: {e}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.catelog_update_error,
@@ -200,7 +200,7 @@ class CATELOG_CONTROLLER:
                 )
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error during DeleteCatelog: {e}')
+            # await MY_METHODS.printStatus(f'Error during DeleteCatelog: {e}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.catelog_delete_error,
@@ -245,19 +245,24 @@ class CATELOG_CONTROLLER:
         try:
             categorys = ProductCategory.objects.all()
             tabData = []
+
+
             for category in categorys:
                 if category.catCatelogues.all().count():
                     categoryData = await PRODUCTS_TASKS.getCategoriesDataTask(category)
                     if categoryData:
                         categoryData['type']='category'
                         tabData.append(categoryData)
+
+
             subCategorys = ProductSubCategory.objects.all()
             for subCategory in subCategorys:
                 if subCategory.catSubCatelogues.all().count():
                     subCategoryData = await PRODUCTS_TASKS.getCategoriesDataTask(subCategory)
                     if subCategoryData:
-                        subCategory['type']='subCategory'
+                        subCategoryData['type']='subCategory'
                         tabData.append(subCategoryData)
+
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.catelog_table_success,
@@ -265,6 +270,7 @@ class CATELOG_CONTROLLER:
                 data=tabData
                 )
         except Exception as e:
+            await MY_METHODS.printStatus(f'Error during GetCatelougeTab: {str(e)}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.catelog_table_error,

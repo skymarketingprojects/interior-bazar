@@ -12,12 +12,12 @@ from rest_framework.permissions import IsAuthenticated
 @api_view(['POST'])
 async def CreateContactView(request):
     try:
-        await MY_METHODS.printStatus('create contact view request.data', request.data)
+        # await MY_METHODS.printStatus('create contact view request.data', request.data)
         data = MY_METHODS.json_to_object(request.data)
-        await MY_METHODS.printStatus(f'create contact view data {data}')
+        # await MY_METHODS.printStatus(f'create contact view data {data}')
 
         create_contact_resp = await CONTACT_CONTROLLER.CreateContact(data=data)
-        await MY_METHODS.printStatus(f'create contact resp {create_contact_resp}')
+        # await MY_METHODS.printStatus(f'create contact resp {create_contact_resp}')
 
         return ServerResponse(
             response=create_contact_resp.response,

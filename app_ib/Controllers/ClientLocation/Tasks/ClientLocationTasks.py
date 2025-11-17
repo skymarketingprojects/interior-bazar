@@ -23,7 +23,7 @@ class CLIENT_LOC_TASKS:
             return True
             
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in CreateClientLocTask {e}')
+            # await MY_METHODS.printStatus(f'Error in CreateClientLocTask {e}')
             return None
 
 
@@ -43,7 +43,7 @@ class CLIENT_LOC_TASKS:
             return True
             
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in UpdateClientLocTask {e}')
+            # await MY_METHODS.printStatus(f'Error in UpdateClientLocTask {e}')
             return None
 
 
@@ -61,5 +61,5 @@ class CLIENT_LOC_TASKS:
             return client_loc_data
             
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in GetClientLocTask {e}')
+            # await MY_METHODS.printStatus(f'Error in GetClientLocTask {e}')
             return None

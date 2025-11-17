@@ -57,7 +57,7 @@ class BUSS_CONTROLLER:
 
             if is_business_exist:
                 business_instance = await sync_to_async(Business.objects.get)(user=user_ins)
-                await MY_METHODS.printStatus(f'business instance {business_instance}')
+                # await MY_METHODS.printStatus(f'business instance {business_instance}')
                 
                 business_ins = await BUSS_TASK.UpdateBusinessTask(business_ins=business_instance, data=data)
                 if business_ins is None:
@@ -96,7 +96,7 @@ class BUSS_CONTROLLER:
 
             if is_business_exist:
                 business_data = await BUSS_TASK.GetBusinessInfo(id=id)
-                await MY_METHODS.printStatus(f'business data {business_data}')
+                # await MY_METHODS.printStatus(f'business data {business_data}')
 
                 if business_data is not None:
                     return LocalResponse(

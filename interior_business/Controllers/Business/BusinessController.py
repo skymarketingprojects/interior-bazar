@@ -10,6 +10,7 @@ from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.models import Business,BusinessType,BusinessCategory,BusinessSegment
 import asyncio
 from django.db.models import Count
+from interior_notification.signals import businessSignupSignal
 
 class BUSS_CONTROLLER:
 
@@ -51,7 +52,8 @@ class BUSS_CONTROLLER:
                     data={})
             # Create business
             business_ins = await BUSS_TASK.CreateBusinessTask(user_ins=user_ins, data=data)
-            await MY_METHODS.printStatus(f'business_ins {business_ins}')
+            # await MY_METHODS.printStatus(f'business_ins {business_ins}')
+            asyncio.create_task(sync_to_async(businessSignupSignal.send)(sender=Business,instance=Business.objects.get(user=user_ins),created=True))
             if not business_ins:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.error,
@@ -83,7 +85,7 @@ class BUSS_CONTROLLER:
 
             if is_business_exist:
                 business_instance = await sync_to_async(Business.objects.get)(user=user_ins)
-                await MY_METHODS.printStatus(f'business instance {business_instance}')
+                # await MY_METHODS.printStatus(f'business instance {business_instance}')
                 
                 business_ins = await BUSS_TASK.UpdateBusinessTask(business_ins=business_instance, data=data)
                 if business_ins is None:
@@ -122,7 +124,7 @@ class BUSS_CONTROLLER:
 
             if is_business_exist:
                 business_data = await BUSS_TASK.GetBusinessInfo(id=id)
-                await MY_METHODS.printStatus(f'business data {business_data}')
+                # await MY_METHODS.printStatus(f'business data {business_data}')
 
                 if business_data is not None:
                     return LocalResponse(
@@ -273,7 +275,7 @@ class BUSS_CONTROLLER:
                     continue
                 segments = categoryInstance.business_category_segment.all()
                 segmentData = [await BUSS_TASK.GetBusinessTypeData(seg) for seg in segments]
-                categoryData['segments'] = segmentData
+                categoryData['subCategories'] = segmentData
                 data.append(categoryData)
             if not data:
                 return LocalResponse(

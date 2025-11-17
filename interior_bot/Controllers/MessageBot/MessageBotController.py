@@ -33,7 +33,7 @@ class MESSAGE_BOT_CONTROLLER:
                 message="messages found"
             )
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
+            # await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 code=RESPONSE_CODES.error,

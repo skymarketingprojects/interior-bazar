@@ -1,6 +1,8 @@
 from asgiref.sync import sync_to_async
 from app_ib.models import BusinessProfile, Business, BusinessSocialMedia
 from app_ib.Utils.MyMethods import MY_METHODS
+
+import asyncio
 class BUSS_PROF_TASK:
 
     @classmethod
@@ -70,10 +72,11 @@ class BUSS_PROF_TASK:
             business_prof_ins.primary_image_url= data.primary_image_url if data.primary_image_url else ''
             business_prof_ins.secondary_images_url= data.secondary_images_url if data.secondary_images_url else ''
             await sync_to_async(business_prof_ins.save)()
+            
             return True
             
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in CreateBusinessProfileTask {e}')
+            # await MY_METHODS.printStatus(f'Error in CreateBusinessProfileTask {e}')
             return None
 
     @classmethod
@@ -87,7 +90,7 @@ class BUSS_PROF_TASK:
             return True
             
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in UpdateBusinessProfileTask {e}')
+            # await MY_METHODS.printStatus(f'Error in UpdateBusinessProfileTask {e}')
             return None
 
     @classmethod
@@ -101,5 +104,5 @@ class BUSS_PROF_TASK:
             return business_prof_data
             
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in GetBusinessProfTask {e}')
+            # await MY_METHODS.printStatus(f'Error in GetBusinessProfTask {e}')
             return None

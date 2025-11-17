@@ -43,7 +43,7 @@ class BusinessScheduleView(AsyncAPIView):
                 data=businessScheduleResponse.data
             )
         except Exception as e:
-            await MY_METHODS.printStatus(f"error in BusinessScheduleView.post {e}")
+            # await MY_METHODS.printStatus(f"error in BusinessScheduleView.post {e}")
             return ServerResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.business_fetch_error,

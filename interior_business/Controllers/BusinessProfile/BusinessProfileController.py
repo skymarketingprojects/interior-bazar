@@ -10,7 +10,6 @@ from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.models import BusinessProfile, Business
 from interior_business.Controllers.BusinessProfile.Tasks.BusinessProfileTasks import BUSS_PROF_TASK
-from interior_notification.signals import businessSignupSignal
 from asgiref.sync import sync_to_async
 import asyncio
 
@@ -48,18 +47,18 @@ class BUSS_PROFILE_CONTROLLER:
             business_loc_ins= None
 
             is_business_exist = await sync_to_async(Business.objects.filter(user=user_ins).exists)()
-            await MY_METHODS.printStatus(f'is_business_exist {is_business_exist}')
+            # await MY_METHODS.printStatus(f'is_business_exist {is_business_exist}')
 
             if(is_business_exist):
                  business_ins = await sync_to_async(Business.objects.get)(user=user_ins)
 
             # Check if business already exist
             is_business_prof_exist = await sync_to_async(BusinessProfile.objects.filter(business=business_ins).exists)()
-            await MY_METHODS.printStatus(f'is_business_prof_exist {is_business_prof_exist}')
+            # await MY_METHODS.printStatus(f'is_business_prof_exist {is_business_prof_exist}')
 
             if is_business_prof_exist:
                 business_prof_ins = await sync_to_async(BusinessProfile.objects.get)(business=business_ins)
-                await MY_METHODS.printStatus(f'update business profile')
+                # await MY_METHODS.printStatus(f'update business profile')
                 update_resp = await BUSS_PROF_TASK.UpdateBusinessProfileTask(business_prof_ins=business_prof_ins,data=data)
 
                 if update_resp:
@@ -76,10 +75,9 @@ class BUSS_PROFILE_CONTROLLER:
                         data={})
 
             else:
-                await MY_METHODS.printStatus(f'create business location')
+                # await MY_METHODS.printStatus(f'create business location')
                 create_resp = await BUSS_PROF_TASK.CreateBusinessProfileTask(
                     business_ins=business_ins, data=data)
-                asyncio.create_task(sync_to_async(businessSignupSignal.send)(sender=user_ins.user_business.__class__,instance=user_ins.user_business.business_profile,created=True))
                 if create_resp:
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.success,
@@ -93,7 +91,7 @@ class BUSS_PROFILE_CONTROLLER:
                         code=RESPONSE_CODES.error,
                         data={})
         except Exception as e:
-            await MY_METHODS.printStatus(f'error in business profile {e}')
+            # await MY_METHODS.printStatus(f'error in business profile {e}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.business_prof_create_error,
@@ -109,7 +107,7 @@ class BUSS_PROFILE_CONTROLLER:
             business_prof_ins= None
 
             is_business_exist = await sync_to_async(Business.objects.filter(pk=id).exists)()
-            await MY_METHODS.printStatus(f'is_business_exist {is_business_exist}')
+            # await MY_METHODS.printStatus(f'is_business_exist {is_business_exist}')
 
             if(is_business_exist):
                  business_ins = await sync_to_async(Business.objects.get)(pk=id)
@@ -150,13 +148,13 @@ class BUSS_PROFILE_CONTROLLER:
         try:
             business_ins = None
             is_business_exist = await sync_to_async(Business.objects.filter(user=user_ins).exists)()
-            await MY_METHODS.printStatus(f'is_business_exist {is_business_exist}')
+            # await MY_METHODS.printStatus(f'is_business_exist {is_business_exist}')
 
             if(is_business_exist): 
                 business_ins = await sync_to_async(Business.objects.get)(user=user_ins)
 
             is_buss_prof_ins_exist = await sync_to_async(BusinessProfile.objects.filter(business=business_ins).exists)()
-            await MY_METHODS.printStatus(f'is_buss_prof_ins_exist {is_buss_prof_ins_exist}')
+            # await MY_METHODS.printStatus(f'is_buss_prof_ins_exist {is_buss_prof_ins_exist}')
 
             # Update Profile Image if already exist : 
             if is_buss_prof_ins_exist:
@@ -191,13 +189,13 @@ class BUSS_PROFILE_CONTROLLER:
         try:
             business_ins = None
             is_business_exist = await sync_to_async(Business.objects.filter(user=user_ins).exists)()
-            await MY_METHODS.printStatus(f'is_business_exist {is_business_exist}')
+            # await MY_METHODS.printStatus(f'is_business_exist {is_business_exist}')
 
             if(is_business_exist): 
                 business_ins = await sync_to_async(Business.objects.get)(user=user_ins)
 
             is_buss_prof_ins_exist = await sync_to_async(BusinessProfile.objects.filter(business=business_ins).exists)()
-            await MY_METHODS.printStatus(f'is_buss_prof_ins_exist {is_buss_prof_ins_exist}')
+            # await MY_METHODS.printStatus(f'is_buss_prof_ins_exist {is_buss_prof_ins_exist}')
 
             # Update Profile Image if already exist : 
             if is_buss_prof_ins_exist:

@@ -46,7 +46,7 @@ class BUSINESS_SCHEDULE_CONTROLLER:
             )
 
         except Exception as e:
-            await MY_METHODS.printStatus(f"[CreateOrUpdateBusinessSchedule Error]: {e}")
+            # await MY_METHODS.printStatus(f"[CreateOrUpdateBusinessSchedule Error]: {e}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Failed to save schedule",
@@ -78,7 +78,7 @@ class BUSINESS_SCHEDULE_CONTROLLER:
             )
 
         except Exception as e:
-            await MY_METHODS.printStatus(f"[GetBusinessSchedule Error]: {e}")
+            # await MY_METHODS.printStatus(f"[GetBusinessSchedule Error]: {e}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Failed to fetch schedule",
@@ -116,7 +116,7 @@ class BUSINESS_SCHEDULE_CONTROLLER:
                 )
 
         except Exception as e:
-            await MY_METHODS.printStatus(f"[UpdateBusinessSchedule Error]: {e}")
+            # await MY_METHODS.printStatus(f"[UpdateBusinessSchedule Error]: {e}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Error updating schedule",

@@ -18,7 +18,7 @@ class AUTH_TASK:
             is_user_exist = await sync_to_async(CustomUser.objects.filter(username=username).exists)()
             return is_user_exist
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in IsUserExist {e}')
+            # await MY_METHODS.printStatus(f'Error in IsUserExist {e}')
             return None
 
     @classmethod
@@ -28,7 +28,7 @@ class AUTH_TASK:
             is_user_exist = await sync_to_async(CustomUser.objects.filter(email=email).exists)()
             return is_user_exist
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in IsUserExist {e}')
+            # await MY_METHODS.printStatus(f'Error in IsUserExist {e}')
             return None
         
     @classmethod
@@ -44,7 +44,7 @@ class AUTH_TASK:
             await sync_to_async(user_ins.save)()
             return user_ins
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in CreateUser {e}')
+            # await MY_METHODS.printStatus(f'Error in CreateUser {e}')
             return None
 
     @classmethod
@@ -66,7 +66,7 @@ class AUTH_TASK:
             }
             return data
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in GenerateUserToken {e}')
+            # await MY_METHODS.printStatus(f'Error in GenerateUserToken {e}')
             return None
 
     @classmethod
@@ -80,7 +80,7 @@ class AUTH_TASK:
                 return user_ins
             return is_user_exist
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in IsUserExist {e}')
+            # await MY_METHODS.printStatus(f'Error in IsUserExist {e}')
             return None
 
     @classmethod
@@ -88,7 +88,7 @@ class AUTH_TASK:
         try:
             return True
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in IsUserExist {e}')
+            # await MY_METHODS.printStatus(f'Error in IsUserExist {e}')
             return None
 
     @classmethod
@@ -124,7 +124,7 @@ class AUTH_TASK:
                 link = f'{APPMODE_URL.PROD}v-1/forgot-password/{encoded_hash}'
             return link
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in GenerateForgotPasswordLink {e}')
+            # await MY_METHODS.printStatus(f'Error in GenerateForgotPasswordLink {e}')
             return None
 
     #####################################
@@ -148,7 +148,7 @@ class AUTH_TASK:
             else:
                 return False
         except Exception as e:
-            await MY_METHODS.printStatus(f'Getting UserProfile instance error {e}')
+            # await MY_METHODS.printStatus(f'Getting UserProfile instance error {e}')
             return None
 
     #####################################
@@ -165,7 +165,7 @@ class AUTH_TASK:
             )
             return True
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in SendForgotPasswordEmail {e}')
+            # await MY_METHODS.printStatus(f'Error in SendForgotPasswordEmail {e}')
             return None
     
     ###############################################
@@ -182,7 +182,7 @@ class AUTH_TASK:
                 return False
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in ResetPassword {e}')
+            # await MY_METHODS.printStatus(f'Error in ResetPassword {e}')
             return None
 
 
@@ -197,7 +197,7 @@ class AUTH_TASK:
             time_difference =  await MY_METHODS.GetTimeDifferenceInMinutes(my_time=timestamp)
             return time_difference
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in DecodeHash {e}')
+            # await MY_METHODS.printStatus(f'Error in DecodeHash {e}')
             return None
 
     ###############################################
@@ -206,13 +206,13 @@ class AUTH_TASK:
     @classmethod
     async def ChangePassword(self, hash, password):
         try:
-            await MY_METHODS.printStatus(f'hash {hash}')
-            await MY_METHODS.printStatus(f'password {password}')
+            # await MY_METHODS.printStatus(f'hash {hash}')
+            # await MY_METHODS.printStatus(f'password {password}')
 
             decoded_json_str = base64.urlsafe_b64decode(hash.encode()).decode()
             decode_hash = json.loads(decoded_json_str)
             username = decode_hash[NAMES.USERNAME]
-            await MY_METHODS.printStatus(f'username {username}')
+            # await MY_METHODS.printStatus(f'username {username}')
             
 
             user_ins = await sync_to_async(CustomUser.objects.get)(username=username)
@@ -221,5 +221,5 @@ class AUTH_TASK:
             return True
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in ResetPassword {e}')
+            # await MY_METHODS.printStatus(f'Error in ResetPassword {e}')
             return None

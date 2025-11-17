@@ -7,7 +7,7 @@ from django.utils import timezone
 from datetime import timedelta
 
 from asgiref.sync import sync_to_async,async_to_sync
-from app_ib.models import UserProfile,BusinessPlan,LeadQuery,FunnelForm,PlanQuery,BusinessProfile
+from app_ib.models import UserProfile,BusinessPlan,LeadQuery,FunnelForm,PlanQuery,Business
 from app_ib.Utils.MyMethods import MY_METHODS
 
 from .Controllers.Publish import publishEmailToUser,WhatsappMessage,publishToUser
@@ -52,10 +52,10 @@ def sendSignupNotification(sender, instance:UserProfile, created, **kwargs):
         pass
 @receiver(businessSignupSignal)
 # @receiver(post_save, sender=BusinessProfile)
-def sendSignupNotificationBusiness(sender, instance:BusinessProfile, created, **kwargs):
+def sendSignupNotificationBusiness(sender, instance:Business, created, **kwargs):
     try:
         async_to_sync(MY_METHODS.printStatus)("sendSignupNotificationBusiness")
-        user = instance.business.user.user_profile
+        user = instance.user.user_profile
         email = user.email
         phone = user.phone
         countryCode = user.countryCode
@@ -65,7 +65,7 @@ def sendSignupNotificationBusiness(sender, instance:BusinessProfile, created, **
         
         subscribeEmail(email)
         subscribeSMS(internationalPhone)
-        business= instance.business
+        business= instance
         
         busType=business.business_type.lable
         businessName=business.business_name

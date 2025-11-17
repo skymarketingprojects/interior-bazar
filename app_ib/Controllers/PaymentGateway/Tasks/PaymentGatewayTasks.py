@@ -25,11 +25,11 @@ class PaymentGatewayTasks:
                 NAMES.REDIRECT_URL: redirectUrl,
             }
 
-            await MY_METHODS.printStatus(f"Generated Cashfree transaction: {transaction_data}")
+            # await MY_METHODS.printStatus(f"Generated Cashfree transaction: {transaction_data}")
             return transaction_data
 
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in GenerateTransactionData: {e}")
+            # await MY_METHODS.printStatus(f"Error in GenerateTransactionData: {e}")
             return None
 
     @classmethod
@@ -46,7 +46,7 @@ class PaymentGatewayTasks:
                 phone = await MY_METHODS.formatPhone(country_code=str(user.user_profile.countryCode),phone=str(user.user_profile.phone))
             except Exception as e:
                 phone = ""
-            await MY_METHODS.printStatus(f"amount in CreateTransection: {amount}, phone: {phone}")
+            # await MY_METHODS.printStatus(f"amount in CreateTransection: {amount}, phone: {phone}")
             if phone == "":
                 return None
             
@@ -65,8 +65,8 @@ class PaymentGatewayTasks:
             }
 
             response_data = await sync_to_async(CashfreeClientWrapper.create_order)(payload)
-            await MY_METHODS.printStatus(f"Cashfree Create Order Response: {response_data}")
+            # await MY_METHODS.printStatus(f"Cashfree Create Order Response: {response_data}")
             return response_data, transactionData
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in CreateTransection: {e}")
+            # await MY_METHODS.printStatus(f"Error in CreateTransection: {e}")
             return None

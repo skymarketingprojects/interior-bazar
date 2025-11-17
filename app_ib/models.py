@@ -144,6 +144,7 @@ class Country(models.Model):
 class State(models.Model):
     country = models.ForeignKey(Country, on_delete=models.CASCADE, related_name='states')
     name = models.CharField(max_length=255)
+    value = models.CharField(max_length=255,null=True, blank=True)
 
     def __str__(self):
         return f'State: {self.name} in {self.country.name}'

@@ -19,11 +19,11 @@ class PLAN_QUATE_TASKS:
                     setattr(quate_ins, field, value)
 
             await sync_to_async(quate_ins.save)()
-            await MY_METHODS.printStatus(f'quate instance pk {quate_ins.pk}')
+            # await MY_METHODS.printStatus(f'quate instance pk {quate_ins.pk}')
             return quate_ins.pk
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in CreatePlanQuateTask {e}')
+            # await MY_METHODS.printStatus(f'Error in CreatePlanQuateTask {e}')
             return None
 
 
@@ -43,5 +43,5 @@ class PLAN_QUATE_TASKS:
             return True
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in VerifyQuateTask {e}')
+            # await MY_METHODS.printStatus(f'Error in VerifyQuateTask {e}')
             return None

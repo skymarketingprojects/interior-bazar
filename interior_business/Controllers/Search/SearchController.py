@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
-from app_ib.models import Business, Location, BusinessProfile, UserProfile
+from app_ib.models import Business, Location, BusinessProfile,BusinessCategory,BusinessSegment, UserProfile
 from interior_business.Controllers.BusinessProfile.Tasks.BusinessProfileTasks import BUSS_PROF_TASK
 from app_ib.Controllers.Profile.Tasks.Taskys import PROFILE_TASKS
 from interior_business.Controllers.Business.Tasks.BusinessTasks import BUSS_TASK
@@ -16,16 +16,39 @@ from interior_business.Controllers.BussLocation.Tasks.BusinessLocationTasks impo
 from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.Utils.LocalResponse import LocalResponse
 from interior_business.Controllers.Search.Tasks.SearchTasks import SEARCH_TASKS
+from django.db.models import Q
 
 class SEARCH_CONTROLLER:
     @classmethod
-    async def GetBusinessUsingPagination(self,pageNo):
+    async def GetBusinessUsingPagination(self,pageNo,pageSize=10,tabId=None,tabType=None,state=None,query=None):
         try:
-            # Getting all business instance: 
-            businesses_query = await sync_to_async(list)(Business.objects.all().order_by('-timestamp'))
+            businesses_query=[]
+            filterQuery=Q()
+
+            if state:
+                filterQuery &= Q(business_location__locationState__value__iexact=state)
+                # filterQuery &= Q(business_location__state__iexact=state)
+            
+            if tabId and tabType:
+                if tabType=='category':
+                    await MY_METHODS.printStatus(f'category Id {tabId}')
+                    filterQuery &= Q(businessCategory__id=tabId)
+                elif tabType=='subCategory':
+                    await MY_METHODS.printStatus(f'sub category Id {tabId}')
+                    filterQuery &= Q(businessSegment__id=tabId)
+            if query:
+                await MY_METHODS.printStatus(f'Query {query}')
+                filterQuery &= Q(business_name__icontains=query)
+
+            if not state and not tabId and not query:
+                await MY_METHODS.printStatus('No filter applied')
+                businesses_query = await sync_to_async(list)(Business.objects.all().order_by('-timestamp'))
+            else:
+                await MY_METHODS.printStatus('Filter applied')
+                businesses_query = await sync_to_async(list)(Business.objects.filter(filterQuery).order_by('-timestamp'))
 
             # fetch business data:
-            business_data= await SEARCH_TASKS.GetQueryData(businesses_query=businesses_query,pageNo=pageNo)
+            business_data= await SEARCH_TASKS.GetQueryData(businesses_query=businesses_query,pageNo=pageNo,pageSize=pageSize)
 
             return LocalResponse(
                 code=RESPONSE_CODES.success,
@@ -95,9 +118,15 @@ class SEARCH_CONTROLLER:
             )
 
     @classmethod
-    async def GetNearbyBusiness(self, businessId, pageNo=1):
+    async def GetNearbyBusiness(self, businessId=None,city=None,state=None, pageNo=1):
         try:
-            nearby_businesses = await SEARCH_TASKS.GetNearbyBusinesses(business_id=businessId, pageNo=pageNo)
+            business=None
+            locationState=None
+            if businessId:
+                business = await sync_to_async(Business.objects.get)(id=businessId)
+                city = business.business_location.city
+                locationState = business.business_location.locationState
+            nearby_businesses = await SEARCH_TASKS.GetNearbyBusinesses(businessId=businessId,city=city,state=state,locationState=locationState, pageNo=pageNo)
             if nearby_businesses is None:
                 return LocalResponse(
                     code=RESPONSE_CODES.error,

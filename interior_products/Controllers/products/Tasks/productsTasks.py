@@ -12,7 +12,7 @@ class PRODUCTS_TASKS:
             product.delete()
             return True
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in deleteProduct: {str(e)}")
+            # await MY_METHODS.printStatus(f"Error in deleteProduct: {str(e)}")
             return False
     
     @classmethod
@@ -54,7 +54,7 @@ class PRODUCTS_TASKS:
             try:
                 if data.images:
                     for image in data.images:
-                        await MY_METHODS.printStatus(f"updateProduct: {image['id']}")
+                        # await MY_METHODS.printStatus(f"updateProduct: {image['id']}")
                         if image.id:
                             await sync_to_async(ProductImage.objects.filter(id=image.id).update)(
                                 image=image.imageUrl,
@@ -71,12 +71,12 @@ class PRODUCTS_TASKS:
 
 
             except Exception as e:
-                await MY_METHODS.printStatus(f"Error in updateProduct: {str(e)}")
+                # await MY_METHODS.printStatus(f"Error in updateProduct: {str(e)}")
                 pass
 
 
             specifications = {"sizeAvailabe":data.sizeAvailabe,"userManual":data.userManual,"detail":data.detail}
-            await MY_METHODS.printStatus(f"updateProduct: {specifications}")
+            # await MY_METHODS.printStatus(f"updateProduct: {specifications}")
 
 
             for key, value in specifications.items():
@@ -89,7 +89,7 @@ class PRODUCTS_TASKS:
             return data
         
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in updateProduct: {str(e)}")
+            # await MY_METHODS.printStatus(f"Error in updateProduct: {str(e)}")
             return False
     
     @staticmethod
@@ -102,7 +102,7 @@ class PRODUCTS_TASKS:
             )
             return True
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in _create_or_update_spec: {str(e)}")
+            # await MY_METHODS.printStatus(f"Error in _create_or_update_spec: {str(e)}")
             return False
 
     @classmethod
@@ -147,7 +147,7 @@ class PRODUCTS_TASKS:
                             link=image.link
                         )
             except Exception as e:
-                await MY_METHODS.printStatus(f"Error in createProduct: {str(e)}")
+                # await MY_METHODS.printStatus(f"Error in createProduct: {str(e)}")
                 pass
             specifications = {"sizeAvailabe":data.sizeAvailabe,"userManual":data.userManual,"detail":data.detail}
             for key,value in specifications.items():
@@ -159,7 +159,7 @@ class PRODUCTS_TASKS:
             data = await self.getProduct(product)
             return data
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in createProduct: {str(e)}")
+            # await MY_METHODS.printStatus(f"Error in createProduct: {str(e)}")
             return False
         
     @classmethod
@@ -174,7 +174,7 @@ class PRODUCTS_TASKS:
                     'index':image.index,
                     'link':image.link
                 })
-            await MY_METHODS.printStatus(f"Product tag Data: {product.productTags} of type {type(product.productTags)}")
+            # await MY_METHODS.printStatus(f"Product tag Data: {product.productTags} of type {type(product.productTags)}")
             tags = json.loads(str(product.productTags).replace("'",'"')) if product.productTags else []
 
             prodCategory=[]
@@ -191,7 +191,7 @@ class PRODUCTS_TASKS:
             productData = {
                 'id':product.id,
                 'title':product.title,
-                'orignalPrice':product.orignalPrice,
+                'originalPrice':product.orignalPrice,
                 'price':product.orignalPrice,
                 'discountType':product.discountType,
                 'discountBy':product.discountBy,
@@ -209,7 +209,7 @@ class PRODUCTS_TASKS:
                 productData[specification.title] = specification.description
             return productData
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in getProduct: {str(e)}")
+            # await MY_METHODS.printStatus(f"Error in getProduct: {str(e)}")
             return False
 
     @classmethod
@@ -221,11 +221,13 @@ class PRODUCTS_TASKS:
                 data.append({
                     "id":cat.id,
                     "label":cat.lable,
-                    "value":cat.value
+                    "value":cat.value,
+                    'imageSQUrl':cat.imageSQUrl,
+                    'imageRTUrl':cat.imageRTUrl
                 })
             return data
         except Exception as e:
-            await MY_METHODS.printStatus(f"error in get product category {str(e)}")
+            # await MY_METHODS.printStatus(f"error in get product category {str(e)}")
             return False
     
     @classmethod
@@ -241,7 +243,7 @@ class PRODUCTS_TASKS:
                 })
             return data
         except Exception as e:
-            await MY_METHODS.printStatus(f"error in get product category {str(e)}")
+            # await MY_METHODS.printStatus(f"error in get product category {str(e)}")
             return False
     
     @classmethod

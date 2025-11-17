@@ -25,7 +25,7 @@ class BUSS_LOC_TASK:
             return True
             
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in CreateBusinessLocTask {e}')
+            # await MY_METHODS.printStatus(f'Error in CreateBusinessLocTask {e}')
             return None
 
     @classmethod
@@ -44,7 +44,7 @@ class BUSS_LOC_TASK:
             return True
             
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in UpdateBusinessLocTask {e}')
+            # await MY_METHODS.printStatus(f'Error in UpdateBusinessLocTask {e}')
             return None
 
     @classmethod
@@ -77,7 +77,7 @@ class BUSS_LOC_TASK:
             return business_loc_data
             
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in GetBusinessLocTask {e}')
+            # await MY_METHODS.printStatus(f'Error in GetBusinessLocTask {e}')
             return None
 
     @classmethod
@@ -90,17 +90,18 @@ class BUSS_LOC_TASK:
             }
             return countryData
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in GetCountryCodeTask {e}')
+            # await MY_METHODS.printStatus(f'Error in GetCountryCodeTask {e}')
             return None
         
     @classmethod
-    async def GetStateDataTask(self, state):
+    async def GetStateDataTask(self, state:State):
         try:
             stateData = {
                 "id": state.id,
-                "name": state.name
+                "name": state.name,
+                "value": state.value
             }
             return stateData
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in GetStateDataTask {e}')
+            # await MY_METHODS.printStatus(f'Error in GetStateDataTask {e}')
             return None

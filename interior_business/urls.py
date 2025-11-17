@@ -4,7 +4,8 @@ from . import views
 urlpatterns = [
 
     path('related/<int:businessId>/',SearchView.GetRelatedBusinessView, name='GetRelatedBusinessView'),
-    path('nearby/<int:businessId>/',SearchView.GetNearbyBusinessView, name='GetRelatedBusinessView'),
+    path('nearby/',SearchView.GetNearbyBusinessView, name='GetAllNearbyBusinessView'),
+    path('nearby/<int:businessId>/',SearchView.GetNearbyBusinessView, name='GetnearbyBusinessView'),
      #########################################################
     # Business:  
     #########################################################
@@ -36,6 +37,7 @@ urlpatterns = [
     path('categories/', BusinessView.GetAllBusinessCategoriesView, name='GetAllBusinessCategories'),
     path('segments/<int:typeId>/', BusinessView.GetAllBusinessSegmentsByTypeView, name='GetBusinessSegmentsByCategory'),
     path('tab/', BusinessView.GetAllBusinessTabView, name='GetAllBusinessTab'),
+    path('explore/', BusinessView.GetExploreSectionsView, name='exploreSection'),
 
     ######################################################
     # location
@@ -46,7 +48,7 @@ urlpatterns = [
     ########################################################
     # Serachview: 
     #########################################################
-    path('pagination/<int:index>/', SearchView.GetBusinessByPaginationView, name='GetBusinessByPaginationView'),
+    path('pagination/', SearchView.GetBusinessByPaginationView, name='GetBusinessByPaginationView'),
     path('top-business/<int:index>/', SearchView.GetTopBusinessView, name='GetTopBusinessView'),
     
     #########################################################
