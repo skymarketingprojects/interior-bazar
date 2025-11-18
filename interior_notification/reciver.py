@@ -55,7 +55,7 @@ def sendSignupNotification(sender, instance:UserProfile, created, **kwargs):
 def sendSignupNotificationBusiness(sender, instance:Business, created, **kwargs):
     try:
         async_to_sync(MY_METHODS.printStatus)("sendSignupNotificationBusiness")
-        user = instance.user.user_profile
+        user:UserProfile = instance.user.user_profile
         email = user.email
         phone = user.phone
         countryCode = user.countryCode
@@ -65,10 +65,9 @@ def sendSignupNotificationBusiness(sender, instance:Business, created, **kwargs)
         
         subscribeEmail(email)
         subscribeSMS(internationalPhone)
-        business= instance
         
-        busType=business.business_type.lable
-        businessName=business.business_name
+        busType=instance.businessType.lable
+        businessName=instance.businessName
         name = user.name
 
         sender_email = "hello@interiorbazzar.com"
@@ -100,7 +99,7 @@ def sendPlanNotification(sender, instance:BusinessPlan, **kwargs):
             business = instance.business
             if not business:
                 return
-            user = business.user.user_profile
+            user:UserProfile = business.user.user_profile
             if not user:
                 return
             
@@ -112,7 +111,7 @@ def sendPlanNotification(sender, instance:BusinessPlan, **kwargs):
             amount = instance.amount
             planName = instance.plan.title
             transectionId = instance.transactionId
-            businessName= instance.business.business_name
+            businessName= instance.business.businessName
             amount=instance.amount
             expiryDate=instance.expireDate
 
@@ -202,7 +201,7 @@ def leadqueryReceiver(sender, instance:LeadQuery, **kwargs):
         business = instance.business
         if not business:
             return
-        user = business.user.user_profile
+        user:UserProfile = business.user.user_profile
         if not user:
             return
         email = user.email
@@ -210,7 +209,7 @@ def leadqueryReceiver(sender, instance:LeadQuery, **kwargs):
         countryCode = user.countryCode
         sender_email = "hello@interiorbazzar.com"
         context={
-            "businessName":business.business_name,
+            "businessName":business.businessName,
             'lead':instance,
         }
 

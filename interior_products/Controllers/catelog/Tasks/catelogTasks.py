@@ -15,9 +15,9 @@ class CATELOG_TASKS:
             }
             businessData = {
                 "id": catelog.business.id,
-                "name": catelog.business.business_name
+                "name": catelog.business.businessName
             }
-            catalougeImages = await sync_to_async(catelog.catelogueImages.all)()
+            catalougeImages:list[CatelogueImage] = await sync_to_async(catelog.catelogueImages.all)()
             # await MY_METHODS.printStatus(f"getCatelog: {catalougeImages}")
             imageData = []
             for image in catalougeImages:

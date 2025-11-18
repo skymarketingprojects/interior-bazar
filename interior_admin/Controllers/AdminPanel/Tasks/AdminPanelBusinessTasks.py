@@ -14,7 +14,7 @@ class ADMIN_PANEL_TASKS:
     async def GetTotalActiveBusinesses(cls):
         try:
             active_businesses = await sync_to_async(
-                lambda: BusinessPlan.objects.filter(expire_date__gte=timezone.now()).values_list('business_id', flat=True).distinct().count()
+                lambda: BusinessPlan.objects.filter(expireDate__gte=timezone.now()).values_list('business_id', flat=True).distinct().count()
             )()
             return active_businesses if active_businesses is not None else 0
         except Exception as e:
@@ -25,7 +25,7 @@ class ADMIN_PANEL_TASKS:
     async def GetTotalInactiveBusinesses(cls):
         try:
             active_ids = await sync_to_async(
-                lambda: list(BusinessPlan.objects.filter(expire_date__gte=timezone.now()).values_list('business_id', flat=True))
+                lambda: list(BusinessPlan.objects.filter(expireDate__gte=timezone.now()).values_list('business_id', flat=True))
             )()
             inactive_count = await sync_to_async(
                 lambda: Business.objects.exclude(id__in=active_ids).count()
@@ -112,7 +112,7 @@ class ADMIN_PANEL_TASKS:
                 results.append({
                     "id": business_id,
                     "joinAt": business.timestamp,
-                    "name": business.business_name,
+                    "name": business.businessName,
                     "plan": plan_name,
                     "assignedLead": assigned_leads_count,
                     "platformLead": platform_leads_count,

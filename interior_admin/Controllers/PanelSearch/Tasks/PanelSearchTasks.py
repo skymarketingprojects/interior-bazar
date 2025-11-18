@@ -12,11 +12,11 @@ class PANEL_SEARCH_TASKS:
             businessResults = None
             if settings.ENV == APPMODE.PROD:
                 businessResults = await sync_to_async(
-                    lambda: Business.objects.filter(Q(business_name__icontains=Query) | Q(segment__icontains=Query),selfCreated = False)
+                    lambda: Business.objects.filter(Q(businessName__icontains=Query) | Q(businessSegment__value__icontains=Query),selfCreated = False)
                 )()
             else:
                 businessResults = await sync_to_async(
-                    lambda: Business.objects.filter(Q(business_name__icontains=Query) | Q(segment__icontains=Query))
+                    lambda: Business.objects.filter(Q(businessName__icontains=Query) | Q(businessSegment__value__icontains=Query))
                 )()
             results = []
 

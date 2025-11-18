@@ -1,5 +1,5 @@
 from asgiref.sync import sync_to_async
-from app_ib.models import Business
+from app_ib.models import Business,LeadQuery
 from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.Utils.Names import NAMES
 from django.db.models import Q
@@ -9,7 +9,7 @@ from app_ib.Utils.AppMode import APPMODE
 class MATCH_LEADS_TASKS:
 
     @classmethod
-    async def MatchLeadTask(cls, lead_query_ins):
+    async def MatchLeadTask(cls, lead_query_ins:LeadQuery):
         try:
             interested_text = (lead_query_ins.interested or NAMES.EMPTY).lower()
             city = (lead_query_ins.city or NAMES.EMPTY).lower()
@@ -40,8 +40,8 @@ class MATCH_LEADS_TASKS:
                 businessList = await sync_to_async(
                                 lambda: list(Business.objects.filter(
                                     Q(business_location__city__iexact=city)
-                                    | Q(business_location__state__iexact=state)
-                                    | Q(business_location__country__iexact=country),
+                                    | Q(business_location__locationState__value__iexact=state)
+                                    | Q(business_location__locationCountry__name__iexact=country),
                                     selfCreated = False
                                 ))
                             )()
@@ -49,15 +49,15 @@ class MATCH_LEADS_TASKS:
                 businessList = await sync_to_async(
                     lambda: list(Business.objects.filter(
                         Q(business_location__city__iexact=city)
-                        | Q(business_location__state__iexact=state)
-                        | Q(business_location__country__iexact=country)
+                        | Q(business_location__locationState__value__iexact=state)
+                        | Q(business_location__locationCountry__name__iexact=country)
                     ))
                 )()
+            return businessList
         except Exception as e:
             # await MY_METHODS.printStatus(f'Error in MatchingBusinesses: {e}')
             return None
 
-        return 
 
     @classmethod
     async def LocationScore(cls, businesses, city, state, country):
@@ -69,8 +69,8 @@ class MATCH_LEADS_TASKS:
             location_score = 0
             if bl:
                 bl_city = (bl.city or NAMES.EMPTY).lower()
-                bl_state = (bl.state or NAMES.EMPTY).lower()
-                bl_country = (bl.country or NAMES.EMPTY).lower()
+                bl_state = (bl.locationState.name or NAMES.EMPTY).lower()
+                bl_country = (bl.locationCountry.name or NAMES.EMPTY).lower()
 
                 # Exact matches
                 if city and bl_city == city:
@@ -93,7 +93,7 @@ class MATCH_LEADS_TASKS:
         return pre_ranked
 
     @classmethod
-    async def GetBusinessesCandidate(cls, businesses, interestedText=None, interest=True):
+    async def GetBusinessesCandidate(cls, businesses:list, interestedText=None, interest=True):
         
         try:
             candidates = []
@@ -103,7 +103,7 @@ class MATCH_LEADS_TASKS:
                     break
 
                 if interest:
-                    segment_words = (business.segment or NAMES.EMPTY).lower().split()
+                    segment_words = (business.businessSegment.lable or NAMES.EMPTY).lower().split()
                     if interestedText and segment_words:
                         if not any(word in interestedText for word in segment_words):
                             continue
@@ -115,11 +115,11 @@ class MATCH_LEADS_TASKS:
                 bl = getattr(business, NAMES.BUSINESS_LOCATION, None)
                 candidates.append({
                     NAMES.ID: business.pk,
-                    NAMES.BUSINESS_NAME: business.business_name,
-                    NAMES.SEGMENT: business.segment,
-                    NAMES.CITY: getattr(bl, NAMES.CITY, None),
-                    NAMES.STATE: getattr(bl, NAMES.STATE, None),
-                    NAMES.COUNTRY: getattr(bl, NAMES.COUNTRY, None),
+                    NAMES.BUSINESS_NAME: business.businessName,
+                    NAMES.SEGMENT: business.businessSegment.lable,
+                    NAMES.CITY: business.business_location.city,
+                    NAMES.STATE: business.business_location.locationState.name,
+                    NAMES.COUNTRY: business.business_location.locationCountry.name,
                     NAMES.LEAD_COUNT: lead_count,
                     NAMES.LOCATION_SCORE: location_score
                 })

@@ -117,7 +117,7 @@ class SERVICES_TASKS:
     @classmethod
     async def getService(self,service:Service):
         try:
-            serviceImages = await sync_to_async(service.serviceImages.all)()
+            serviceImages: list[ServiceImage] = await sync_to_async(service.serviceImages.all)()
             serviceImageData = []
             for image in serviceImages:
                 serviceImageData.append({

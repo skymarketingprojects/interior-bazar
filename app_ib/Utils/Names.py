@@ -101,6 +101,10 @@ class NAMES:
     PRIMARY_IMAGE='primary_image'
     SECONDARY_IMAGE='secondary_image'
 
+    #business profile
+    PRIMARY_IMAGE_URL='primaryImageUrl'
+    SECONDARY_IMAGES_URL='secondaryImagesUrl'
+
     #location
     CITY='city'
     STATE='state'

@@ -24,9 +24,9 @@ class BUSINESS_INFO_CONTROLLER:
             if settings.ENV == APPMODE.PROD:
                 businessesIns = await sync_to_async(lambda: Business.objects.filter(selfCreated=False).select_related('business_profile').only(
                         'id',
-                        'business_name',
+                        'businessName',
                         'timestamp',
-                        'cover_image_url',
+                        'coverImageUrl',
                         'since',
                         'business_plan__services',
                         'business_plan__isActive',
@@ -36,7 +36,7 @@ class BUSINESS_INFO_CONTROLLER:
             else: 
                 businessesIns = await sync_to_async(lambda: Business.objects.all().select_related('business_profile').only(
                         'id',
-                        'business_name',
+                        'businessName',
                         'timestamp',
                         'cover_image_url',
                         'since',

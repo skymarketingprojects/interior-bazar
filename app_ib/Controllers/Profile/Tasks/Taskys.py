@@ -13,7 +13,7 @@ class PROFILE_TASKS:
             user_profile_ins.email = data.email
             user_profile_ins.phone = data.phone
             user_profile_ins.countryCode = data.countryCode
-            user_profile_ins.profile_image_url = data.profile_image_url
+            user_profile_ins.profileImageUrl = data.profileImageUrl
             await sync_to_async(user_profile_ins.save)()
             return True
             
@@ -28,7 +28,7 @@ class PROFILE_TASKS:
             user_profile_ins.email = data.email
             user_profile_ins.phone = data.phone
             user_profile_ins.countryCode = data.countryCode
-            user_profile_ins.profile_image_url = data.profile_image_url
+            user_profile_ins.profileImageUrl = data.profileImageUrl
             await sync_to_async(user_profile_ins.save)()
             return True
             
@@ -41,7 +41,7 @@ class PROFILE_TASKS:
         try:
             user_profile_ins = UserProfile()
             user_profile_ins.user = user_ins
-            user_profile_ins.profile_image_url = profile_image
+            user_profile_ins.profileImageUrl = profile_image
             await sync_to_async(user_profile_ins.save)()
             return True
             
@@ -52,7 +52,7 @@ class PROFILE_TASKS:
     @classmethod
     async def UpdateProfileImageTask(self, user_profile_ins:UserProfile, profile_image):
         try:
-            user_profile_ins.profile_image = profile_image
+            user_profile_ins.profileImageUrl = profile_image
             await sync_to_async(user_profile_ins.save)()
             return True
             
@@ -65,14 +65,12 @@ class PROFILE_TASKS:
     async def GetProfileDataTask(self, user_profile_ins:UserProfile):
         try:
             user_profile_data = {
-                NAMES.PROFILE_IMAGE_URL: user_profile_ins.profile_image_url if user_profile_ins.profile_image_url else NAMES.EMPTY,
+                NAMES.PROFILE_IMAGE_URL: user_profile_ins.profileImageUrl if user_profile_ins.profileImageUrl else NAMES.EMPTY,
                 NAMES.NAME: user_profile_ins.name if user_profile_ins.name else NAMES.EMPTY,
                 NAMES.EMAIL: user_profile_ins.email if user_profile_ins.email else NAMES.EMPTY,
                 NAMES.PHONE: user_profile_ins.phone if user_profile_ins.phone else NAMES.EMPTY,
                 NAMES.COUNTRY_CODE: user_profile_ins.countryCode if user_profile_ins.countryCode else NAMES.EMPTY,
             }
-            if(user_profile_ins.profile_image):
-                user_profile_data[NAMES.PROFILE_IMAGE]=user_profile_ins.profile_image.url
             return user_profile_data
             
         except Exception as e:

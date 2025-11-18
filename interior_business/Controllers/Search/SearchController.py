@@ -124,8 +124,10 @@ class SEARCH_CONTROLLER:
             locationState=None
             if businessId:
                 business = await sync_to_async(Business.objects.get)(id=businessId)
-                city = business.business_location.city
-                locationState = business.business_location.locationState
+                location:Location = business.business_location
+                city = location.city
+                locationState = location.locationState.name
+                
             nearby_businesses = await SEARCH_TASKS.GetNearbyBusinesses(businessId=businessId,city=city,state=state,locationState=locationState, pageNo=pageNo)
             if nearby_businesses is None:
                 return LocalResponse(

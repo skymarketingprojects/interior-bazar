@@ -94,7 +94,7 @@ class LEAD_TASKS:
             results = []
 
             for lead in lead_list:
-                business_name = lead.business.business_name if lead.business else None
+                business_name = lead.business.businessName if lead.business else None
 
                 results.append({
                     "date": lead.timestamp,

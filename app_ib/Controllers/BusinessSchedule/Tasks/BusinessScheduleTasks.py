@@ -13,9 +13,9 @@ class BUSINESS_SCHEDULE_TASKS:
                 business=business,
                 day=day_number,
                 defaults={
-                    "start_time": start_time,
-                    "end_time": end_time,
-                    "is_working": is_working
+                    "startTime": start_time,
+                    "endTime": end_time,
+                    "isWorking": is_working
                 }
             )
 
@@ -32,9 +32,9 @@ class BUSINESS_SCHEDULE_TASKS:
             result = {}
             for day in schedules:
                 result[day.get_day_display()] = {
-                    NAMES.START_TIME: day.start_time.strftime(NAMES.HM_FORMAT),
-                    NAMES.END_TIME: day.end_time.strftime(NAMES.HM_FORMAT),
-                    NAMES.IS_WORKING: day.is_working
+                    NAMES.START_TIME: day.startTime.strftime(NAMES.HM_FORMAT),
+                    NAMES.END_TIME: day.endTime.strftime(NAMES.HM_FORMAT),
+                    NAMES.IS_WORKING: day.isWorking
                 }
             return result
         except Exception as e:
@@ -60,9 +60,9 @@ class BUSINESS_SCHEDULE_TASKS:
                         DaySchedule.objects.get
                     )(business=business_ins, day=day_number)
 
-                    schedule_ins.start_time = values.get(NAMES.START_TIME)
-                    schedule_ins.end_time = values.get(NAMES.END_TIME)
-                    schedule_ins.is_working = values.get(NAMES.IS_WORKING, False)
+                    schedule_ins.startTime = values.get(NAMES.START_TIME)
+                    schedule_ins.endTime = values.get(NAMES.END_TIME)
+                    schedule_ins.isWorking = values.get(NAMES.IS_WORKING, False)
                     await sync_to_async(schedule_ins.save)()
             data = cls.GetScheduleByBusiness(business_ins)
 

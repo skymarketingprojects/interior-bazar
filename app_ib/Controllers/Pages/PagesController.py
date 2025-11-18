@@ -21,7 +21,7 @@ class PAGE_CONTROLLER:
             # await MY_METHODS.printStatus(f'page ins {page_ins}')
             page_data={
                 NAMES.ID:page_ins.id,
-                NAMES.PAGE_NAME:page_ins.page_name,
+                NAMES.PAGE_NAME:page_ins.pageName,
                 NAMES.PAGE_TITLE:page_ins.title,
                 NAMES.PAGE_CONTENT:page_ins.content.html,
             }

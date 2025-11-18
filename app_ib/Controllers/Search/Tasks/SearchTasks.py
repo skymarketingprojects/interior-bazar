@@ -84,11 +84,11 @@ class SEARCH_TASKS:
 
 
     @classmethod
-    async def FetchBusiness(self, business):
+    async def FetchBusiness(self, business:Business):
         try:
             final_data = {}
             # await MY_METHODS.printStatus(f'business {business}')
-            user_ins = business.user
+            # user_ins = business.user
 
             # Use asyncio.gather to fetch data in parallel for faster performance
             business_data, business_location_data = await asyncio.gather(

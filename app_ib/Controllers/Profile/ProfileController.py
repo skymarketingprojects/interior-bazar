@@ -3,7 +3,7 @@ from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.Names import NAMES
 from app_ib.Utils.LocalResponse import LocalResponse
-from app_ib.models import UserProfile
+from app_ib.models import UserProfile,CustomUser
 from app_ib.Controllers.Profile.Tasks.Taskys import PROFILE_TASKS
 from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.Controllers.Plans.PlanController import PLAN_CONTROLLER
@@ -78,7 +78,7 @@ class PROFILE_CONTROLLER:
  # Create or update profile image   
  ########################################### 
     @classmethod 
-    async def CreateOrUpdateProfileImage(self, user_ins , profile_image):
+    async def CreateOrUpdateProfileImage(self, user_ins:CustomUser , profile_image):
         try:
             # Test
             # await MY_METHODS.printStatus(f'user instance {user_ins}')
@@ -141,7 +141,7 @@ class PROFILE_CONTROLLER:
     ###########################################                   
 
     @classmethod
-    async def GetProfileData(cls, userIns, includePlan=False):
+    async def GetProfileData(cls, userIns:CustomUser, includePlan=False):
         try:
             is_user_profile_created = await sync_to_async(UserProfile.objects.filter(user=userIns).exists)()
             

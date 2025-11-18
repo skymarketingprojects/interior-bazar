@@ -204,7 +204,7 @@ class PRODUCTS_TASKS:
                 "categories":prodCategory,
                 "subCategories":prodSubCategory
             }
-            specifications = await sync_to_async(product.productSpecifications.all)()
+            specifications:list[ProductSpecification] = await sync_to_async(product.productSpecifications.all)()
             for specification in specifications:
                 productData[specification.title] = specification.description
             return productData

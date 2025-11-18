@@ -131,7 +131,7 @@ class ADS_TASKS:
     # ---------------- PAYMENT ----------------
 
     @classmethod
-    async def CreateAdPaymentTask(cls, AdCampaignIns, Data):
+    async def CreateAdPaymentTask(cls, AdCampaignIns, Data:dict):
         try:
             PaymentStatusIns = None
             if "status" in Data:

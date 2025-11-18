@@ -16,11 +16,11 @@ class BUSS_LOC_TASK:
             country = await sync_to_async(Country.objects.filter(id=data.country.id).first)()
             business_loc_ins = Location()
             business_loc_ins.business=business_ins
-            business_loc_ins.pin_code=data.pin_code
+            business_loc_ins.pinCode=data.pinCode
             business_loc_ins.city=data.city
             business_loc_ins.locationState=state
             business_loc_ins.locationCountry=country
-            business_loc_ins.location_link=data.gmbLink
+            business_loc_ins.locationLink=data.gmbLink
             await sync_to_async(business_loc_ins.save)()
             return True
             
@@ -29,17 +29,17 @@ class BUSS_LOC_TASK:
             return None
 
     @classmethod
-    async def UpdateBusinessLocTask(self,business_loc_ins, data):
+    async def UpdateBusinessLocTask(self,business_loc_ins:Location, data):
         try:
             state = await sync_to_async(State.objects.filter(id=data.state.id).first)()
             country = await sync_to_async(Country.objects.filter(id=data.country.id).first)()
             business_loc_ins.locationState=state
             business_loc_ins.locationCountry=country
-            business_loc_ins.pin_code=data.pin_code
+            business_loc_ins.pinCode=data.pinCode
             business_loc_ins.city=data.city
             # business_loc_ins.state=data.state
             # business_loc_ins.country=data.country
-            business_loc_ins.location_link=data.gmbLink
+            business_loc_ins.locationLink=data.gmbLink
             await sync_to_async(business_loc_ins.save)()
             return True
             
@@ -48,30 +48,23 @@ class BUSS_LOC_TASK:
             return None
 
     @classmethod
-    async def GetBusinessLocTask(self,business_loc_ins):
+    async def GetBusinessLocTask(self,business_loc_ins:Location):
         try:
             state = {
                 "id": business_loc_ins.locationState.id,
                 "name": business_loc_ins.locationState.name
-            } if business_loc_ins.locationState else {
-                "id": 1,
-                "name": business_loc_ins.state
-            }
+            } 
             country = {
                 "id": business_loc_ins.locationCountry.id,
                 "name": business_loc_ins.locationCountry.name,
                 "code": business_loc_ins.locationCountry.code
-            } if business_loc_ins.locationCountry else {
-                "id": 1,
-                "name": business_loc_ins.country,
-                "code":1
             }
             business_loc_data={
-                'pin_code':business_loc_ins.pin_code,
+                'pin_code':business_loc_ins.pinCode,
                 'city':business_loc_ins.city,
                 'state':state,
                 'country':country,
-                'gmbLink':business_loc_ins.location_link,
+                'gmbLink':business_loc_ins.locationLink,
                 'id':business_loc_ins.pk,
             }
             return business_loc_data
@@ -81,7 +74,7 @@ class BUSS_LOC_TASK:
             return None
 
     @classmethod
-    async def GetCountryDataTask(self, country):
+    async def GetCountryDataTask(self, country:Country):
         try:
             countryData = {
                 "id": country.id,

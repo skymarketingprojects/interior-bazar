@@ -8,10 +8,10 @@ from app_ib.Controllers.BussLocation.Tasks.BusinessLocationTasks import BUSS_LOC
 from app_ib.Utils.MyMethods import MY_METHODS
 from django.db.models import Prefetch
 
-from app_ib.models import BusinessSegment
+from app_ib.models import BusinessSegment,CustomUser
 class BUSS_TASK:
     @classmethod
-    async def CreateBusinessTask(cls, user_ins, data):
+    async def CreateBusinessTask(cls, user_ins:CustomUser, data):
         try:
             badge = await sync_to_async(lambda: BusinessBadge.objects.filter(isDefault=True).first())()
 
@@ -38,21 +38,21 @@ class BUSS_TASK:
             # Create Business instance
             business_ins = Business()
             business_ins.user = user_ins
-            business_ins.business_name = getattr(data, NAMES.BUSINESS_NAME, NAMES.EMPTY)
+            business_ins.businessName = getattr(data, NAMES.BUSINESS_NAME, NAMES.EMPTY)
             business_ins.whatsapp = getattr(data, NAMES.WHATSAPP, NAMES.EMPTY)
             business_ins.gst = getattr(data, NAMES.GST, NAMES.EMPTY)
             business_ins.since = getattr(data, NAMES.SINCE, NAMES.EMPTY)
             business_ins.bio = getattr(data, NAMES.BIO, NAMES.EMPTY)
-            business_ins.banner_image_url = getattr(data, NAMES.BANNER_IMAGE_URL, NAMES.EMPTY)
+            business_ins.bannerImageUrl = getattr(data, NAMES.BANNER_IMAGE_URL, NAMES.EMPTY)
             business_ins.bannerLink = getattr(data, NAMES.BANNER_LINK, NAMES.EMPTY)
             business_ins.bannerText = getattr(data, NAMES.BANNER_TEXT, NAMES.EMPTY)
-            business_ins.cover_image_url = getattr(data, NAMES.COVER_IMAGE_URL, NAMES.EMPTY)
-            business_ins.business_type = business_type
+            business_ins.coverImageUrl = getattr(data, NAMES.COVER_IMAGE_URL, NAMES.EMPTY)
+            business_ins.businessType = business_type
             business_ins.businessBadge = badge
 
             # Optional legacy text (store labels)
-            business_ins.segment = ', '.join([s.lable for s in segments])
-            business_ins.catigory = ', '.join([c.lable for c in categories])
+            # business_ins.segment = ', '.join([s.lable for s in segments])
+            # business_ins.catigory = ', '.join([c.lable for c in categories])
 
             await sync_to_async(business_ins.save)()
 
@@ -75,7 +75,7 @@ class BUSS_TASK:
             if hasattr(data, NAMES.BUSINESS_TYPE) and getattr(data.businessType, NAMES.ID, None):
                 business_type = await sync_to_async(BusinessType.objects.filter(id=data.businessType.id).first)()
                 if business_type:
-                    business_ins.business_type = business_type
+                    business_ins.businessType = business_type
 
             # --- M2M: BusinessSegment (max 5) ---
             segments = getattr(data, NAMES.SEGMENTS, None)
@@ -84,7 +84,7 @@ class BUSS_TASK:
                 segment_objs = await sync_to_async(lambda: list(BusinessSegment.objects.filter(id__in=segment_ids)))()
                 if len(segment_objs) == len(segment_ids):
                     await sync_to_async(business_ins.businessSegment.set)(segment_objs)
-                    business_ins.segment = ', '.join([s.lable for s in segment_objs])  # legacy
+                    # business_ins.segment = ', '.join([s.lable for s in segment_objs])  # legacy
 
             # --- M2M: BusinessCategory (max 3) ---
             categories = getattr(data, NAMES.CATEGORIES, None)
@@ -93,17 +93,17 @@ class BUSS_TASK:
                 category_objs = await sync_to_async(lambda: list(BusinessCategory.objects.filter(id__in=category_ids)))()
                 if len(category_objs) == len(category_ids):
                     await sync_to_async(business_ins.businessCategory.set)(category_objs)
-                    business_ins.catigory = ', '.join([c.lable for c in category_objs])  # legacy
+                    # business_ins.catigory = ', '.join([c.lable for c in category_objs])  # legacy
 
             # --- Simple Fields ---
-            business_ins.business_name = getattr(data, NAMES.BUSINESS_NAME, business_ins.business_name)
+            business_ins.businessName = getattr(data, NAMES.BUSINESS_NAME, business_ins.businessName)
             business_ins.gst = getattr(data, NAMES.GST, business_ins.gst)
             business_ins.since = getattr(data, NAMES.SINCE, business_ins.since)
             business_ins.bio = getattr(data, NAMES.BIO, business_ins.bio)
-            business_ins.banner_image_url = getattr(data, NAMES.BANNER_IMAGE_URL, business_ins.banner_image_url)
+            business_ins.bannerImageUrl = getattr(data, NAMES.BANNER_IMAGE_URL, business_ins.bannerImageUrl)
             business_ins.bannerLink = getattr(data, NAMES.BANNER_LINK, business_ins.bannerLink)
             business_ins.bannerText = getattr(data, NAMES.BANNER_TEXT, business_ins.bannerText)
-            business_ins.cover_image_url = getattr(data, NAMES.COVER_IMAGE_URL, business_ins.cover_image_url)
+            business_ins.coverImageUrl = getattr(data, NAMES.COVER_IMAGE_URL, business_ins.coverImageUrl)
             await sync_to_async(business_ins.save)()
 
             # --- Business Location (if exists) ---
@@ -114,7 +114,7 @@ class BUSS_TASK:
 
             # --- Business Profile (if exists) ---
             if prof and hasattr(data, NAMES.YOUTUBELINK):
-                prof.youtube_link = getattr(data, NAMES.YOUTUBELINK)
+                prof.youtubeLink = getattr(data, NAMES.YOUTUBELINK)
                 await sync_to_async(prof.save)()
 
             return await cls.GetBusinessInfo(business_ins.id)
@@ -140,23 +140,23 @@ class BUSS_TASK:
             # await MY_METHODS.printStatus(f'category {category_data},categories {categories}')
 
             data = {
-                NAMES.BUSINESS_NAME: business_ins.business_name,
+                NAMES.BUSINESS_NAME: business_ins.businessName,
                 NAMES.SEGMENTS: segment_data,
                 NAMES.CATEGORIES: category_data,
                 NAMES.WHATSAPP: business_ins.whatsapp,
                 NAMES.GST: business_ins.gst,
-                NAMES.COVER_IMAGE_URL: business_ins.cover_image_url,
+                NAMES.COVER_IMAGE_URL: business_ins.coverImageUrl,
                 NAMES.SINCE: business_ins.since,
                 NAMES.ID: business_ins.id,
                 NAMES.BIO: business_ins.bio,
-                NAMES.UPDATED_AT: business_ins.updated_at,
-                NAMES.BADGE: business_ins.businessBadge.image_url if business_ins.businessBadge else None,
+                NAMES.UPDATED_AT: business_ins.updatedAt,
+                NAMES.BADGE: business_ins.businessBadge.imageUrl if business_ins.businessBadge else None,
                 NAMES.TIMESTAMP: business_ins.timestamp
             }
 
             # Serialize business type
-            if business_ins.business_type:
-                data[NAMES.BUSINESS_TYPE] = await cls.GetBusinessTypeData(business_ins.business_type)
+            if business_ins.businessType:
+                data[NAMES.BUSINESS_TYPE] = await cls.GetBusinessTypeData(business_ins.businessType)
 
             # Location
             if business_loc_ins:
@@ -169,7 +169,7 @@ class BUSS_TASK:
 
             # Profile
             if business_prof_ins:
-                data[NAMES.YOUTUBE_LINK] = business_prof_ins.youtube_link
+                data[NAMES.YOUTUBE_LINK] = business_prof_ins.youtubeLink
 
             return data
 
@@ -188,7 +188,7 @@ class BUSS_TASK:
 
             # Business profile image
             business_profile = getattr(business_ins, NAMES.BUSINESS_PROFILE, None)
-            business_image = business_profile.primary_image_url if business_profile else None
+            business_image = business_profile.primaryImageUrl if business_profile else None
 
             # Segments
             segments = await sync_to_async(lambda: list(business_ins.businessSegment.all()))()
@@ -200,14 +200,14 @@ class BUSS_TASK:
 
             # Business Type
             business_type_data = None
-            if business_ins.business_type:
-                business_type_data = await cls.GetBusinessTypeData(business_ins.business_type)
+            if business_ins.businessType:
+                business_type_data = await cls.GetBusinessTypeData(business_ins.businessType)
 
             # Final response
             data = {
                 NAMES.ID: business_ins.id,
-                NAMES.BUSINESS_NAME: business_ins.business_name,
-                NAMES.COVER_IMAGE_URL: business_ins.cover_image_url,
+                NAMES.BUSINESS_NAME: business_ins.businessName,
+                NAMES.COVER_IMAGE_URL: business_ins.coverImageUrl,
                 NAMES.SINCE: business_ins.since,
                 NAMES.BUSINESS_IMAGE: business_image,
                 NAMES.SEGMENTS: segment_data,

@@ -11,9 +11,9 @@ class BUSS_PROF_TASK:
             business_prof_ins = BusinessProfile()
             business_prof_ins.business= business_ins
             business_prof_ins.about= data.about
-            business_prof_ins.youtube_link= data.youtube_link
-            business_prof_ins.primary_image_url= data.primary_image_url if data.primary_image_url else ''
-            business_prof_ins.secondary_images_url= data.secondary_images_url if data.secondary_images_url else ''
+            business_prof_ins.youtubeLink= data.youtubeLink
+            business_prof_ins.primaryImageUrl= data.primaryImageUrl if data.primaryImageUrl else NAMES.EMPTY
+            business_prof_ins.secondaryImagesUrl= data.secondaryImagesUrl if data.secondaryImagesUrl else NAMES.EMPTY
             await sync_to_async(business_prof_ins.save)()
             return True
             
@@ -22,12 +22,12 @@ class BUSS_PROF_TASK:
             return None
 
     @classmethod
-    async def UpdateBusinessProfileTask(self, business_prof_ins, data):
+    async def UpdateBusinessProfileTask(self, business_prof_ins:BusinessProfile, data):
         try:
             business_prof_ins.about= data.about
-            business_prof_ins.youtube_link= data.youtube_link
-            business_prof_ins.primary_image_url= data.primary_image_url if data.primary_image_url else business_prof_ins.primary_image_url
-            business_prof_ins.secondary_images_url= data.secondary_images_url if data.secondary_images_url else business_prof_ins.secondary_images_url
+            business_prof_ins.youtubeLink= data.youtubeLink
+            business_prof_ins.primaryImageUrl= data.primaryImageUrl if data.primaryImageUrl else business_prof_ins.primaryImageUrl
+            business_prof_ins.secondaryImagesUrl= data.secondaryImagesUrl if data.secondaryImagesUrl else business_prof_ins.secondaryImagesUrl
             await sync_to_async(business_prof_ins.save)()
             return True
             
@@ -37,12 +37,14 @@ class BUSS_PROF_TASK:
 
 
     @classmethod
-    async def GetBusinessProfTask(self,business_prof_ins):
+    async def GetBusinessProfTask(self,business_prof_ins:BusinessProfile):
         try:
             business_prof_data={
                 NAMES.ABOUT:business_prof_ins.about,
-                NAMES.YOUTUBE_LINK:business_prof_ins.youtube_link,
-                NAMES.ID:business_prof_ins.pk,
+                NAMES.YOUTUBE_LINK:business_prof_ins.youtubeLink,
+                NAMES.PRIMARY_IMAGE_URL:business_prof_ins.primaryImageUrl,
+                NAMES.SECONDARY_IMAGES_URL:business_prof_ins.secondaryImagesUrl,
+                NAMES.ID:business_prof_ins.pk
             }
             return business_prof_data
             

@@ -1,8 +1,9 @@
 from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.Utils.Names import NAMES
+from app_ib.models import Blog
 class BLOG_TASK:
     @classmethod
-    async def GetBlogData(self, blog_instance):
+    async def GetBlogData(self, blog_instance:Blog):
         try:
             if blog_instance is None:
                 return None
@@ -12,7 +13,7 @@ class BLOG_TASK:
                 NAMES.ID: blog_instance.id,
                 NAMES.TITLE: blog_instance.title,
                 NAMES.SLUG: blog_instance.slug,
-                NAMES.COVER_IMAGE_URL: blog_instance.cover_image_url,
+                NAMES.COVER_IMAGE_URL: blog_instance.coverImageUrl,
                 NAMES.AUTHOR_NAME: blog_instance.author,
                 NAMES.AUTHOR_IMAGE: blog_instance.authorImageUrl,
                 NAMES.PUBLISH_DATE: blog_instance.timestamp.strftime(NAMES.DMY_FORMAT),
@@ -25,7 +26,7 @@ class BLOG_TASK:
             return None
         
     @classmethod
-    async def GetBlogDetailData(self, blog_instance):
+    async def GetBlogDetailData(self, blog_instance:Blog):
         try:
             if blog_instance is None:
                 return None
@@ -33,7 +34,7 @@ class BLOG_TASK:
             blog_data = {
                 NAMES.ID: blog_instance.id,
                 NAMES.TITLE: blog_instance.title,
-                NAMES.COVER_IMAGE_URL: blog_instance.cover_image_url,
+                NAMES.COVER_IMAGE_URL: blog_instance.coverImageUrl,
                 NAMES.CONTENT: blog_instance.description.html,
                 NAMES.AUTHOR: blog_instance.author,
                 NAMES.AUTHOR_IMAGE: blog_instance.authorImageUrl,

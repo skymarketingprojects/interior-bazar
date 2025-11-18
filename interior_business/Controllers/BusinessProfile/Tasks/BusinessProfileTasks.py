@@ -1,5 +1,11 @@
 from asgiref.sync import sync_to_async
-from app_ib.models import BusinessProfile, Business, BusinessSocialMedia
+from app_ib.models import (
+    BusinessProfile,
+    Business,
+    BusinessSocialMedia,
+    Location,
+    UserProfile
+    )
 from app_ib.Utils.MyMethods import MY_METHODS
 
 import asyncio
@@ -22,7 +28,7 @@ class BUSS_PROF_TASK:
                     "user__user_profile__profile_image_url",
                 ).get(id=business_id)
             )()
-            businessLocation = business.business_location
+            businessLocation: Location = business.business_location
             # 2️⃣ Fetch Social Media (with related social media names)
             social_media_data = await sync_to_async(
                 lambda: list(
@@ -33,24 +39,25 @@ class BUSS_PROF_TASK:
             )()
 
             # 3️⃣ Build Response
+            profile: UserProfile = business.user.user_profile
             response_data = {
-                "bannerImageUrl": business.banner_image_url or "",
+                "bannerImageUrl": business.bannerImageUrl or "",
                 "profile_image_url": (
-                    business.user.user_profile.profile_image_url
+                    profile.profile_image_url
                     if business.user and business.user.user_profile
                     else ""
                 ),
                 "phone": (
-                    business.user.user_profile.phone
-                    if business.user and business.user.user_profile
+                    profile.phone
+                    if business.user and profile
                     else ""
                 ),
                 "countryCode": (
-                    business.user.user_profile.countryCode
-                    if business.user and business.user.user_profile
+                    profile.countryCode
+                    if business.user and profile
                     else "0"
                 ),
-                "businessName": business.business_name,
+                "businessName": business.businessName,
                 "socialMedia":{f"{sm['socialMedia__name']}Link": sm["link"] for sm in social_media_data},
             }
 
@@ -68,9 +75,9 @@ class BUSS_PROF_TASK:
             business_prof_ins = BusinessProfile()
             business_prof_ins.business= business_ins
             business_prof_ins.about= data.about
-            business_prof_ins.youtube_link= data.youtube_link
-            business_prof_ins.primary_image_url= data.primary_image_url if data.primary_image_url else ''
-            business_prof_ins.secondary_images_url= data.secondary_images_url if data.secondary_images_url else ''
+            business_prof_ins.youtubeLink= data.youtubeLink
+            business_prof_ins.primaryImageUrl= data.primaryImageUrl if data.primaryImageUrl else ''
+            business_prof_ins.secondaryImagesUrl= data.secondaryImagesUrl if data.secondaryImagesUrl else ''
             await sync_to_async(business_prof_ins.save)()
             
             return True
@@ -80,12 +87,12 @@ class BUSS_PROF_TASK:
             return None
 
     @classmethod
-    async def UpdateBusinessProfileTask(self, business_prof_ins, data):
+    async def UpdateBusinessProfileTask(self, business_prof_ins:BusinessProfile, data):
         try:
             business_prof_ins.about= data.about
-            business_prof_ins.youtube_link= data.youtube_link
-            business_prof_ins.primary_image_url= data.primary_image_url if data.primary_image_url else business_prof_ins.primary_image_url
-            business_prof_ins.secondary_images_url= data.secondary_images_url if data.secondary_images_url else business_prof_ins.secondary_images_url
+            business_prof_ins.youtubeLink= data.youtubeLink
+            business_prof_ins.primaryImageUrl= data.primaryImageUrl if data.primaryImageUrl else business_prof_ins.primaryImageUrl
+            business_prof_ins.secondaryImagesUrl= data.secondaryImagesUrl if data.secondaryImagesUrl else business_prof_ins.secondaryImagesUrl
             await sync_to_async(business_prof_ins.save)()
             return True
             
@@ -94,11 +101,11 @@ class BUSS_PROF_TASK:
             return None
 
     @classmethod
-    async def GetBusinessProfTask(self,business_prof_ins):
+    async def GetBusinessProfTask(self,business_prof_ins:BusinessProfile):
         try:
             business_prof_data={
                 'about':business_prof_ins.about,
-                'youtube_link':business_prof_ins.youtube_link,
+                'youtube_link':business_prof_ins.youtubeLink,
                 'id':business_prof_ins.pk,
             }
             return business_prof_data

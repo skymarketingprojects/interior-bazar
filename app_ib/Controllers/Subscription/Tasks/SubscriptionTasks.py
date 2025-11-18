@@ -16,16 +16,16 @@ class SUBSCRIPTION_TASKS:
             subscription_ins.duration = data[NAMES.DURATION]
             subscription_ins.tag = data[NAMES.TAG]
             subscription_ins.amount = data[NAMES.AMOUNT]
-            subscription_ins.discount_percentage = data[NAMES.DISCOUNT_PERCENTAGE]
-            subscription_ins.discount_amount = data[NAMES.DISCOUNT_AMOUNT]
-            subscription_ins.payable_amount = data[NAMES.PAYABLE_AMOUNT]
-            subscription_ins.cover_image = data.get(NAMES.COVER_IMAGE, None)
-            subscription_ins.fallback_image_url = data.get(NAMES.FALLBACK_IMG, None)
-            subscription_ins.video = data.get(NAMES.VIDEO, None)
-            subscription_ins.video_url = data.get(NAMES.VIDEO_URL, None)
-            subscription_ins.plan_pdf = data.get(NAMES.PLAN_PDF, None)
-            subscription_ins.plan_pdf_url = data.get(NAMES.PLAN_PDF_URL, None)
-            subscription_ins.is_active = data[NAMES.IS_ACTIVE]
+            subscription_ins.discountPercentage = data[NAMES.DISCOUNT_PERCENTAGE]
+            subscription_ins.discountAmount = data[NAMES.DISCOUNT_AMOUNT]
+            subscription_ins.payableAmount = data[NAMES.PAYABLE_AMOUNT]
+            # subscription_ins.planPdfUrl = data.get(NAMES.COVER_IMAGE, None)
+            subscription_ins.fallbackImageUrl = data.get(NAMES.FALLBACK_IMG, None)
+            # subscription_ins.video = data.get(NAMES.VIDEO, None)
+            subscription_ins.videoUrl = data.get(NAMES.VIDEO_URL, None)
+            # subscription_ins.plan_pdf = data.get(NAMES.PLAN_PDF, None)
+            subscription_ins.planPdfUrl = data.get(NAMES.PLAN_PDF_URL, None)
+            subscription_ins.isActive = data[NAMES.IS_ACTIVE]
             
             await sync_to_async(subscription_ins.save)()
             return True
@@ -41,16 +41,16 @@ class SUBSCRIPTION_TASKS:
             subscription_ins.subtitle = data[NAMES.SUBTITLE]
             subscription_ins.services = data[NAMES.SERVICES]
             subscription_ins.amount = data[NAMES.AMOUNT]
-            subscription_ins.discount_percentage = data[NAMES.DISCOUNT_PERCENTAGE]
-            subscription_ins.discount_amount = data[NAMES.DISCOUNT_AMOUNT]
-            subscription_ins.payable_amount = data[NAMES.PAYABLE_AMOUNT]
-            subscription_ins.cover_image = data.get(NAMES.COVER_IMAGE, None)
-            subscription_ins.fallback_image_url = data.get(NAMES.FALLBACK_IMG, None)
-            subscription_ins.video = data.get(NAMES.VIDEO, None)
-            subscription_ins.video_url = data.get(NAMES.VIDEO_URL, None)
-            subscription_ins.plan_pdf = data.get(NAMES.PLAN_PDF, None)
-            subscription_ins.plan_pdf_url = data.get(NAMES.PLAN_PDF_URL, None)
-            subscription_ins.is_active = data[NAMES.IS_ACTIVE]
+            subscription_ins.discountPercentage = data[NAMES.DISCOUNT_PERCENTAGE]
+            subscription_ins.discountAmount = data[NAMES.DISCOUNT_AMOUNT]
+            subscription_ins.payableAmount = data[NAMES.PAYABLE_AMOUNT]
+            # subscription_ins.coverImage = data.get(NAMES.COVER_IMAGE, None)
+            subscription_ins.fallbackImageUrl = data.get(NAMES.FALLBACK_IMG, None)
+            # subscription_ins.videoUrl = data.get(NAMES.VIDEO, None)
+            subscription_ins.videoUrl = data.get(NAMES.VIDEO_URL, None)
+            # subscription_ins.plan_pdf = data.get(NAMES.PLAN_PDF, None)
+            subscription_ins.planPdfUrl = data.get(NAMES.PLAN_PDF_URL, None)
+            subscription_ins.isActive = data[NAMES.IS_ACTIVE]
             
             await sync_to_async(subscription_ins.save)()
             return True
@@ -68,11 +68,11 @@ class SUBSCRIPTION_TASKS:
                 NAMES.TYPE: subscription_ins.type,
                 NAMES.NAME: subscription_ins.title,  # Title as name
                 NAMES.FEATURES: subscription_ins.services.split(NAMES.COMMA),  # Assuming services are comma-separated
-                NAMES.PRICE:subscription_ins.payable_amount,  # Convert to a float for price
+                NAMES.PRICE:subscription_ins.payableAmount,  # Convert to a float for price
                 NAMES.DESCRIPTION: subscription_ins.subtitle,
-                NAMES.VIDEO: subscription_ins.video_url or NAMES.EMPTY,  # Fallback to empty string if not present
-                NAMES.FALLBACK: subscription_ins.fallback_image_url or NAMES.EMPTY,
-                NAMES.PLAN_PDF: subscription_ins.plan_pdf_url or NAMES.EMPTY
+                NAMES.VIDEO: subscription_ins.videoUrl or NAMES.EMPTY,  # Fallback to empty string if not present
+                NAMES.FALLBACK: subscription_ins.fallbackImageUrl or NAMES.EMPTY,
+                NAMES.PLAN_PDF: subscription_ins.planPdfUrl or NAMES.EMPTY
             }
             return data
         
@@ -89,11 +89,11 @@ class SUBSCRIPTION_TASKS:
                     NAMES.ID: subscription.id,
                     NAMES.NAME: subscription.title,
                     NAMES.FEATURES: subscription.services.split(NAMES.COMMA),  # Assuming it's a comma-separated string
-                    NAMES.PRICE: float(subscription.payable_amount),
+                    NAMES.PRICE: float(subscription.payableAmount),
                     NAMES.DESCRIPTION: subscription.subtitle,
-                    NAMES.VIDEO: subscription.video_url or NAMES.EMPTY,
-                    NAMES.FALLBACK: subscription.fallback_image_url or NAMES.EMPTY,
-                    NAMES.PLAN_PDF: subscription.plan_pdf_url or NAMES.EMPTY
+                    NAMES.VIDEO: subscription.videoUrl or NAMES.EMPTY,
+                    NAMES.FALLBACK: subscription.fallbackImageUrl or NAMES.EMPTY,
+                    NAMES.PLAN_PDF: subscription.planPdfUrl or NAMES.EMPTY
                 }
                 query_data.append(data)
 

@@ -136,24 +136,24 @@ class ANALYTICS_TASKS:
                 inactive = 0
                 if settings.ENV == APPMODE.PROD:
                     active = Business.objects.filter(
-                        businessplan__is_active=True,
+                        businessplan__isActive=True,
                         timestamp__gte=start_date,
                         selfCreated = False
                     ).count()
                     inactive = Business.objects.filter(
                         Q(businessplan__isnull=True) |
-                        Q(businessplan__is_active=False),
+                        Q(businessplan__isActive=False),
                         timestamp__gte=start_date,
                         selfCreated = False
                     ).count()
                 else:
                     active = Business.objects.filter(
-                        businessplan__is_active=True,
+                        businessplan__isActive=True,
                         timestamp__gte=start_date
                     ).count()
                     inactive = Business.objects.filter(
                         Q(businessplan__isnull=True) |
-                        Q(businessplan__is_active=False),
+                        Q(businessplan__isActive=False),
                         timestamp__gte=start_date
                     ).count()
                 return {"active": active, "inactive": inactive}

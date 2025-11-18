@@ -159,14 +159,14 @@ class BUSS_PROFILE_CONTROLLER:
             # Update Profile Image if already exist : 
             if is_buss_prof_ins_exist:
                 profile_ins = await sync_to_async(BusinessProfile.objects.get)(business=business_ins)
-                profile_ins.primary_image = primary_image
+                profile_ins.primaryImageUrl = primary_image
                 await sync_to_async(profile_ins.save)()
 
             # Create Profile Image if not exist : 
             else:
                 profile_ins = BusinessProfile()
                 profile_ins.business = business_ins
-                profile_ins.primary_image = primary_image
+                profile_ins.primaryImageUrl = primary_image
                 await sync_to_async(profile_ins.save)()
             
             return LocalResponse(
@@ -200,14 +200,14 @@ class BUSS_PROFILE_CONTROLLER:
             # Update Profile Image if already exist : 
             if is_buss_prof_ins_exist:
                 profile_ins = await sync_to_async(BusinessProfile.objects.get)(business=business_ins)
-                profile_ins.secondary_images = secondary_image
+                profile_ins.secondaryImagesUrl = secondary_image
                 await sync_to_async(profile_ins.save)()
 
             # Create Profile Image if not exist : 
             else:
                 profile_ins = BusinessProfile()
                 profile_ins.business = business_ins
-                profile_ins.secondary_images = secondary_image
+                profile_ins.secondaryImagesUrl = secondary_image
                 await sync_to_async(profile_ins.save)()
             
             return LocalResponse(

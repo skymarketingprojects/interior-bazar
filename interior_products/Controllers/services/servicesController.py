@@ -106,7 +106,7 @@ class SERVICES_CONTROLLER:
     @classmethod
     async def getServicesForBusiness(self,business:Business)->LocalResponse:
         try:
-            services = await sync_to_async(
+            services:Service = await sync_to_async(
             lambda: business.services.all().order_by('index')
         )()
             servicesData = []

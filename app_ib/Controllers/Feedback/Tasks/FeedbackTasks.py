@@ -18,7 +18,7 @@ class FEEDBACK_TASKS:
             return None
 
     @classmethod
-    async def UdpateFeedbackTask(self,feedback_ins, data):
+    async def UdpateFeedbackTask(self,feedback_ins:Feedback, data):
         try:
             feedback_ins.status= data.status 
             await sync_to_async(feedback_ins.save)()

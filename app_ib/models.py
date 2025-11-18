@@ -51,16 +51,16 @@ class UserProfile(models.Model):
     phone= models.CharField(max_length=100,default='',null=True, blank=True)
     countryCode= models.CharField(max_length=10,default='',null=True, blank=True)
     email= models.CharField(max_length=250,default='',null=True, blank=True)
-    profile_image= models.FileField(null=True, blank=True, upload_to='user/profile_image')
-    profile_image_url = models.TextField(default='',null=True, blank=True)
+    # profile_image= models.FileField(null=True, blank=True, upload_to='user/profile_image')
+    profileImageUrl = models.TextField(default='',null=True, blank=True)
     timestamp= models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    updatedAt = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f'profile - {self.user.pk}'
 class BusinessBadge(models.Model):
     type = models.CharField(max_length=250)
-    image_url = models.URLField(max_length=2250, null=True, blank=True)
+    imageUrl = models.URLField(max_length=2250, null=True, blank=True)
     isDefault = models.BooleanField(default=False)
 
     def __str__(self):
@@ -95,44 +95,44 @@ class BusinessSegment(models.Model):
 
 class Business(models.Model):
     user= models.OneToOneField(CustomUser,on_delete=models.CASCADE, null=True, blank=True,related_name='user_business')
-    business_name= models.CharField(max_length=250)
+    businessName= models.CharField(max_length=250)
     brandName = models.CharField(max_length=250,null=True, blank=True)
     whatsapp= models.CharField(max_length=100,default='',null=True, blank=True)
-    cover_image_url = models.TextField(default='',null=True, blank=True)
-    banner_image_url = models.TextField(default='',null=True, blank=True)
+    coverImageUrl = models.TextField(default='',null=True, blank=True)
+    bannerImageUrl = models.TextField(default='',null=True, blank=True)
     bannerLink = models.TextField(default='',null=True, blank=True)
     bannerText = models.TextField(default='',null=True, blank=True)
     gst= models.CharField(max_length=250,null=True, blank=True)
     since= models.CharField(max_length=250,null=True, blank=True)
 
-    segment= models.TextField() # "manufraturer" #remove in version 2
-    catigory= models.TextField() # ["interior", "exterior","office"] # remove in version 2
-    business_type= models.ForeignKey(BusinessType, on_delete=models.SET_NULL, null=True, blank=True)
+    # segment= models.TextField() # "manufraturer" #remove in version 2
+    # catigory= models.TextField() # ["interior", "exterior","office"] # remove in version 2
+    businessType= models.ForeignKey(BusinessType, on_delete=models.SET_NULL, null=True, blank=True)
     businessSegment= models.ManyToManyField(BusinessSegment,related_name='business_segment')
     businessCategory= models.ManyToManyField(BusinessCategory,related_name='business_category')
 
-    badge = models.TextField(null=True, blank=True)
+    # badge = models.TextField(null=True, blank=True)
     businessBadge= models.ForeignKey(BusinessBadge, on_delete=models.SET_NULL, null=True, blank=True)
     bio = models.TextField( null=True, blank=True)
     timestamp= models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    updatedAt = models.DateTimeField(auto_now=True)
 
     selfCreated = models.BooleanField(default=False)
 
     def __str__(self):
-        return f'business name - {self.business_name} : pk: {self.pk}'
+        return f'business name - {self.businessName} : pk: {self.pk}'
 
 class BusinessProfile(models.Model):
     business= models.OneToOneField(Business,on_delete=models.CASCADE, null=True, blank=True,related_name='business_profile')
-    primary_image= models.FileField(null=True, blank=True , upload_to='business/primary_image')
-    secondary_images= models.FileField(null=True, blank=True, upload_to='business/secondary_images')
-    primary_image_url = models.TextField(default='',null=True, blank=True)
-    secondary_images_url = models.TextField(default='',null=True, blank=True)
+    # primary_image= models.FileField(null=True, blank=True , upload_to='business/primary_image')
+    # secondary_images= models.FileField(null=True, blank=True, upload_to='business/secondary_images')
+    primaryImageUrl = models.TextField(default='',null=True, blank=True)
+    secondaryImagesUrl = models.TextField(default='',null=True, blank=True)
     about= models.TextField()
-    youtube_link= models.TextField()
+    youtubeLink= models.TextField()
 
     def __str__(self):
-        return f'business profile - {self.business.pk}'
+        return f'business profile - {self.business.businessName}'
 
 class Country(models.Model):
     name = models.CharField(max_length=255)
@@ -151,15 +151,15 @@ class State(models.Model):
 class Location(models.Model):
     user= models.OneToOneField(CustomUser,on_delete=models.CASCADE, null=True, blank=True)
     business= models.OneToOneField(Business,on_delete=models.CASCADE, null=True, blank=True, related_name='business_location')
-    pin_code= models.CharField(max_length=500)
+    pinCode= models.CharField(max_length=500)
     city= models.CharField(max_length=500)
     locationState = models.ForeignKey(State, on_delete=models.CASCADE,null=True, blank=True)
-    state= models.CharField(max_length=500)
+    # state= models.CharField(max_length=500)
     locationCountry = models.ForeignKey(Country, on_delete=models.CASCADE,null=True, blank=True)
-    country= models.CharField(max_length=500)
-    location_link= models.TextField()
+    # country= models.CharField(max_length=500)
+    locationLink= models.TextField()
     timestamp= models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    updatedAt = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         if self.business:
@@ -184,7 +184,7 @@ class LeadQuery(models.Model):
     priority= models.TextField(default='',null=True,blank=True)
     remark= models.TextField(default='',null=True,blank=True)
     timestamp= models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    updatedAt = models.DateTimeField(auto_now=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -211,20 +211,20 @@ class Subscription(models.Model):
     duration= models.CharField(max_length=800,null=True, blank=True)
     tag= models.CharField(max_length=800,null=True, blank=True) 
     amount= models.CharField(max_length=800,null=True, blank=True) 
-    discount_percentage= models.CharField(max_length=800,null=True, blank=True) 
-    discount_amount= models.CharField(max_length=800,null=True, blank=True) 
-    payable_amount= models.CharField(max_length=800,null=True, blank=True) 
+    discountPercentage= models.CharField(max_length=800,null=True, blank=True) 
+    discountAmount= models.CharField(max_length=800,null=True, blank=True) 
+    payableAmount= models.CharField(max_length=800,null=True, blank=True) 
 
-    cover_image= models.FileField(null=True, blank=True, upload_to='subscription/attachment')
-    fallback_image_url= models.URLField(max_length=2250, null=True, blank=True) 
-    video= models.FileField(null=True, blank=True, upload_to='subscription/video')
-    video_url= models.URLField(max_length=2250, null=True, blank=True)
-    plan_pdf= models.FileField(null=True, blank=True, upload_to='subscription/pdf')
-    plan_pdf_url= models.URLField(max_length=2250, null=True, blank=True)
+    # cover_image= models.FileField(null=True, blank=True, upload_to='subscription/attachment')
+    fallbackImageUrl= models.URLField(max_length=2250, null=True, blank=True) 
+    # video= models.FileField(null=True, blank=True, upload_to='subscription/video')
+    videoUrl= models.URLField(max_length=2250, null=True, blank=True)
+    # plan_pdf= models.FileField(null=True, blank=True, upload_to='subscription/pdf')
+    planPdfUrl= models.URLField(max_length=2250, null=True, blank=True)
 
-    is_active= models.BooleanField(default=False)
+    isActive= models.BooleanField(default=False)
     timestamp= models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    updatedAt = models.DateTimeField(auto_now=True)
     def __str__(self):
         return f'ID:{self.id} rating:{self.title}'
 
@@ -263,12 +263,12 @@ class PlanQuery(models.Model):
     state= models.CharField(max_length=500,default='')
     country= models.CharField(max_length=500,default='')
     address= models.TextField(default='')
-    transaction_id= models.CharField(max_length=500,default='')
+    transactionId= models.CharField(max_length=500,default='')
     stage= models.CharField(max_length=500,default='') #{"1":"Lead","2":"Contacted","3":"Followed Up","4":"Closed"}
     attachment= models.FileField(null=True, blank=True, upload_to='lead_query/attachment')
-    attachment_url = models.URLField(default='',null=True, blank=True)
+    attachmentUrl = models.URLField(default='',null=True, blank=True)
     timestamp= models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    updatedAt = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f' ID {self.pk} phone:{self.phone} stage:{self.stage}'
@@ -289,13 +289,13 @@ class Quate(models.Model):
     city= models.CharField(max_length=500,default='')
     state= models.CharField(max_length=500,default='')
     timestamp= models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    updatedAt = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         if self.phoneNumber and not self.stage:
             return f'ID {self.pk} phone:{self.phoneNumber}'
         elif self.phoneNumber and self.stage:
-            return f'ID {self.pk} phone:{self.phone} stage:{self.stage}'
+            return f'ID {self.pk} phone:{self.phoneNumber} stage:{self.stage}'
         return f'ID {self.pk}'
     
     class Meta:
@@ -308,7 +308,7 @@ class Feedback(models.Model):
     feedback= models.TextField() # lable : Feedback rating
     status= models.TextField() # lable : [view,]
     timestamp= models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    updatedAt = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f'pk:{self.pk}  feedback:{self.feedback}'
@@ -318,12 +318,12 @@ class Blog(models.Model):
     title= models.TextField() 
     slug = models.CharField(max_length=800, unique=True, null=True, blank=True)
     cover= models.FileField(null=True, blank=True,upload_to='blog/cover')
-    cover_image_url = models.TextField(default='',null=True, blank=True)
+    coverImageUrl = models.TextField(default='',null=True, blank=True)
     description=QuillField(null=True, blank=True)
     author= models.TextField()
     authorImageUrl = models.URLField(default='',null=True, blank=True)
     timestamp= models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    updatedAt = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f'author {self.author} title:{self.title} timestamp:{self.timestamp}'
@@ -343,7 +343,7 @@ class Contact(models.Model):
     detail= models.TextField()
     attachment= models.FileField(null=True, blank=True,upload_to='contact/attachment')
     timestamp= models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    updatedAt = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f'ID {self.pk} tag {self.tag}'
@@ -351,38 +351,38 @@ class Contact(models.Model):
 class Constants(models.Model):
     segments= models.TextField() # {'manu':Manugraturer, 'retailer':Retailer}
     catigory= models.TextField() # {'manu':[furniture,lighting,decor,flooring,wall_coverings,window_treatments,home_textiles,kitchen_cabinets], 'retailer':[bathroom_fixtures,toilets,faucets,sinks,showers,bathtubs,bathroom_accessories,water_systems]}
-    payment_detail = models.TextField()
-    payment_qr = models.FileField(null=True, blank=True ,upload_to='payment_qr')
+    paymentDetail = models.TextField()
+    paymentQr = models.FileField(null=True, blank=True ,upload_to='payment_qr')
     def __str__(self):
         return f' pk {self.pk} segments:{self.segments}'
 
 class Banners(models.Model):
-    support_text = models.TextField()
+    supportText = models.TextField()
     title = models.TextField()
     banner = models.FileField(null=True, blank=True ,upload_to='banners')
-    is_active = models.BooleanField(default=False)
+    isActive = models.BooleanField(default=False)
     def __str__(self):
         return f' pk {self.pk} title:{self.title}'
 
 class OfferHeading(models.Model):
     title = models.TextField()
-    is_active = models.BooleanField(default=False)
+    isActive = models.BooleanField(default=False)
     def __str__(self):
         return f' pk {self.pk} title:{self.title}'
 
 class Pages(models.Model):
-    page_name = models.CharField(max_length=500, unique=True)
+    pageName = models.CharField(max_length=500, unique=True)
     title = models.CharField(max_length=500)
     content = QuillField(null=True, blank=True)
     def __str__(self):
-        return f'page_name: {self.page_name} title:{self.title}'
+        return f'page_name: {self.pageName} title:{self.title}'
     class Meta:
         verbose_name_plural = "information pages"
     
 class QNA(models.Model):
     question = models.TextField()
     answer = models.TextField()
-    is_active = models.BooleanField(default=False)
+    isActive = models.BooleanField(default=False)
     def __str__(self):
         return f' pk {self.pk} question:{self.question}'
     
@@ -439,7 +439,7 @@ class FunnelForm(models.Model):
     need = models.TextField(default='', null=True, blank=True)
     timestamp= models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=255, default='New', null=True, blank=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    updatedAt = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f' pk {self.pk} name:{self.name} phone:{self.phone}'
@@ -472,12 +472,12 @@ class DaySchedule(models.Model):
 
     business = models.ForeignKey(Business, on_delete=models.CASCADE, related_name="schedules")
     day = models.PositiveSmallIntegerField(choices=DAYS_OF_WEEK)
-    start_time = models.TimeField()
-    end_time = models.TimeField()
-    is_working = models.BooleanField(default=False)
+    startTime = models.TimeField()
+    endTime = models.TimeField()
+    isWorking = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['day']
 
     def __str__(self):
-        return f"{self.business.business_name} - {self.get_day_display()}"
+        return f"{self.business.businessName} - {self.get_day_display()}"

@@ -6,7 +6,7 @@ from app_ib.Utils.Names import NAMES
 class BUSINESS_INFO_TASKS:
     
     @classmethod
-    async def GetBusinessInfo(cls, business):
+    async def GetBusinessInfo(cls, business:Business):
         try:
             assignLeads = business.business_lead_query.count()
             platformLeads = 0
@@ -28,7 +28,7 @@ class BUSINESS_INFO_TASKS:
                     planData.append(plan)
 
             data = {
-                NAMES.NAME: business.business_name,
+                NAMES.NAME: business.businessName,
                 NAMES.JOIN_AT: business.timestamp.strftime(NAMES.DMY_FORMAT),
                 NAMES.ID: business.id,
                 NAMES.PLAN: planData,

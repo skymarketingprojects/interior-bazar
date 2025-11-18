@@ -21,8 +21,8 @@ class PLAN_TASKS:
             plan_query.country= getattr(data, NAMES.COUNTRY, NAMES.EMPTY)
             # plan_query.address= data.address
             plan_query.stage= NAMES.PENDING
-            plan_query.attachment_url= payment_proof
-            plan_query.transaction_id= getattr(data, NAMES.TRANSACTION, '')
+            plan_query.attachmentUrl= payment_proof
+            plan_query.transactionId= getattr(data, NAMES.TRANSACTION, '')
 
             await sync_to_async(plan_query.save)()
 
@@ -46,8 +46,8 @@ class PLAN_TASKS:
             plan_ins.country= getattr(data, NAMES.COUNTRY, plan_ins.country)
             # plan_query.address= getattr(data, 'address', plan_ins.address)
             plan_ins.stage= getattr(data, NAMES.STAGE, plan_ins.stage)
-            plan_ins.attachment_url= getattr(data, NAMES.ATTACHMENT_URL, plan_ins.attachment_url)
-            plan_ins.transaction_id= getattr(data, NAMES.TRANSACTION, plan_ins.transaction_id)
+            plan_ins.attachmentUrl= getattr(data, NAMES.ATTACHMENT_URL, plan_ins.attachmentUrl)
+            plan_ins.transactionId= getattr(data, NAMES.TRANSACTION, plan_ins.transactionId)
             await sync_to_async(plan_ins.save)()
             return True
             

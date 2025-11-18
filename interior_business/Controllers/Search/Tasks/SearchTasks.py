@@ -183,7 +183,7 @@ class SEARCH_TASKS:
             business = await sync_to_async(Business.objects.get)(id=business_id)
 
             # Build a single Q object combining all filters
-            q_filter = Q(business_type=business.business_type) | \
+            q_filter = Q(business_type=business.businessType) | \
                        Q(businessSegment__in=business.businessSegment.all()) | \
                        Q(businessCategory__in=business.businessCategory.all())
 
