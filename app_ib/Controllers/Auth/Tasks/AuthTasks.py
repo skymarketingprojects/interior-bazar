@@ -60,7 +60,7 @@ class AUTH_TASK:
                 NAMES.TYPE:user_ins.type,
                 NAMES.USERID:user_ins.id,
                 NAMES.USERNAME:user_ins.username,
-                NAMES.IS_ACTIVE:user_ins.is_active,
+                NAMES.ISACTIVE:user_ins.is_active,
                 NAMES.IS_DELETE:user_ins.is_delete,
                 NAMES.UNIQUE_ID:user_ins.unique_id
             }

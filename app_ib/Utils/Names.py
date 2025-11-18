@@ -38,16 +38,16 @@ class NAMES:
     SERVICES='services'
     DURATION='duration'
     AMOUNT='amount'
-    DISCOUNT_PERCENTAGE='discount_percentage'
-    DISCOUNT_AMOUNT='discount_amount'
-    PAYABLE_AMOUNT='payable_amount'
-    COVER_IMAGE='cover_image'
-    FALLBACK_IMG='fallback_image_url'
+    DISCOUNT_PERCENTAGE='discountPercentage'
+    DISCOUNT_AMOUNT='discountAmount'
+    PAYABLE_AMOUNT='payableAmount'
+    COVER_IMAGE='coverImage'
+    FALLBACK_IMG='fallbackImageUrl'
     VIDEO='video'
-    VIDEO_URL='video_url'
-    PLAN_PDF='plan_pdf'
-    PLAN_PDF_URL='plan_pdf_url'
-    IS_ACTIVE='is_active'
+    VIDEO_URL='videoUrl'
+    PLAN_PDF='planPdf'
+    PLAN_PDF_URL='planPdfUrl'
+    IS_ACTIVE='isActive'
 
     FEATURES='features'
     PRICE='price'
@@ -93,13 +93,13 @@ class NAMES:
     SEGMENT='segment'
 
     BUSINESS_TYPE='businessType'
-    BUSINESSTYPE='business_type'
+    BUSINESSTYPE='businessType'
     BUSINESS_SEGMENT='businessSegment'
     BUSINESS_CATEGORY='businessCategory'
     IMAGE_SQ_URL='imageSQUrl'
     IMAGE_RT_URL='imageRTUrl'
-    PRIMARY_IMAGE='primary_image'
-    SECONDARY_IMAGE='secondary_image'
+    PRIMARY_IMAGE='primaryImage'
+    SECONDARY_IMAGE='secondaryImage'
 
     #business profile
     PRIMARY_IMAGE_URL='primaryImageUrl'
@@ -111,8 +111,8 @@ class NAMES:
     COUNTRY='country'
     PINCODE='pin_code'
     LOCATION='location'
-    LOCATION_LINK='location_link'
-    BUSINESS_LOCATION='business_location'
+    LOCATION_LINK='locationLink'
+    BUSINESS_LOCATION='businessLocation'
 
     RATING='rating'
     RATING_VALUE='ratingValue'
@@ -137,14 +137,14 @@ class NAMES:
     ROLE='role'
     USER='user'
     PLAN='plan'
-    PROFILE_IMAGE_URL='profile_image_url'
+    PROFILE_IMAGE_URL='profileImageUrl'
     COUNTRY_CODE='countryCode'
-    PROFILE_IMAGE='profile_image'
+    PROFILE_IMAGE='profileImage'
 
     #plan
     PENDING='pending'
     STAGE='stage'
-    ATTACHMENT_URL='attachment_url'
+    ATTACHMENT_URL='attachmentUrl'
     CONFIRM='confirm'
 
     BUSINESS_ID='businessId'
@@ -156,8 +156,8 @@ class NAMES:
 
     #payment
     TRANSACTION='transactionId'
-    TRANSACTION_ID='transaction_id'
-    PAYMENT_SESSION_ID='payment_session_id'
+    TRANSACTION_ID='transactionId'
+    PAYMENT_SESSION_ID='paymentSessionId'
     PAYMENT_URL='paymentUrl'
     SESSION_ID='sessionId'
     CF_PAID='PAID'
@@ -195,9 +195,9 @@ class NAMES:
     ADS='ads'
 
     # pages
-    PAGE_NAME='page_name'
-    PAGE_TITLE='page_title'
-    PAGE_CONTENT='page_content'
+    PAGE_NAME='pageName'
+    PAGE_TITLE='pageTitle'
+    PAGE_CONTENT='pageContent'
     QUESTION='question'
     ANSWER='answer'
 
@@ -222,8 +222,8 @@ class NAMES:
 
     #business Profile
     ABOUT ='about'
-    YOUTUBE_LINK='youtube_link'
-    BUSINESS_PROFILE='business_profile'
+    YOUTUBE_LINK='youtubeLink'
+    BUSINESS_PROFILE='businessProfile'
 
     #business Info
     EXPIRY_DATE='expiryDate'
@@ -242,28 +242,28 @@ class NAMES:
     READ_TIME='readTime'
 
     #AUTH
-    TIME_DIFFERENCE='time_difference'
+    TIME_DIFFERENCE='timeDifference'
     KEY='key'
-    EXPIRE_IN='expire_in'
+    EXPIRE_IN='expireIn'
     ACCESS='access'
     REFRESH='refresh'
-    ACCESS_TOKEN='access_token'
-    REFRESH_TOKEN='refresh_token'
+    ACCESS_TOKEN='accessToken'
+    REFRESH_TOKEN='refreshToken'
 
-    USERID='user_id'
-    UNIQUE_ID='unique_id'
+    USERID='userId'
+    UNIQUE_ID='uniqueId'
 
     #admin
     START_DATE='startDate'
-    START__DATE='start_date'
+    START__DATE='startDate'
     END_DATE='endDate'
-    END__DATE='end_date'
+    END__DATE='endDate'
     PAGE_NUMBER='pageNumber'
 
     #admin query
     QUERY_ID='queryId'
     LEAD_ID='leadId'
-    LEAD_CANDIDATE='lead_candidates'
+    LEAD_CANDIDATE='leadCandidates'
     LEAD_COUNT='leadCount'
     LOCATION_SCORE='locationScore'
     
