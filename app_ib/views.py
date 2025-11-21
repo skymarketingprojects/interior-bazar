@@ -10,7 +10,7 @@ from django.conf import settings
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
-
+from django.views.decorators.csrf import csrf_exempt
 from app_ib.Controllers.UrlGenrator.UrlGenrator import imageUrlGenrator
 
 from app_ib.Utils.MyMethods import MY_METHODS
@@ -56,7 +56,9 @@ async def TestMailView(request):
         # await MY_METHODS.printStatus(f'Email sending failed: {e}')
 
 @api_view(['POST'])
+@csrf_exempt
 async def generateUploadUrlView(request):
+    
     try:
         fileName = request.data.get("fileName")
         fileType = request.data.get("fileType")

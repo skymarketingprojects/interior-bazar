@@ -8,13 +8,35 @@ from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.Names import NAMES
 from app_ib.Utils.LocalResponse import LocalResponse
-from app_ib.models import PlanQuery,BusinessPlan,CustomUser,Subscription
+from app_ib.models import PlanQuery,BusinessPlan,CustomUser,Subscription,TransectionData
 from app_ib.Controllers.Plans.Tasks.PlanTasks import PLAN_TASKS
 
 from interior_notification.signals import planSignal
 import asyncio
 
 class PLAN_CONTROLLER:
+
+    @classmethod
+    async def CreateTransectionData(self,data):
+        try:
+            transection = await PLAN_TASKS.CreateTransectionData(data,paymentFor=NAMES.PLAN)
+            if transection:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.transection_create_success,
+                    code=RESPONSE_CODES.success,
+                    data=transection
+                )
+        except Exception as e:
+            await MY_METHODS.printStatus(f'Error in CreateTransectionData {e}')  
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.transection_create_error,
+                code=RESPONSE_CODES.error,
+                data={
+                    NAMES.ERROR: str(e)
+                }
+            )
     @classmethod
     async def CreatePlan(self,payment_proof,data,user_ins):
         try:
@@ -94,7 +116,7 @@ class PLAN_CONTROLLER:
             plan = await sync_to_async(Subscription.objects.get)(id=planId)
             data = await PLAN_TASKS.CreateBusinessPlan(plan=plan,businessId=businessId,transectionId=transectionId)
             if data:
-                # await MY_METHODS.printStatus(f'Business plan created successfully for user {userId} with plan {planId}')
+                await MY_METHODS.printStatus(f'Business plan created successfully for user {userId} with plan {planId}')
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
                     message=RESPONSE_MESSAGES.business_plan_create_success,
@@ -103,7 +125,7 @@ class PLAN_CONTROLLER:
                     )
 
             else:
-                # await MY_METHODS.printStatus(f'Failed to create business plan for user {userId} with plan {planId}')
+                await MY_METHODS.printStatus(f'Failed to create business plan for user {userId} with plan {planId}')
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.error,
                     message=RESPONSE_MESSAGES.business_plan_create_error,
@@ -136,14 +158,14 @@ class PLAN_CONTROLLER:
                         data={NAMES.ID:planIns.id})
 
                 else:
-                    # await MY_METHODS.printStatus(f'Failed to activate business plan for transaction id {transectionId}')
+                    await MY_METHODS.printStatus(f'Failed to activate business plan for transaction id {transectionId}')
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.error,
                         message=RESPONSE_MESSAGES.business_plan_activate_error,
                         code=RESPONSE_CODES.error,
                         data={NAMES.ID:planIns.id})
             else:
-                # await MY_METHODS.printStatus(f'Business plan does not exist for transaction id {transectionId}')
+                await MY_METHODS.printStatus(f'Business plan does not exist for transaction id {transectionId}')
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.error,
                     message=RESPONSE_MESSAGES.business_plan_activate_error,
@@ -151,7 +173,7 @@ class PLAN_CONTROLLER:
                     data={})
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in ActivateBusinessPlan: {e}')
+            await MY_METHODS.printStatus(f'Error in ActivateBusinessPlan: {e}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.business_plan_activate_error,

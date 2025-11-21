@@ -147,7 +147,7 @@ class PRODUCTS_TASKS:
                             link=image.link
                         )
             except Exception as e:
-                # await MY_METHODS.printStatus(f"Error in createProduct: {str(e)}")
+                await MY_METHODS.printStatus(f"Error in createProduct: {str(e)}")
                 pass
             specifications = {"sizeAvailabe":data.sizeAvailabe,"userManual":data.userManual,"detail":data.detail}
             for key,value in specifications.items():
@@ -159,7 +159,7 @@ class PRODUCTS_TASKS:
             data = await self.getProduct(product)
             return data
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in createProduct: {str(e)}")
+            await MY_METHODS.printStatus(f"Error in createProduct: {str(e)}")
             return False
         
     @classmethod

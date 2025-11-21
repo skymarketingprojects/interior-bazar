@@ -1,5 +1,6 @@
 class NAMES:
     ERROR = 'error'
+    BUSINESS = 'business'
 
     #common
     TITLE='title'
@@ -32,6 +33,10 @@ class NAMES:
     DMY_FORMAT='%d-%m-%Y'
     YMD_FORMAT='%Y-%m-%d'
     HM_FORMAT='%H:%M'
+
+    PRODUCT='product'
+    CATALOUGE='catalogue'
+    SERVICE='service'
 
     #subscription
     TYPE = 'type'
@@ -126,7 +131,9 @@ class NAMES:
     REMARK='remark'
     DATE='date'
     ASSIGNED='assigned'
+    LEADFOR='leadFor'
     CANDIDATE='candidates'
+    ITEM_ID='itemId'
 
     ASSIGNED_LEADS='assignedLeads'
     PLATFORM_LEADS='platformLeads'
@@ -157,36 +164,38 @@ class NAMES:
     #payment
     TRANSACTION='transactionId'
     TRANSACTION_ID='transactionId'
-    PAYMENT_SESSION_ID='paymentSessionId'
+    PAYMENT_SESSION_ID='payment_session_id' # do not change
     PAYMENT_URL='paymentUrl'
     SESSION_ID='sessionId'
     CF_PAID='PAID'
     CF_UNKNOWN='UNKNOWN'
     PAYMENT_FOR='paymentFor'
 
-    REFUND_AMOUNT='refund_amount'
-    REFUND_ID='refund_id'
-    REFUND_NOTE='refund_note'
-    REFUND_STATUS='refund_status'
+    REFUND_AMOUNT='refund_amount' # do not change
+    REFUND_ID='refund_id' # do not change
+    REFUND_NOTE='refund_note' # do not change
+    REFUND_STATUS='refund_status' # do not change
 
     RESPONSE='response'
     REDIRECT_URL='redirectUrl'
 
-    ORDER_ID='order_id'
-    ORDER_AMOUNT='order_amount'
-    ORDER_CURRENCY='order_currency'
-    ORDER_STATUS='order_status'
+    ORDER_ID='order_id' # do not change
+    CF_ORDER_ID='cf_order_id'
+    ORDER_AMOUNT='order_amount' # do not change
+    ORDER_CURRENCY='order_currency' # do not change
+    ORDER_STATUS='order_status' # do not change
+    ORDER_EXPIRY_TIME="order_expiry_time"
 
     CUSTOMER_DETAILS='customer_details'
-    CUSTOMER_ID='customer_id'
-    CUSTOMER_PHONE='customer_phone'
-    CUSTOMER_EMAIL='customer_email'
+    CUSTOMER_ID='customer_id' # do not change
+    CUSTOMER_PHONE='customer_phone' # do not change
+    CUSTOMER_EMAIL='customer_email' # do not change
 
-    RETURN_URL='return_url'
+    RETURN_URL='return_url' # do not change
 
-    ORDER_META='order_meta'
+    ORDER_META='order_meta' # do not change
 
-    ADVERTISEMENT='advertisement'
+    ADVERTISEMENT='advertisement' # do not change
 
     #Currency
     INR='INR'

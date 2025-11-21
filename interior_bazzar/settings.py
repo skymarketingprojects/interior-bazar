@@ -361,12 +361,12 @@ WHATSAPP_PHONE_NUMBER_ID = env('WHATSAPP_PHONE_NUMBER_ID')
 # PHONEPE_CLIENT_VERSION = env('PHONEPE_CLIENT_VERSION')
 
     # Development:
-    #  eb deploy dev-ib-env-1 --profile interiorBazzar
+    #  eb deploy devInteriorEnv --profile newInteriorBazzar
     # [domain]
     
     
     # Production
-    # eb deploy prod-ib-env-1 --profile interiorBazzar
+    # eb deploy prodInteriorEnv --profile newInteriorBazzar
     # [domain]
     
     

@@ -8,12 +8,28 @@ from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.Names import NAMES
 from app_ib.Controllers.AdsQuery.AdsQueryController import ADS_QUERY_CONTROLLER
+from app_ib.models import UserProfile,CustomUser,Location
 
 @api_view(['POST'])
 async def CreateAdsQueryView(request):
     try:
+        user = None
+        reqdata = request.data
+        if request.user.is_authenticated:
+            user:CustomUser = request.user
+            userProf:UserProfile = user.user_profile
+            reqdata['phone']=userProf.phone
+            reqdata['email']=userProf.email
+            location = None
+            if user.type == NAMES.BUSINESS:
+                location:Location= user.user_business.business_location
+            else:
+                location:Location= user.user_location
+            reqdata['city']=location.city
+            reqdata['state']=location.locationState.name
+            reqdata['country']=location.locationCountry.name
         # Convert request.data to dot notation object
-        data = MY_METHODS.json_to_object(request.data)
+        data = MY_METHODS.json_to_object(reqdata)
         
         # Call Auth Controller to Create User
         final_response = await  asyncio.gather(ADS_QUERY_CONTROLLER.CreateAdsQuery(data=data))

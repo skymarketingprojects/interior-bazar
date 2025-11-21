@@ -11,27 +11,28 @@ from app_ib.Controllers.Plans.PlanController import PLAN_CONTROLLER
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 async def CreatePlanView(request):
     try:
         # Convert request.data to dot notation object
         user_ins= request.user
-        data= request.data.get('data')     
+        # await MY_METHODS.printStatus(f'data {request}')  
+        data= request.data
+        # await MY_METHODS.printStatus(f'data {data}')
         payment_proof= request.FILES.get(NAMES.ATTACHMENT_URL)
         data = MY_METHODS.json_to_object(data)
         final_response = None
         # Call Auth Controller to Create User
         if getattr(data, NAMES.ID, None):
             if data.id!='':
-                print('verifying plan')
+                await MY_METHODS.printStatus(f'verifying plan')
                 final_response = await PLAN_CONTROLLER.VerifyPlan(data=data)
             else:
-                print("creating plan")
+                await MY_METHODS.printStatus(f'creating plan')
                 final_response =await PLAN_CONTROLLER.CreatePlan(payment_proof=payment_proof,data=data,user_ins= user_ins)
         else:
-            print("creating plan")
+            await MY_METHODS.printStatus(f'creating plan')
             final_response =await PLAN_CONTROLLER.CreatePlan(payment_proof=payment_proof,data=data,user_ins= user_ins)
         
         if not final_response:

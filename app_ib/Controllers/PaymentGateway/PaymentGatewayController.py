@@ -9,11 +9,12 @@ from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.Names import NAMES
 from app_ib.Controllers.PaymentGateway.Tasks.PaymentGatewayTasks import PaymentGatewayTasks
+from app_ib.Controllers.Plans.Tasks.PlanTasks import PLAN_TASKS
 from app_ib.Utils.CashfreeClient import CashfreeClientWrapper
 from app_ib.Controllers.Plans.PlanController import PLAN_CONTROLLER
 from interior_advertisement.Controllers.Ads.Tasks.AdsTasks import ADS_TASKS
 from app_ib.Utils.MyMethods import MY_METHODS
-from app_ib.models import Subscription
+from app_ib.models import Subscription,TransectionData
 from interior_advertisement.models import AdCampaign,AdPayment,AdPaymentStatus
 from interior_advertisement.Controllers.Ads.Tasks.AdsTasks import ADS_TASKS
 
@@ -52,6 +53,9 @@ class PaymentGatewayController:
             if response_data and response_data.get(NAMES.PAYMENT_SESSION_ID):
                 payment_url = f"https://payments.cashfree.com/pgui/v2/checkout?payment_session_id={response_data['payment_session_id']}"
 
+                #create tansection data
+                transection= await PLAN_CONTROLLER.CreateTransectionData(data=response_data)
+
                 # Create Business Plan
                 businessPlan = await PLAN_CONTROLLER.CreateBusinessPlan(
                     planId=plan.id,
@@ -65,10 +69,24 @@ class PaymentGatewayController:
                     NAMES.SESSION_ID: response_data.get(NAMES.PAYMENT_SESSION_ID),
                 }
 
-                if businessPlan is None:
+                if transection.code != RESPONSE_CODES.success and businessPlan.code != RESPONSE_CODES.success:
+                    return LocalResponse(
+                        response=RESPONSE_MESSAGES.warning,
+                        message="Failed to create transaction and business plan",
+                        code=RESPONSE_CODES.warning,
+                        data=data
+                    )
+                elif businessPlan.code != RESPONSE_CODES.success:
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.warning,
                         message="Failed to create business plan",
+                        code=RESPONSE_CODES.warning,
+                        data=data
+                    )
+                elif transection.code != RESPONSE_CODES.success:
+                    return LocalResponse(
+                        response=RESPONSE_MESSAGES.warning,
+                        message="Failed to create transaction",
                         code=RESPONSE_CODES.warning,
                         data=data
                     )
@@ -88,6 +106,7 @@ class PaymentGatewayController:
                 )
 
         except Exception as e:
+            await MY_METHODS.printStatus(f"Exception during payment initiation: {str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Exception during payment initiation",
@@ -130,6 +149,8 @@ class PaymentGatewayController:
             data[NAMES.AMOUNT] = amount
             data[NAMES.TRANSACTION] = transactionData[NAMES.TRANSACTION]
 
+            transection = await PLAN_TASKS.CreateTransectionData(data=response_data,paymentFor=NAMES.ADVERTISEMENT)
+
             adsresult = await ADS_TASKS.CreateAdPaymentTask(AdCampaignIns=campain,Data=data)
             
             # await MY_METHODS.printStatus(f"Advertisement payment initiated: {response_data}")
@@ -169,23 +190,35 @@ class PaymentGatewayController:
         Check payment status using Cashfree REST API.
         """
         try:
+            serviceType = await sync_to_async(TransectionData.objects.get)(transactionId=transactionId)
+            data = {
+                NAMES.STATUS: serviceType.orderStatus,
+                NAMES.TRANSACTION: serviceType.transactionId,
+            }
+            if serviceType.orderStatus == NAMES.CF_PAID:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message="Payment already completed",
+                    code=RESPONSE_CODES.success,
+                    data=data
+            )
             response_data = await sync_to_async(CashfreeClientWrapper.fetch_order)(transactionId)
             status = response_data.get(NAMES.ORDER_STATUS, NAMES.CF_UNKNOWN)
-            serviceType = data.get(NAMES.PAYMENT_FOR,NAMES.EMPTY)
             serviceActivated = None
-            if serviceType == NAMES.PLAN and status == NAMES.CF_PAID:
+            if serviceType.paymentFor == NAMES.PLAN and status == NAMES.CF_PAID:
                 serviceActivated=await PLAN_CONTROLLER.ActivateBusinessPlan(transactionId)
-            elif serviceType == NAMES.ADS and status == NAMES.CF_PAID:
+            elif serviceType.paymentFor == NAMES.ADVERTISEMENT and status == NAMES.CF_PAID:
                 adPayment = await sync_to_async(AdPayment.objects.get)(transactionId=transactionId)
                 data[NAMES.STATUS] = status.lower()
                 serviceActivated=await ADS_TASKS.UpdateAdPaymentTask(AdPaymentIns=adPayment,Data=data)
             
-            data = {
-                NAMES.STATUS: status,
-                NAMES.TRANSACTION: transactionId,
-            }
+            serviceType.orderStatus = status
+            serviceType.save()
+            
+            data[NAMES.STATUS] = status
+            data[NAMES.TRANSACTION] = transactionId
 
-            if serviceActivated is None and status == NAMES.CF_PAID:
+            if not serviceActivated  and status == NAMES.CF_PAID:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.warning,
                     message="Failed to activate service after payment",

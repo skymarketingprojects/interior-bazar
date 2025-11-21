@@ -41,7 +41,14 @@ async def GetBusinessByPaginationView(request):
 @api_view(['GET'])
 async def GetTopBusinessView(request,index):
     try:
-        final_response= await SEARCH_CONTROLLER.GetTopBusiness(index=index)
+        # index = request.GET.get('pageNo', 1)
+        pageSize = request.GET.get('pageSize', 1)
+        tabId = request.GET.get('tabId', None)
+        tabType= request.GET.get('type', None)
+        state = request.GET.get('state', None)
+        query = request.GET.get('query', None)
+
+        final_response= await SEARCH_CONTROLLER.GetTopBusiness(index=index,pageSize=pageSize,tabId=tabId,tabType=tabType,state=state,query=query)
         return ServerResponse(
             response=final_response.response,
             code=final_response.code,

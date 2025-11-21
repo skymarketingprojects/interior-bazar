@@ -61,7 +61,7 @@ class RESPONSE_MESSAGES:
     user_removed_success= 'User removed successfully'
     password_not_match= 'Password does not match'
     incorrect_password= 'Incorrect password'
-    incorrect_username= 'Incorrect username'
+    incorrect_username= ' Username does not exist'
 
     unauthorized= 'Unauthorized'
 
@@ -368,6 +368,11 @@ class RESPONSE_MESSAGES:
     ############################################
     explore_section_fetch_error= 'Unable to fetch explore section'
     explore_section_fetch_success= 'Explore section fetched successfully'
+
+
+    #transection
+    transection_create_success= 'Transection created successfully'
+    transection_create_error= 'Unable to create transection'
 
 class VALIDATION_MESSAGES:
     password_length= 'Password must be at least 8 characters long'

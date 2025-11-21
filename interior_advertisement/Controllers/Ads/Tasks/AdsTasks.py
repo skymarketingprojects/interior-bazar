@@ -22,6 +22,8 @@ from app_ib.Controllers.Business.Tasks.BusinessTasks import BUSS_TASK
 
 class ADS_TASKS:
 
+    
+
     # ---------------- CAMPAIGN ----------------
 
     @classmethod

@@ -11,6 +11,7 @@ class ADS_QUERY_CONTROLLER:
     @classmethod
     async def CreateAdsQuery(self,data):
         try:
+            
             create_query_resp = await  ADS_QUERY_TASKS.CreateAdsQueryTask(data=data)
             # await MY_METHODS.printStatus(f'create query resp {create_query_resp}')
 

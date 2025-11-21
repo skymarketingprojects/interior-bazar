@@ -66,14 +66,10 @@ class SEARCH_CONTROLLER:
                 })
 
     @classmethod
-    async def GetTopBusiness(self,index):
+    async def GetTopBusiness(self,index,pageSize=10,tabId=None,tabType=None,state=None,query=None):
         try:
-            # Getting all business instance: 
-            businesses_query = await sync_to_async(list)(Business.objects.all().order_by('-timestamp'))
-
-            # fetch business data:
-            business_data= await SEARCH_TASKS.GetQueryData(businesses_query=businesses_query,pageNo=index)
-
+            paginationResp = await self.GetBusinessUsingPagination(pageNo=index,pageSize=pageSize,tabId=tabId,tabType=tabType,state=state,query=query)
+            business_data = paginationResp.data
             business_data['topSeller'] = business_data['data'][:5]
             business_data['businesses'] = business_data.pop('data')
 

@@ -58,6 +58,7 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f'profile - {self.user.pk}'
+
 class BusinessBadge(models.Model):
     type = models.CharField(max_length=250)
     imageUrl = models.URLField(max_length=2250, null=True, blank=True)
@@ -85,7 +86,7 @@ class BusinessCategory(models.Model):
 
 class BusinessSegment(models.Model):
     businessType = models.ForeignKey(BusinessType, on_delete=models.CASCADE, null=True, blank=True, related_name='business_type_segment')
-    businessCategory = models.ManyToManyField(BusinessCategory,  null=True, blank=True, related_name='business_category_segment')
+    businessCategory = models.ManyToManyField(BusinessCategory, blank=True, related_name='business_category_segment')
     imageSQUrl = models.CharField(max_length=2250,null=True,blank=True)
     imageRTUrl = models.CharField(max_length=2250,null=True,blank=True)
     value = models.CharField(max_length=250)
@@ -148,8 +149,9 @@ class State(models.Model):
 
     def __str__(self):
         return f'State: {self.name} in {self.country.name}'
+
 class Location(models.Model):
-    user= models.OneToOneField(CustomUser,on_delete=models.CASCADE, null=True, blank=True)
+    user= models.OneToOneField(CustomUser,on_delete=models.CASCADE, null=True, blank=True,related_name='user_location')
     business= models.OneToOneField(Business,on_delete=models.CASCADE, null=True, blank=True, related_name='business_location')
     pinCode= models.CharField(max_length=500)
     city= models.CharField(max_length=500)
@@ -163,10 +165,10 @@ class Location(models.Model):
 
     def __str__(self):
         if self.business:
-            return f'State: {self.state}  business location{self.business.pk}'
+            return f'State: {self.locationState.name}  business location{self.business.pk}'
         elif self.user:
-            return f'State: {self.state}  user location{self.user.pk}'
-        return f'State: {self.state}'
+            return f'State: {self.locationState.name}  user location{self.user.pk}'
+        return f'State: {self.locationState.name}'
 
 class LeadQuery(models.Model):
     business= models.ForeignKey(Business,on_delete=models.CASCADE, null=True, blank=True,related_name='business_lead_query')
@@ -183,6 +185,13 @@ class LeadQuery(models.Model):
     tag= models.TextField(default='',null=True,blank=True)
     priority= models.TextField(default='',null=True,blank=True)
     remark= models.TextField(default='',null=True,blank=True)
+
+    product= models.ForeignKey('interior_products.Product', on_delete=models.SET_NULL, null=True, blank=True,related_name='product_lead_query')
+    service = models.ForeignKey('interior_products.Service', on_delete=models.SET_NULL, null=True, blank=True,related_name='service_lead_query')
+    catalouge = models.ForeignKey('interior_products.Catelogue', on_delete=models.SET_NULL, null=True, blank=True,related_name='catalouge_lead_query')
+
+
+
     timestamp= models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
 
@@ -246,13 +255,33 @@ class BusinessPlan(models.Model):
     
     def save(self, *args, **kwargs):
         if self.isActive and self.business:
-            BusinessPlan.objects.filter(
+            plans = BusinessPlan.objects.filter(
                 business=self.business,
                 isActive=True
-            ).exclude(id=self.id).update(isActive=False)
+            ).exclude(id=self.id)
+            for plan in plans:
+                if int(plan.amount.replace(",", "")) >= int(self.amount.replace(",", "")):
+                    self.isActive = False
+                    continue
+                plan.isActive = False
+                plan.save()
 
         super().save(*args, **kwargs)
 
+# payment gateway related models
+class TransectionData(models.Model):
+    orderId= models.CharField(max_length=500,default='')
+    transactionId= models.CharField(max_length=500,default='')
+    amount= models.CharField(max_length=500,default='')
+    paymentFor= models.CharField(max_length=500,default='')
+    createdAt = models.DateTimeField()
+    expiryAt= models.DateTimeField()
+    orderStatus= models.CharField(max_length=500,default='')
+    paymentSessionId= models.CharField(max_length=1000,default='')
+
+    def __str__(self):
+        return f" transection data for {self.paymentFor} with transaction id {self.transactionId}"
+    
 # Platform own Plan buy query
 class PlanQuery(models.Model):
     user= models.ForeignKey(CustomUser,on_delete=models.CASCADE, null=True, blank=True)

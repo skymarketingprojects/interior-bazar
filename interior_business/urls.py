@@ -15,7 +15,7 @@ urlpatterns = [
     path('', BusinessView.GetBusinessByUser, name='GetBusinessByUser'),
 
     #########################################################
-    # Business Location: 
+    # Business Location:
     #########################################################
     path('location/create-update/', BusinessLocationView.CreateOrUpdateBusinessLocationView, name='CreateBusinessLocationView'),
     path('location/', BusinessLocationView.GetBusinessLocationView, name='GetBusinessLocationByBussIDView'),

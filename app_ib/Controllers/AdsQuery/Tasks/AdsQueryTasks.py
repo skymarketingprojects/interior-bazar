@@ -10,7 +10,7 @@ class ADS_QUERY_TASKS:
             # await MY_METHODS.printStatus(f'data {data}')
             lead_query_ins = LeadQuery()
             lead_query_ins.phone= data.phone    
-            lead_query_ins.interested= data.interested            
+            lead_query_ins.interested= data.interested         
             await sync_to_async(lead_query_ins.save)()
             data = {
                 NAMES.ID:lead_query_ins.pk

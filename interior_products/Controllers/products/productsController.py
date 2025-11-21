@@ -157,7 +157,7 @@ class PRODUCTS_CONTROLLER:
                 data=product
             )
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in createProduct: {str(e)}")
+            await MY_METHODS.printStatus(f"Error in createProduct: {str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.product_create_error,
@@ -242,7 +242,7 @@ class PRODUCTS_CONTROLLER:
             related_qs = Product.objects.filter(
                                 Q(productTags__iregex=r"(" + "|".join(tags) + ")")
                                 | Q(title__icontains=product.title.split(" ")[0])
-                            ).exclude(id=product.id)
+                            ).exclude(id=product.id).order_by('index')
 
             paginated = await MY_METHODS.paginate_queryset(related_qs, page, size)
             productData = []
