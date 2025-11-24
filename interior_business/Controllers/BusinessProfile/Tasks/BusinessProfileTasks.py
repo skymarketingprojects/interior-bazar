@@ -25,7 +25,7 @@ class BUSS_PROF_TASK:
                     "user__id",
                     "user__user_profile__phone",
                     "user__user_profile__countryCode",
-                    "user__user_profile__profile_image_url",
+                    "user__user_profile__profileImageUrl",
                 ).get(id=business_id)
             )()
             businessLocation: Location = business.business_location
@@ -42,8 +42,8 @@ class BUSS_PROF_TASK:
             profile: UserProfile = business.user.user_profile
             response_data = {
                 "bannerImageUrl": business.bannerImageUrl or "",
-                "profile_image_url": (
-                    profile.profile_image_url
+                "profileImageUrl": (
+                    profile.profileImageUrl
                     if business.user and business.user.user_profile
                     else ""
                 ),

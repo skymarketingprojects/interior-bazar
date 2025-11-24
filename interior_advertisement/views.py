@@ -130,6 +130,26 @@ async def GetCampaignsByBusinessView(request):
                 data={"error": str(e)}
             )
 
+@api_view(['GET'])
+async def GetActiveCampaignsView(request,placementId):
+    try:
+        await MY_METHODS.printStatus(f"placementId: {placementId}")
+        final_response = await ADS_CONTROLLER.GetActiveCampaigns(placementId=placementId)
+        return ServerResponse(
+            response=final_response.response,
+            code=final_response.code,
+            message=final_response.message,
+            data=final_response.data
+        )
+    except Exception as e:
+        await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message="Error fetching active campaigns",
+            code=RESPONSE_CODES.error,
+            data={"error": str(e)}
+        )
+
 # ---------------- AD ASSET ----------------
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -217,6 +237,7 @@ async def UpdateAdAssetView(request, asset_id):
                 code=RESPONSE_CODES.error,
                 data={"error": str(e)}
             )
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -393,6 +414,7 @@ async def getAdEventTypeEnum(request):
             code=RESPONSE_CODES.error,
             data={"error": str(e)}
         )
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

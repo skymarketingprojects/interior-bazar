@@ -127,6 +127,32 @@ class ADS_CONTROLLER:
             )
     
     @classmethod
+    async def GetActiveCampaigns(cls,placementId):
+        try:
+            status,activeCampaigns = await ADS_TASKS.GetActiveAdsCampaignTask(placementId)
+            if status:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message="Active campaigns fetched successfully",
+                    code=RESPONSE_CODES.success,
+                    data=activeCampaigns
+                )
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message="Failed to fetch active campaigns",
+                code=RESPONSE_CODES.error,
+                data=activeCampaigns
+            )
+
+        except Exception as e:
+            await MY_METHODS.printStatus(f"Error fetching active campaigns: {str(e)}")
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message="Error fetching active campaigns",
+                code=RESPONSE_CODES.error,
+                data={"error": str(e)}
+            )
+    @classmethod
     async def GetAdCampaignsByBusiness(cls, business:Business):
         try:
             campaigns = await sync_to_async(list)(AdCampaign.objects.filter(advertiser=business).order_by("-createdAt"))

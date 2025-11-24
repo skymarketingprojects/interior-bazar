@@ -6,6 +6,7 @@ urlpatterns = [
     path("campaign/<int:campaign_id>/update/", views.UpdateCampaignView, name="campaign-update"),
     path("campaign/<int:campaign_id>/", views.GetCampaignView, name="campaign-detail"),
     path("campaigns/", views.GetCampaignsByBusinessView, name="campaign-list"),
+    path("campaign/placement/<int:placementId>/", views.GetActiveCampaignsView, name='campaign-list-by-placement'),
 
     # ---------------- AD ASSET ----------------
     path("campaign/<int:campaign_id>/asset/create/", views.AdAssetCreateView, name="asset-create"),

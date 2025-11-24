@@ -70,6 +70,24 @@ class ADS_TASKS:
             print(f"Error in UpdateAdCampaignTask: {E}")
             return None
 
+    @classmethod
+    async def GetActiveAdsCampaignTask(cls, placementId):
+        try:
+            activeAds = await sync_to_async(AdCampaign.objects.filter)(
+                status__code="active", placement__pk=placementId
+            )
+            adsData = []
+            for ad in activeAds:
+                status, data = await cls.GetAdAssetsTask(ad)
+                if status:
+                    for obj in data:
+                        adsData.append(obj)
+
+            return True, adsData
+        except Exception as E:
+            await MY_METHODS.printStatus(f"Error in GetActiveAdsCampaignTask: {E}")
+            return False, str(E)
+
 
     # ---------------- ASSET ----------------
 
@@ -306,13 +324,12 @@ class ADS_TASKS:
                 "id", "assetType__code", "s3Key", "meta"
             ))
             # await MY_METHODS.printStatus(f"AssetsQS: {AssetsQS}")
-            AssetsQS = [
-                {"fileUrl": Item["s3Key"],"assetType": Item["assetType__code"],
-                **{k: v for k, v in Item.items() if k != "assetType__code" and k != "s3Key"}
-                } for Item in AssetsQS
-            ]
+            assetData=[]
+            for asset in AssetsQS:
+                status,data = await cls.GetAdAssetTask(asset.id)
+                assetData.append(data) if status else None
             
-            return True, AssetsQS
+            return True, assetData
         except Exception as E:
             return False, str(E)
 
@@ -451,16 +468,4 @@ class ADS_TASKS:
             return True, data
         except Exception as E:
             return False, str(E)
-"""
-class AdPersona(models.Model):
-    campaign = models.ForeignKey(AdCampaign, on_delete=models.CASCADE, related_name='personas')
-    gender = models.CharField(max_length=50, blank=True, null=True)
-    categories = models.ForeignKey('app_ib.BusinessCategory', on_delete=models.PROTECT, blank=True, null=True)
-    ageBetween = models.CharField(max_length=50, blank=True, null=True)
-    personaType = models.CharField(max_length=50, blank=True, null=True)
-    segment = models.ForeignKey('app_ib.BusinessSegment', on_delete=models.PROTECT, blank=True, null=True)
 
-
-    def __str__(self):
-        return f"Persona {self.id}  for ({self.campaign.title or 'Untitled'})"
-"""

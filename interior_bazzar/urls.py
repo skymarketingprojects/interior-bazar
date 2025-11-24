@@ -36,7 +36,7 @@ urlpatterns = [
     path('robots.txt', views.robots_txt, name='robots'),
     path('terms-of-use/', admin.site.urls),
     path('api/', include("app_ib.urls")),
-     path('seller-buyer/', views.seller_buyer, name='seller_buyer'),
+    path('seller-buyer/', views.seller_buyer, name='seller_buyer'),
     path('blog/', views.blog, name='blog'),
     path('blog/<slug:slug>/', views.blog_detail, name='blog_detail'),  # For individual blog posts
     path('plan/', views.plan, name='plan'),
@@ -51,4 +51,4 @@ urlpatterns = [
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-    urlpatterns += static(settings.MEDIA_URL, documents_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

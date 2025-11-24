@@ -101,7 +101,7 @@ async def CreateOrUpdatePrimaryImageView(request):
     try:
         # Get user instance
         user_ins = request.user
-        primary_image = request.FILES.get('primary_image')  
+        primary_image = request.FILES.get('primaryImage')  
         # await MY_METHODS.printStatus(f'primary image {primary_image}')
 
         # Call Auth Controller to Create User

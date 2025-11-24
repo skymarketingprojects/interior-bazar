@@ -81,8 +81,7 @@ class AdCampaign(models.Model):
     def __str__(self):
         return f"{self.title or 'Untitled'} ({self.status.code})"
     
-    def getDays(self):
-        
+    def getDays(self):  
         if self.days and self.days > 0:
             return self.days
 
