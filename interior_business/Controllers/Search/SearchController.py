@@ -14,6 +14,7 @@ from app_ib.Controllers.Profile.Tasks.Taskys import PROFILE_TASKS
 from interior_business.Controllers.Business.Tasks.BusinessTasks import BUSS_TASK
 from interior_business.Controllers.BussLocation.Tasks.BusinessLocationTasks import BUSS_LOC_TASK
 from app_ib.Utils.MyMethods import MY_METHODS
+from app_ib.Utils.Names import NAMES
 from app_ib.Utils.LocalResponse import LocalResponse
 from interior_business.Controllers.Search.Tasks.SearchTasks import SEARCH_TASKS
 from django.db.models import Q
@@ -30,10 +31,10 @@ class SEARCH_CONTROLLER:
                 # filterQuery &= Q(business_location__state__iexact=state)
             
             if tabId and tabType:
-                if tabType=='category':
+                if tabType==NAMES.CATEGORY:
                     await MY_METHODS.printStatus(f'category Id {tabId}')
                     filterQuery &= Q(businessCategory__id=tabId)
-                elif tabType=='subCategory':
+                elif tabType==NAMES.SUB_CATEGORY:
                     await MY_METHODS.printStatus(f'sub category Id {tabId}')
                     filterQuery &= Q(businessSegment__id=tabId)
             if query:
@@ -62,7 +63,7 @@ class SEARCH_CONTROLLER:
                 message=RESPONSE_MESSAGES.business_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
     @classmethod
@@ -70,8 +71,8 @@ class SEARCH_CONTROLLER:
         try:
             paginationResp = await self.GetBusinessUsingPagination(pageNo=index,pageSize=pageSize,tabId=tabId,tabType=tabType,state=state,query=query)
             business_data = paginationResp.data
-            business_data['topSeller'] = business_data['data'][:5]
-            business_data['businesses'] = business_data.pop('data')
+            business_data[NAMES.TOP_SELLER] = business_data[NAMES.DATA][:5]
+            business_data[NAMES.BUSINESSES] = business_data.pop(NAMES.DATA)
 
             return LocalResponse(
                 code=RESPONSE_CODES.success,
@@ -85,7 +86,7 @@ class SEARCH_CONTROLLER:
                 message=RESPONSE_MESSAGES.business_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
     @classmethod
     async def GetRelatedBusiness(self, businessId, pageNo=1):

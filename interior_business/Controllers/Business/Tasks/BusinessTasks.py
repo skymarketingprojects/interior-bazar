@@ -17,7 +17,10 @@ from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.LocalResponse import LocalResponse
 from interior_business.Controllers.BussLocation.Tasks.BusinessLocationTasks import BUSS_LOC_TASK
 from app_ib.Utils.MyMethods import MY_METHODS
+from app_ib.Utils.Names import NAMES
 from django.db.models import Prefetch
+
+
 class BUSS_TASK:
 
     @classmethod
@@ -37,9 +40,9 @@ class BUSS_TASK:
     async def GetBusinessBannerTask(cls, business: Business):
         try:
             return {
-                'bannerImageUrl': business.bannerImageUrl,
-                'bannerLink': business.bannerLink,
-                'bannerText': business.bannerText,
+                NAMES.BANNER_IMAGE_URL: business.bannerImageUrl,
+                NAMES.BANNER_LINK: business.bannerLink,
+                NAMES.BANNER_TEXT: business.bannerText,
             }
         except Exception as e:
             # await MY_METHODS.printStatus(f'Error in GetBusinessBannerTask {e}')
@@ -51,8 +54,8 @@ class BUSS_TASK:
             # 1️⃣ Fetch Business with user + user_profile + location
             business = await sync_to_async(
                 lambda: Business.objects.select_related(
-                    "user__user_profile",
-                    "business_location",
+                    'user__user_profile',
+                    NAMES.BUSINESS_LOCATION_RELATION,
                 ).get(id=business.id)
             )()
 
@@ -60,48 +63,48 @@ class BUSS_TASK:
             website_link = await sync_to_async(
                 lambda: BusinessSocialMedia.objects.filter(
                     business=business,
-                    socialMedia__name__iexact="website"
-                ).values_list("link", flat=True).first()
+                    socialMedia__name__iexact=NAMES.WEBSITE
+                ).values_list(NAMES.LINK, flat=True).first()
             )()
 
             # 3️⃣ Build location safely
-            loc: Location = getattr(business, "business_location", None)
+            loc: Location = getattr(business, NAMES.BUSINESS_LOCATION_RELATION, None)
             if loc:
                 location_parts = [
-                    loc.city or "",
-                    loc.locationState.name or "",
-                    loc.locationCountry.name or "",
+                    loc.city or NAMES.EMPTY,
+                    loc.locationState.name or NAMES.EMPTY,
+                    loc.locationCountry.name or NAMES.EMPTY,
                 ]
-                location = ", ".join([part for part in location_parts if part])
+                location = ', '.join([part for part in location_parts if part])
             else:
-                location = ""
+                location = NAMES.EMPTY
 
             # 4️⃣ Build structured response
             userProfile: UserProfile = business.user.user_profile
             data = {
-                "phone": (
+                NAMES.PHONE: (
                     userProfile.phone
-                    if business.user and userProfile else ""
+                    if business.user and userProfile else NAMES.EMPTY
                 ),
-                "countryCode": (
+                NAMES.COUNTRY_CODE: (
                     userProfile.countryCode
-                    if business.user and userProfile else ""
+                    if business.user and userProfile else NAMES.EMPTY
                 ),
-                "location": location,
-                "email": (
+                NAMES.LOCATION: location,
+                NAMES.EMAIL: (
                     userProfile.email
-                    if business.user and userProfile else ""
+                    if business.user and userProfile else NAMES.EMPTY
                 ),
-                "gmbLink":loc.locationLink,
-                "websiteLink": website_link or ""
+                NAMES.GMB_LINK:loc.locationLink,
+                NAMES.WEBSITE_LINK: website_link or NAMES.EMPTY
             }
 
             return data
 
         except Business.DoesNotExist:
-            return {"error": "Business not found"}
+            return {NAMES.ERROR: 'Business not found'}
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in GetBusinessContactInfoTask: {e}")
+            # await MY_METHODS.printStatus(f'Error in GetBusinessContactInfoTask: {e}')
             return None
 
     @classmethod
@@ -110,11 +113,11 @@ class BUSS_TASK:
             badge = await sync_to_async(lambda: BusinessBadge.objects.filter(isDefault=True).first())()
 
             # Get business type (FK)
-            business_type_id = getattr(data.businessType, 'id', None)
+            business_type_id = getattr(data.businessType, NAMES.ID, None)
             business_type = await sync_to_async(lambda: BusinessType.objects.filter(id=business_type_id).first())()
 
             # Validate and fetch segments (max 5)
-            segment_ids = [seg.id for seg in getattr(data, 'segments', [])]
+            segment_ids = [seg.id for seg in getattr(data, NAMES.SEGMENTS, [])]
             if len(segment_ids) > 5:
                 return None  # Too many segments
             segments = await sync_to_async(lambda: list(BusinessSegment.objects.filter(id__in=segment_ids)))()
@@ -122,7 +125,7 @@ class BUSS_TASK:
                 return None  # Invalid segment IDs
 
             # Validate and fetch categories (max 3)
-            category_ids = [cat.id for cat in getattr(data, 'categories', [])]
+            category_ids = [cat.id for cat in getattr(data, NAMES.CATEGORIES, [])]
             if len(category_ids) > 3:
                 return None  # Too many categories
             categories = await sync_to_async(lambda: list(BusinessCategory.objects.filter(id__in=category_ids)))()
@@ -132,20 +135,20 @@ class BUSS_TASK:
             # Create Business instance
             business_ins = Business()
             business_ins.user = user_ins
-            business_ins.businessName = getattr(data, 'businessName', "")
-            business_ins.brandName = getattr(data, 'brandName', "")
-            business_ins.whatsapp = getattr(data, 'whatsapp', "")
-            business_ins.gst = getattr(data, 'gst', "")
-            business_ins.since = getattr(data, 'since', "")
-            business_ins.bio = getattr(data, 'bio', "")
-            business_ins.coverImageUrl = getattr(data, 'coverImageUrl', "")
-            business_ins.bannerImageUrl = getattr(data, 'bannerImageUrl', "")
+            business_ins.businessName = getattr(data, NAMES.BUSINESS_NAME, NAMES.EMPTY)
+            business_ins.brandName = getattr(data, NAMES.BRAND_NAME, NAMES.EMPTY)
+            business_ins.whatsapp = getattr(data, NAMES.WHATSAPP, NAMES.EMPTY)
+            business_ins.gst = getattr(data, NAMES.GST, NAMES.EMPTY)
+            business_ins.since = getattr(data, NAMES.SINCE, NAMES.EMPTY)
+            business_ins.bio = getattr(data, NAMES.BIO, NAMES.EMPTY)
+            business_ins.coverImageUrl = getattr(data, NAMES.COVER_IMAGE_URL, NAMES.EMPTY)
+            business_ins.bannerImageUrl = getattr(data, NAMES.BANNER_IMAGE_URL, NAMES.EMPTY)
             business_ins.businessType = business_type
             business_ins.businessBadge = badge
 
             # Optional legacy text (store labels)
-            business_ins.segment = ", ".join([s.lable for s in segments])
-            business_ins.catigory = ", ".join([c.lable for c in categories])
+            business_ins.segment = ', '.join([s.lable for s in segments])
+            business_ins.catigory = ', '.join([c.lable for c in categories])
 
             await sync_to_async(business_ins.save)()
 
@@ -162,41 +165,41 @@ class BUSS_TASK:
     async def UpdateBusinessTask(cls, business_ins:Business, data):
         try:
             # Related instances (nullable)
-            loc = getattr(business_ins, 'business_location', None)
+            loc = getattr(business_ins, NAMES.BUSINESS_LOCATION_RELATION, None)
             prof: BusinessProfile = getattr(business_ins, 'business_profile', None)
 
             # --- ForeignKey: BusinessType ---
-            if hasattr(data, 'businessType') and getattr(data.businessType, 'id', None):
+            if hasattr(data, NAMES.BUSINESS_TYPE) and getattr(data.businessType, NAMES.ID, None):
                 business_type = await sync_to_async(BusinessType.objects.filter(id=data.businessType.id).first)()
                 if business_type:
                     business_ins.businessType = business_type
 
             # --- M2M: BusinessSegment (max 5) ---
-            segments = getattr(data, 'segments', None)
+            segments = getattr(data, NAMES.SEGMENTS, None)
             if isinstance(segments, list) and len(segments) <= 5:
                 segment_ids = [s.id for s in segments]
                 segment_objs = await sync_to_async(lambda: list(BusinessSegment.objects.filter(id__in=segment_ids)))()
                 if len(segment_objs) == len(segment_ids):
                     await sync_to_async(business_ins.businessSegment.set)(segment_objs)
-                    business_ins.segment = ", ".join([s.lable for s in segment_objs])  # legacy
+                    business_ins.segment = ', '.join([s.lable for s in segment_objs])  # legacy
 
             # --- M2M: BusinessCategory (max 3) ---
-            categories = getattr(data, 'categories', None)
+            categories = getattr(data, NAMES.CATEGORIES, None)
             if isinstance(categories, list) and len(categories) <= 3:
                 category_ids = [c.id for c in categories]
                 category_objs = await sync_to_async(lambda: list(BusinessCategory.objects.filter(id__in=category_ids)))()
                 if len(category_objs) == len(category_ids):
                     await sync_to_async(business_ins.businessCategory.set)(category_objs)
-                    business_ins.catigory = ", ".join([c.lable for c in category_objs])  # legacy
+                    business_ins.catigory = ', '.join([c.lable for c in category_objs])  # legacy
 
             # --- Simple Fields ---
-            business_ins.businessName = getattr(data, 'businessName', business_ins.businessName)
-            business_ins.brandName = getattr(data, 'brandName', business_ins.brandName)
-            business_ins.gst = getattr(data, 'gst', business_ins.gst)
-            business_ins.since = getattr(data, 'since', business_ins.since)
-            business_ins.bio = getattr(data, 'bio', business_ins.bio)
-            business_ins.coverImageUrl = getattr(data, 'coverImageUrl', business_ins.coverImageUrl)
-            business_ins.bannerImageUrl = getattr(data, 'bannerImageUrl', business_ins.bannerImageUrl)
+            business_ins.businessName = getattr(data, NAMES.BUSINESS_NAME, business_ins.businessName)
+            business_ins.brandName = getattr(data, NAMES.BRAND_NAME, business_ins.brandName)
+            business_ins.gst = getattr(data, NAMES.GST, business_ins.gst)
+            business_ins.since = getattr(data, NAMES.SINCE, business_ins.since)
+            business_ins.bio = getattr(data, NAMES.BIO, business_ins.bio)
+            business_ins.coverImageUrl = getattr(data, NAMES.COVER_IMAGE_URL, business_ins.coverImageUrl)
+            business_ins.bannerImageUrl = getattr(data, NAMES.BANNER_IMAGE_URL, business_ins.bannerImageUrl)
             await sync_to_async(business_ins.save)()
 
             # --- Business Location (if exists) ---
@@ -206,8 +209,8 @@ class BUSS_TASK:
                 await BUSS_LOC_TASK.CreateBusinessLocTask(business_ins, data)
 
             # --- Business Profile (if exists) ---
-            if prof and hasattr(data, 'youtubeLink'):
-                prof.youtubeLink = getattr(data, 'youtubeLink')
+            if prof and hasattr(data, NAMES.YOUTUBE_LINK):
+                prof.youtubeLink = getattr(data, NAMES.YOUTUBE_LINK)
                 await sync_to_async(prof.save)()
 
             return await cls.GetBusinessInfo(business_ins.id)
@@ -220,7 +223,7 @@ class BUSS_TASK:
     async def GetBusinessInfo(cls, id):
         try:
             business_ins = await sync_to_async(Business.objects.get)(pk=id)
-            business_loc_ins:Location = getattr(business_ins, 'business_location', None)
+            business_loc_ins:Location = getattr(business_ins, NAMES.BUSINESS_LOCATION_RELATION, None)
             business_prof_ins: BusinessProfile = getattr(business_ins, 'business_profile', None)
 
             # Get related segments and categories (as objects)
@@ -230,45 +233,45 @@ class BUSS_TASK:
             # Serialize them
             segment_data = [await cls.GetBusinessTypeData(seg) for seg in segments]
             category_data = [await cls.GetBusinessTypeData(cat) for cat in categories]
-            # await MY_METHODS.printStatus(f"category {category_data},categories {categories}")
+            # await MY_METHODS.printStatus(f'category {category_data},categories {categories}')
 
             data = {
-                'businessName': business_ins.businessName,
-                'brandName': business_ins.brandName,
-                'segments': segment_data,
-                'categories': category_data,
-                'whatsapp': business_ins.whatsapp,
-                'gst': business_ins.gst,
-                'coverImageUrl': business_ins.coverImageUrl if business_ins.coverImageUrl else "",
-                'bannerImageUrl': business_ins.bannerImageUrl if business_ins.bannerImageUrl else "",
-                'since': business_ins.since,
-                'id': business_ins.id,
-                'bio': business_ins.bio,
-                'updatedAt': business_ins.updatedAt,
-                'badge': business_ins.businessBadge.imageUrl if business_ins.businessBadge else None,
-                'timestamp': business_ins.timestamp
+                NAMES.BUSINESS_NAME: business_ins.businessName,
+                NAMES.BRAND_NAME: business_ins.brandName,
+                NAMES.SEGMENTS: segment_data,
+                NAMES.CATEGORIES: category_data,
+                NAMES.WHATSAPP: business_ins.whatsapp,
+                NAMES.GST: business_ins.gst,
+                NAMES.COVER_IMAGE_URL: business_ins.coverImageUrl if business_ins.coverImageUrl else NAMES.EMPTY,
+                NAMES.BANNER_IMAGE_URL: business_ins.bannerImageUrl if business_ins.bannerImageUrl else NAMES.EMPTY,
+                NAMES.SINCE: business_ins.since,
+                NAMES.ID: business_ins.id,
+                NAMES.BIO: business_ins.bio,
+                NAMES.UPDATED_AT: business_ins.updatedAt,
+                NAMES.BADGE: business_ins.businessBadge.imageUrl if business_ins.businessBadge else None,
+                NAMES.TIMESTAMP: business_ins.timestamp
             }
 
             rating = await MY_METHODS.get_random_rating()
-            data['rating'] = f"{rating}"
-            data['ratingValue'] = float(rating)
+            data[NAMES.RATING] = f'{rating}'
+            data[NAMES.RATING_VALUE] = float(rating)
 
             # Serialize business type
             if business_ins.businessType:
-                data['businessType'] = await cls.GetBusinessTypeData(business_ins.businessType)
+                data[NAMES.BUSINESS_TYPE] = await cls.GetBusinessTypeData(business_ins.businessType)
 
             # Location
             if business_loc_ins:
                 location = await BUSS_LOC_TASK.GetBusinessLocTask(business_loc_ins)
-                data['gmbLink'] = location["gmbLink"]
-                data['pin_code'] =location['pin_code']
-                data['city'] = location['city']
-                data['state'] = location['state']
-                data['country'] = location['country']
+                data[NAMES.GMB_LINK] = location[NAMES.GMB_LINK]
+                data[NAMES.PINCODE] =location[NAMES.PINCODE]
+                data[NAMES.CITY] = location[NAMES.CITY]
+                data[NAMES.STATE] = location[NAMES.STATE]
+                data[NAMES.COUNTRY] = location[NAMES.COUNTRY]
 
             # Profile
             if business_prof_ins:
-                data['youtube_link'] = business_prof_ins.youtubeLink
+                data[NAMES.YOUTUBE_LINK] = business_prof_ins.youtubeLink
 
             return data
 
@@ -304,15 +307,15 @@ class BUSS_TASK:
 
             # Final response
             data = {
-                'id': business_ins.id,
-                'businessName': business_ins.businessName,
-                'brandName': business_ins.brandName,
-                'coverImageUrl': business_ins.coverImageUrl,
-                'since': business_ins.since,
-                'businessImage': business_image,
-                'segments': segment_data,
-                'categories': category_data,
-                'businessType': business_type_data,
+                NAMES.ID: business_ins.id,
+                NAMES.BUSINESS_NAME: business_ins.businessName,
+                NAMES.BRAND_NAME: business_ins.brandName,
+                NAMES.COVER_IMAGE_URL: business_ins.coverImageUrl,
+                NAMES.SINCE: business_ins.since,
+                NAMES.BUSINESS_IMAGE: business_image,
+                NAMES.SEGMENTS: segment_data,
+                NAMES.CATEGORIES: category_data,
+                NAMES.BUSINESS_TYPE: business_type_data,
             }
 
             return data
@@ -324,15 +327,18 @@ class BUSS_TASK:
     @classmethod
     async def GetBusinessTypeData(cls,businesstype:BusinessCategory):
         try:
+            business:Business = businesstype.business_category 
+            sqUrl = businesstype.imageSQUrl or business.coverImageUrl
+            rtUrl = businesstype.imageRTUrl or business.bannerImageUrl
             typeData={
-                'id': businesstype.id,
-                'label': businesstype.lable,
-                'value': businesstype.value,
-                'imageSQUrl': businesstype.imageSQUrl,
-                'imageRTUrl': businesstype.imageRTUrl
+                NAMES.ID: businesstype.id,
+                NAMES.LABEL: businesstype.lable,
+                NAMES.VALUE: businesstype.value,
+                NAMES.IMAGE_SQ_URL: sqUrl,
+                NAMES.IMAGE_RT_URL: rtUrl
             }
 
             return typeData
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in GetAllBusinessTypes: {e}')
+            await MY_METHODS.printStatus(f'Error in GetAllBusinessTypes: {e}')
             return None

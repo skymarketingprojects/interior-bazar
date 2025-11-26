@@ -8,6 +8,7 @@ class ProductCategory(models.Model):
     lable = models.CharField(max_length=250)
     imageSQUrl = models.CharField(max_length=2250,null=True,blank=True)
     imageRTUrl = models.CharField(max_length=2250,null=True,blank=True)
+    trending = models.BooleanField(default=False)
    
     def __str__(self):
         return f'product category - {self.lable}'
@@ -18,6 +19,7 @@ class ProductSubCategory(models.Model):
     lable = models.CharField(max_length=250)
     imageSQUrl = models.CharField(max_length=2250,null=True,blank=True)
     imageRTUrl = models.CharField(max_length=2250,null=True,blank=True)
+    trending = models.BooleanField(default=False)
    
     def __str__(self):
         return f'product sub category - {self.lable}'
@@ -148,3 +150,18 @@ class ServiceImage(models.Model):
 
     def __str__(self):
         return f"Image {self.index} for ({self.service.title or 'Untitled'})"
+    
+class InteriorServices(models.Model):
+    value = models.CharField(max_length=250)
+    lable = models.CharField(max_length=250)
+    imageSQUrl = models.CharField(max_length=2250,null=True,blank=True)
+    imageRTUrl = models.CharField(max_length=2250,null=True,blank=True)
+    index= models.IntegerField(default=0)
+   
+    def __str__(self):
+        return f'Interior Service - {self.lable}'
+    def save(self, *args, **kwargs):
+        if not self.index:
+            self.index = self.__class__.objects.all().count()+1
+        indexShifting(instance=self,filter_attr='index')
+        super(InteriorServices, self).save(*args, **kwargs)

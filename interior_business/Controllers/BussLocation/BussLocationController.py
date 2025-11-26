@@ -2,11 +2,8 @@ from asgiref.sync import sync_to_async
 from adrf.decorators import api_view
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
-from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.Utils.LocalResponse import LocalResponse
-from interior_business.Controllers.Business.Tasks.BusinessTasks import BUSS_TASK
-from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
-from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.models import Location, Business,Country,State
 from interior_business.Controllers.BussLocation.Tasks.BusinessLocationTasks import BUSS_LOC_TASK
@@ -70,7 +67,7 @@ class BUSS_LOCATION_CONTROLLER:
                 message=RESPONSE_MESSAGES.business_register_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
     @classmethod
@@ -106,7 +103,7 @@ class BUSS_LOCATION_CONTROLLER:
                 message=RESPONSE_MESSAGES.business_loc_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
     @classmethod
@@ -136,7 +133,7 @@ class BUSS_LOCATION_CONTROLLER:
                 message=RESPONSE_MESSAGES.country_list_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
     @classmethod
     async def GetStateListByCountry(self,countryId):
@@ -165,5 +162,5 @@ class BUSS_LOCATION_CONTROLLER:
                 message=RESPONSE_MESSAGES.country_list_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })

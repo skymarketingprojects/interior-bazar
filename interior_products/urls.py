@@ -33,5 +33,6 @@ urlpatterns = [
 
     #tab
     path('tab/',views.GetTabsView, name="get_tabs"),
+    path('own-services/',views.GetOwnServicesView, name="own_services"),
 
 ]

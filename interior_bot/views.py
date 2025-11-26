@@ -6,6 +6,7 @@ from .Controllers.MessageBot.MessageBotController import MESSAGE_BOT_CONTROLLER
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 # Create your views here.
 
 @api_view(["GET"])
@@ -24,6 +25,6 @@ async def GetMessagesView(request):
         return ServerResponse(
                 response=RESPONSE_MESSAGES.error,
                 code=RESPONSE_CODES.error,
-                data={"error":str(e)},
+                data={NAMES.ERROR:str(e)},
                 message="messages found Error"
             )

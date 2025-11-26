@@ -7,6 +7,7 @@ from app_ib.Utils.LocalResponse import LocalResponse
 from interior_business.Controllers.Business.Tasks.BusinessTasks import BUSS_TASK
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.models import BusinessProfile, Business
 from interior_business.Controllers.BusinessProfile.Tasks.BusinessProfileTasks import BUSS_PROF_TASK
@@ -19,7 +20,7 @@ class BUSS_PROFILE_CONTROLLER:
     async def GetBusinessProfileForDisplay(self, business_id):
         try:
             get_resp = await BUSS_PROF_TASK.GetBusinessProfileTask(business_id=business_id)
-            if 'error' not in get_resp:
+            if NAMES.ERROR not in get_resp:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
                     message=RESPONSE_MESSAGES.business_prof_fetch_success,
@@ -37,7 +38,7 @@ class BUSS_PROFILE_CONTROLLER:
                 message=RESPONSE_MESSAGES.business_prof_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
   
     @classmethod
@@ -97,7 +98,7 @@ class BUSS_PROFILE_CONTROLLER:
                 message=RESPONSE_MESSAGES.business_prof_create_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
     @classmethod
@@ -140,7 +141,7 @@ class BUSS_PROFILE_CONTROLLER:
                 message=RESPONSE_MESSAGES.business_prof_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
     @classmethod 
@@ -181,7 +182,7 @@ class BUSS_PROFILE_CONTROLLER:
                 message=RESPONSE_MESSAGES.default_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
     @classmethod 
@@ -222,6 +223,6 @@ class BUSS_PROFILE_CONTROLLER:
                 message=RESPONSE_MESSAGES.default_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
         

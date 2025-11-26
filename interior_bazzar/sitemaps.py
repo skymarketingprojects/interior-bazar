@@ -39,7 +39,7 @@ class BlogPostSitemap(Sitemap):
         return f'/blog/{slugify(obj.title, obj.id)}/'
 
     def lastmod(self, obj):
-        return obj.updated_at
+        return obj.updatedAt
 
     def changefreq(self, obj):
         return 'weekly'

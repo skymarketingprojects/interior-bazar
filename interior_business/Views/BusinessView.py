@@ -13,7 +13,7 @@ from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from adrf.views import APIView
 from django.views.decorators.csrf import csrf_exempt
-
+from app_ib.Utils.Names import NAMES
 
 
 @api_view(['POST'])
@@ -43,7 +43,7 @@ async def CreateBusinessView(request):
             message=RESPONSE_MESSAGES.business_register_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 @api_view(['POST'])
@@ -72,7 +72,7 @@ async def UpdateBusinessView(request):
             message=RESPONSE_MESSAGES.business_register_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 @api_view(['GET'])
@@ -96,7 +96,7 @@ async def GetBusinessByIdView(request,id):
             message=RESPONSE_MESSAGES.business_register_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 @api_view(['GET'])
@@ -122,7 +122,7 @@ async def GetBusinessByUser(request):
             message=RESPONSE_MESSAGES.business_register_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 @api_view(['GET'])
@@ -145,7 +145,7 @@ async def GetAllBusinessTypesView(request):
             message=RESPONSE_MESSAGES.business_type_fetch_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
     
 
@@ -169,13 +169,14 @@ async def GetAllBusinessTabView(request):
             message=RESPONSE_MESSAGES.business_category_fetch_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 @api_view(['GET'])
 async def GetAllBusinessCategoriesView(request):
     try:
+        trending = request.query_params.get('trending', False)
         # Call Auth Controller to Create User
-        final_response = await BUSS_CONTROLLER.GetAllBusinessCategories()
+        final_response = await BUSS_CONTROLLER.GetAllBusinessCategories(trending=trending)
         # await MY_METHODS.printStatus(f'final_response {final_response}')
 
         return ServerResponse(
@@ -191,7 +192,7 @@ async def GetAllBusinessCategoriesView(request):
             message=RESPONSE_MESSAGES.business_category_fetch_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 @api_view(['GET'])
@@ -214,7 +215,7 @@ async def GetAllBusinessSegmentsByTypeView(request,typeId):
             message=RESPONSE_MESSAGES.business_category_fetch_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 @api_view(['GET'])
@@ -237,7 +238,7 @@ async def GetExploreSectionsView(request):
             message=RESPONSE_MESSAGES.business_category_fetch_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 class BusinessBannerView(APIView):
@@ -265,7 +266,7 @@ class BusinessBannerView(APIView):
                 message=RESPONSE_MESSAGES.business_register_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
     async def get(self, request):
         try:
@@ -286,5 +287,5 @@ class BusinessBannerView(APIView):
                 message=RESPONSE_MESSAGES.business_register_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })

@@ -1,12 +1,10 @@
-from asgiref.sync import sync_to_async
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.LocalResponse import LocalResponse
 from interior_bot.models import MessageBot
 
 from .Tasks.MessageBotTasks import MESSAGE_BOT_TASKS
-from .Validators.MessageBotValidators import MESSAGE_BOT_VALIDATORS
-from app_ib.Utils.MyMethods import MY_METHODS
+from app_ib.Utils.Names import NAMES
 
 class MESSAGE_BOT_CONTROLLER:
     
@@ -37,7 +35,7 @@ class MESSAGE_BOT_CONTROLLER:
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 code=RESPONSE_CODES.error,
-                data={"error":str(e)},
+                data={NAMES.ERROR:str(e)},
                 message="messages found Error"
             )
 

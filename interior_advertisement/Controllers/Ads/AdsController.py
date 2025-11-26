@@ -7,33 +7,34 @@ from .Tasks.AdsTasks import ADS_TASKS
 from interior_advertisement.models import AdCampaign, AdAsset, AdPersona
 from app_ib.models import Business
 import asyncio
+from app_ib.Utils.Names import NAMES
 
 class ADS_CONTROLLER:
 
     # ---------------- GET CAMPAIGN DETAILS ----------------
     @classmethod
     async def GetUserAds(cls, user_ins):
-        """Fetch all ad campaigns (and their full data) for a user's business."""
+        '''Fetch all ad campaigns (and their full data) for a user's business.'''
         try:
             # Step 1: Get advertiser (reverse relation from user)
             AdvertiserIns = await sync_to_async(user_ins.user_business, None)
             if not AdvertiserIns:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.error,
-                    message="No advertiser/business found for user",
+                    message='No advertiser/business found for user',
                     code=RESPONSE_CODES.error,
                     data={}
                 )
 
             # Step 2: Fetch all campaigns under that advertiser
             Campaigns = await sync_to_async(list)(
-                AdCampaign.objects.filter(advertiser=AdvertiserIns).order_by("-created_at")
+                AdCampaign.objects.filter(advertiser=AdvertiserIns).order_by(f'-{NAMES.CREATED_AT}')
             )
 
             if not Campaigns:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
-                    message="No campaigns found for this advertiser",
+                    message='No campaigns found for this advertiser',
                     code=RESPONSE_CODES.success,
                     data=[]
                 )
@@ -50,28 +51,29 @@ class ADS_CONTROLLER:
                 _, EventsData = await ADS_TASKS.GetAdEventsTask(campaign)
                 _, AggregatesData = await ADS_TASKS.GetAdAggregatesTask(campaign)
 
-                CampaignData["assets"] = AssetsData
-                CampaignData["payments"] = PaymentsData
-                CampaignData["events"] = EventsData
-                CampaignData["aggregates"] = AggregatesData
+                CampaignData[NAMES.ASSETS] = AssetsData
+                CampaignData[NAMES.PAYMENTS] = PaymentsData
+                CampaignData[NAMES.EVENTS] = EventsData
+                CampaignData[NAMES.AGGREGATES] = AggregatesData
 
                 AllCampaignsData.append(CampaignData)
 
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
-                message="All campaigns fetched successfully",
+                message='All campaigns fetched successfully',
                 code=RESPONSE_CODES.success,
                 data=AllCampaignsData
             )
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error fetching user campaigns: {str(e)}")
+            # await MY_METHODS.printStatus(f'Error fetching user campaigns: {str(e)}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Error fetching user campaigns",
+                message='Error fetching user campaigns',
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
+    
     @classmethod
     async def GetAdCampaign(cls, AdCampaignId):
         try:
@@ -79,7 +81,7 @@ class ADS_CONTROLLER:
             if not IsExist:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.error,
-                    message="Ad campaign not found",
+                    message='Ad campaign not found',
                     code=RESPONSE_CODES.error,
                     data={}
                 )
@@ -91,9 +93,9 @@ class ADS_CONTROLLER:
             if not IsSuccess:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.error,
-                    message="Error fetching campaign",
+                    message='Error fetching campaign',
                     code=RESPONSE_CODES.error,
-                    data={"error": CampaignData}
+                    data={NAMES.ERROR: CampaignData}
                 )
 
             # Fetch related data
@@ -104,26 +106,26 @@ class ADS_CONTROLLER:
             _, PersonasData = await ADS_TASKS.GetAdPersonasTask(AdCampaignIns)
 
             # Combine all data
-            CampaignData["assets"] = AssetsData
-            CampaignData["payments"] = PaymentsData
-            CampaignData["events"] = EventsData
-            CampaignData["aggregates"] = AggregatesData
-            CampaignData["personas"] = PersonasData
+            CampaignData[NAMES.ASSETS] = AssetsData
+            CampaignData[NAMES.PAYMENTS] = PaymentsData
+            CampaignData[NAMES.EVENTS] = EventsData
+            CampaignData[NAMES.AGGREGATES] = AggregatesData
+            CampaignData[NAMES.PERSONAS] = PersonasData
 
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
-                message="Ad campaign details fetched successfully",
+                message='Ad campaign details fetched successfully',
                 code=RESPONSE_CODES.success,
                 data=CampaignData
             )
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
+            # await MY_METHODS.printStatus(f'Error fetching enum: {str(e)}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Error fetching ad campaign details",
+                message='Error fetching ad campaign details',
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
     
     @classmethod
@@ -133,29 +135,29 @@ class ADS_CONTROLLER:
             if status:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
-                    message="Active campaigns fetched successfully",
+                    message='Active campaigns fetched successfully',
                     code=RESPONSE_CODES.success,
                     data=activeCampaigns
                 )
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Failed to fetch active campaigns",
+                message='Failed to fetch active campaigns',
                 code=RESPONSE_CODES.error,
                 data=activeCampaigns
             )
 
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error fetching active campaigns: {str(e)}")
+            await MY_METHODS.printStatus(f'Error fetching active campaigns: {str(e)}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Error fetching active campaigns",
+                message='Error fetching active campaigns',
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
     @classmethod
     async def GetAdCampaignsByBusiness(cls, business:Business):
         try:
-            campaigns = await sync_to_async(list)(AdCampaign.objects.filter(advertiser=business).order_by("-createdAt"))
+            campaigns = await sync_to_async(list)(AdCampaign.objects.filter(advertiser=business).order_by(f'-{NAMES.CREATED_AT}'))
 
             tasks = [ADS_TASKS.GetAdCampaignTask(campaign) for campaign in campaigns]
             results = await asyncio.gather(*tasks)
@@ -164,21 +166,21 @@ class ADS_CONTROLLER:
                 IsSuccess, campaignData = result
                 if IsSuccess:
                     campaigns.append(campaignData)
-                # await MY_METHODS.printStatus(f"Error fetching campaign data: {campaignData}")
+                # await MY_METHODS.printStatus(f'Error fetching campaign data: {campaignData}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
-                message="Ad campaigns fetched successfully",
+                message='Ad campaigns fetched successfully',
                 code=RESPONSE_CODES.success,
                 data=campaigns
             )
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
+            # await MY_METHODS.printStatus(f'Error fetching enum: {str(e)}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Error fetching ad campaigns",
+                message='Error fetching ad campaigns',
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
     # ---------------- CREATE CAMPAIGN ----------------
     @classmethod
@@ -191,23 +193,23 @@ class ADS_CONTROLLER:
                     response=RESPONSE_MESSAGES.success,
                     message=RESPONSE_MESSAGES.success,
                     code=RESPONSE_CODES.success,
-                    data={"adCampaignId": str(AdCampaignIns.id)}
+                    data={NAMES.AD_CAMPAIGN_ID: str(AdCampaignIns.id)}
                 )
 
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Failed to create ad campaign",
+                message='Failed to create ad campaign',
                 code=RESPONSE_CODES.error,
                 data={}
             )
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error creating ad campaign: {str(e)}")
+            # await MY_METHODS.printStatus(f'Error creating ad campaign: {str(e)}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Error creating ad campaign",
+                message='Error creating ad campaign',
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
 
     # ---------------- UPDATE CAMPAIGN ----------------
@@ -218,7 +220,7 @@ class ADS_CONTROLLER:
             if not IsExist:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.error,
-                    message="Ad campaign not found",
+                    message='Ad campaign not found',
                     code=RESPONSE_CODES.error,
                     data={}
                 )
@@ -229,25 +231,25 @@ class ADS_CONTROLLER:
             if UpdateSuccess:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
-                    message="Ad campaign updated successfully",
+                    message='Ad campaign updated successfully',
                     code=RESPONSE_CODES.success,
                     data=UpdateSuccess
                 )
 
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Failed to update ad campaign",
+                message='Failed to update ad campaign',
                 code=RESPONSE_CODES.error,
                 data={}
             )
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error  updating ad campaign: {str(e)}")
+            # await MY_METHODS.printStatus(f'Error  updating ad campaign: {str(e)}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Error updating ad campaign",
+                message='Error updating ad campaign',
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
 
     # ---------------- CREATE ASSET ----------------
@@ -255,42 +257,42 @@ class ADS_CONTROLLER:
     async def CreateAdAsset(cls, AdCampaignId, Data):
         try:
             adCampaign = await sync_to_async(AdCampaign.objects.get)(id=AdCampaignId)
-            # await MY_METHODS.printStatus(f"adCampaign: {adCampaign}")
+            # await MY_METHODS.printStatus(f'adCampaign: {adCampaign}')
             isAssetExist = await sync_to_async(AdAsset.objects.filter(campaign=adCampaign).exists)()
-            # await MY_METHODS.printStatus(f"isAssetExist: {isAssetExist}")
+            # await MY_METHODS.printStatus(f'isAssetExist: {isAssetExist}')
             IsSuccess= False
             AdAssetIns = None
             if isAssetExist:
-                # await MY_METHODS.printStatus(f"AdAsset exist: {isAssetExist}")
+                # await MY_METHODS.printStatus(f'AdAsset exist: {isAssetExist}')
                 adAssetIns = await sync_to_async(AdAsset.objects.get)(campaign=adCampaign)
-                # await MY_METHODS.printStatus(f"AdAssetIns: {adAssetIns}")
+                # await MY_METHODS.printStatus(f'AdAssetIns: {adAssetIns}')
                 IsSuccess, AdAssetIns = await ADS_TASKS.UpdateAdAssetTask(AdAssetIns=adAssetIns, Data=Data)
 
             else:
                 IsSuccess, AdAssetIns = await ADS_TASKS.CreateAdAssetTask(AdCampaignIns=adCampaign, Data=Data)
-            # await MY_METHODS.printStatus(f"AdAssetIns: {AdAssetIns}; IsSuccess: {IsSuccess}")
+            # await MY_METHODS.printStatus(f'AdAssetIns: {AdAssetIns}; IsSuccess: {IsSuccess}')
             if IsSuccess:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
-                    message="Ad asset created successfully",
+                    message='Ad asset created successfully',
                     code=RESPONSE_CODES.success,
                     data=AdAssetIns
                 )
 
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Failed to create ad asset",
+                message='Failed to create ad asset',
                 code=RESPONSE_CODES.error,
                 data={}
             )
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error Creating ad asset: {str(e)}")
+            # await MY_METHODS.printStatus(f'Error Creating ad asset: {str(e)}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Error creating ad asset",
+                message='Error creating ad asset',
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
 
     @classmethod
@@ -300,7 +302,7 @@ class ADS_CONTROLLER:
             if not IsExist:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.error,
-                    message="Ad asset not found",
+                    message='Ad asset not found',
                     code=RESPONSE_CODES.error,
                     data={}
                 )
@@ -311,25 +313,25 @@ class ADS_CONTROLLER:
             if UpdateSuccess:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
-                    message="Ad asset updated successfully",
+                    message='Ad asset updated successfully',
                     code=RESPONSE_CODES.success,
                     data=UpdateSuccess
                 )
 
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Failed to update ad asset",
+                message='Failed to update ad asset',
                 code=RESPONSE_CODES.error,
                 data={}
             )
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error  updating ad asset: {str(e)}")
+            # await MY_METHODS.printStatus(f'Error  updating ad asset: {str(e)}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Error updating ad asset",
+                message='Error updating ad asset',
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
 
     @classmethod
@@ -339,7 +341,7 @@ class ADS_CONTROLLER:
             if not IsExist:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.error,
-                    message="Ad asset not found",
+                    message='Ad asset not found',
                     code=RESPONSE_CODES.error,
                     data={}
                 )
@@ -350,25 +352,25 @@ class ADS_CONTROLLER:
             if DeleteSuccess:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
-                    message="Ad asset deleted successfully",
+                    message='Ad asset deleted successfully',
                     code=RESPONSE_CODES.success,
                     data=DeleteSuccess
                 )
 
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Failed to delete ad asset",
+                message='Failed to delete ad asset',
                 code=RESPONSE_CODES.error,
                 data={}
             )
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error deleting ad asset: {str(e)}")
+            # await MY_METHODS.printStatus(f'Error deleting ad asset: {str(e)}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Error deleting ad asset",
+                message='Error deleting ad asset',
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
 
     @classmethod
@@ -378,25 +380,25 @@ class ADS_CONTROLLER:
             if not IsExist:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.error,
-                    message="Ad asset not found",
+                    message='Ad asset not found',
                     code=RESPONSE_CODES.error,
                     data={}
                 )
             AdAssetIns = await ADS_TASKS.GetAdAssetTask(AdAssetId=AdAssetId)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
-                message="Ad asset fetched successfully",
+                message='Ad asset fetched successfully',
                 code=RESPONSE_CODES.success,
                 data=AdAssetIns
             )
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error getting ad asset: {str(e)}")
+            # await MY_METHODS.printStatus(f'Error getting ad asset: {str(e)}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Error getting ad asset",
+                message='Error getting ad asset',
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
 
     @classmethod
@@ -409,21 +411,21 @@ class ADS_CONTROLLER:
                 status,response = await ADS_TASKS.GetAdAssetsTask(AdCampaignIns=campaign)
                 if status:
                     data.append(response[0])
-            # await MY_METHODS.printStatus(f"AdAssets: {data}")
+            # await MY_METHODS.printStatus(f'AdAssets: {data}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
-                message="Ad assets fetched successfully",
+                message='Ad assets fetched successfully',
                 code=RESPONSE_CODES.success,
                 data=data
             )
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error getting ad assets: {str(e)}")
+            # await MY_METHODS.printStatus(f'Error getting ad assets: {str(e)}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Error getting ad assets",
+                message='Error getting ad assets',
                 code=RESPONSE_CODES.error,
-                data={"error": str(e),"data":data}
+                data={NAMES.ERROR: str(e),NAMES.DATA:data}
             )
 
     # ---------------- CREATE PAYMENT ----------------
@@ -432,29 +434,29 @@ class ADS_CONTROLLER:
         try:
             AdCampaignIns = await sync_to_async(AdCampaign.objects.get)(id=AdCampaignId)
             IsSuccess, AdPaymentIns = await ADS_TASKS.CreateAdPaymentTask(AdCampaignIns=AdCampaignIns, Data=Data)
-            # await MY_METHODS.printStatus(f"AdPaymentIns: {AdPaymentIns}")
+            # await MY_METHODS.printStatus(f'AdPaymentIns: {AdPaymentIns}')
             if IsSuccess:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
-                    message="Ad payment created successfully",
+                    message='Ad payment created successfully',
                     code=RESPONSE_CODES.success,
-                    data={"adPaymentId": str(AdPaymentIns.id)}
+                    data={'adPaymentId': str(AdPaymentIns.id)}
                 )
 
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Failed to create ad payment",
+                message='Failed to create ad payment',
                 code=RESPONSE_CODES.error,
                 data={}
             )
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error Creating ad payment: {str(e)}")
+            # await MY_METHODS.printStatus(f'Error Creating ad payment: {str(e)}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Error creating ad payment",
+                message='Error creating ad payment',
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
 
     # ---------------- CREATE EVENT ----------------
@@ -466,25 +468,25 @@ class ADS_CONTROLLER:
             if IsSuccess:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
-                    message="Ad event created successfully",
+                    message='Ad event created successfully',
                     code=RESPONSE_CODES.success,
-                    data={"adEventId": str(AdEventIns.id)}
+                    data={'adEventId': str(AdEventIns.id)}
                 )
 
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Failed to create ad event",
+                message='Failed to create ad event',
                 code=RESPONSE_CODES.error,
                 data={}
             )
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error Creating ad event: {str(e)}")
+            # await MY_METHODS.printStatus(f'Error Creating ad event: {str(e)}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Error creating ad event",
+                message='Error creating ad event',
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
 
     # ---------------- GET ENUM JSON ----------------
@@ -495,25 +497,25 @@ class ADS_CONTROLLER:
             if IsSuccess:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
-                    message="Enums fetched successfully",
+                    message='Enums fetched successfully',
                     code=RESPONSE_CODES.success,
                     data=EnumJson
                 )
 
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Failed to fetch enums",
+                message='Failed to fetch enums',
                 code=RESPONSE_CODES.error,
                 data=EnumJson
             )
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error fetching enum json: {str(e)}")
+            # await MY_METHODS.printStatus(f'Error fetching enum json: {str(e)}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Error fetching enums",
+                message='Error fetching enums',
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
 
     # ---------------- Ad Placement ----------------
@@ -524,25 +526,25 @@ class ADS_CONTROLLER:
             if IsSuccess:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
-                    message="Placement list fetched successfully",
+                    message='Placement list fetched successfully',
                     code=RESPONSE_CODES.success,
                     data=PlacementList
                 )
-            # await MY_METHODS.printStatus(f"PlacementList: {PlacementList}")
+            # await MY_METHODS.printStatus(f'PlacementList: {PlacementList}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Failed to fetch placement list",
+                message='Failed to fetch placement list',
                 code=RESPONSE_CODES.error,
                 data=PlacementList
             )
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error fetching placement list: {str(e)}")
+            # await MY_METHODS.printStatus(f'Error fetching placement list: {str(e)}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Error fetching placement list",
+                message='Error fetching placement list',
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
         
     # ---------------- Ad Persona ----------------
@@ -561,25 +563,25 @@ class ADS_CONTROLLER:
             if IsSuccess:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
-                    message="Persona created successfully",
+                    message='Persona created successfully',
                     code=RESPONSE_CODES.success,
                     data=PersonaIns
                 )
 
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Failed to create persona",
+                message='Failed to create persona',
                 code=RESPONSE_CODES.error,
                 data=PersonaIns
             )
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error creating persona: {str(e)}")
+            # await MY_METHODS.printStatus(f'Error creating persona: {str(e)}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Error creating persona",
+                message='Error creating persona',
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
         
     @classmethod
@@ -590,22 +592,22 @@ class ADS_CONTROLLER:
             if not IsSuccess:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.error,
-                    message="Failed to fetch persona list",
+                    message='Failed to fetch persona list',
                     code=RESPONSE_CODES.error,
                     data=personaData
                 )
 
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
-                message="Persona list fetched successfully",
+                message='Persona list fetched successfully',
                 code=RESPONSE_CODES.success,
                 data=personaData
             )
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error fetching persona list: {str(e)}")
+            # await MY_METHODS.printStatus(f'Error fetching persona list: {str(e)}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Error fetching persona list",
+                message='Error fetching persona list',
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )

@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from interior_business.Controllers.BusinessProfile.BusinessProfileController import BUSS_PROFILE_CONTROLLER
-
+from app_ib.Utils.Names import NAMES
 
 @api_view(['GET'])
 async def GetBusinessProfileForDisplayView(request, businessId = None):
@@ -34,7 +34,7 @@ async def GetBusinessProfileForDisplayView(request, businessId = None):
             message=RESPONSE_MESSAGES.business_prof_fetch_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 @api_view(['POST'])
@@ -65,7 +65,7 @@ async def CreateOrUpdateBusinessProfileView(request):
             message=RESPONSE_MESSAGES.business_register_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
             
@@ -91,7 +91,7 @@ async def GetBusinessProfileByBussIDView(request,id):
             message=RESPONSE_MESSAGES.business_fetch_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 
@@ -122,7 +122,7 @@ async def CreateOrUpdatePrimaryImageView(request):
             message=RESPONSE_MESSAGES.user_profile_create_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })
 
 
@@ -152,5 +152,5 @@ async def CreateOrUpdateSecondaryImageView(request):
             message=RESPONSE_MESSAGES.default_error,
             code=RESPONSE_CODES.error,
             data={
-                'error': str(e)
+                NAMES.ERROR: str(e)
             })

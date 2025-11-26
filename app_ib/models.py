@@ -72,6 +72,7 @@ class BusinessType(models.Model):
     imageRTUrl = models.CharField(max_length=2250,null=True,blank=True)
     value = models.CharField(max_length=250)
     lable = models.CharField(max_length=250)
+    trending = models.BooleanField(default=False)
     def __str__(self):
         return f'business type - {self.lable}'
 
@@ -81,8 +82,15 @@ class BusinessCategory(models.Model):
     imageRTUrl = models.CharField(max_length=2250,null=True,blank=True)
     value = models.CharField(max_length=250)
     lable = models.CharField(max_length=250)
+    trending = models.BooleanField(default=False)
+    index = models.IntegerField(default=0)
     def __str__(self):
         return f'business category - {self.lable}'
+    def save(self, *args, **kwargs):
+        if not self.index:
+            self.index = self.__class__.objects.all().count()+1
+        indexShifting(instance=self,filter_attr='index')
+        super(BusinessCategory, self).save(*args, **kwargs)
 
 class BusinessSegment(models.Model):
     businessType = models.ForeignKey(BusinessType, on_delete=models.CASCADE, null=True, blank=True, related_name='business_type_segment')
@@ -91,6 +99,7 @@ class BusinessSegment(models.Model):
     imageRTUrl = models.CharField(max_length=2250,null=True,blank=True)
     value = models.CharField(max_length=250)
     lable = models.CharField(max_length=250)
+    trending = models.BooleanField(default=False)
     def __str__(self):
         return f'business segment - {self.lable}'
 

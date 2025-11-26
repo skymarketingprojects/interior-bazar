@@ -3,6 +3,7 @@ from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.Utils.MyMethods import MY_METHODS
+from app_ib.Utils.Names import NAMES
 from asgiref.sync import sync_to_async
 from app_ib.models import Business
 
@@ -10,8 +11,8 @@ class BUSS_VALIDATOR:
     @classmethod
     async def _validate_business_name(self, business_name):
         try:
-            error_msg = ''
-            if business_name==None or business_name=='':
+            error_msg = NAMES.EMPTY
+            if business_name==None or business_name==NAMES.EMPTY:
                 error_msg = "At least one character required"
             if error_msg:
                 return LocalResponse(
@@ -31,7 +32,7 @@ class BUSS_VALIDATOR:
     @classmethod
     async def _validate_business_phone(self, phone):
         try:
-            error_msg = ''
+            error_msg = NAMES.EMPTY
             validate_phone=MY_METHODS._validate_phone(phone)
             if validate_phone==False:
                 error_msg = "Invalid phone number"
@@ -64,7 +65,7 @@ class BUSS_VALIDATOR:
     @classmethod
     async def _validate_business_gst(self, gst):
         try:
-            error_msg = ''
+            error_msg = NAMES.EMPTY
             validate_gst=MY_METHODS._validate_gst(gst)
             if validate_gst==False:
                 error_msg = "Invalid GST number"
@@ -97,7 +98,7 @@ class BUSS_VALIDATOR:
     @classmethod
     async def _validate_business_since(self, since):
         try:
-            error_msg = ''
+            error_msg = NAMES.EMPTY
             
             if error_msg:
                 return LocalResponse(

@@ -7,6 +7,7 @@ from app_ib.models import (
     UserProfile
     )
 from app_ib.Utils.MyMethods import MY_METHODS
+from app_ib.Utils.Names import NAMES
 
 import asyncio
 class BUSS_PROF_TASK:
@@ -17,15 +18,15 @@ class BUSS_PROF_TASK:
             # 1️⃣ Fetch Business + User + UserProfile in one optimized query
             business = await sync_to_async(
                 lambda: Business.objects.select_related(
-                    "user__user_profile"
+                    'user__user_profile'
                 ).only(
-                    "id",
-                    "business_name",
-                    "banner_image_url",
-                    "user__id",
-                    "user__user_profile__phone",
-                    "user__user_profile__countryCode",
-                    "user__user_profile__profileImageUrl",
+                    NAMES.ID,
+                    NAMES.BUSINESS_NAME,
+                    'banner_image_url',
+                    'user__id',
+                    'user__user_profile__phone',
+                    'user__user_profile__countryCode',
+                    'user__user_profile__profileImageUrl',
                 ).get(id=business_id)
             )()
             businessLocation: Location = business.business_location
@@ -33,41 +34,41 @@ class BUSS_PROF_TASK:
             social_media_data = await sync_to_async(
                 lambda: list(
                     BusinessSocialMedia.objects.filter(business=business)
-                    .select_related("socialMedia")
-                    .values("socialMedia__name", "link")
+                    .select_related(NAMES.SOCIAL_MEDIA)
+                    .values('socialMedia__name', NAMES.LINK)
                 )
             )()
 
             # 3️⃣ Build Response
             profile: UserProfile = business.user.user_profile
             response_data = {
-                "bannerImageUrl": business.bannerImageUrl or "",
-                "profileImageUrl": (
+                NAMES.BANNER_IMAGE_URL: business.bannerImageUrl or NAMES.EMPTY,
+                NAMES.PROFILE_IMAGE_URL: (
                     profile.profileImageUrl
                     if business.user and business.user.user_profile
-                    else ""
+                    else NAMES.EMPTY
                 ),
-                "phone": (
+                NAMES.PHONE: (
                     profile.phone
                     if business.user and profile
-                    else ""
+                    else NAMES.EMPTY
                 ),
-                "countryCode": (
+                NAMES.COUNTRY_CODE: (
                     profile.countryCode
                     if business.user and profile
-                    else "0"
+                    else '0'
                 ),
-                "businessName": business.businessName,
-                "socialMedia":{f"{sm['socialMedia__name']}Link": sm["link"] for sm in social_media_data},
+                NAMES.BUSINESS_NAME: business.businessName,
+                NAMES.SOCIAL_MEDIA:{f"{sm['socialMedia__name']}Link": sm[NAMES.LINK] for sm in social_media_data},
             }
 
             return response_data
 
         except Business.DoesNotExist:
-            return {"error": "Business not found"}
+            return {NAMES.ERROR: 'Business not found'}
         except Exception as e:
-            print("Error in GetBusinessProfile:", e)
-            return {"error": str(e)}
+            print('Error in GetBusinessProfile:', e)
+            return {NAMES.ERROR: str(e)}
 
     @classmethod
     async def CreateBusinessProfileTask(self, business_ins, data):
@@ -76,8 +77,8 @@ class BUSS_PROF_TASK:
             business_prof_ins.business= business_ins
             business_prof_ins.about= data.about
             business_prof_ins.youtubeLink= data.youtubeLink
-            business_prof_ins.primaryImageUrl= data.primaryImageUrl if data.primaryImageUrl else ''
-            business_prof_ins.secondaryImagesUrl= data.secondaryImagesUrl if data.secondaryImagesUrl else ''
+            business_prof_ins.primaryImageUrl= data.primaryImageUrl if data.primaryImageUrl else NAMES.EMPTY
+            business_prof_ins.secondaryImagesUrl= data.secondaryImagesUrl if data.secondaryImagesUrl else NAMES.EMPTY
             await sync_to_async(business_prof_ins.save)()
             
             return True
@@ -104,9 +105,9 @@ class BUSS_PROF_TASK:
     async def GetBusinessProfTask(self,business_prof_ins:BusinessProfile):
         try:
             business_prof_data={
-                'about':business_prof_ins.about,
-                'youtube_link':business_prof_ins.youtubeLink,
-                'id':business_prof_ins.pk,
+                NAMES.ABOUT:business_prof_ins.about,
+                NAMES.YOUTUBE_LINK:business_prof_ins.youtubeLink,
+                NAMES.ID:business_prof_ins.pk,
             }
             return business_prof_data
             

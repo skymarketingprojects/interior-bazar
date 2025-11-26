@@ -6,6 +6,7 @@ class NAMES:
     TITLE='title'
     SUBTITLE='subtitle'
     ID='id'
+    PK='pk'
     NAME='name'
     CODE='code'
     DESCRIPTION='description'
@@ -13,6 +14,9 @@ class NAMES:
     PHONE='phone'
     USER_ID='userId'
     COVER_IMAGE_URL='coverImageUrl'
+    SUCCESS='success'
+
+    GENDER='gender'
 
     EMPTY=''
     COMMA=','
@@ -37,6 +41,9 @@ class NAMES:
     PRODUCT='product'
     CATALOUGE='catalogue'
     SERVICE='service'
+
+    CATEGORY='category'
+    SUB_CATEGORY='subCategory'
 
     #subscription
     TYPE = 'type'
@@ -78,8 +85,11 @@ class NAMES:
     CURRENT_PAGE='currentPage'
     TOTAL_PAGES='totalPages'
 
+    TAB_ID='tabId'
+
     #business
     BUSINESS_NAME='businessName'
+    BRAND_NAME='brandName'
     COMPANY_NAME='companyName'
     MEMBERSHIP_ID='membershipId'
     BADGE='badge'
@@ -88,6 +98,7 @@ class NAMES:
     BUSINESS_IMAGE='businessImage'
     SEGMENTS='segments'
     CATEGORIES='categories'
+    SUB_CATEGORIES='subCategories'
     WHATSAPP='whatsapp'
     GST='gst'
     BIO='bio'
@@ -95,6 +106,7 @@ class NAMES:
     BANNER_LINK='bannerLink'
     BANNER_TEXT='bannerText'
     YOUTUBELINK='youtubeLink'
+    WEBSITE_LINK='websiteLink'
     SEGMENT='segment'
 
     BUSINESS_TYPE='businessType'
@@ -105,6 +117,12 @@ class NAMES:
     IMAGE_RT_URL='imageRTUrl'
     PRIMARY_IMAGE='primaryImage'
     SECONDARY_IMAGE='secondaryImage'
+
+    BUSINESS_CATEGORY_RELATION='business_category'
+    BUSINESS_SEGMENT_RELATION='business_segment'
+    BUSINESS_LOCATION_RELATION='business_location'
+
+    WEBSITE='website'
 
     #business profile
     PRIMARY_IMAGE_URL='primaryImageUrl'
@@ -117,6 +135,7 @@ class NAMES:
     PINCODE='pin_code'
     LOCATION='location'
     LOCATION_LINK='locationLink'
+    GMB_LINK='gmbLink'
     BUSINESS_LOCATION='businessLocation'
 
     RATING='rating'
@@ -162,6 +181,7 @@ class NAMES:
     EXPIRE_DATE='expireDate'
 
     #payment
+    APPROVAL_MODE='approvalMode'
     TRANSACTION='transactionId'
     TRANSACTION_ID='transactionId'
     PAYMENT_SESSION_ID='payment_session_id' # do not change
@@ -231,8 +251,9 @@ class NAMES:
 
     #business Profile
     ABOUT ='about'
-    YOUTUBE_LINK='youtubeLink'
+    YOUTUBE_LINK='youtube_link'
     BUSINESS_PROFILE='businessProfile'
+    SOCIAL_MEDIA='socialMedia'
 
     #business Info
     EXPIRY_DATE='expiryDate'
@@ -275,6 +296,62 @@ class NAMES:
     LEAD_CANDIDATE='leadCandidates'
     LEAD_COUNT='leadCount'
     LOCATION_SCORE='locationScore'
+
+    # ads query
+    DRAFT = 'draft'
+    PLACEMENT_ID = 'placementId'
+    FILE_URL = 'fileUrl'
+    META = 'meta'
+    DAYS='days'
+    PRICE_TOTAL='priceTotal'
+
+    ADVERTISER_ID='advertiserId'
+
+    ACTIVE='active'
+    ASSET_TYPE='assetType'
+    PAYMENT_PROVIDER = 'paymentProvider'
+    PAYMENT_REFRENCE='paymentReference'
+    PAID_AT='paidAt'
+
+    S3_KEY='s3Key'
+    ASSET_TYPE_CODE='assetType__code'
+
+    STATUS_CODE='status__code'
+
+    FORM_SUBMISSION= 'formSubmissions'
+
+    CLICKS='clicks'
+    CLICK='click'
+    IMPRESSIONS='impressions'
+    IMPRESSION='impression'
+    FORM_SUBMISSION='form_submission'
+
+    META_DATA='metadata'
+    USER_SESSION_ID='userSessionId'
+    EVENT_TYPE_CODE='eventType__code'
+
+    EVENT_TYPE = 'eventType'
+
+    DAILY_PRICE='dailyPrice'
+
+    ASPECT_RATIO='aspectRatio'
+
+    AGE_BTW = 'ageBetween'
+    PERSONA_TYPE = 'personaType'
+
+    ASSETS='assets'
+    PAYMENTS='payments'
+    EVENTS='events'
+    AGGREGATES='aggregates'
+    PERSONAS='personas'
+
+    AD_CAMPAIGN_ID='adCampaignId'
     
+
+
+
+
+
+
 
 

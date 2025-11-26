@@ -5,6 +5,7 @@ from .Controllers.catelog.catelogController import CATELOG_CONTROLLER
 from .Controllers.products.productsController import PRODUCTS_CONTROLLER
 from interior_business.Controllers.Business.BusinessController import BUSS_CONTROLLER
 from .Controllers.services.servicesController import SERVICES_CONTROLLER
+from .Controllers.InteriorService.InteriorServiceController import INTERIOR_SERVICE_CONTROLLER
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
@@ -508,6 +509,25 @@ async def GetAllServiceView(request:HttpRequest):
             data={'error': str(e)}
         )
 
+@api_view(['GET'])
+async def GetOwnServicesView(request:HttpRequest):
+    try:
+        pageNo= int(request.GET.get("pageNo",1))
+        pageSize = int(request.GET.get('pageSize',10))
+        catelogResponse = await INTERIOR_SERVICE_CONTROLLER.getInteriorService(pageNo=pageNo,pageSize=pageSize)
+        return ServerResponse(
+            response=catelogResponse.response,
+            message=catelogResponse.message,
+            code=catelogResponse.code,
+            data=catelogResponse.data
+        )
+    except Exception as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message="Error fetching Services",
+            code=RESPONSE_CODES.error,
+            data={'error': str(e)}
+        )
 # categories
 @api_view(['GET'])
 async def GetProductCategoriesView(request):

@@ -14,12 +14,12 @@ from .models import (
     AdPaymentStatus,
     AdEventType,
 )
-
+from app_ib.Utils.Names import NAMES
 # ---------------- AD CAMPAIGN ----------------
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 async def GetUserAdsView(request):
-    """Get all ads and their complete data for the logged-in user"""
+    '''Get all ads and their complete data for the logged-in user'''
     try:
         user = request.user
         final_response = await asyncio.gather(
@@ -35,12 +35,12 @@ async def GetUserAdsView(request):
         )
 
     except Exception as e:
-        # await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
+        # await MY_METHODS.printStatus(f'Error fetching enum: {str(e)}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             code=RESPONSE_CODES.error,
-            message="Error fetching ads for user",
-            data={"error": str(e)}
+            message='Error fetching ads for user',
+            data={NAMES.ERROR: str(e)}
         )
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -57,12 +57,12 @@ async def CreateCampaignView(request):
                 data=final_response.data
             )
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
+            # await MY_METHODS.printStatus(f'Error fetching enum: {str(e)}')
             return ServerResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Error creating ad campaign",
+                message='Error creating ad campaign',
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
 
 
@@ -80,12 +80,12 @@ async def UpdateCampaignView(request, campaign_id):
                 data=final_response.data
             )
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error Updating campaign: {str(e)}")
+            # await MY_METHODS.printStatus(f'Error Updating campaign: {str(e)}')
             return ServerResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Error updating ad campaign",
+                message='Error updating ad campaign',
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
 
 
@@ -101,12 +101,12 @@ async def GetCampaignView(request, campaign_id):
                 data=final_response.data
             )
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
+            # await MY_METHODS.printStatus(f'Error fetching enum: {str(e)}')
             return ServerResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Error fetching ad campaign",
+                message='Error fetching ad campaign',
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
 
 @api_view(['GET'])
@@ -122,18 +122,18 @@ async def GetCampaignsByBusinessView(request):
                 data=final_response.data
             )
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
+            # await MY_METHODS.printStatus(f'Error fetching enum: {str(e)}')
             return ServerResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Error fetching ad campaigns",
+                message='Error fetching ad campaigns',
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
 
 @api_view(['GET'])
 async def GetActiveCampaignsView(request,placementId):
     try:
-        await MY_METHODS.printStatus(f"placementId: {placementId}")
+        await MY_METHODS.printStatus(f'placementId: {placementId}')
         final_response = await ADS_CONTROLLER.GetActiveCampaigns(placementId=placementId)
         return ServerResponse(
             response=final_response.response,
@@ -142,12 +142,12 @@ async def GetActiveCampaignsView(request,placementId):
             data=final_response.data
         )
     except Exception as e:
-        await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
+        await MY_METHODS.printStatus(f'Error fetching enum: {str(e)}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
-            message="Error fetching active campaigns",
+            message='Error fetching active campaigns',
             code=RESPONSE_CODES.error,
-            data={"error": str(e)}
+            data={NAMES.ERROR: str(e)}
         )
 
 # ---------------- AD ASSET ----------------
@@ -157,7 +157,7 @@ async def AdAssetCreateView(request, campaign_id):
         try:
             data = request.data
             final_response = await ADS_CONTROLLER.CreateAdAsset(AdCampaignId=campaign_id, Data=data)
-            # await MY_METHODS.printStatus(f"final_response: {final_response}")
+            # await MY_METHODS.printStatus(f'final_response: {final_response}')
 
             return ServerResponse(
                 response=final_response.response,
@@ -166,12 +166,12 @@ async def AdAssetCreateView(request, campaign_id):
                 data=final_response.data
             )
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
+            # await MY_METHODS.printStatus(f'Error fetching enum: {str(e)}')
             return ServerResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Error creating ad asset",
+                message='Error creating ad asset',
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
 
 @api_view(['GET'])
@@ -186,12 +186,12 @@ async def GetAdAssetView(request, asset_id):
                 data=final_response.data
             )
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
+            # await MY_METHODS.printStatus(f'Error fetching enum: {str(e)}')
             return ServerResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Error fetching ad asset",
+                message='Error fetching ad asset',
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
 
 
@@ -207,12 +207,12 @@ async def GetAdAssetsByCampaignView(request, campaign_id):
                 data=final_response.data
             )
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
+            # await MY_METHODS.printStatus(f'Error fetching enum: {str(e)}')
             return ServerResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Error fetching ad assets",
+                message='Error fetching ad assets',
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
         
 
@@ -230,12 +230,12 @@ async def UpdateAdAssetView(request, asset_id):
                 data=final_response.data
             )
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
+            # await MY_METHODS.printStatus(f'Error fetching enum: {str(e)}')
             return ServerResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Error updating ad asset",
+                message='Error updating ad asset',
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
 
 
@@ -252,12 +252,12 @@ async def DeleteAssetView(request, asset_id):
                 data=final_response.data
             )
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
+            # await MY_METHODS.printStatus(f'Error fetching enum: {str(e)}')
             return ServerResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Error deleting ad asset",
+                message='Error deleting ad asset',
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
 
 # ---------------- AD PAYMENT ----------------
@@ -267,7 +267,7 @@ async def AdPaymentCreateView(request, campaign_id):
         try:
             data = request.data
             final_response = await ADS_CONTROLLER.CreateAdPayment(AdCampaignId=campaign_id, Data=data)
-            # await MY_METHODS.printStatus(f"final_response: {final_response}")
+            # await MY_METHODS.printStatus(f'final_response: {final_response}')
 
             return ServerResponse(
                 response=final_response.response,
@@ -276,12 +276,12 @@ async def AdPaymentCreateView(request, campaign_id):
                 data=final_response.data
             )
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
+            # await MY_METHODS.printStatus(f'Error fetching enum: {str(e)}')
             return ServerResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Error creating ad payment",
+                message='Error creating ad payment',
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
 
 
@@ -300,12 +300,12 @@ async def AdEventCreateView(request, campaign_id):
                 data=final_response.data
             )
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
+            # await MY_METHODS.printStatus(f'Error fetching enum: {str(e)}')
             return ServerResponse(
                 response=RESPONSE_MESSAGES.error,
-                message="Error creating ad event",
+                message='Error creating ad event',
                 code=RESPONSE_CODES.error,
-                data={"error": str(e)}
+                data={NAMES.ERROR: str(e)}
             )
 
 
@@ -323,12 +323,12 @@ async def getAdStatusEnum(request):
             data=final_response.data
         )
     except Exception as e:
-        # await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
+        # await MY_METHODS.printStatus(f'Error fetching enum: {str(e)}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
-            message="Error fetching AdStatus enum",
+            message='Error fetching AdStatus enum',
             code=RESPONSE_CODES.error,
-            data={"error": str(e)}
+            data={NAMES.ERROR: str(e)}
         )
 
 
@@ -344,12 +344,12 @@ async def getAdApprovalModeEnum(request):
             data=final_response.data
         )
     except Exception as e:
-        # await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
+        # await MY_METHODS.printStatus(f'Error fetching enum: {str(e)}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
-            message="Error fetching AdApprovalMode enum",
+            message='Error fetching AdApprovalMode enum',
             code=RESPONSE_CODES.error,
-            data={"error": str(e)}
+            data={NAMES.ERROR: str(e)}
         )
 
 
@@ -365,12 +365,12 @@ async def getAdAssetTypeEnum(request):
             data=final_response.data
         )
     except Exception as e:
-        # await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
+        # await MY_METHODS.printStatus(f'Error fetching enum: {str(e)}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
-            message="Error fetching AdAssetType enum",
+            message='Error fetching AdAssetType enum',
             code=RESPONSE_CODES.error,
-            data={"error": str(e)}
+            data={NAMES.ERROR: str(e)}
         )
 
 
@@ -386,12 +386,12 @@ async def getAdPaymentStatusEnum(request):
             data=final_response.data
         )
     except Exception as e:
-        # await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
+        # await MY_METHODS.printStatus(f'Error fetching enum: {str(e)}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
-            message="Error fetching AdPaymentStatus enum",
+            message='Error fetching AdPaymentStatus enum',
             code=RESPONSE_CODES.error,
-            data={"error": str(e)}
+            data={NAMES.ERROR: str(e)}
         )
 
 
@@ -407,12 +407,12 @@ async def getAdEventTypeEnum(request):
             data=final_response.data
         )
     except Exception as e:
-        # await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
+        # await MY_METHODS.printStatus(f'Error fetching enum: {str(e)}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
-            message="Error fetching AdEventType enum",
+            message='Error fetching AdEventType enum',
             code=RESPONSE_CODES.error,
-            data={"error": str(e)}
+            data={NAMES.ERROR: str(e)}
         )
 
 
@@ -428,12 +428,12 @@ async def getAdPlacementEnum(request):
             data=final_response.data
         )
     except Exception as e:
-        # await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
+        # await MY_METHODS.printStatus(f'Error fetching enum: {str(e)}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
-            message="Error fetching AdPlacement enum",
+            message='Error fetching AdPlacement enum',
             code=RESPONSE_CODES.error,
-            data={"error": str(e)}
+            data={NAMES.ERROR: str(e)}
         )
 
 # ---------------- AD Persona ----------------
@@ -450,12 +450,12 @@ async def GetAdPersonaView(request, campaignId):
             data=final_response.data
         )
     except Exception as e:
-        # await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
+        # await MY_METHODS.printStatus(f'Error fetching enum: {str(e)}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
-            message="Error fetching ad persona",
+            message='Error fetching ad persona',
             code=RESPONSE_CODES.error,
-            data={"error": str(e)}
+            data={NAMES.ERROR: str(e)}
         )
 
 @api_view(['POST'])
@@ -470,10 +470,10 @@ async def CreateAdPersonaView(request, campaignId):
             data=final_response.data
         )
     except Exception as e:
-        # await MY_METHODS.printStatus(f"Error fetching enum: {str(e)}")
+        # await MY_METHODS.printStatus(f'Error fetching enum: {str(e)}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
-            message="Error creating ad persona",
+            message='Error creating ad persona',
             code=RESPONSE_CODES.error,
-            data={"error": str(e)}
+            data={NAMES.ERROR: str(e)}
         )

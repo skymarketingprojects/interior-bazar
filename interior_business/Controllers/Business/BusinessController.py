@@ -3,6 +3,7 @@ from adrf.decorators import api_view
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.MyMethods import MY_METHODS
+from app_ib.Utils.Names import NAMES
 from app_ib.Utils.LocalResponse import LocalResponse
 from .Tasks.BusinessTasks import BUSS_TASK
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
@@ -36,7 +37,7 @@ class BUSS_CONTROLLER:
                 message=RESPONSE_MESSAGES.business_contact_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
     
     @classmethod
@@ -73,7 +74,7 @@ class BUSS_CONTROLLER:
                 message=RESPONSE_MESSAGES.business_register_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
     @classmethod
@@ -113,7 +114,7 @@ class BUSS_CONTROLLER:
                 message=RESPONSE_MESSAGES.business_register_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
     
     @classmethod
@@ -151,7 +152,7 @@ class BUSS_CONTROLLER:
                 message=RESPONSE_MESSAGES.business_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
 
 
@@ -175,28 +176,28 @@ class BUSS_CONTROLLER:
                 message=RESPONSE_MESSAGES.business_type_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
     
     @classmethod
     async def GetAllBusinessTab(self):
         try:
             categoryInstances = await sync_to_async(list)(
-                BusinessCategory.objects.annotate(num_related=Count('business_category')).filter(num_related__gt=0)
+                BusinessCategory.objects.annotate(num_related=Count(NAMES.BUSINESS_CATEGORY_RELATION)).filter(num_related__gt=0)
             )
             category_list = []
             for categoryInstance in categoryInstances:
                 categoryData = await BUSS_TASK.GetBusinessTypeData(categoryInstance)
                 if categoryData:
-                    categoryData['type']='category'
+                    categoryData[NAMES.TYPE]=NAMES.CATEGORY
                     category_list.append(categoryData)
             segmentInstances = await sync_to_async(list)(
-                BusinessSegment.objects.annotate(num_related=Count('business_segment')).filter(num_related__gt=0)
+                BusinessSegment.objects.annotate(num_related=Count(NAMES.BUSINESS_SEGMENT_RELATION)).filter(num_related__gt=0)
                 )
             for segmentInstance in segmentInstances:
                 segmentData = await BUSS_TASK.GetBusinessTypeData(segmentInstance)
                 if segmentData:
-                    segmentData['type']='segment'
+                    segmentData[NAMES.TYPE]=NAMES.SEGMENT
                     category_list.append(segmentData)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
@@ -209,12 +210,16 @@ class BUSS_CONTROLLER:
                 message=RESPONSE_MESSAGES.business_category_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
     @classmethod
-    async def GetAllBusinessCategories(self):
+    async def GetAllBusinessCategories(self,trending=False):
         try:
-            categoryInstances = await sync_to_async(list)(BusinessCategory.objects.all())
+            categoryInstances = []
+            if trending:
+                categoryInstances = await sync_to_async(list)(BusinessCategory.objects.filter(trending=True).order_by('index'))
+            else:
+                categoryInstances = await sync_to_async(list)(BusinessCategory.objects.all())
             category_list = []
             for categoryInstance in categoryInstances:
                 categoryData = await BUSS_TASK.GetBusinessTypeData(categoryInstance)
@@ -226,12 +231,13 @@ class BUSS_CONTROLLER:
                 code=RESPONSE_CODES.success,
                 data=category_list)
         except Exception as e:
+            await MY_METHODS.printStatus(f'Error in category GET: {e}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.business_category_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
     @classmethod
     async def GetBusinessSegmentsByType(self,typeId):
@@ -261,7 +267,7 @@ class BUSS_CONTROLLER:
                 message=RESPONSE_MESSAGES.business_category_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
         
     @classmethod
@@ -275,7 +281,7 @@ class BUSS_CONTROLLER:
                     continue
                 segments = categoryInstance.business_category_segment.all()
                 segmentData = [await BUSS_TASK.GetBusinessTypeData(seg) for seg in segments]
-                categoryData['subCategories'] = segmentData
+                categoryData[NAMES.SUB_CATEGORIES] = segmentData
                 data.append(categoryData)
             if not data:
                 return LocalResponse(
@@ -297,7 +303,7 @@ class BUSS_CONTROLLER:
                 message=RESPONSE_MESSAGES.explore_section_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
     @classmethod
     async def UpdateBusinessBanner(self, business_ins, data):
@@ -320,7 +326,7 @@ class BUSS_CONTROLLER:
                 message=RESPONSE_MESSAGES.business_banner_update_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })
     
     @classmethod
@@ -344,5 +350,5 @@ class BUSS_CONTROLLER:
                 message=RESPONSE_MESSAGES.business_banner_fetch_error,
                 code=RESPONSE_CODES.error,
                 data={
-                    'error': str(e)
+                    NAMES.ERROR: str(e)
                 })

@@ -1,6 +1,6 @@
 from app_ib.models import BusinessSocialMedia, SocialMedia, Business
 from asgiref.sync import sync_to_async
-
+from app_ib.Utils.Names import NAMES
 class BSM_TASK:
 
     @classmethod
@@ -85,7 +85,7 @@ class BSM_TASK:
     async def GetSocialMediaList(cls):
         try:
             sm_list = await sync_to_async(list)(SocialMedia.objects.all())
-            return [{'id': sm.id, 'name': sm.name} for sm in sm_list]
+            return [{NAMES.ID: sm.id, NAMES.NAME: sm.name} for sm in sm_list]
         except Exception as e:
             return False
     
@@ -94,10 +94,10 @@ class BSM_TASK:
         try:
 
             return {
-                'id': bsm.id,
-                'business': bsm.business.id,
-                'socialMedia': bsm.socialMedia.name,
-                'link': bsm.link
+                NAMES.ID: bsm.id,
+                NAMES.BUSINESS: bsm.business.id,
+                NAMES.SOCIAL_MEDIA: bsm.socialMedia.name,
+                NAMES.LINK: bsm.link
             }
         except Exception as e:
             return False

@@ -5,6 +5,7 @@ from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.models import Location, Business
 from app_ib.Utils.MyMethods import MY_METHODS
+from app_ib.Utils.Names import NAMES
 
 class BUSS_LOC_TASK:
 
@@ -51,21 +52,21 @@ class BUSS_LOC_TASK:
     async def GetBusinessLocTask(self,business_loc_ins:Location):
         try:
             state = {
-                "id": business_loc_ins.locationState.id,
-                "name": business_loc_ins.locationState.name
+                NAMES.ID: business_loc_ins.locationState.id,
+                NAMES.NAME: business_loc_ins.locationState.name
             } 
             country = {
-                "id": business_loc_ins.locationCountry.id,
-                "name": business_loc_ins.locationCountry.name,
-                "code": business_loc_ins.locationCountry.code
+                NAMES.ID: business_loc_ins.locationCountry.id,
+                NAMES.NAME: business_loc_ins.locationCountry.name,
+                NAMES.CODE: business_loc_ins.locationCountry.code
             }
             business_loc_data={
-                'pin_code':business_loc_ins.pinCode,
-                'city':business_loc_ins.city,
-                'state':state,
-                'country':country,
-                'gmbLink':business_loc_ins.locationLink,
-                'id':business_loc_ins.pk,
+                NAMES.PINCODE:business_loc_ins.pinCode,
+                NAMES.CITY:business_loc_ins.city,
+                NAMES.STATE:state,
+                NAMES.COUNTRY:country,
+                NAMES.GMB_LINK:business_loc_ins.locationLink,
+                NAMES.ID:business_loc_ins.pk,
             }
             return business_loc_data
             
@@ -77,9 +78,9 @@ class BUSS_LOC_TASK:
     async def GetCountryDataTask(self, country:Country):
         try:
             countryData = {
-                "id": country.id,
-                "name": country.name,
-                "code": country.code
+                NAMES.ID: country.id,
+                NAMES.NAME: country.name,
+                NAMES.CODE: country.code
             }
             return countryData
         except Exception as e:
@@ -90,9 +91,9 @@ class BUSS_LOC_TASK:
     async def GetStateDataTask(self, state:State):
         try:
             stateData = {
-                "id": state.id,
-                "name": state.name,
-                "value": state.value
+                NAMES.ID: state.id,
+                NAMES.NAME: state.name,
+                NAMES.VALUE: state.value
             }
             return stateData
         except Exception as e:
