@@ -90,7 +90,7 @@ class BusinessCategory(models.Model):
         if not self.index:
             self.index = self.__class__.objects.all().count()+1
         indexShifting(instance=self,filter_attr='index')
-        super(BusinessCategory, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
 class BusinessSegment(models.Model):
     businessType = models.ForeignKey(BusinessType, on_delete=models.CASCADE, null=True, blank=True, related_name='business_type_segment')
