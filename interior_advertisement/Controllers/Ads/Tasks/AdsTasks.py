@@ -72,8 +72,9 @@ class ADS_TASKS:
     async def GetActiveAdsCampaignTask(cls, placementId):
         try:
             activeAds = await sync_to_async(AdCampaign.objects.filter)(
-                status__code=NAMES.ACTIVE, placement__pk=placementId
+                status__code=NAMES.ACTIVE, placement__placementId=placementId
             )
+            await MY_METHODS.printStatus(f'activeAds: {activeAds}')
             adsData = []
             for ad in activeAds:
                 status, data = await cls.GetAdAssetsTask(ad)
@@ -320,10 +321,8 @@ class ADS_TASKS:
     @classmethod
     async def GetAdAssetsTask(cls, AdCampaignIns):
         try:
-            AssetsQS = await sync_to_async(list)(AdAsset.objects.filter(campaign=AdCampaignIns).values(
-                NAMES.ID, NAMES.ASSET_TYPE_CODE, NAMES.S3_KEY, NAMES.META
-            ))
-            # await MY_METHODS.printStatus(f'AssetsQS: {AssetsQS}')
+            AssetsQS = await sync_to_async(list)(AdAsset.objects.filter(campaign=AdCampaignIns))
+            await MY_METHODS.printStatus(f'AssetsQS: {AssetsQS}')
             assetData=[]
             for asset in AssetsQS:
                 status,data = await cls.GetAdAssetTask(asset.id)
@@ -331,7 +330,7 @@ class ADS_TASKS:
             
             return True, assetData
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in GetAdAssetsTask: {e}')
+            await MY_METHODS.printStatus(f'Error in GetAdAssetsTask: {e}')
             return False, str(e)
 
     # ---------------- GET PAYMENTS ----------------
