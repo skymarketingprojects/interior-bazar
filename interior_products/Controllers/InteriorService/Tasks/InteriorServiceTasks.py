@@ -11,7 +11,8 @@ class INTERIOR_SERVICE_TASKS:
                 'value':service.value,
                 'lable':service.lable,
                 'imageSQUrl':service.imageSQUrl,
-                'imageRTUrl':service.imageRTUrl
+                'imageRTUrl':service.imageRTUrl,
+                'link':service.link
             }
             return True,data
         except Exception as e:

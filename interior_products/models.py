@@ -156,6 +156,8 @@ class InteriorServices(models.Model):
     lable = models.CharField(max_length=250)
     imageSQUrl = models.CharField(max_length=2250,null=True,blank=True)
     imageRTUrl = models.CharField(max_length=2250,null=True,blank=True)
+
+    link= models.CharField(max_length=2250, null=True, blank=True)
     index= models.IntegerField(default=0)
    
     def __str__(self):

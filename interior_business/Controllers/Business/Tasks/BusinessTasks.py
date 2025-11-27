@@ -350,11 +350,11 @@ class BUSS_TASK:
         try:
             business:Business = businesstype.business_segment.first()
             if not business:
-                sqUrl= businesstype.imageSQUrl or NAMES.RANDOM_SQ_IMAGE.replace('{text}', businesstype.value)
-                rtUrl = businesstype.imageRTUrl or NAMES.RANDOM_RT_IMAGE.replace('{text}', businesstype.value)
+                sqUrl= businesstype.imageSQUrl or NAMES.RANDOM_SQ_IMAGE
+                rtUrl = businesstype.imageRTUrl or NAMES.RANDOM_RT_IMAGE
             else:
-                sqUrl = business.coverImageUrl or businesstype.imageSQUrl or NAMES.RANDOM_SQ_IMAGE.replace('{text}', businesstype.value)
-                rtUrl =  business.bannerImageUrl or businesstype.imageRTUrl or NAMES.RANDOM_RT_IMAGE.replace('{text}', businesstype.value)
+                sqUrl = business.coverImageUrl or businesstype.imageSQUrl or NAMES.RANDOM_SQ_IMAGE
+                rtUrl =  business.bannerImageUrl or businesstype.imageRTUrl or NAMES.RANDOM_RT_IMAGE
 
             typeData={
                 NAMES.ID: businesstype.id,
