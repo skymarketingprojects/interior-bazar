@@ -2,6 +2,10 @@ class NAMES:
     ERROR = 'error'
     BUSINESS = 'business'
 
+    #random
+    RANDOM_SQ_IMAGE = 'https://www.imgz.app/500x500?text={text}'
+    RANDOM_RT_IMAGE = 'https://www.imgz.app/1000x500?text={text}'
+
     #common
     TITLE='title'
     SUBTITLE='subtitle'

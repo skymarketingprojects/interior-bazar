@@ -15,6 +15,7 @@ from asgiref.sync import sync_to_async
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.LocalResponse import LocalResponse
+from app_ib.Utils.Names import NAMES
 from interior_business.Controllers.BussLocation.Tasks.BusinessLocationTasks import BUSS_LOC_TASK
 from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.Utils.Names import NAMES
@@ -327,9 +328,34 @@ class BUSS_TASK:
     @classmethod
     async def GetBusinessTypeData(cls,businesstype:BusinessCategory):
         try:
-            business:Business = businesstype.business_category 
-            sqUrl = businesstype.imageSQUrl or business.coverImageUrl
-            rtUrl = businesstype.imageRTUrl or business.bannerImageUrl
+            
+            sqUrl= businesstype.imageSQUrl or NAMES.RANDOM_SQ_IMAGE.replace('{text}', businesstype.value)
+            rtUrl = businesstype.imageRTUrl or NAMES.RANDOM_RT_IMAGE.replace('{text}', businesstype.value)
+            
+
+            typeData={
+                NAMES.ID: businesstype.id,
+                NAMES.LABEL: businesstype.lable,
+                NAMES.VALUE: businesstype.value,
+                NAMES.IMAGE_SQ_URL: sqUrl,
+                NAMES.IMAGE_RT_URL: rtUrl
+            }
+
+            return typeData
+        except Exception as e:
+            await MY_METHODS.printStatus(f'Error in GetAllBusinessTypes: {e}')
+            return None
+    @classmethod
+    async def GetBusinessSegmentData(cls,businesstype:BusinessSegment):
+        try:
+            business:Business = businesstype.business_segment.first()
+            if not business:
+                sqUrl= businesstype.imageSQUrl or NAMES.RANDOM_SQ_IMAGE.replace('{text}', businesstype.value)
+                rtUrl = businesstype.imageRTUrl or NAMES.RANDOM_RT_IMAGE.replace('{text}', businesstype.value)
+            else:
+                sqUrl = business.coverImageUrl or businesstype.imageSQUrl or NAMES.RANDOM_SQ_IMAGE.replace('{text}', businesstype.value)
+                rtUrl =  business.bannerImageUrl or businesstype.imageRTUrl or NAMES.RANDOM_RT_IMAGE.replace('{text}', businesstype.value)
+
             typeData={
                 NAMES.ID: businesstype.id,
                 NAMES.LABEL: businesstype.lable,

@@ -253,7 +253,7 @@ class BUSS_CONTROLLER:
             segmentInstances = await sync_to_async(list)(businessType.business_type_segment.all())
             segment_list = []
             for segmentInstance in segmentInstances:
-                segmentData = await BUSS_TASK.GetBusinessTypeData(segmentInstance)
+                segmentData = await BUSS_TASK.GetBusinessSegmentData(segmentInstance)
                 if segmentData:
                     segment_list.append(segmentData)
             return LocalResponse(
@@ -280,7 +280,7 @@ class BUSS_CONTROLLER:
                 if not categoryData:
                     continue
                 segments = categoryInstance.business_category_segment.all()
-                segmentData = [await BUSS_TASK.GetBusinessTypeData(seg) for seg in segments]
+                segmentData = [await BUSS_TASK.GetBusinessSegmentData(seg) for seg in segments]
                 categoryData[NAMES.SUB_CATEGORIES] = segmentData
                 data.append(categoryData)
             if not data:

@@ -58,16 +58,13 @@ def indexShifting(instance: models.Model, filter_attr: Optional[str] = None):
         old_index = model_class.objects.get(pk=instance.pk).index
 
         if old_index < instance.index:
-
             shiftDown(model_class, old_index, instance.index, filter_attr=filter_attr, filter_value=filter_value, exclude_pk=instance.pk)
         elif old_index > instance.index:
             shiftUpRange(model_class, instance.index, old_index, filter_attr=filter_attr, filter_value=filter_value, exclude_pk=instance.pk)
 
     else:
-        print("No Instance PK")
-        if model_class.objects.filter(index=filter_value).exists():
+        if model_class.objects.filter(index=instance.index).exists():
             shiftUp(model_class, instance.index, filter_attr=filter_attr, filter_value=filter_value)
-            print("Shifting Up")
 
 def applyDiscount(instance: models.Model)->float:
     """

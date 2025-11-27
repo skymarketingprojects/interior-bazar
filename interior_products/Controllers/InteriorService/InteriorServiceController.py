@@ -20,8 +20,8 @@ class INTERIOR_SERVICE_CONTROLLER:
             serviceData = []
 
             for c in paginated["results"]:
-                data = await INTERIOR_SERVICE_TASKS.GetServiceData(c)
-                if data:
+                status,data = await INTERIOR_SERVICE_TASKS.GetServiceData(c)
+                if status:
                     serviceData.append(data)
             paginated['pagination']['data'] = serviceData
             
