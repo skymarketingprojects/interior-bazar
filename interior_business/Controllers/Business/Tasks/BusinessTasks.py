@@ -328,9 +328,10 @@ class BUSS_TASK:
     @classmethod
     async def GetBusinessTypeData(cls,businesstype:BusinessCategory):
         try:
+            randomNumber = await MY_METHODS.getRandomNumber()
             
-            sqUrl= businesstype.imageSQUrl or NAMES.RANDOM_SQ_IMAGE.replace('{text}', businesstype.value)
-            rtUrl = businesstype.imageRTUrl or NAMES.RANDOM_RT_IMAGE.replace('{text}', businesstype.value)
+            sqUrl= businesstype.imageSQUrl or NAMES.RANDOM_SQ_IMAGE.replace('{num}', randomNumber)
+            rtUrl = businesstype.imageRTUrl or NAMES.RANDOM_RT_IMAGE.replace('{num}', randomNumber)
             
 
             typeData={
@@ -348,13 +349,14 @@ class BUSS_TASK:
     @classmethod
     async def GetBusinessSegmentData(cls,businesstype:BusinessSegment):
         try:
+            randomNumber = await MY_METHODS.getRandomNumber()
             business:Business = businesstype.business_segment.first()
             if not business:
-                sqUrl= businesstype.imageSQUrl or NAMES.RANDOM_SQ_IMAGE
-                rtUrl = businesstype.imageRTUrl or NAMES.RANDOM_RT_IMAGE
+                sqUrl= businesstype.imageSQUrl or NAMES.RANDOM_SQ_IMAGE.replace('{num}', randomNumber)
+                rtUrl = businesstype.imageRTUrl or NAMES.RANDOM_RT_IMAGE.replace('{num}', randomNumber)
             else:
-                sqUrl = business.coverImageUrl or businesstype.imageSQUrl or NAMES.RANDOM_SQ_IMAGE
-                rtUrl =  business.bannerImageUrl or businesstype.imageRTUrl or NAMES.RANDOM_RT_IMAGE
+                sqUrl = business.coverImageUrl or businesstype.imageSQUrl or NAMES.RANDOM_SQ_IMAGE.replace('{num}', randomNumber)
+                rtUrl =  business.bannerImageUrl or businesstype.imageRTUrl or NAMES.RANDOM_RT_IMAGE.replace('{num}', randomNumber)
 
             typeData={
                 NAMES.ID: businesstype.id,

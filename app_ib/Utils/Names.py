@@ -3,8 +3,8 @@ class NAMES:
     BUSINESS = 'business'
 
     #random
-    RANDOM_SQ_IMAGE = 'https://picsum.photos/500/500'
-    RANDOM_RT_IMAGE = 'https://picsum.photos/500/500'
+    RANDOM_SQ_IMAGE = 'https://picsum.photos/500/500?random={num}'
+    RANDOM_RT_IMAGE = 'https://picsum.photos/1000/500?random={num}'
 
     #common
     TITLE='title'

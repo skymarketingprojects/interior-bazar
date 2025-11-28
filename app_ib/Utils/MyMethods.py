@@ -385,3 +385,7 @@ class MY_METHODS:
 
         except Exception:
             return None
+    @staticmethod
+    async def getRandomNumber(min_val=1, max_val=999):
+        """Generate a random number between min_val and max_val."""
+        return str(random.randint(min_val, max_val))
