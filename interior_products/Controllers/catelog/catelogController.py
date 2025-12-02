@@ -278,7 +278,7 @@ class CATELOG_CONTROLLER:
                 data=tabData
                 )
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error during GetCatelougeTab: {str(e)}')
+            # await MY_METHODS.printStatus(f'Error during GetCatelougeTab: {str(e)}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.catelog_table_error,

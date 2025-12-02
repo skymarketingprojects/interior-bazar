@@ -32,20 +32,20 @@ class SEARCH_CONTROLLER:
             
             if tabId and tabType:
                 if tabType==NAMES.CATEGORY:
-                    await MY_METHODS.printStatus(f'category Id {tabId}')
+                    # await MY_METHODS.printStatus(f'category Id {tabId}')
                     filterQuery &= Q(businessCategory__id=tabId)
                 elif tabType==NAMES.SUB_CATEGORY:
-                    await MY_METHODS.printStatus(f'sub category Id {tabId}')
+                    # await MY_METHODS.printStatus(f'sub category Id {tabId}')
                     filterQuery &= Q(businessSegment__id=tabId)
             if query:
-                await MY_METHODS.printStatus(f'Query {query}')
+                # await MY_METHODS.printStatus(f'Query {query}')
                 filterQuery &= Q(business_name__icontains=query)
 
             if not state and not tabId and not query:
-                await MY_METHODS.printStatus('No filter applied')
+                # await MY_METHODS.printStatus('No filter applied')
                 businesses_query = await sync_to_async(list)(Business.objects.all().order_by('-timestamp'))
             else:
-                await MY_METHODS.printStatus('Filter applied')
+                # await MY_METHODS.printStatus('Filter applied')
                 businesses_query = await sync_to_async(list)(Business.objects.filter(filterQuery).order_by('-timestamp'))
 
             # fetch business data:

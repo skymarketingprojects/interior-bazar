@@ -47,7 +47,7 @@ class ADS_TASKS:
             return True, AdCampaignIns
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in CreateAdCampaignTask: {e}')
+            # await MY_METHODS.printStatus(f'Error in CreateAdCampaignTask: {e}')
             return None, str(e)
 
     @classmethod
@@ -65,7 +65,7 @@ class ADS_TASKS:
             return data
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in UpdateAdCampaignTask: {e}')
+            # await MY_METHODS.printStatus(f'Error in UpdateAdCampaignTask: {e}')
             return None
 
     @classmethod
@@ -74,7 +74,7 @@ class ADS_TASKS:
             activeAds = await sync_to_async(AdCampaign.objects.filter)(
                 status__code=NAMES.ACTIVE, placement__placementId=placementId
             )
-            await MY_METHODS.printStatus(f'activeAds: {activeAds}')
+            # await MY_METHODS.printStatus(f'activeAds: {activeAds}')
             adsData = []
             for ad in activeAds:
                 status, data = await cls.GetAdAssetsTask(ad)
@@ -84,7 +84,7 @@ class ADS_TASKS:
 
             return True, adsData
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in GetActiveAdsCampaignTask: {e}')
+            # await MY_METHODS.printStatus(f'Error in GetActiveAdsCampaignTask: {e}')
             return False, str(e)
 
 
@@ -120,7 +120,7 @@ class ADS_TASKS:
             return True,data
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in UpdateAdAssetTask: {e}')
+            # await MY_METHODS.printStatus(f'Error in UpdateAdAssetTask: {e}')
             return None, str(e)
     
     @classmethod
@@ -130,7 +130,7 @@ class ADS_TASKS:
             return True
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in DeleteAdAssetTask: {e}')
+            # await MY_METHODS.printStatus(f'Error in DeleteAdAssetTask: {e}')
             return None
     
     @classmethod
@@ -145,7 +145,7 @@ class ADS_TASKS:
             return True, data
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in GetAdAssetTask: {e}')
+            # await MY_METHODS.printStatus(f'Error in GetAdAssetTask: {e}')
             return None
     # ---------------- PAYMENT ----------------
 
@@ -172,7 +172,7 @@ class ADS_TASKS:
             return True, AdPaymentIns
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in CreateAdPaymentTask: {e}')
+            # await MY_METHODS.printStatus(f'Error in CreateAdPaymentTask: {e}')
             return None, str(e)
 
     @classmethod
@@ -196,7 +196,7 @@ class ADS_TASKS:
             return data
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in UpdateAdPaymentTask: {e}')
+            # await MY_METHODS.printStatus(f'Error in UpdateAdPaymentTask: {e}')
             return None
         
     @classmethod
@@ -212,7 +212,7 @@ class ADS_TASKS:
             return paymentData
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in GetAdPaymentTask: {e}')
+            # await MY_METHODS.printStatus(f'Error in GetAdPaymentTask: {e}')
             return None
 
     # ---------------- EVENTS ----------------
@@ -232,7 +232,7 @@ class ADS_TASKS:
             return True, AdEventIns
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in CreateAdEventTask: {e}')
+            # await MY_METHODS.printStatus(f'Error in CreateAdEventTask: {e}')
             return None, str(e)
 
 
@@ -258,7 +258,7 @@ class ADS_TASKS:
             return True
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in UpdateAdAggregateTask: {e}')
+            # await MY_METHODS.printStatus(f'Error in UpdateAdAggregateTask: {e}')
             return None
 
     @classmethod
@@ -281,7 +281,7 @@ class ADS_TASKS:
                 ]
             return True, EnumDict
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in GetEnumList: {e}')
+            # await MY_METHODS.printStatus(f'Error in GetEnumList: {e}')
             return False, {NAMES.ERROR: str(e)}
     
     # ---------------- GET SINGLE CAMPAIGN ----------------
@@ -322,7 +322,7 @@ class ADS_TASKS:
     async def GetAdAssetsTask(cls, AdCampaignIns):
         try:
             AssetsQS = await sync_to_async(list)(AdAsset.objects.filter(campaign=AdCampaignIns))
-            await MY_METHODS.printStatus(f'AssetsQS: {AssetsQS}')
+            # await MY_METHODS.printStatus(f'AssetsQS: {AssetsQS}')
             assetData=[]
             for asset in AssetsQS:
                 status,data = await cls.GetAdAssetTask(asset.id)
@@ -330,7 +330,7 @@ class ADS_TASKS:
             
             return True, assetData
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in GetAdAssetsTask: {e}')
+            # await MY_METHODS.printStatus(f'Error in GetAdAssetsTask: {e}')
             return False, str(e)
 
     # ---------------- GET PAYMENTS ----------------
@@ -475,6 +475,6 @@ class ADS_TASKS:
             status,data = await cls.GetAdPersonasTask(AdPersonaIns.campaign)
             return True, data
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in CreateAdPersonaTask: {e}')
+            # await MY_METHODS.printStatus(f'Error in CreateAdPersonaTask: {e}')
             return False, str(e)
 

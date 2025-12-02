@@ -598,7 +598,7 @@ async def GetTabsView(request):
             data=resp.data
         )
     except Exception as e:
-        await MY_METHODS.printStatus(f"Error fetching Tabs: {str(e)}")
+        # await MY_METHODS.printStatus(f"Error fetching Tabs: {str(e)}")
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message="Error fetching Tabs",

@@ -133,7 +133,7 @@ async def GetCampaignsByBusinessView(request):
 @api_view(['GET'])
 async def GetActiveCampaignsView(request,placementId):
     try:
-        await MY_METHODS.printStatus(f'placementId: {placementId}')
+        # await MY_METHODS.printStatus(f'placementId: {placementId}')
         final_response = await ADS_CONTROLLER.GetActiveCampaigns(placementId=placementId)
         return ServerResponse(
             response=final_response.response,
@@ -142,7 +142,7 @@ async def GetActiveCampaignsView(request,placementId):
             data=final_response.data
         )
     except Exception as e:
-        await MY_METHODS.printStatus(f'Error fetching enum: {str(e)}')
+        # await MY_METHODS.printStatus(f'Error fetching enum: {str(e)}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message='Error fetching active campaigns',

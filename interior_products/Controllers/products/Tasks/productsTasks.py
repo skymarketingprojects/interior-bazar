@@ -118,20 +118,16 @@ class PRODUCTS_TASKS:
                 productTags=data.productTags,
             )
 
-            category_ids = [cat.id for cat in getattr(data, 'categories', [])]
-            if len(category_ids) > 3:
-                return None
-            categories = await sync_to_async(lambda: list(ProductCategory.objects.filter(id__in=category_ids)))()
-            if len(categories) != len(category_ids):
-                return None
+            category_ids = [cat.id for cat in getattr(data, 'categories', [])][:3]
+            categories=[]
+            if len(category_ids) <= 3:
+                categories = await sync_to_async(lambda: list(ProductCategory.objects.filter(id__in=category_ids)))()
             
 
-            subCategoryIds = [cat.id for cat in getattr(data, 'subCategories', [])]
-            if len(subCategoryIds) > 3:
-                return None
-            subCategories = await sync_to_async(lambda: list(ProductSubCategory.objects.filter(id__in=subCategoryIds)))()
-            if len(subCategories) != len(subCategoryIds):
-                return None
+            subCategoryIds = [cat.id for cat in getattr(data, 'subCategories', [])][:3]
+            subCategories=[]
+            if len(subCategoryIds) <= 3:
+                subCategories = await sync_to_async(lambda: list(ProductSubCategory.objects.filter(id__in=subCategoryIds)))()
             
 
             await sync_to_async(product.category.set)(categories)
@@ -147,7 +143,7 @@ class PRODUCTS_TASKS:
                             link=image.link
                         )
             except Exception as e:
-                await MY_METHODS.printStatus(f"Error in createProduct: {str(e)}")
+                # await MY_METHODS.printStatus(f"Error in createProduct image: {str(e)}")
                 pass
             specifications = {"sizeAvailabe":data.sizeAvailabe,"userManual":data.userManual,"detail":data.detail}
             for key,value in specifications.items():
@@ -159,7 +155,7 @@ class PRODUCTS_TASKS:
             data = await self.getProduct(product)
             return data
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in createProduct: {str(e)}")
+            # await MY_METHODS.printStatus(f"Error in createProduct: {str(e)}")
             return False
         
     @classmethod
@@ -256,5 +252,5 @@ class PRODUCTS_TASKS:
                     "value":catgories.value
                 }
         except Exception as e:
-            await MY_METHODS.printStatus(f"error in get product category {str(e)}")
+            # await MY_METHODS.printStatus(f"error in get product category {str(e)}")
             return False

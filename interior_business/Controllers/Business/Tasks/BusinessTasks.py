@@ -344,7 +344,7 @@ class BUSS_TASK:
 
             return typeData
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in GetAllBusinessTypes: {e}')
+            # await MY_METHODS.printStatus(f'Error in GetAllBusinessTypes: {e}')
             return None
     @classmethod
     async def GetBusinessSegmentData(cls,businesstype:BusinessSegment):
@@ -368,5 +368,5 @@ class BUSS_TASK:
 
             return typeData
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in GetAllBusinessTypes: {e}')
+            # await MY_METHODS.printStatus(f'Error in GetAllBusinessTypes: {e}')
             return None

@@ -106,7 +106,7 @@ class PaymentGatewayController:
                 )
 
         except Exception as e:
-            await MY_METHODS.printStatus(f"Exception during payment initiation: {str(e)}")
+            # await MY_METHODS.printStatus(f"Exception during payment initiation: {str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Exception during payment initiation",

@@ -157,7 +157,7 @@ class PRODUCTS_CONTROLLER:
                 data=product
             )
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in createProduct: {str(e)}")
+            # await MY_METHODS.printStatus(f"Error in createProduct: {str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.product_create_error,

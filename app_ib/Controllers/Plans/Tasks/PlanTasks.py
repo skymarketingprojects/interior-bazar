@@ -23,12 +23,12 @@ class PLAN_TASKS:
             transection.save()
             return True
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in CreateTransectionData {e}')  
+            # await MY_METHODS.printStatus(f'Error in CreateTransectionData {e}')  
             return False
     @classmethod
     async def CreatePlanTask(self, payment_proof, user_ins, data):
         try:
-            await MY_METHODS.printStatus(f'Creating plan for user: {data}')
+            # await MY_METHODS.printStatus(f'Creating plan for user: {data}')
             plan_query = PlanQuery()
             plan_query.user= user_ins
             plan_query.plan= getattr(data, NAMES.PLAN, NAMES.EMPTY)
@@ -47,7 +47,7 @@ class PLAN_TASKS:
             return {NAMES.ID:plan_query.id}
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in CreatePlanTask {e}')
+            # await MY_METHODS.printStatus(f'Error in CreatePlanTask {e}')
             return None
 
 
@@ -77,7 +77,7 @@ class PLAN_TASKS:
     @classmethod
     async def CreateBusinessPlan(self,plan:Subscription,businessId,transectionId):
         try:
-            await MY_METHODS.printStatus(f'Creating business plan for businessId: {businessId} with planId: {plan.id}')
+            # await MY_METHODS.printStatus(f'Creating business plan for businessId: {businessId} with planId: {plan.id}')
             business = await sync_to_async(Business.objects.get)(id=businessId)
             today = await MY_METHODS.getCurrentDateTime()
             planDuration =  await MY_METHODS.parseDurationToDays(plan.duration)
@@ -96,7 +96,7 @@ class PLAN_TASKS:
             data = await self.GetBusinessPlanData(businessPlanIns)
             return data
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in CreateBusinessPlan {e}')
+            # await MY_METHODS.printStatus(f'Error in CreateBusinessPlan {e}')
             return None
         
     @classmethod

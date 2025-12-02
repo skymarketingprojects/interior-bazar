@@ -231,7 +231,7 @@ class BUSS_CONTROLLER:
                 code=RESPONSE_CODES.success,
                 data=category_list)
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in category GET: {e}')
+            # await MY_METHODS.printStatus(f'Error in category GET: {e}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.business_category_fetch_error,

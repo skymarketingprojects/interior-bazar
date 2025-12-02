@@ -147,7 +147,7 @@ class ADS_CONTROLLER:
             )
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error fetching active campaigns: {str(e)}')
+            # await MY_METHODS.printStatus(f'Error fetching active campaigns: {str(e)}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message='Error fetching active campaigns',

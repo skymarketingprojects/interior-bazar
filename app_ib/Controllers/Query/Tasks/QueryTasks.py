@@ -39,7 +39,7 @@ class LEAD_QUERY_TASK:
                     leadfor = await sync_to_async(Service.objects.get)(id=data.itemId)
                     lead_query_ins.service= leadfor
             except Exception as e:
-                await MY_METHODS.printStatus(f'type or id not found {str(e)}')
+                # await MY_METHODS.printStatus(f'type or id not found {str(e)}')
                 pass
             
             if leadfor:
@@ -53,7 +53,7 @@ class LEAD_QUERY_TASK:
             return True,respData
             
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in CreateLeadQueryTask {e}')
+            # await MY_METHODS.printStatus(f'Error in CreateLeadQueryTask {e}')
             return None,str(e)
   
     @classmethod
@@ -71,14 +71,14 @@ class LEAD_QUERY_TASK:
             lead_query_ins.priority= data.priority or lead_query_ins.priority
             lead_query_ins.remark= data.remark or lead_query_ins.remark
             
-            await MY_METHODS.printStatus(f'tag {data.tag}')
+            # await MY_METHODS.printStatus(f'tag {data.tag}')
             
             await sync_to_async(lead_query_ins.save)()
             data = await self.GetLeadQueryTask(lead_query_ins)
             return data
             
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in UpdateLeadQueryTask {str(e)}')
+            # await MY_METHODS.printStatus(f'Error in UpdateLeadQueryTask {str(e)}')
             return None
 
     @classmethod
@@ -145,7 +145,7 @@ class LEAD_QUERY_TASK:
             return data
             
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in CreateLeadQueryTask {e}')
+            # await MY_METHODS.printStatus(f'Error in CreateLeadQueryTask {e}')
             return None
 
 

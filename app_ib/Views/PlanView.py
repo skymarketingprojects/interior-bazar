@@ -26,13 +26,13 @@ async def CreatePlanView(request):
         # Call Auth Controller to Create User
         if getattr(data, NAMES.ID, None):
             if data.id!='':
-                await MY_METHODS.printStatus(f'verifying plan')
+                # await MY_METHODS.printStatus(f'verifying plan')
                 final_response = await PLAN_CONTROLLER.VerifyPlan(data=data)
             else:
-                await MY_METHODS.printStatus(f'creating plan')
+                # await MY_METHODS.printStatus(f'creating plan')
                 final_response =await PLAN_CONTROLLER.CreatePlan(payment_proof=payment_proof,data=data,user_ins= user_ins)
         else:
-            await MY_METHODS.printStatus(f'creating plan')
+            # await MY_METHODS.printStatus(f'creating plan')
             final_response =await PLAN_CONTROLLER.CreatePlan(payment_proof=payment_proof,data=data,user_ins= user_ins)
         
         if not final_response:
