@@ -32,11 +32,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-+v0qbypjz*^(5^!7@uosljz@9phfii&=13u3*)0oz802oulfzu'
 
-# Set the environment
-ENV =  APPMODE.PROD
-
-
-print(f'ENV: {ENV}')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 ALLOWED_HOSTS = ["*"]
@@ -213,127 +208,57 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
 AWS_REGION_NAME = env('S3_REGION')
-if(ENV == APPMODE.DEV):
-    print(f'Mode Activated [ DEV ]')
-    DEBUG = True 
 
-    #cashfree
-    CASHFREE_CLIENT_ID = env('TEST_CASHFREE_CLIENT_ID')
-    CASHFREE_CLIENT_SECRET = env('TEST_CASHFREE_CLIENT_SECRET')
-    CASHFREE_ENVIRONMENT = env('TEST_CASHFREE_ENVIRONMENT', default="SANDBOX")
-    CASHFREE_API_VERSION = env('TEST_CASHFREE_API_VERSION')
+print(f'Mode Activated [ PROD ]')    
+DEBUG = False 
+
+#cashfree
+CASHFREE_CLIENT_ID = env('CASHFREE_CLIENT_ID')
+CASHFREE_CLIENT_SECRET = env('CASHFREE_CLIENT_SECRET')
+CASHFREE_ENVIRONMENT = env('CASHFREE_ENVIRONMENT', default="PRODUCTION")
+CASHFREE_API_VERSION = env('CASHFREE_API_VERSION')
+
+
+# Razor pay
+# RAZORPAY_KEY=env("PROD_RAZORPAY_KEY")
+# RAZORPAY_KEY_SECRET=env("PROD_RAZORPAY_KEY_SECRET")
+# AWS
+AWS_ACCESS_KEY_ID = env('AWS_KEY')
+AWS_SECRET_ACCESS_KEY = env('AWS_SECRETE_KEY')
         
-    # Razor Pay
-    # RAZORPAY_KEY=env("PROD_RAZORPAY_KEY")
-    # RAZORPAY_KEY_SECRET=env("PROD_RAZORPAY_KEY_SECRET")
+ALLOWED_HOSTS = ["*"]
     
-
-    ALLOWED_HOSTS = ["*"]
-    # CORS_ORIGIN_WHITELIST = [
-    #     'https://lawcalldevapi.store',
-    # ]
-    # CORS_ALLOWED_ORIGIN_REGEXES = [
-    #     r"^https://\w+\.lawcalldevapi\.store$",
-    # ]
+CORS_ORIGIN_ALLOW_ALL = True
+# CORS_ORIGIN_WHITELIST = [        
+#     'https://granthamapi.store',
+#     'https://grantham.org.in', 
+# ]
     
-    CORS_ORIGIN_ALLOW_ALL = True
-
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': env('DATABASE_NAME'),
-            'USER': env('DATABASE_USERNAME'),
-            'PASSWORD': env('DATABASE_PASSWORD'),
-            'HOST': env('DATABASE_HOST'),
-            'PORT': env('DATABASE_PORT'),
-        }
+# CORS_ALLOWED_ORIGIN_REGEXES = [
+# r"^https://\w+\.grantham\.org.in$",
+# r"^https://\w+\.granthamapi\.store$",
+# ]
+    
+# DB
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': env('DATABASE_NAME'),
+        'USER': env('DATABASE_USERNAME'),
+        'PASSWORD': env('DATABASE_PASSWORD'),
+        'HOST': env('DATABASE_HOST'),
+        'PORT': env('DATABASE_PORT'),
     }
-    
-    # S3
-    AWS_ACCESS_KEY_ID = env('AWS_KEY')
-    AWS_SECRET_ACCESS_KEY = env('AWS_SECRETE_KEY')
-    AWS_STORAGE_BUCKET_NAME = env('S3_BUCKET_NAME')
-    AWS_S3_REGION_NAME = env('S3_REGION')
-    DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
-    STATICFILES_STORAGE = "storages.backends.s3.S3Storage"
-    AWS_S3_FILE_OVERWRITE = True
-    AWS_DEFAULT_ACL = None
-    
-    
-if(ENV == APPMODE.PROD):
-    print(f'Mode Activated [ PROD ]')    
-    DEBUG = False 
-
-    #cashfree
-    CASHFREE_CLIENT_ID = env('CASHFREE_CLIENT_ID')
-    CASHFREE_CLIENT_SECRET = env('CASHFREE_CLIENT_SECRET')
-    CASHFREE_ENVIRONMENT = env('CASHFREE_ENVIRONMENT', default="PRODUCTION")
-    CASHFREE_API_VERSION = env('CASHFREE_API_VERSION')
-
-
-    # Razor pay
-    # RAZORPAY_KEY=env("PROD_RAZORPAY_KEY")
-    # RAZORPAY_KEY_SECRET=env("PROD_RAZORPAY_KEY_SECRET")
-    # AWS
-    AWS_ACCESS_KEY_ID = env('AWS_KEY')
-    AWS_SECRET_ACCESS_KEY = env('AWS_SECRETE_KEY')
-        
-    ALLOWED_HOSTS = ["*"]
-    
-    CORS_ORIGIN_ALLOW_ALL = True
-    # CORS_ORIGIN_WHITELIST = [        
-    #     'https://granthamapi.store',
-    #     'https://grantham.org.in', 
-    # ]
-    
-    # CORS_ALLOWED_ORIGIN_REGEXES = [
-    # r"^https://\w+\.grantham\.org.in$",
-    # r"^https://\w+\.granthamapi\.store$",
-    # ]
-    
-    # DB
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': env('PROD_DATABASE_NAME'),
-            'USER': env('PROD_DATABASE_USERNAME'),
-            'PASSWORD': env('PROD_DATABASE_PASSWORD'),
-            'HOST': env('PROD_DATABASE_HOST'),
-            'PORT': env('PROD_DATABASE_PORT'),
-        }
-    }
+}
     
 
-    # S3:
-    AWS_STORAGE_BUCKET_NAME = env('PROD_S3_BUCKET_NAME')
-    AWS_S3_REGION_NAME = env('PROD_S3_REGION')
-    DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
-    STATICFILES_STORAGE = "storages.backends.s3.S3Storage"
-    AWS_S3_FILE_OVERWRITE = True
-    AWS_DEFAULT_ACL = None
-
-if(ENV == APPMODE.LOC):
-    ALLOWED_HOSTS = ["*"]
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
-    AWS_ACCESS_KEY_ID = env('AWS_KEY')
-    AWS_SECRET_ACCESS_KEY = env('AWS_SECRETE_KEY')
-    AWS_STORAGE_BUCKET_NAME = env('S3_BUCKET_NAME')
-    AWS_S3_REGION_NAME = env('S3_REGION')
-    DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
-    STATICFILES_STORAGE = "storages.backends.s3.S3Storage"
-    AWS_S3_FILE_OVERWRITE = True
-    AWS_DEFAULT_ACL = None
-
-    #cashfree
-    CASHFREE_CLIENT_ID = env('TEST_CASHFREE_CLIENT_ID')
-    CASHFREE_CLIENT_SECRET = env('TEST_CASHFREE_CLIENT_SECRET')
-    CASHFREE_ENVIRONMENT = env('TEST_CASHFREE_ENVIRONMENT', default="SANDBOX")
-    CASHFREE_API_VERSION = env('TEST_CASHFREE_API_VERSION')
+# S3:
+AWS_STORAGE_BUCKET_NAME = env('S3_BUCKET_NAME')
+AWS_S3_REGION_NAME = env('S3_REGION')
+DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
+STATICFILES_STORAGE = "storages.backends.s3.S3Storage"
+AWS_S3_FILE_OVERWRITE = True
+AWS_DEFAULT_ACL = None
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
