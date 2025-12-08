@@ -212,7 +212,7 @@ cython_debug/
 #custom cmds
 app_ib/management/*
 app_ib/management
-data.json
-dev.json
-prod.json
-*.json
+# data.json
+# dev.json
+# prod.json
+# *.json
