@@ -210,7 +210,7 @@ SIMPLE_JWT = {
 AWS_REGION_NAME = env('S3_REGION')
 
 # print(f'Mode Activated [ PROD ]')    
-DEBUG = False 
+DEBUG = True
 
 #cashfree
 CASHFREE_CLIENT_ID = env('CASHFREE_CLIENT_ID')
