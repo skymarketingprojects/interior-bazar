@@ -33,7 +33,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-+v0qbypjz*^(5^!7@uosljz@9phfii&=13u3*)0oz802oulfzu'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env('DEBUG', default=True)
 ALLOWED_HOSTS = ["*"]
 AUTH_USER_MODEL = 'app_ib.CustomUser'
 
@@ -209,7 +209,7 @@ SIMPLE_JWT = {
 }
 AWS_REGION_NAME = env('S3_REGION')
 
-print(f'Mode Activated [ PROD ]')    
+# print(f'Mode Activated [ PROD ]')    
 DEBUG = False 
 
 #cashfree
@@ -238,7 +238,16 @@ CORS_ORIGIN_ALLOW_ALL = True
 # r"^https://\w+\.grantham\.org.in$",
 # r"^https://\w+\.granthamapi\.store$",
 # ]
-    
+CSRF_TRUSTED_ORIGINS = [
+    'http://interiorbazzar.com/',
+    'https://interiorbazzar.com/',
+    'http://dev.interiorbazzar.com/',
+    'https://dev.interiorbazzar.com/',
+    'http://prod.interiorbazzar.com/',
+    'https://prod.interiorbazzar.com/',
+    'http://testfrontend.interiorbazzar.com/',
+    'https://testfrontend.interiorbazzar.com/'
+]
 # DB
 DATABASES = {
     'default': {
