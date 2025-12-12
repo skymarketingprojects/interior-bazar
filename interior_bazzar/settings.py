@@ -239,14 +239,14 @@ CORS_ORIGIN_ALLOW_ALL = True
 # r"^https://\w+\.granthamapi\.store$",
 # ]
 CSRF_TRUSTED_ORIGINS = [
-    'http://interiorbazzar.com/',
-    'https://interiorbazzar.com/',
-    'http://dev.interiorbazzar.com/',
-    'https://dev.interiorbazzar.com/',
-    'http://prod.interiorbazzar.com/',
-    'https://prod.interiorbazzar.com/',
-    'http://testfrontend.interiorbazzar.com/',
-    'https://testfrontend.interiorbazzar.com/'
+    'http://interiorbazzar.com',
+    'https://interiorbazzar.com',
+    'http://dev.interiorbazzar.com',
+    'https://dev.interiorbazzar.com',
+    'http://prod.interiorbazzar.com',
+    'https://prod.interiorbazzar.com',
+    'http://testfrontend.interiorbazzar.com',
+    'https://testfrontend.interiorbazzar.com'
 ]
 # DB
 DATABASES = {
