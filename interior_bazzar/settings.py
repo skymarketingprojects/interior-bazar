@@ -26,6 +26,7 @@ os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 ENV = APPMODE.DEV if env('ENV', default='DEV') == 'DEV' else APPMODE.PROD
+print(f'Environment Mode: {ENV}')
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 

@@ -14,6 +14,7 @@ from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from adrf.views import APIView
 from django.views.decorators.csrf import csrf_exempt
 from app_ib.Utils.Names import NAMES
+from app_ib.models import CustomUser
 
 
 @api_view(['POST'])
@@ -102,7 +103,7 @@ async def GetBusinessByIdView(request,id):
 @api_view(['GET'])
 async def GetBusinessByUser(request):
     try:
-        user_ins = request.user
+        user_ins:CustomUser = request.user
         business = user_ins.user_business
         # Call Auth Controller to Create User
         final_response = await  asyncio.gather(BUSS_CONTROLLER.GetBusinessById(id=business.id))

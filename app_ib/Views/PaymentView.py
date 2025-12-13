@@ -6,6 +6,7 @@ from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.Names import NAMES
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
+from app_ib.Utils.MyMethods import MY_METHODS
 
 paymentFor = {
     NAMES.PLAN: PaymentGatewayController.InitiatePlanPayment,
@@ -16,9 +17,11 @@ paymentFor = {
 @permission_classes([IsAuthenticated])
 async def InitiatePaymentView(request):
     try:
+        
         data = request.data
         user = request.user
         serviceType = data.get(NAMES.PAYMENT_FOR,NAMES.EMPTY)
+        await MY_METHODS.printStatus(f'Initiating payment for {serviceType} by user {user.id}')
         if serviceType not in paymentFor:
             return ServerResponse(
                 response=RESPONSE_MESSAGES.error,

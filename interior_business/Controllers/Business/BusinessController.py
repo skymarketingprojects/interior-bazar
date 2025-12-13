@@ -273,13 +273,13 @@ class BUSS_CONTROLLER:
     @classmethod
     async def GetExploreSections(self):
         try:
-            categoryInstances = await sync_to_async(list)(BusinessCategory.objects.all())
+            categoryInstances = await sync_to_async(list)(BusinessCategory.objects.exclude(trending=False).order_by('index'))
             data = []
             for categoryInstance in categoryInstances:
                 categoryData = await BUSS_TASK.GetBusinessTypeData(categoryInstance)
                 if not categoryData:
                     continue
-                segments = categoryInstance.business_category_segment.all()
+                segments = categoryInstance.business_category_segment.all()[:3]
                 segmentData = [await BUSS_TASK.GetBusinessSegmentData(seg) for seg in segments]
                 categoryData[NAMES.SUB_CATEGORIES] = segmentData
                 data.append(categoryData)
