@@ -6,13 +6,15 @@ from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.models import LeadQuery
 from app_ib.Controllers.AdsQuery.Tasks.AdsQueryTasks import ADS_QUERY_TASKS
 from app_ib.Utils.MyMethods import MY_METHODS
+from app_ib.models import CustomUser
+
 
 class ADS_QUERY_CONTROLLER:
     @classmethod
-    async def CreateAdsQuery(self,data):
+    async def CreateAdsQuery(self,data,user:CustomUser=None):
         try:
             
-            create_query_resp = await  ADS_QUERY_TASKS.CreateAdsQueryTask(data=data)
+            create_query_resp = await  ADS_QUERY_TASKS.CreateAdsQueryTask(data=data,user=user)
             # await MY_METHODS.printStatus(f'create query resp {create_query_resp}')
 
             if create_query_resp:

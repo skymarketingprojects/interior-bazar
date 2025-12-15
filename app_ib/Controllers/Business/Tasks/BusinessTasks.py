@@ -1,4 +1,4 @@
-from app_ib.models import Business,Location,BusinessBadge,BusinessType,BusinessCategory,BusinessSegment
+from app_ib.models import Business,Location,BusinessBadge,BusinessType,BusinessCategory,BusinessSegment,BusinessProfile
 import asyncio
 from asgiref.sync import sync_to_async
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
@@ -181,13 +181,13 @@ class BUSS_TASK:
     async def GetBusinessInfoForSearch(cls, id):
         try:
             business_ins = await sync_to_async(
-                Business.objects.select_related(NAMES.BUSINESS_PROFILE, NAMES.BUSINESSTYPE)
+                Business.objects.select_related(NAMES.BUSINESSTYPE)
                 .prefetch_related(NAMES.BUSINESS_SEGMENT, NAMES.BUSINESS_CATEGORY)
                 .get
             )(pk=id)
 
             # Business profile image
-            business_profile = getattr(business_ins, NAMES.BUSINESS_PROFILE, None)
+            business_profile: BusinessProfile = getattr(business_ins, NAMES.BUSINESS_PROFILE, None)
             business_image = business_profile.primaryImageUrl if business_profile else None
 
             # Segments
@@ -218,7 +218,7 @@ class BUSS_TASK:
             return data
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in GetBusinessInfoForSearch: {e}')
+            await MY_METHODS.printStatus(f'Error in GetBusinessInfoForSearch: {e}')
             return None
 
     @classmethod

@@ -23,8 +23,10 @@ class SEARCH_CONTROLLER:
     @classmethod
     async def GetBusinessUsingPagination(self,pageNo,pageSize=10,tabId=None,tabType=None,state=None,query=None):
         try:
-            businesses_query=[]
+            # businesses_query=[]
             filterQuery=Q()
+            offset = (pageNo - 1) * pageSize
+            limit = offset + pageSize
 
             if state:
                 filterQuery &= Q(business_location__locationState__value__iexact=state)
@@ -41,15 +43,39 @@ class SEARCH_CONTROLLER:
                 # await MY_METHODS.printStatus(f'Query {query}')
                 filterQuery &= Q(business_name__icontains=query)
 
-            if not state and not tabId and not query:
-                # await MY_METHODS.printStatus('No filter applied')
-                businesses_query = await sync_to_async(list)(Business.objects.all().order_by('-timestamp'))
-            else:
-                # await MY_METHODS.printStatus('Filter applied')
-                businesses_query = await sync_to_async(list)(Business.objects.filter(filterQuery).order_by('-timestamp'))
+            # if not state and not tabId and not query:
+            #     # await MY_METHODS.printStatus('No filter applied')
+            #     businesses_query = await sync_to_async(list)(Business.objects.all().order_by('-timestamp'))
+            # else:
+            #     # await MY_METHODS.printStatus('Filter applied')
+            #     businesses_query = await sync_to_async(list)(Business.objects.filter(filterQuery).order_by('-timestamp'))
+            
 
+            queryset = (
+                Business.objects
+                .filter(filterQuery)
+                .select_related(
+                    "user",
+                    "businessBadge",
+                    "business_location",
+                    "business_location__locationState",
+                    "business_location__locationCountry",
+                )
+                .prefetch_related(
+                    "businessCategory",
+                    "businessSegment",
+                )
+                .order_by("-timestamp")[offset:limit]
+            )
+
+            businesses = await sync_to_async(list)(queryset)
             # fetch business data:
-            business_data= await SEARCH_TASKS.GetQueryData(businesses_query=businesses_query,pageNo=pageNo,pageSize=pageSize)
+            business_data = await SEARCH_TASKS.GetQueryData(
+                                businesses_query=businesses,
+                                pageNo=pageNo,
+                                pageSize=pageSize
+                            )
+            # await MY_METHODS.printStatus(f'business data {business_data}')
 
             return LocalResponse(
                 code=RESPONSE_CODES.success,
@@ -58,6 +84,7 @@ class SEARCH_CONTROLLER:
                 data=business_data)
 
         except Exception as e:
+            # await MY_METHODS.printStatus(f'Error in GetBusinessUsingPagination {e}')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.business_fetch_error,

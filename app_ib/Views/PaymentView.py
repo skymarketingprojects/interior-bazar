@@ -21,7 +21,7 @@ async def InitiatePaymentView(request):
         data = request.data
         user = request.user
         serviceType = data.get(NAMES.PAYMENT_FOR,NAMES.EMPTY)
-        await MY_METHODS.printStatus(f'Initiating payment for {serviceType} by user {user.id}')
+        # await MY_METHODS.printStatus(f'Initiating payment for {serviceType} by user {user.id}')
         if serviceType not in paymentFor:
             return ServerResponse(
                 response=RESPONSE_MESSAGES.error,

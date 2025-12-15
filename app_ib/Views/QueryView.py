@@ -46,6 +46,7 @@ async def GetQueryView(request):
 @api_view(['POST'])
 async def CreateQueryView(request):
     try:
+        # await MY_METHODS.printStatus(f'Request Data: {request.data}')
         user = None
         reqdata:dict = request.data
         if request.user.is_authenticated:

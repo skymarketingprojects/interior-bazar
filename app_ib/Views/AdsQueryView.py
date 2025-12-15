@@ -13,6 +13,7 @@ from app_ib.models import UserProfile,CustomUser,Location
 @api_view(['POST'])
 async def CreateAdsQueryView(request):
     try:
+        # await MY_METHODS.printStatus(f'Request Data: {request.data}')
         user = None
         reqdata = request.data
         if request.user.is_authenticated:
@@ -32,7 +33,7 @@ async def CreateAdsQueryView(request):
         data = MY_METHODS.json_to_object(reqdata)
         
         # Call Auth Controller to Create User
-        final_response = await  asyncio.gather(ADS_QUERY_CONTROLLER.CreateAdsQuery(data=data))
+        final_response = await  asyncio.gather(ADS_QUERY_CONTROLLER.CreateAdsQuery(data=data,user=user))
         final_response = final_response[0]
 
         return ServerResponse(

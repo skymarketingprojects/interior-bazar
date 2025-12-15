@@ -68,10 +68,10 @@ class PaymentGatewayController:
                     NAMES.TRANSACTION: transactionData[NAMES.TRANSACTION],
                     NAMES.SESSION_ID: response_data.get(NAMES.PAYMENT_SESSION_ID),
                 }
-                await MY_METHODS.printStatus(f"Plan payment initiated: {response_data}")
+                # await MY_METHODS.printStatus(f"Plan payment initiated: {response_data}")
 
                 if transection.code != RESPONSE_CODES.success and businessPlan.code != RESPONSE_CODES.success:
-                    await MY_METHODS.printStatus(f"Failed to create transaction and business plan for user {user.id} with plan {plan.id}")
+                    # await MY_METHODS.printStatus(f"Failed to create transaction and business plan for user {user.id} with plan {plan.id}")
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.warning,
                         message="Failed to create transaction and business plan",
@@ -79,7 +79,7 @@ class PaymentGatewayController:
                         data=data
                     )
                 elif businessPlan.code != RESPONSE_CODES.success:
-                    await MY_METHODS.printStatus(f"Failed to create business plan for user {user.id} with plan {plan.id}")
+                    # await MY_METHODS.printStatus(f"Failed to create business plan for user {user.id} with plan {plan.id}")
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.warning,
                         message="Failed to create business plan",
@@ -87,7 +87,7 @@ class PaymentGatewayController:
                         data=data
                     )
                 elif transection.code != RESPONSE_CODES.success:
-                    await MY_METHODS.printStatus(f"Failed to create transaction for user {user.id} with plan {plan.id}")
+                    # await MY_METHODS.printStatus(f"Failed to create transaction for user {user.id} with plan {plan.id}")
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.warning,
                         message="Failed to create transaction",
@@ -102,7 +102,7 @@ class PaymentGatewayController:
                     data=data
                 )
             else:
-                await MY_METHODS.printStatus(f"Failed to create Cashfree order: {response_data}")
+                # await MY_METHODS.printStatus(f"Failed to create Cashfree order: {response_data}")
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.error,
                     message=f"Failed to create Cashfree order: {response_data}",
@@ -111,7 +111,7 @@ class PaymentGatewayController:
                 )
 
         except Exception as e:
-            await MY_METHODS.printStatus(f"Exception during payment initiation: {str(e)}")
+            # await MY_METHODS.printStatus(f"Exception during payment initiation: {str(e)}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Exception during payment initiation",
@@ -137,7 +137,7 @@ class PaymentGatewayController:
             campainAmount = await MY_METHODS.formatAmount(campain.placement.dailyPrice)
 
             days = campain.getDays()
-            await MY_METHODS.printStatus(f"campainAmount: {campainAmount}, days: {days}")
+            # await MY_METHODS.printStatus(f"campainAmount: {campainAmount}, days: {days}")
             amount = float(campainAmount) * days
             # return LocalResponse(
             #     response=RESPONSE_MESSAGES.error,
@@ -158,7 +158,7 @@ class PaymentGatewayController:
 
             adsresult = await ADS_TASKS.CreateAdPaymentTask(AdCampaignIns=campain,Data=data)
             
-            await MY_METHODS.printStatus(f"Advertisement payment initiated: {response_data}")
+            # await MY_METHODS.printStatus(f"Advertisement payment initiated: {response_data}")
             payment_url = f"https://payments.cashfree.com/pgui/v2/checkout?payment_session_id={response_data['payment_session_id']}"
 
             data = {
@@ -182,7 +182,7 @@ class PaymentGatewayController:
                 data=data
             )
         except Exception as e:
-            await MY_METHODS.printStatus(f"Error in InitiateADSPayment: {e}")
+            # await MY_METHODS.printStatus(f"Error in InitiateADSPayment: {e}")
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Exception during advertisement payment initiation",

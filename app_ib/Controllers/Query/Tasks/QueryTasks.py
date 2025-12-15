@@ -26,7 +26,6 @@ class LEAD_QUERY_TASK:
             if user:
                 lead_query_ins.user= user
 
-                user
             leadfor = None
             try:
                 if data.type==NAMES.PRODUCT:

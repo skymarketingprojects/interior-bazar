@@ -11,7 +11,6 @@ from django.http import JsonResponse
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
-from app_ib.models import Business, Location, BusinessProfile, UserProfile,State
 from app_ib.Controllers.BusinessProfile.Tasks.BusinessProfileTasks import BUSS_PROF_TASK
 from app_ib.Controllers.Profile.Tasks.Taskys import PROFILE_TASKS
 from app_ib.Controllers.Business.Tasks.BusinessTasks import BUSS_TASK
@@ -22,7 +21,7 @@ from app_ib.Utils.LocalResponse import LocalResponse
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Q
-
+from app_ib.models import Business, Location, BusinessProfile, UserProfile,State,Country,BusinessBadge
 class SEARCH_TASKS:
     
     @classmethod
@@ -51,103 +50,143 @@ class SEARCH_TASKS:
 
 
     @classmethod
-    async def GetQueryData(self,businesses_query,pageNo,pageSize=10):
+    async def GetQueryData(cls, businesses_query, pageNo, pageSize=10):
         try:
-            lawyres_data = []
-            business_list = []
-            
-            # pagination : 
-            pageingate_lawers = await asyncio.gather(self.PaginateQuery(businesses_query=businesses_query,PageNo=pageNo,pageSize=pageSize))
-            pageingate_lawers = pageingate_lawers[0]
+            # businesses_query should ALREADY be paginated queryset or list
+            business_list = list(businesses_query)
 
-            
-            business_list = pageingate_lawers[NAMES.BUSINESSES]
-            has_next = pageingate_lawers[NAMES.HAS_NEXT]
-            totalPage = pageingate_lawers[NAMES.TOTAL_PAGES]
-            pageNo = pageingate_lawers[NAMES.PAGE_NO]
+            # Run FetchBusiness concurrently
+            tasks = [
+                cls.FetchBusiness(business=business)
+                for business in business_list
+            ]
 
-            # fetch all information 
-            for business in business_list:
-                lawer_resp = await self.FetchBusiness( business=business)
-                lawyres_data.append(lawer_resp)
-            
-            final_data = {
-                NAMES.HAS_NEXT:has_next,
-                NAMES.TOTAL_PAGES:totalPage,
-                NAMES.PAGE_NO:pageNo,
-                NAMES.DATA:lawyres_data
+            lawyres_data = await asyncio.gather(*tasks)
+
+
+            return {
+                NAMES.PAGE_NO: pageNo,
+                NAMES.DATA: lawyres_data
             }
-            
-            return final_data
-            
+
         except Exception as e:
-            # await MY_METHODS.printStatus(f' Error runing pagination {e}')
             return None
 
 
-    @classmethod
-    async def FetchBusiness(self, business):
-        try:
-            final_data = {}
-            # await MY_METHODS.printStatus(f'business {business}')
-            user_ins = business.user
+    # @classmethod
+    # async def FetchBusiness(self, business):
+    #     try:
+    #         final_data = {}
+    #         # await MY_METHODS.printStatus(f'business {business}')
+    #         user_ins = business.user
 
-            # Use asyncio.gather to fetch data in parallel for faster performance
-            business_data, business_location_data = await asyncio.gather(
-                BUSS_TASK.GetBusinessInfo(id=business.pk),
-                BUSS_LOC_TASK.GetBusinessLocTask(business_loc_ins=await sync_to_async(Location.objects.get)(business=business) if await sync_to_async(Location.objects.filter(business=business).exists)() else None)
-            )
-            # await MY_METHODS.printStatus(f'\nbusiness_data {business_data}\n')
+    #         # Use asyncio.gather to fetch data in parallel for faster performance
+    #         business_data, business_location_data = await asyncio.gather(
+    #             BUSS_TASK.GetBusinessInfo(id=business.pk),
+    #             BUSS_LOC_TASK.GetBusinessLocTask(business_loc_ins=await sync_to_async(Location.objects.get)(business=business) if await sync_to_async(Location.objects.filter(business=business).exists)() else None)
+    #         )
+    #         # await MY_METHODS.printStatus(f'\nbusiness_data {business_data}\n')
 
-            # Handle time ago logic
-            timestamp = business_data.get('timestamp', None)
-            time_ago = await self.get_time_ago(updated_at=timestamp)
+    #         # Handle time ago logic
+    #         timestamp = business_data.get('timestamp', None)
+    #         time_ago = await self.get_time_ago(updated_at=timestamp)
             
-            # await MY_METHODS.printStatus(f"time_ago {time_ago}, timestamp {timestamp}")
+    #         # await MY_METHODS.printStatus(f"time_ago {time_ago}, timestamp {timestamp}")
 
-            # Assign the required fields to final_data in camelCase format
-            try:
-                final_data[NAMES.ID] = business.pk
-                final_data[NAMES.BUSINESS_NAME] = business_data.get(NAMES.BUSINESS_NAME, NAMES.EMPTY)
-                final_data[NAMES.COMPANY_NAME] = business_data.get(NAMES.BUSINESS_NAME, NAMES.EMPTY)
-                final_data[NAMES.MEMBERSHIP_ID] = business.pk
-                final_data[NAMES.BADGE] = business_data.get(NAMES.BADGE, NAMES.EMPTY)
-                final_data[NAMES.TIME_AGO] = str(time_ago)  # Add the timeAgo field
-                final_data[NAMES.SINCE] = business_data.get(NAMES.SINCE, NAMES.EMPTY)
-                # final_data['category'] = business_data.get('category', NAMES.EMPTY)
-                final_data[NAMES.BUSINESS_IMAGE] = business_data.get(NAMES.COVER_IMAGE_URL, NAMES.EMPTY)
-                final_data[NAMES.CITY] = business_location_data.get(NAMES.CITY, NAMES.EMPTY)
-                final_data[NAMES.STATE] = business_location_data.get(NAMES.STATE, NAMES.EMPTY)
-                final_data[NAMES.COUNTRY] = business_location_data.get(NAMES.COUNTRY, NAMES.EMPTY)
-                final_data[NAMES.PINCODE] = business_location_data.get(NAMES.PINCODE, NAMES.EMPTY)
-                # final_data['category'] = business_data.get('categories', [])
-            except Exception as e:
-                # await MY_METHODS.printStatus(f'Error while assigning data {e}')
-                pass
-
-
+    #         # Assign the required fields to final_data in camelCase format
+    #         try:
+    #             final_data[NAMES.ID] = business.pk
+    #             final_data[NAMES.BUSINESS_NAME] = business_data.get(NAMES.BUSINESS_NAME, NAMES.EMPTY)
+    #             final_data[NAMES.COMPANY_NAME] = business_data.get(NAMES.BUSINESS_NAME, NAMES.EMPTY)
+    #             final_data[NAMES.MEMBERSHIP_ID] = business.pk
+    #             final_data[NAMES.BADGE] = business_data.get(NAMES.BADGE, NAMES.EMPTY)
+    #             final_data[NAMES.TIME_AGO] = str(time_ago)  # Add the timeAgo field
+    #             final_data[NAMES.SINCE] = business_data.get(NAMES.SINCE, NAMES.EMPTY)
+    #             # final_data['category'] = business_data.get('category', NAMES.EMPTY)
+    #             final_data[NAMES.BUSINESS_IMAGE] = business_data.get(NAMES.COVER_IMAGE_URL, NAMES.EMPTY)
+    #             final_data[NAMES.CITY] = business_location_data.get(NAMES.CITY, NAMES.EMPTY)
+    #             final_data[NAMES.STATE] = business_location_data.get(NAMES.STATE, NAMES.EMPTY)
+    #             final_data[NAMES.COUNTRY] = business_location_data.get(NAMES.COUNTRY, NAMES.EMPTY)
+    #             final_data[NAMES.PINCODE] = business_location_data.get(NAMES.PINCODE, NAMES.EMPTY)
+    #             # final_data['category'] = business_data.get('categories', [])
+    #         except Exception as e:
+    #             # await MY_METHODS.printStatus(f'Error while assigning data {e}')
+    #             pass
 
 
-            # Handle location
-            loc = ""
-            try:
-                location_data = business_location_data if business_location_data else {}
-                city = f"{location_data.get(NAMES.CITY, None)} ," if location_data.get(NAMES.CITY) else None 
-                state = f"{location_data.get(NAMES.STATE, None)[NAMES.NAME]} ," if location_data.get(NAMES.STATE) else None
-                country = f"{location_data.get(NAMES.COUNTRY, None)[NAMES.NAME]}" if location_data.get(NAMES.COUNTRY) else None
-                # await MY_METHODS.printStatus(f'state {state} country {country}')
-                loc = f"{city if city else NAMES.EMPTY}{state if state else NAMES.EMPTY}{country if country else NAMES.EMPTY}"
-            except Exception as e:
-                # await MY_METHODS.printStatus(f'Error while fetching location {e}')
-                pass
-            final_data[NAMES.LOCATION] = loc
-            # Handle rating - assuming you still want a random rating for the example
-            rating = await MY_METHODS.get_random_rating()
-            final_data[NAMES.RATING] = f"{rating}"
-            final_data[NAMES.RATING_VALUE] = float(rating)
-            # await MY_METHODS.printStatus(f'final_data {final_data}')
+
+
+    #         # Handle location
+    #         loc = NAMES.EMPTY
+    #         try:
+    #             location_data = business_location_data if business_location_data else {}
+    #             city = f"{location_data.get(NAMES.CITY, None)} ," if location_data.get(NAMES.CITY) else None 
+    #             state = f"{location_data.get(NAMES.STATE, None)[NAMES.NAME]} ," if location_data.get(NAMES.STATE) else None
+    #             country = f"{location_data.get(NAMES.COUNTRY, None)[NAMES.NAME]}" if location_data.get(NAMES.COUNTRY) else None
+    #             # await MY_METHODS.printStatus(f'state {state} country {country}')
+    #             loc = f"{city if city else NAMES.EMPTY}{state if state else NAMES.EMPTY}{country if country else NAMES.EMPTY}"
+    #         except Exception as e:
+    #             # await MY_METHODS.printStatus(f'Error while fetching location {e}')
+    #             pass
+    #         final_data[NAMES.LOCATION] = loc
+    #         # Handle rating - assuming you still want a random rating for the example
+    #         rating = await MY_METHODS.get_random_rating()
+    #         final_data[NAMES.RATING] = f"{rating}"
+    #         final_data[NAMES.RATING_VALUE] = float(rating)
+    #         # await MY_METHODS.printStatus(f'final_data {final_data}')
+
+    #         return final_data
+    #     except Exception as e:
+    #         # await MY_METHODS.printStatus(f'Error while fetching business {e}')
+    #         return None
+    @classmethod
+    async def FetchBusiness(cls, business:Business):
+        try:
+            location:Location = getattr(business, "business_location", None)
+            state:State = location.locationState if location else None
+            country:Country = location.locationCountry if location else None
+            badge:BusinessBadge = business.businessBadge
+
+            # format location
+            city = f"{location.city} ," if location and location.city else NAMES.EMPTY
+            state_name = f"{state.name} ," if state else NAMES.EMPTY
+            country_name = f"{country.name}" if country else NAMES.EMPTY
+
+
+            final_data = {
+                NAMES.ID: business.pk,
+                NAMES.BUSINESS_NAME: business.businessName,
+                NAMES.COMPANY_NAME: business.brandName or business.businessName,
+                NAMES.MEMBERSHIP_ID: business.pk,
+
+                NAMES.BADGE: badge.imageUrl if badge else NAMES.EMPTY,
+
+                NAMES.TIME_AGO: await MY_METHODS.get_time_ago(business.timestamp) if business.timestamp else "No update available",
+                NAMES.SINCE: business.since or NAMES.EMPTY,
+
+                NAMES.BUSINESS_IMAGE: business.coverImageUrl or NAMES.EMPTY,
+
+                NAMES.CITY: location.city if location else NAMES.EMPTY,
+                NAMES.STATE: {
+                    NAMES.ID: state.pk,
+                    NAMES.NAME: state.name,
+                } if state else {},
+
+                NAMES.COUNTRY: {
+                    NAMES.ID: country.pk,
+                    NAMES.NAME: country.code,
+                } if country else {},
+
+                NAMES.PINCODE: location.pinCode if location else NAMES.EMPTY,
+
+                NAMES.LOCATION: f"{city}{state_name}{country_name}",
+
+                NAMES.RATING: f"{await MY_METHODS.get_random_rating()}",
+                NAMES.RATING_VALUE: float(await MY_METHODS.get_random_rating()),
+            }
 
             return final_data
+
         except Exception as e:
             # await MY_METHODS.printStatus(f'Error while fetching business {e}')
             return None
@@ -189,7 +228,16 @@ class SEARCH_TASKS:
                        Q(businessCategory__in=business.businessCategory.all())
 
             # Fetch related businesses in one query, excluding the current business
-            related_query = Business.objects.filter(q_filter).exclude(id=business_id).distinct()
+            related_query = Business.objects.filter(q_filter).select_related(
+                    "user",
+                    "businessBadge",
+                    "business_location",
+                    "business_location__locationState",
+                    "business_location__locationCountry",
+                ).prefetch_related(
+                    "businessCategory",
+                    "businessSegment",
+                ).exclude(id=business_id).distinct()
 
             # Paginate and fetch full business data
             return await self.GetQueryData(businesses_query=related_query, pageNo=pageNo)
@@ -212,9 +260,27 @@ class SEARCH_TASKS:
 
             if businessId:
             # Use Q to check city OR state
-                nearby_query = Business.objects.filter(query).exclude(id=businessId)
+                nearby_query = Business.objects.filter(query).select_related(
+                    "user",
+                    "businessBadge",
+                    "business_location",
+                    "business_location__locationState",
+                    "business_location__locationCountry",
+                ).prefetch_related(
+                    "businessCategory",
+                    "businessSegment",
+                ).exclude(id=businessId)
             else:
-                nearby_query = Business.objects.filter(query)
+                nearby_query = Business.objects.filter(query).select_related(
+                    "user",
+                    "businessBadge",
+                    "business_location",
+                    "business_location__locationState",
+                    "business_location__locationCountry",
+                ).prefetch_related(
+                    "businessCategory",
+                    "businessSegment",
+                )
 
             # await MY_METHODS.printStatus(f'nearby_query {nearby_query}')
             return await self.GetQueryData(businesses_query=nearby_query, pageNo=pageNo)

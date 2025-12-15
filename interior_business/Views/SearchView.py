@@ -5,6 +5,7 @@ from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 
 from interior_business.Controllers.Search.SearchController import SEARCH_CONTROLLER
 from app_ib.Utils.Names import NAMES
+import time
 
 # #########################################
 # 1. Add profile data to obj: 
@@ -15,28 +16,46 @@ from app_ib.Utils.Names import NAMES
 # #########################################
 @api_view(['GET'])
 async def GetBusinessByPaginationView(request):
+    start_time = time.perf_counter()
     try:
-        index = request.GET.get(NAMES.PAGE_NO, 1)
-        pageSize = request.GET.get(NAMES.PAGE_SIZE, 1)
+        index = int(request.GET.get(NAMES.PAGE_NO, 1))
+        pageSize = int(request.GET.get(NAMES.PAGE_SIZE, 1))
         tabId = request.GET.get(NAMES.TAB_ID, None)
-        tabType= request.GET.get(NAMES.TYPE, None)
+        tabType = request.GET.get(NAMES.TYPE, None)
         state = request.GET.get(NAMES.STATE, None)
         query = request.GET.get(NAMES.QUERY, None)
-        
-        final_response= await SEARCH_CONTROLLER.GetBusinessUsingPagination(pageNo=index,pageSize=pageSize,tabId=tabId,tabType=tabType,state=state,query=query)
+
+        final_response = await SEARCH_CONTROLLER.GetBusinessUsingPagination(
+            pageNo=index,
+            pageSize=pageSize,
+            tabId=tabId,
+            tabType=tabType,
+            state=state,
+            query=query
+        )
+
+        elapsed = time.perf_counter() - start_time
+        print(f"GetBusinessByPaginationView executed in {elapsed:.4f} seconds")
+
         return ServerResponse(
             response=final_response.response,
             code=final_response.code,
             message=final_response.message,
-            data=final_response.data)
+            data={
+                **final_response.data,
+            }
+        )
+
     except Exception as e:
+        elapsed = time.perf_counter() - start_time
+        print(f"Error after {elapsed:.4f} seconds")
+
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.default_error,
             code=RESPONSE_CODES.error,
-            data={
-                NAMES.ERROR: str(e)
-            })
+            data={NAMES.ERROR: str(e)}
+        )
 
 @api_view(['GET'])
 async def GetTopBusinessView(request,index):

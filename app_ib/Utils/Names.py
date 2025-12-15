@@ -350,6 +350,17 @@ class NAMES:
     PERSONAS='personas'
 
     AD_CAMPAIGN_ID='adCampaignId'
+
+    # lead query tags
+    QUERY_TAG='query'
+    DEFAULT_TAG='default'
+    AIFILTERED_TAG='aifiltered'
+    MANUALFILTERED_TAG='manualfiltered'
+    VERIFIED_TAG='verified'
+    NEARBY_TAG='nearby'
+    NORMAL_TAG='normal'
+
+
     
 
 
