@@ -25,6 +25,72 @@ from django.db.models import Prefetch
 class BUSS_TASK:
 
     @classmethod
+    async def GetBusinessHeaderTask(cls, business: Business):
+        """
+        Return business header data for frontend ProfileHeader
+        """
+        try:
+            # Fetch related objects safely (async)
+            business = await sync_to_async(
+                Business.objects
+                .select_related(NAMES.USER, NAMES.BUSINESS_PROFILE_RELATION)
+                .prefetch_related(
+                    Prefetch(
+                        NAMES.BUSINESS_SOCIAL_MEDIA_RELATION,
+                        queryset=BusinessSocialMedia.objects.select_related(NAMES.SOCIAL_MEDIA)
+                    )
+                )
+                .get
+            )(pk=business.pk)
+
+            # User profile (phone & country code)
+            user_profile = None
+            if business.user_id:
+                user_profile = await sync_to_async(
+                    UserProfile.objects.filter(user=business.user).first
+                )()
+
+            # Social media links
+            social_links = {
+                NAMES.LINKEDIN_LINK:NAMES.EMPTY,
+                NAMES.WHATSAPP_LINK: business.whatsapp or NAMES.EMPTY,
+                NAMES.FACEBOOK_LINK: NAMES.EMPTY,
+                NAMES.INSTAGRAM_LINK: NAMES.EMPTY,
+            }
+
+            for sm in business.businessSocialMedia.all():
+                name = sm.socialMedia.name.lower()
+
+                if name == NAMES.LINKEDIN:
+                    social_links[NAMES.LINKEDIN_LINK] = sm.link
+                elif name == NAMES.FACEBOOK:
+                    social_links[NAMES.FACEBOOK_LINK] = sm.link
+                elif name == NAMES.INSTAGRAM:
+                    social_links[NAMES.INSTAGRAM_LINK] = sm.link
+
+            # Business profile image
+            profile_image = NAMES.EMPTY
+            if hasattr(business, NAMES.BUSINESS_PROFILE_RELATION) and business.business_profile:
+                profile_image = business.business_profile.primaryImageUrl or NAMES.EMPTY
+            
+            data = {
+                NAMES.BUSINESS_NAME: business.businessName or NAMES.EMPTY,
+                NAMES.DESCRIPTION: business.bio or NAMES.EMPTY,
+                NAMES.SOCIAL_MEDIA: social_links,
+                NAMES.PROFILE_IMAGE_URL: profile_image,
+                NAMES.BANNER_IMAGE_URL: business.bannerImageUrl or NAMES.EMPTY,
+                NAMES.PHONE: user_profile.phone if user_profile else NAMES.EMPTY,
+                NAMES.COUNTRY_CODE: user_profile.countryCode if user_profile else NAMES.EMPTY,
+            }
+
+            return data,True
+
+        except Exception as e:
+            await MY_METHODS.printStatus(f'Error in GetBusinessHeaderTask: {e}')
+            return str(e),False
+
+
+    @classmethod
     async def UpdateBusinessBannerTask(cls, business: Business,data):
         try:
             business.bannerImageUrl = data.bannerImageUrl

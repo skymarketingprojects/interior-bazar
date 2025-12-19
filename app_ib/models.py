@@ -107,6 +107,7 @@ class Business(models.Model):
     user= models.OneToOneField(CustomUser,on_delete=models.CASCADE, null=True, blank=True,related_name='user_business')
     businessName= models.CharField(max_length=250)
     brandName = models.CharField(max_length=250,null=True, blank=True)
+    rating= models.CharField(max_length=3,null=True, blank=True,default="3.5")
     whatsapp= models.CharField(max_length=100,default='',null=True, blank=True)
     coverImageUrl = models.TextField(default='',null=True, blank=True)
     bannerImageUrl = models.TextField(default='',null=True, blank=True)

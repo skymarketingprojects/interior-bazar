@@ -181,8 +181,8 @@ class SEARCH_TASKS:
 
                 NAMES.LOCATION: f"{city}{state_name}{country_name}",
 
-                NAMES.RATING: f"{await MY_METHODS.get_random_rating()}",
-                NAMES.RATING_VALUE: float(await MY_METHODS.get_random_rating()),
+                NAMES.RATING: business.rating or '3.5',
+                NAMES.RATING_VALUE: float(business.rating or '3.5'),
             }
 
             return final_data
@@ -222,28 +222,35 @@ class SEARCH_TASKS:
         try:
             business = await sync_to_async(Business.objects.get)(id=business_id)
 
-            # Build a single Q object combining all filters
-            q_filter = Q(business_type=business.businessType) | \
-                       Q(businessSegment__in=business.businessSegment.all()) | \
-                       Q(businessCategory__in=business.businessCategory.all())
+            business_segments = await sync_to_async(list)(business.businessSegment.all())
+            business_categories = await sync_to_async(list)(business.businessCategory.all())
 
-            # Fetch related businesses in one query, excluding the current business
-            related_query = Business.objects.filter(q_filter).select_related(
+            q_filter = (
+                Q(businessType=business.businessType) |
+                Q(businessSegment__in=business_segments) |
+                Q(businessCategory__in=business_categories)
+            )
+
+            related_query = await sync_to_async(
+                lambda: Business.objects.filter(q_filter)
+                .select_related(
                     "user",
                     "businessBadge",
                     "business_location",
                     "business_location__locationState",
                     "business_location__locationCountry",
-                ).prefetch_related(
+                )
+                .prefetch_related(
                     "businessCategory",
                     "businessSegment",
-                ).exclude(id=business_id).distinct()
+                )
+                .exclude(id=business_id)
+                .distinct()
+            )()
 
-            # Paginate and fetch full business data
             return await self.GetQueryData(businesses_query=related_query, pageNo=pageNo)
-        
+
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error while fetching business {e}')
             return None
     @classmethod
     async def GetNearbyBusinesses(self,city:str=None,state:str=None,locationState:State=None,businessId:int = None, pageNo=1):

@@ -16,6 +16,34 @@ from interior_notification.signals import businessSignupSignal
 class BUSS_CONTROLLER:
 
     @classmethod
+    async def GetBusinessHeader(self,businessId):
+        try:
+            business = await sync_to_async(Business.objects.get)(id=businessId)
+            headerData,status = await BUSS_TASK.GetBusinessHeaderTask(business)
+            if status:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.business_header_fetch_success,
+                    code=RESPONSE_CODES.success,
+                    data=headerData)
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.business_header_fetch_error,
+                code=RESPONSE_CODES.error,
+                data={
+                    NAMES.ERROR: headerData
+                }
+            )
+        except Exception as e:
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.business_header_fetch_error,
+                code=RESPONSE_CODES.error,
+                data={
+                    NAMES.ERROR: str(e)
+                })
+
+    @classmethod
     async def GetBusinessContactInfo(self, business:Business):
         try:
             contact_info = await BUSS_TASK.GetBusinessContactInfoTask(business)

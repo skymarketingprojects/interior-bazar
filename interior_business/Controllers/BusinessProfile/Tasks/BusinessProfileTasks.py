@@ -22,14 +22,13 @@ class BUSS_PROF_TASK:
                 ).only(
                     NAMES.ID,
                     NAMES.BUSINESS_NAME,
-                    'banner_image_url',
+                    'bannerImageUrl',
                     'user__id',
                     'user__user_profile__phone',
                     'user__user_profile__countryCode',
                     'user__user_profile__profileImageUrl',
                 ).get(id=business_id)
             )()
-            businessLocation: Location = business.business_location
             # 2️⃣ Fetch Social Media (with related social media names)
             social_media_data = await sync_to_async(
                 lambda: list(

@@ -172,6 +172,7 @@ async def GetAllBusinessTabView(request):
             data={
                 NAMES.ERROR: str(e)
             })
+
 @api_view(['GET'])
 async def GetAllBusinessCategoriesView(request):
     try:
@@ -237,6 +238,29 @@ async def GetExploreSectionsView(request):
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.business_category_fetch_error,
+            code=RESPONSE_CODES.error,
+            data={
+                NAMES.ERROR: str(e)
+            })
+
+@api_view(['GET'])
+async def GetBusinessHeaderView(request):
+    try:
+        # Call Auth Controller to Create User
+        final_response = await BUSS_CONTROLLER.GetBusinessHeader()
+        # await MY_METHODS.printStatus(f'final_response {final_response}')
+
+        return ServerResponse(
+            response=final_response.response,
+            code=final_response.code,
+            message=final_response.message,
+            data=final_response.data)
+
+    except Exception as e:
+        # await MY_METHODS.printStatus(f'Error: {e}')
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message=RESPONSE_MESSAGES.business_header_fetch_error,
             code=RESPONSE_CODES.error,
             data={
                 NAMES.ERROR: str(e)

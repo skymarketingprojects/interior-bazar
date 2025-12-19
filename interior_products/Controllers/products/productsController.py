@@ -9,6 +9,7 @@ from .Validators.productsValidators import PRODUCTS_VALIDATORS
 from app_ib.models import Business
 from interior_products.models import Product,ProductCategory,ProductSubCategory
 from django.db.models import Q
+from app_ib.Utils.Names import NAMES
 
 class PRODUCTS_CONTROLLER:
 
@@ -240,9 +241,9 @@ class PRODUCTS_CONTROLLER:
             product = Product.objects.get(id=productId)
             tags = [tag.strip().lower() for tag in product.productTags.split(",")]
             related_qs = Product.objects.filter(
-                                Q(productTags__iregex=r"(" + "|".join(tags) + ")")
-                                | Q(title__icontains=product.title.split(" ")[0])
-                            ).exclude(id=product.id).order_by('index')
+                                Q(title__icontains=product.title.split(" ")[0])
+                                | Q(business=product.business)
+                            ).exclude(id=product.id).order_by(NAMES.INDEX)
 
             paginated = await MY_METHODS.paginate_queryset(related_qs, page, size)
             productData = []

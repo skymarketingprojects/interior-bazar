@@ -360,6 +360,25 @@ class NAMES:
     NEARBY_TAG='nearby'
     NORMAL_TAG='normal'
 
+    #relations
+    BUSINESS_SOCIAL_MEDIA_RELATION='businessSocialMedia'
+    BUSINESS_PROFILE_RELATION='business_profile'
+
+    #Links
+    SOCIAL_LINKS='socialLinks'
+    LINKEDIN_LINK='linkedinLink'
+    WHATSAPP_LINK='whatsappLink'
+    INSTAGRAM_LINK='instagramLink'
+    YOUTUBE_LINK='youtubeLink'
+    FACEBOOK_LINK='facebookLink'
+    TWITTER_LINK='twitterLink'
+    LINKEDIN='linkedin'
+    WHATSAPP='whatsapp'
+    INSTAGRAM='instagram'
+    YOUTUBE='youtube'
+    FACEBOOK='facebook'
+    TWITTER='twitter'
+
 
     
 

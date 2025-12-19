@@ -16,7 +16,7 @@ import time
 # #########################################
 @api_view(['GET'])
 async def GetBusinessByPaginationView(request):
-    start_time = time.perf_counter()
+    # start_time = time.perf_counter()
     try:
         index = int(request.GET.get(NAMES.PAGE_NO, 1))
         pageSize = int(request.GET.get(NAMES.PAGE_SIZE, 1))
@@ -34,8 +34,8 @@ async def GetBusinessByPaginationView(request):
             query=query
         )
 
-        elapsed = time.perf_counter() - start_time
-        print(f"GetBusinessByPaginationView executed in {elapsed:.4f} seconds")
+        # elapsed = time.perf_counter() - start_time
+        # print(f"GetBusinessByPaginationView executed in {elapsed:.4f} seconds")
 
         return ServerResponse(
             response=final_response.response,
@@ -47,8 +47,8 @@ async def GetBusinessByPaginationView(request):
         )
 
     except Exception as e:
-        elapsed = time.perf_counter() - start_time
-        print(f"Error after {elapsed:.4f} seconds")
+        # elapsed = time.perf_counter() - start_time
+        # print(f"Error after {elapsed:.4f} seconds")
 
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,

@@ -20,7 +20,7 @@ class LEAD_QUERY_TASK:
             lead_query_ins.query= data.query
             lead_query_ins.state= data.state
             lead_query_ins.country= data.country
-            lead_query_ins.tag= data.tag
+            lead_query_ins.tag= NAMES.QUERY_TAG
             (f'type {data.type}')
 
             if user:

@@ -229,11 +229,10 @@ class SERVICES_CONTROLLER:
     async def GetRelatedServices(cls, serviceId: int, page: int = 1, size: int = 10):
         try:
             service = Service.objects.get(id=serviceId)
-            tags = [tag.strip().lower() for tag in service.serviceTags.split(",")]
             related_qs = Service.objects.filter(
-                                Q(serviceTags__iregex=r"(" + "|".join(tags) + ")")
-                                | Q(title__icontains=service.title.split(" ")[0])
+                                Q(title__icontains=service.title.split(" ")[0])
                                 | Q(orignalPrice__range=(service.orignalPrice * 0.8, service.orignalPrice * 1.2))
+                                | Q(business=service.business)
                             ).exclude(id=service.id)
 
             paginated = await MY_METHODS.paginate_queryset(related_qs, page, size)

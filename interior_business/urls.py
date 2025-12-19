@@ -3,12 +3,14 @@ from django.urls import path, include
 from . import views
 urlpatterns = [
 
+
     path('related/<int:businessId>/',SearchView.GetRelatedBusinessView, name='GetRelatedBusinessView'),
     path('nearby/',SearchView.GetNearbyBusinessView, name='GetAllNearbyBusinessView'),
     path('nearby/<int:businessId>/',SearchView.GetNearbyBusinessView, name='GetnearbyBusinessView'),
      #########################################################
     # Business:  
     #########################################################
+    path('detail//header/<int:businessId>/',BusinessView.GetBusinessHeaderView, name='GetBusinessHeaderView'),
     path('create/', BusinessView.CreateBusinessView, name='CreateBusinessView'),
     path('update/', BusinessView.UpdateBusinessView, name='UpdateBusinessView'),
     path('<int:id>/', BusinessView.GetBusinessByIdView, name='GetBusinessByIdView'),
