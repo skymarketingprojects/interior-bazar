@@ -142,6 +142,12 @@ class MY_METHODS:
         return text
 
     @staticmethod
+    def slugify(text):
+        slug = text.lower()
+        slug = slug.replace(' ', '-')
+        slug = re.sub(r'[^\w-]+', '', slug)  # remove all non-word and non-hyphen characters
+        return slug
+    @staticmethod
     def unslugify(slug):
         """
         Convert a slug back to a human-readable string.

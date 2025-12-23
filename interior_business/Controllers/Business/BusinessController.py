@@ -11,6 +11,7 @@ from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.models import Business,BusinessType,BusinessCategory,BusinessSegment
 import asyncio
 from django.db.models import Count
+from django.db.models import Q
 from interior_notification.signals import businessSignupSignal
 
 class BUSS_CONTROLLER:
@@ -241,13 +242,17 @@ class BUSS_CONTROLLER:
                     NAMES.ERROR: str(e)
                 })
     @classmethod
-    async def GetAllBusinessCategories(self,trending=False):
+    async def GetAllBusinessCategories(self,trending=False,query=None):
         try:
             categoryInstances = []
+
             if trending:
                 categoryInstances = await sync_to_async(list)(BusinessCategory.objects.filter(trending=True).order_by('index'))
             else:
-                categoryInstances = await sync_to_async(list)(BusinessCategory.objects.all())
+                if query:
+                    categoryInstances = await sync_to_async(list)(BusinessCategory.objects.filter(lable__icontains=query).order_by('index'))
+                else:
+                    categoryInstances = await sync_to_async(list)(BusinessCategory.objects.all())
             category_list = []
             for categoryInstance in categoryInstances:
                 categoryData = await BUSS_TASK.GetBusinessTypeData(categoryInstance)
@@ -268,7 +273,7 @@ class BUSS_CONTROLLER:
                     NAMES.ERROR: str(e)
                 })
     @classmethod
-    async def GetBusinessSegmentsByType(self,typeId):
+    async def GetBusinessSegmentsByType(self,typeId,query=None):
         try:
             isTypeExist = await sync_to_async(BusinessType.objects.filter(pk=typeId).exists)()
             if not isTypeExist:
@@ -278,7 +283,12 @@ class BUSS_CONTROLLER:
                     code=RESPONSE_CODES.error,
                     data={})
             businessType = await sync_to_async(BusinessType.objects.get)(pk=typeId)
-            segmentInstances = await sync_to_async(list)(businessType.business_type_segment.all())
+            await MY_METHODS.printStatus(f'businessType {businessType}')
+            segmentInstances = []
+            if query:
+                segmentInstances = await sync_to_async(list)(businessType.business_type_segment.filter(lable__icontains=query))
+            else:
+                segmentInstances = await sync_to_async(list)(businessType.business_type_segment.all())
             segment_list = []
             for segmentInstance in segmentInstances:
                 segmentData = await BUSS_TASK.GetBusinessSegmentData(segmentInstance)

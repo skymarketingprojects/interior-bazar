@@ -25,6 +25,36 @@ from django.db.models import Prefetch
 class BUSS_TASK:
 
     @classmethod
+    async def CreateCategoryTask(cls, data):
+        try:
+            lable = await sync_to_async(lambda: MY_METHODS.slugify(data.label))()
+            newCategory = BusinessCategory.objects.create(
+                lable=lable,
+                value=data.label,
+                index = BusinessCategory.objects.all().count()+1
+            )
+
+            return newCategory.id
+        except Exception as e:
+            await MY_METHODS.printStatus(f'Error in CreateCaegoryTask {e}')
+            return None
+    
+    @classmethod
+    async def CreateSegmentTask(cls, data):
+        try:
+            lable = await sync_to_async(lambda: MY_METHODS.slugify(data.label))()
+            newSegment = BusinessSegment.objects.create(
+                lable=lable,
+                value=data.label
+            )
+            await MY_METHODS.printStatus(f' CreateSegmentTask {newSegment}')
+
+            return newSegment.id
+        except Exception as e:
+            await MY_METHODS.printStatus(f'Error in CreateSegmentTask {e}')
+            return None
+
+    @classmethod
     async def GetBusinessHeaderTask(cls, business: Business):
         """
         Return business header data for frontend ProfileHeader
@@ -184,7 +214,7 @@ class BUSS_TASK:
             business_type = await sync_to_async(lambda: BusinessType.objects.filter(id=business_type_id).first())()
 
             # Validate and fetch segments (max 5)
-            segment_ids = [seg.id for seg in getattr(data, NAMES.SEGMENTS, [])]
+            segment_ids = [seg.id if not seg.isNew else await cls.CreateSegmentTask(seg) for seg in getattr(data, NAMES.SEGMENTS, [])]
             if len(segment_ids) > 5:
                 return None  # Too many segments
             segments = await sync_to_async(lambda: list(BusinessSegment.objects.filter(id__in=segment_ids)))()
@@ -192,7 +222,7 @@ class BUSS_TASK:
                 return None  # Invalid segment IDs
 
             # Validate and fetch categories (max 3)
-            category_ids = [cat.id for cat in getattr(data, NAMES.CATEGORIES, [])]
+            category_ids = [cat.id if not cat.isNew else await cls.CreateCategoryTask(cat) for cat in getattr(data, NAMES.CATEGORIES, [])]
             if len(category_ids) > 3:
                 return None  # Too many categories
             categories = await sync_to_async(lambda: list(BusinessCategory.objects.filter(id__in=category_ids)))()
