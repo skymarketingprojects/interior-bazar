@@ -38,7 +38,7 @@ class BUSINESS_INFO_CONTROLLER:
                         'id',
                         'businessName',
                         'timestamp',
-                        'cover_image_url',
+                        'coverImageUrl',
                         'since',
                         'business_plan__services',
                         'business_plan__isActive',
