@@ -232,7 +232,14 @@ class Subscription(models.Model):
     amount= models.CharField(max_length=800,null=True, blank=True) 
     discountPercentage= models.CharField(max_length=800,null=True, blank=True) 
     discountAmount= models.CharField(max_length=800,null=True, blank=True) 
-    payableAmount= models.CharField(max_length=800,null=True, blank=True) 
+    payableAmount= models.CharField(max_length=800,null=True, blank=True)
+    availableDuration = models.JSONField(
+        default=list,
+        null=True,
+        blank=True,
+        help_text="List of objects with duration and price. Example: "
+                "[{'duration': 3, 'price': 100}, {'duration': 6, 'price': 180}]"
+    )
 
     # cover_image= models.FileField(null=True, blank=True, upload_to='subscription/attachment')
     fallbackImageUrl= models.URLField(max_length=2250, null=True, blank=True) 

@@ -64,6 +64,7 @@ class NAMES:
     PLAN_PDF='planPdf'
     PLAN_PDF_URL='planPdfUrl'
     IS_ACTIVE='isActive'
+    AVILABLE_DURATION='availableDuration'
 
     FEATURES='features'
     PRICE='price'

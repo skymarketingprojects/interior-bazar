@@ -72,7 +72,8 @@ class SUBSCRIPTION_TASKS:
                 NAMES.DESCRIPTION: subscription_ins.subtitle,
                 NAMES.VIDEO: subscription_ins.videoUrl or NAMES.EMPTY,  # Fallback to empty string if not present
                 NAMES.FALLBACK: subscription_ins.fallbackImageUrl or NAMES.EMPTY,
-                NAMES.PLAN_PDF: subscription_ins.planPdfUrl or NAMES.EMPTY
+                NAMES.PLAN_PDF: subscription_ins.planPdfUrl or NAMES.EMPTY,
+                NAMES.AVILABLE_DURATION:subscription_ins.availableDuration
             }
             return data
         
