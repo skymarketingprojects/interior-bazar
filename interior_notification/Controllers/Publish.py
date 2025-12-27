@@ -146,14 +146,13 @@ def publishEmailToUser(
         return None
 
 
-def WhatsappMessage(receiver_phone, body_text, button_url="https://interiorbazzar.com/"):
+def WhatsappMessage(receiver_phone, name, phone, business_name,email):
     try:
-
         ACCESS_TOKEN = settings.WHATSAPP_ACCESS_TOKEN
         PHONE_NUMBER_ID = settings.WHATSAPP_PHONE_NUMBER_ID
-        print(f"{ACCESS_TOKEN} {PHONE_NUMBER_ID}")
 
-        url = f"https://graph.facebook.com/v20.0/{PHONE_NUMBER_ID}/messages"
+        url = f"https://graph.facebook.com/v22.0/{PHONE_NUMBER_ID}/messages"
+
         headers = {
             "Authorization": f"Bearer {ACCESS_TOKEN}",
             "Content-Type": "application/json",
@@ -162,27 +161,49 @@ def WhatsappMessage(receiver_phone, body_text, button_url="https://interiorbazza
         payload = {
             "messaging_product": "whatsapp",
             "to": receiver_phone,
-            "type": "interactive",
-            "interactive": {
-                "type": "button",
-                "body": {
-                    "text": body_text
-                },
-                "action": {
-                    "buttons": [
-                        {
-                            "type": "url",
-                            "url": button_url,
-                            "title": "Open Link"
-                        }
-                    ]
-                }
+            "type": "template",
+            "template": {
+                "name": "lead_query",
+                "language": { "code": "en" },
+                "components": [
+                    {
+                        "type": "body",
+                        "parameters": [
+                            {
+                                "type": "text",
+                                "parameter_name": "business_name",
+                                "text": business_name
+                            },
+                            {
+                                "type": "text",
+                                "parameter_name": "name",
+                                "text": name
+                            },
+                            {
+                                "type": "text",
+                                "parameter_name": "phone",
+                                "text": phone
+                            },
+                            {
+                                "type": "text",
+                                "parameter_name": "email",
+                                "text": email
+                            }
+                        ]
+                    }
+                ]
             }
         }
+        # print (url, headers,payload)
 
         response = requests.post(url, headers=headers, json=payload)
+        print(f"response data :{response.json()}")
         response.raise_for_status()
         return {"success": True, "response": response.json()}
-    except requests.exceptions.RequestException as e:
-        print(f"Error sending WhatsApp message: {e}")
+        # return {"success": True, "response": "Message sent successfully"}
+
+    except Exception as e:
+        print("Error sending WhatsApp message:", e)
+        # print("Response:", e.response.text if e.response else None)
         return {"success": False, "error": str(e)}
+

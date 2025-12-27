@@ -227,10 +227,13 @@ def leadqueryReceiver(sender, instance:LeadQuery, **kwargs):
                 )
         WhatsappMessage(
                 receiver_phone=internationalPhone,
-                body_text=text
+                name=instance.name,
+                business_name=business.businessName,
+                phone=instance.phone,
+                email=instance.email
                 )
         
     except Exception as e:
         async_to_sync(MY_METHODS.printStatus)(f"Error in leadqueryReceiver {e}")
         pass
- 
+
