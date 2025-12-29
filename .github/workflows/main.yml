@@ -38,7 +38,7 @@ jobs:
             exit 0
           fi
 
-          ssh -o StrictHostKeyChecking=no user@your_vps_ip << EOF
+          ssh -o StrictHostKeyChecking=no root@72.61.236.50 << EOF
             echo "Deploying $SERVICE..."
             cd $VPS_DIR
             docker compose -f $FILE_NAME build backend
