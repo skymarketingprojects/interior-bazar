@@ -23,7 +23,7 @@ from app_ib.models import CustomUser
 async def CreateBusinessView(request):
     try:
         # Convert request.data to dot notation object
-        await MY_METHODS.printStatus(f'request.data {request.data}')
+        # await MY_METHODS.printStatus(f'request.data {request.data}')
         data = MY_METHODS.json_to_object(request.data)
         user_ins = request.user
 
@@ -204,7 +204,7 @@ async def GetAllBusinessCategoriesView(request):
 async def GetAllBusinessSegmentsByTypeView(request,typeId):
     try:
         query = request.query_params.get('query', None)
-        await MY_METHODS.printStatus(f'typeId {typeId} query {query}')
+        # await MY_METHODS.printStatus(f'typeId {typeId} query {query}')
         # Call Auth Controller to Create User
         final_response = await BUSS_CONTROLLER.GetBusinessSegmentsByType(typeId=typeId,query=query)
         # await MY_METHODS.printStatus(f'final_response {final_response}')

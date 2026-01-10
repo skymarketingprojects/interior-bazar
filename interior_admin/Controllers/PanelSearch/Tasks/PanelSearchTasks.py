@@ -26,10 +26,10 @@ class PANEL_SEARCH_TASKS:
                 # if businessData is None:
                 #     continue
                 results.append(businessData)
-            await MY_METHODS.printStatus(f'[GetSearchResults]: Found {len(results)} results for query "{Query}"')
+            # await MY_METHODS.printStatus(f'[GetSearchResults]: Found {len(results)} results for query "{Query}"')
 
 
             return results
         except Exception as e:
-            await MY_METHODS.printStatus(f'[GetSearchResults Error]: {e}')
+            # await MY_METHODS.printStatus(f'[GetSearchResults Error]: {e}')
             return False

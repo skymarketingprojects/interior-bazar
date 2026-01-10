@@ -377,6 +377,14 @@ class RESPONSE_MESSAGES:
     transection_create_success= 'Transection created successfully'
     transection_create_error= 'Unable to create transection'
 
+    #our clients
+    our_clients_fetch_success= 'Our clients fetched successfully'
+    our_clients_fetch_error= 'Unable to fetch our clients'
+
+    #reel
+    reel_section_fetch_success= 'Reel section fetched successfully'
+    reel_section_fetch_error= 'Unable to fetch reel section'
+
 class VALIDATION_MESSAGES:
     password_length= 'Password must be at least 8 characters long'
     password_must_contain_digit= 'Password must contain at least one digit'

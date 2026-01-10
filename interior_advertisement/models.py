@@ -97,6 +97,10 @@ class AdCampaign(models.Model):
 class AdAsset(models.Model):
     campaign = models.ForeignKey(AdCampaign, on_delete=models.CASCADE, related_name='assets')
     assetType = models.ForeignKey(AdAssetType, on_delete=models.PROTECT)
+    category = models.ManyToManyField('app_ib.BusinessCategory')
+    subCategory = models.ManyToManyField('app_ib.BusinessSegment')
+    productCategory = models.ManyToManyField("interior_products.ProductCategory")
+    productSubCategory = models.ManyToManyField("interior_products.ProductSubCategory")
     s3Key = models.TextField()
     meta = models.JSONField(default=dict)
 
