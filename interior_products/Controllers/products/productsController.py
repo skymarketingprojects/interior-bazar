@@ -63,9 +63,9 @@ class PRODUCTS_CONTROLLER:
             
             if filterType and id:
                 if filterType == "category":
-                    filterQuery |= Q(catProducts__id=int(id))
+                    filterQuery |= Q(category__id=int(id))
                 elif filterType == "subCategory":
-                    filterQuery |= Q(subcatProducts__id=int(id))
+                    filterQuery |= Q(subCategory__id=int(id))
 
             if filterQuery:
                 related_qs = Product.objects.filter(filterQuery).order_by('index')

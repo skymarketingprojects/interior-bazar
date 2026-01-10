@@ -12,8 +12,9 @@ from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from django.views.decorators.csrf import csrf_exempt
 from app_ib.Controllers.UrlGenrator.UrlGenrator import imageUrlGenrator
-
+from .models import OurClients,ReelSection
 from app_ib.Utils.MyMethods import MY_METHODS
+from rest_framework.serializers import ModelSerializer
 
 userCtrl = imageUrlGenrator()
 # Create your views here.
@@ -22,7 +23,7 @@ async def TestView(request):
     try:
         # file = request.data.get("lawyer_profile_image")
         # compress_image = await asyncio.gather(helpingMethods.MyImageCompression(type=COMPRESSSION_TYPE.LAWYER_PROFILE, image=file))
-        # # await MY_METHODS.printStatus(f'compress_image {compress_image[0]}')
+        # await MY_METHODS.printStatus(f'compress_image {compress_image[0]}')
         return JsonResponse({"result": 'success'})
 
     except Exception as e:
@@ -54,6 +55,61 @@ async def TestMailView(request):
     except Exception as e:
         return JsonResponse({"result": 'error'})
         # await MY_METHODS.printStatus(f'Email sending failed: {e}')
+
+@api_view(['GET'])
+async def GetOurClients(request):
+    try:
+        clients = await sync_to_async(OurClients.objects.all)()
+
+        data = []
+        for client in clients:
+            data.append({
+                'image': client.image,
+                'name': client.name,
+                'index': client.index
+            })
+
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.success,
+            message=RESPONSE_MESSAGES.our_clients_fetch_success,
+            data=data,
+            code=RESPONSE_CODES.success
+        )
+    except Exception as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message=RESPONSE_MESSAGES.our_clients_fetch_error,
+            data={'error': str(e)},
+            code=RESPONSE_CODES.error
+        )
+
+@api_view(['GET'])
+async def GetReelSection(request):
+    try:
+        reels = await sync_to_async(ReelSection.objects.all)()
+
+        data = []
+        for reel in reels:
+            data.append({
+                'video': reel.video,
+                'name': reel.name,
+                'index': reel.index
+            })
+
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.success,
+            message=RESPONSE_MESSAGES.reel_section_fetch_success,
+            data=data,
+            code=RESPONSE_CODES.success
+        )
+    except Exception as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            message=RESPONSE_MESSAGES.reel_section_fetch_error,
+            data={'error': str(e)},
+            code=RESPONSE_CODES.error
+        )
+
 
 @api_view(['POST'])
 @csrf_exempt

@@ -6,8 +6,6 @@ python manage.py migrate --noinput
 # If you serve static from container (not recommended for production CDN):
 python manage.py collectstatic --noinput
 
-# Start Gunicorn
-exec gunicorn interior_bazzar.wsgi:application \
-    --bind 0.0.0.0:8000 \
-    --workers 3 \
-    --log-level info
+# Start Uvicorn
+exec python -m uvicorn interior_bazzar.asgi:application --port 8000 --host 0.0.0.0
+ 

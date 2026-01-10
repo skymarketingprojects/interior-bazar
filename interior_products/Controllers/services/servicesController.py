@@ -64,9 +64,9 @@ class SERVICES_CONTROLLER:
             
             if filterType and id:
                 if filterType == "category":
-                    filterQuery |= Q(catServices__id=int(id))
+                    filterQuery |= Q(category__id=int(id))
                 elif filterType == "subCategory":
-                    filterQuery |= Q(subcatServices__id=int(id))
+                    filterQuery |= Q(subCategory__id=int(id))
 
             if filterQuery:
                 related_qs = Service.objects.filter(filterQuery).order_by('index')

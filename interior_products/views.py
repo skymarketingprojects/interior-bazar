@@ -446,7 +446,9 @@ async def GetAllCatelogsView(request:HttpRequest):
         filterId = request.GET.get('tabId',None)
         state = request.GET.get('state',None)
         query = request.GET.get('query',None)
+        # await MY_METHODS.printStatus(f'filterType: {filterType}, filterId: {filterId}, state: {state}, query: {query}')
         catelogResponse = await CATELOG_CONTROLLER.GetAllCatelog(page=pageNo,size=pageSize,filterType=filterType,id=filterId,state=state,query=query)
+        # await MY_METHODS.printStatus(f'catelogResponse: {catelogResponse}')
         return ServerResponse(
             response=catelogResponse.response,
             message=catelogResponse.message,

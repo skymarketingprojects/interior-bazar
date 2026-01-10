@@ -8,7 +8,7 @@ from interior_advertisement.models import AdCampaign, AdAsset, AdPersona
 from app_ib.models import Business
 import asyncio
 from app_ib.Utils.Names import NAMES
-
+from django.db.models import Q
 class ADS_CONTROLLER:
 
     # ---------------- GET CAMPAIGN DETAILS ----------------
@@ -129,9 +129,13 @@ class ADS_CONTROLLER:
             )
     
     @classmethod
-    async def GetActiveCampaigns(cls,placementId):
+    async def GetActiveCampaigns(cls,placementId, category=None, segment=None,categoryType=None):
         try:
-            status,activeCampaigns = await ADS_TASKS.GetActiveAdsCampaignTask(placementId)
+            query = (Q(placement=placementId) & Q(status__code=NAMES.ACTIVE))
+            # await MY_METHODS.printStatus(f'query: {query}')
+            status,activeCampaigns = await ADS_TASKS.GetActiveAdsCampaignTask(query,category,segment,categoryType)
+            # await MY_METHODS.printStatus(f'activeCampaigns: {activeCampaigns}')
+
             if status:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,

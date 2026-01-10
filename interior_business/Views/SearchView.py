@@ -5,6 +5,8 @@ from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 
 from interior_business.Controllers.Search.SearchController import SEARCH_CONTROLLER
 from app_ib.Utils.Names import NAMES
+from app_ib.Utils.MyMethods import MY_METHODS
+
 import time
 
 # #########################################
@@ -18,12 +20,16 @@ import time
 async def GetBusinessByPaginationView(request):
     # start_time = time.perf_counter()
     try:
-        index = int(request.GET.get(NAMES.PAGE_NO, 1))
-        pageSize = int(request.GET.get(NAMES.PAGE_SIZE, 1))
-        tabId = request.GET.get(NAMES.TAB_ID, None)
-        tabType = request.GET.get(NAMES.TYPE, None)
-        state = request.GET.get(NAMES.STATE, None)
-        query = request.GET.get(NAMES.QUERY, None)
+        index = int(request.query_params.get(NAMES.PAGE_NO, 1))
+        pageSize = int(request.query_params.get(NAMES.PAGE_SIZE, 1))
+        tabId = request.query_params.get(NAMES.TAB_ID, None)
+        tabType = request.query_params.get(NAMES.TYPE, None)
+        state = request.query_params.get(NAMES.STATE, None)
+        query = request.query_params.get(NAMES.QUERY, None)
+
+        await MY_METHODS.printStatus(request)
+
+        await MY_METHODS.printStatus(f'index {index} pageSize {pageSize} tabId {tabId} tabType {tabType} state {state} query {query}')
 
         final_response = await SEARCH_CONTROLLER.GetBusinessUsingPagination(
             pageNo=index,

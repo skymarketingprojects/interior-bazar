@@ -20,7 +20,6 @@ from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.models import BusinessCategory,BusinessSegment
 from app_ib.Controllers.Business.Tasks.BusinessTasks import BUSS_TASK
 from app_ib.Utils.Names import NAMES
-
 class ADS_TASKS:
     # ---------------- CAMPAIGN ----------------
 
@@ -69,15 +68,13 @@ class ADS_TASKS:
             return None
 
     @classmethod
-    async def GetActiveAdsCampaignTask(cls, placementId):
+    async def GetActiveAdsCampaignTask(cls, query, category=None, segment=None,categoryType=None):
         try:
-            activeAds = await sync_to_async(AdCampaign.objects.filter)(
-                status__code=NAMES.ACTIVE, placement__placementId=placementId
-            )
+            activeAds = await sync_to_async(AdCampaign.objects.filter)(query)
             # await MY_METHODS.printStatus(f'activeAds: {activeAds}')
             adsData = []
             for ad in activeAds:
-                status, data = await cls.GetAdAssetsTask(ad)
+                status, data = await cls.GetAdAssetsTask(ad,category,segment,categoryType)
                 if status:
                     for obj in data:
                         adsData.append(obj)
@@ -319,9 +316,20 @@ class ADS_TASKS:
 
     # ---------------- GET ASSETS ----------------
     @classmethod
-    async def GetAdAssetsTask(cls, AdCampaignIns):
+    async def GetAdAssetsTask(cls, AdCampaignIns,category,segment,categoryType):
         try:
-            AssetsQS = await sync_to_async(list)(AdAsset.objects.filter(campaign=AdCampaignIns))
+            query = (models.Q(campaign=AdCampaignIns))
+            if category:
+                if categoryType == NAMES.BUSINESS:
+                    query = query & (models.Q(category=category))
+                elif categoryType == NAMES.PRODUCT:
+                    query = query & (models.Q(productCategory=category))
+            if segment:
+                if categoryType == NAMES.BUSINESS:
+                    query = query & (models.Q(subCategory=segment))
+                elif categoryType == NAMES.PRODUCT:
+                    query = query & (models.Q(productSubCategory=segment))
+            AssetsQS = await sync_to_async(list)(AdAsset.objects.filter(query))
             # await MY_METHODS.printStatus(f'AssetsQS: {AssetsQS}')
             assetData=[]
             for asset in AssetsQS:

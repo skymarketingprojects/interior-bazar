@@ -3,6 +3,7 @@ from interior_products.models import Product,ProductImage,Catelogue,ProductSpeci
 from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.models import Business
 import json
+from app_ib.Utils.Names import NAMES
 
 class PRODUCTS_TASKS:
     
@@ -198,7 +199,9 @@ class PRODUCTS_TASKS:
                 'catalogueId':product.catelogue.id if product.catelogue else '',
                 'index':product.index,
                 "categories":prodCategory,
-                "subCategories":prodSubCategory
+                "subCategories":prodSubCategory,
+                "phone":product.business.user.user_profile.phone,
+                "countryCode":product.business.user.user_profile.countryCode
             }
             specifications:list[ProductSpecification] = await sync_to_async(product.productSpecifications.all)()
             for specification in specifications:
@@ -233,9 +236,13 @@ class PRODUCTS_TASKS:
             data = []
             for cat in categories:
                 data.append({
-                    "id":cat.id,
-                    "label":cat.lable,
-                    "value":cat.value
+                    NAMES.ID:cat.id,
+                    NAMES.LABEL:cat.lable,
+                    NAMES.VALUE:cat.value,
+                    NAMES.SHORT_VALUE:cat.shortValue,
+                    NAMES.IMAGE_SQ_URL:cat.imageSQUrl,
+                    NAMES.IMAGE_RT_URL:cat.imageRTUrl,
+                    NAMES.TRENDING:cat.trending
                 })
             return data
         except Exception as e:
@@ -247,9 +254,13 @@ class PRODUCTS_TASKS:
         try:
             
             return {
-                    "id":catgories.id,
-                    "label":catgories.lable,
-                    "value":catgories.value
+                    NAMES.ID:catgories.id,
+                    NAMES.LABEL:catgories.lable,
+                    NAMES.VALUE:catgories.value,
+                    NAMES.SHORT_VALUE:catgories.shortValue,
+                    NAMES.IMAGE_SQ_URL:catgories.imageSQUrl,
+                    NAMES.IMAGE_RT_URL:catgories.imageRTUrl,
+                    NAMES.TRENDING:catgories.trending
                 }
         except Exception as e:
             # await MY_METHODS.printStatus(f"error in get product category {str(e)}")

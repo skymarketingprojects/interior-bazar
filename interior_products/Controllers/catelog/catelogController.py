@@ -77,9 +77,9 @@ class CATELOG_CONTROLLER:
             
             if filterType and id:
                 if filterType == "category":
-                    filterQuery |= Q(catCatelogues__id=int(id))
+                    filterQuery |= Q(catalogCategory__id=int(id))
                 elif filterType == "subCategory":
-                    filterQuery |= Q(catSubCatelogues__id=int(id))
+                    filterQuery |= Q(subCategory__id=int(id))
 
             if filterQuery:
                 related_qs = Catelogue.objects.filter(filterQuery).order_by('index')

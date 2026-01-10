@@ -42,6 +42,28 @@ def sign_in(request):
 def contact_us(request):
     return render_index(request, 'contact us')
 
+def cookie_policy(request):
+    return render_index(request, 'cookie policy')
+
+def marketplace(request):
+    return render_index(request, 'marketplace')
+
+def marketBusiness(request):
+    return render_index(request, 'marketBusiness')
+def marketProduct(request):
+    return render_index(request, 'marketProduct')
+
+def marketCatalogue(request):
+    return render_index(request, 'marketCatalogue')
+
+def marketService(request):
+    return render_index(request, 'marketService')
+
+def legal(request):
+    return render_index(request, 'legal')
+def payment(request):
+    return render_index(request, 'payment')
+
 
 def robots_txt(request):
     lines = [
