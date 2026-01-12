@@ -36,7 +36,7 @@ class SEARCH_CONTROLLER:
                 if tabType==NAMES.CATEGORY:
                     # await MY_METHODS.printStatus(f'category Id {tabId}')
                     filterQuery &= Q(businessCategory__id=tabId)
-                elif tabType==NAMES.SUB_CATEGORY:
+                elif tabType==NAMES.SEGMENT:
                     # await MY_METHODS.printStatus(f'sub category Id {tabId}')
                     filterQuery &= Q(businessSegment__id=tabId)
             if query:

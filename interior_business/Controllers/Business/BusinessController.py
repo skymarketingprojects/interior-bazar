@@ -228,6 +228,11 @@ class BUSS_CONTROLLER:
                 if segmentData:
                     segmentData[NAMES.TYPE]=NAMES.SEGMENT
                     category_list.append(segmentData)
+            
+            category_list.sort(
+                key=lambda x: (x.get(NAMES.LABEL) or "").lower()
+            )
+
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.business_category_fetch_success,
