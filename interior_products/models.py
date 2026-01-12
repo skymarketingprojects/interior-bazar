@@ -10,9 +10,16 @@ class ProductCategory(models.Model):
     imageSQUrl = models.CharField(max_length=2250,null=True,blank=True)
     imageRTUrl = models.CharField(max_length=2250,null=True,blank=True)
     trending = models.BooleanField(default=False)
+    index = models.IntegerField(default=0)
    
     def __str__(self):
         return f'product category - {self.lable}'
+    
+    def save(self, *args, **kwargs):
+        if not self.index:
+            self.index = self.__class__.objects.all().count()+1
+        indexShifting(instance=self,filter_attr='index')
+        super().save(*args, **kwargs)
 
 class ProductSubCategory(models.Model):
     category = models.ForeignKey(ProductCategory,on_delete=models.CASCADE,related_name="prodsubcat")
@@ -22,9 +29,16 @@ class ProductSubCategory(models.Model):
     imageSQUrl = models.CharField(max_length=2250,null=True,blank=True)
     imageRTUrl = models.CharField(max_length=2250,null=True,blank=True)
     trending = models.BooleanField(default=False)
+    index = models.IntegerField(default=0)
    
     def __str__(self):
         return f'product sub category - {self.lable}'
+    
+    def save(self, *args, **kwargs):
+        if not self.index:
+            self.index = self.__class__.objects.all().count()+1
+        indexShifting(instance=self,filter_attr='index')
+        super().save(*args, **kwargs)
 
 #catelog
 class Catelogue(models.Model):
