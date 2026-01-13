@@ -434,11 +434,14 @@ class BUSS_TASK:
                 NAMES.ID: businesstype.id,
                 NAMES.LABEL: businesstype.lable,
                 NAMES.VALUE: businesstype.value,
-                NAMES.SHORT_VALUE: businesstype.shortValue,
                 NAMES.IMAGE_SQ_URL: sqUrl,
                 NAMES.IMAGE_RT_URL: rtUrl,
                 NAMES.TRENDING: businesstype.trending
             }
+            try:
+                typeData[NAMES.SHORT_VALUE] = businesstype.shortValue
+            except:
+                pass
 
             return typeData
         except Exception as e:
