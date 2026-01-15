@@ -11,12 +11,14 @@ from app_ib.Utils.Names import NAMES
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.models import Location
 from app_ib.Controllers.ClientLocation.Tasks.ClientLocationTasks import CLIENT_LOC_TASKS
-
+from app_ib.Controllers.ClientLocation.Validators.ClientLocationValidators import (
+    ClientLocationCreateOrUpdateSchema
+)
 
 class CLIENT_LOCATION_CONTROLLER:
   
     @classmethod
-    async def CreateOrUpdateClientLocation(self, user_ins, data):
+    async def CreateOrUpdateClientLocation(self, user_ins, data:ClientLocationCreateOrUpdateSchema):
         try:
             is_client_loc_exist = await sync_to_async(Location.objects.filter(user=user_ins).exists)()
             if is_client_loc_exist:

@@ -25,7 +25,7 @@ os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-ENV = APPMODE.DEV if env('ENV', default='DEV') == 'DEV' else APPMODE.PROD
+ENV = APPMODE.DEV if env('ENV', default='DEV') == 'DEV' else APPMODE.DEV
 print(f'Environment Mode: {ENV}')
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -274,6 +274,9 @@ STATICFILES_STORAGE = "storages.backends.s3.S3Storage"
 AWS_S3_FILE_OVERWRITE = True
 AWS_DEFAULT_ACL = None
 
+AWS_S3_CUSTOM_DOMAIN = None
+AWS_S3_ENDPOINT_URL = "https://s3.ap-south-1.amazonaws.com"
+
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR  / 'static_root'
@@ -298,73 +301,3 @@ WHATSAPP_PHONE_NUMBER_ID = env('WHATSAPP_PHONE_NUMBER_ID')
 # PHONEPE_CLIENT_ID = env('PHONEPE_CLIENT_ID')
 # PHONEPE_CLIENT_SECRET = env('PHONEPE_CLIENT_SECRET')
 # PHONEPE_CLIENT_VERSION = env('PHONEPE_CLIENT_VERSION')
-
-    # Development:
-    #  eb deploy devInteriorEnv --profile newInteriorBazzar
-    # [domain]
-    
-    
-    # Production
-    # eb deploy prodInteriorEnv --profile newInteriorBazzar
-    # [domain]
-    
-    
-    # python -m uvicorn interior_bazzar.asgi:application --port 8888 --host 0.0.0.0 
-    # http://127.0.0.1:8888/api/test_api/
-
-# async def say_after(delay, what):
-#     await asyncio.sleep(delay)
-#     print(what)
-
-
-# @api_view(['GET'])
-# async def NetworkCall(request):
-#     async with httpx.AsyncClient() as client:
-#         response = await client.get('https://www.example.com/')
-#         print(response)
-
-
-# @api_view(['GET'])
-# async def BackgroundTask(request):
-#     background_tasks = set()
-#     for i in range(10):
-#         task = asyncio.create_task(say_after(2,'df'))
-
-#         # Add task to the set. This creates a strong reference.
-#         background_tasks.add(task)
-
-#         # To prevent keeping references to finished tasks forever,
-#         # make each task remove its own reference from the set after
-#         # completion:
-#         task.add_done_callback(background_tasks.discard)
-#     return Response({"result": 'background task'})
-
-
-# @api_view(['GET'])
-# async def TaskAysnc(request):
-#     task2 = asyncio.create_task(
-#         say_after(2, 'world'))
-#     total = task2.result()
-#     return Response({"result": total})
-
-# @api_view(['GET'])
-# def SyncFunction(request):
-#     start_time = time.time()
-#     total = time.time()-start_time
-#     print(f'Total {total}')
-#     return Response({"result": total})
-
-# @api_view(['GET'])
-# async def AsyncFunction(request):
-#     start_time = time.time()
-#     result = await asyncio.sleep(3)
-#     total = time.time()-start_time
-#     print(f'Total {total}')
-#     return Response({"result": total})
-
-
-# start_time = time.time()
-# end_time = time.time()
-# execution_time = end_time - start_time
-# print(f"Execution time: {execution_time:.4f} seconds")
-

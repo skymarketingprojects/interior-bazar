@@ -14,7 +14,7 @@ from rest_framework.permissions import IsAuthenticated
 from app_ib.Controllers.Query.QueryController import LEAD_QUERY_CONTROLLER
 from app_ib.Controllers.FunnelQuery.FunnelQueryController import FUNNEL_QUERY_CONTROLLER
 from app_ib.models import UserProfile,CustomUser,Location
-from app_ib.Controllers.Query.Validators.QueryValidators import leadQuerysData,leadData
+from app_ib.Controllers.Query.Validators.QueryValidators import LeadQueryFilterSchema,LeadQueryCreateSchema,LeadQueryUpdateSchema,LeadQueryStatusSchema
 from dateutil.parser import parse
 from datetime import date
 
@@ -24,8 +24,7 @@ async def GetQueryView(request):
     try:
         user = request.user
         # Call Auth Controller to Create User
-        final_response = await  asyncio.gather(LEAD_QUERY_CONTROLLER.GetQueries(user_ins=user))
-        final_response = final_response[0]
+        final_response = await LEAD_QUERY_CONTROLLER.GetQueries(user_ins=user)
 
         return ServerResponse(
             response=final_response.response,
@@ -70,7 +69,7 @@ async def CreateQueryView(request):
                 pass
                 
         # Convert request.data to dot notation object
-        data = leadData(**reqdata)
+        data = LeadQueryCreateSchema(**reqdata)
         
         # Call Auth Controller to Create User
         final_response = await  asyncio.gather(LEAD_QUERY_CONTROLLER.CreateLeadQuery(data=data,user=user))
@@ -118,7 +117,7 @@ async def UpdateQueryByIDView(request):
                 # await MY_METHODS.printStatus(f'Error in UpdateQueryByIDView {e}')
                 pass
         # Convert request.data to dot notation object
-        data= leadData(**reqdata)
+        data= LeadQueryUpdateSchema(**reqdata)
         
 
         # Call Auth Controller to Create User
@@ -146,7 +145,8 @@ async def UpdateQueryByIDView(request):
 async def UpdateQueryStatusView(request):
     try:
         # Convert request.data to dot notation object
-        data= MY_METHODS.json_to_object(request.data)
+        # data= MY_METHODS.json_to_object(request.data)
+        data= LeadQueryStatusSchema(**request.data)
         user_ins= request.user 
     
         # Call Auth Controller to Create User
@@ -263,7 +263,7 @@ async def GetQueryBusinessView(request:HttpRequest):
         toDate = request.GET.get('dateTo')
         
 
-        queryParams= leadQuerysData(
+        queryParams= LeadQueryFilterSchema(
             status=status,
             tag=tag,
             priority=priority,

@@ -3,6 +3,7 @@ import hashlib
 import json
 from interior_bazzar  import settings
 from app_ib.serializers import MyTokenObtainPairSerializer
+from django.contrib.auth.hashers import make_password, check_password
 from app_ib.models import CustomUser, UserProfile
 from app_ib.Utils.AppMode import APPMODE, APPMODE_URL
 from app_ib.Utils.MyMethods import MY_METHODS
@@ -18,7 +19,7 @@ class AUTH_TASK:
             is_user_exist = await sync_to_async(CustomUser.objects.filter(username=username).exists)()
             return is_user_exist
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in IsUserExist {e}')
+            await MY_METHODS.printStatus(f'Error in IsUserExist {e}')
             return None
 
     @classmethod
@@ -37,7 +38,7 @@ class AUTH_TASK:
             """Create user in database"""
             user_ins = CustomUser()
             user_ins.username= username
-            user_ins.password= password
+            user_ins.password = make_password(password)
             user_ins.type= type
             user_ins.is_active= True
             user_ins.is_delete= False
@@ -73,15 +74,13 @@ class AUTH_TASK:
     async def LoginUser(self, username, password):
         try:
             """Check if user exists in database"""
-            is_user_exist = await sync_to_async(
-                CustomUser.objects.filter(username=username, password=password).exists)()
-            if is_user_exist:
-                user_ins = await sync_to_async(CustomUser.objects.get)(username=username, password=password)
-                return user_ins
-            return is_user_exist
+            user = await sync_to_async(CustomUser.objects.get)(username=username)
+            if check_password(password, user.password):
+                return user
+            return False
         except Exception as e:
             # await MY_METHODS.printStatus(f'Error in IsUserExist {e}')
-            return None
+            return False
 
     @classmethod
     async def LogoutUser(self,user_ins):
@@ -175,7 +174,7 @@ class AUTH_TASK:
     async def ResetPassword(self, user_ins, data):
         try:
             if(user_ins.password==data.old_password):
-                user_ins.password = data.password
+                user_ins.password = make_password(data.password)
                 await sync_to_async(user_ins.save)()
                 return True
             else:
@@ -216,7 +215,7 @@ class AUTH_TASK:
             
 
             user_ins = await sync_to_async(CustomUser.objects.get)(username=username)
-            user_ins.password = password
+            user_ins.password = make_password(password)
             await sync_to_async(user_ins.save)()
             return True
 

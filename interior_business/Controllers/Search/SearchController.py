@@ -29,19 +29,21 @@ class SEARCH_CONTROLLER:
             limit = offset + pageSize
 
             if state:
-                filterQuery &= Q(business_location__locationState__value__iexact=state)
+                filterQuery |= Q(business_location__locationState__value__iexact=state)
                 # filterQuery &= Q(business_location__state__iexact=state)
             
             if tabId and tabType:
                 if tabType==NAMES.CATEGORY:
-                    # await MY_METHODS.printStatus(f'category Id {tabId}')
+                    await MY_METHODS.printStatus(f'category Id {tabId}')
                     filterQuery &= Q(businessCategory__id=tabId)
                 elif tabType==NAMES.SEGMENT:
-                    # await MY_METHODS.printStatus(f'sub category Id {tabId}')
+                    await MY_METHODS.printStatus(f'sub category Id {tabId}')
                     filterQuery &= Q(businessSegment__id=tabId)
             if query:
-                # await MY_METHODS.printStatus(f'Query {query}')
-                filterQuery &= Q(business_name__icontains=query)
+                await MY_METHODS.printStatus(f'Query {query}')
+                filterQuery |= Q(businessName__icontains=query)
+                filterQuery |= Q(businessSegment__lable__icontains=query)
+                filterQuery |= Q(businessCategory__lable__icontains=query)
 
             # if not state and not tabId and not query:
             #     # await MY_METHODS.printStatus('No filter applied')
@@ -50,10 +52,9 @@ class SEARCH_CONTROLLER:
             #     # await MY_METHODS.printStatus('Filter applied')
             #     businesses_query = await sync_to_async(list)(Business.objects.filter(filterQuery).order_by('-timestamp'))
             
-
             queryset = (
                 Business.objects
-                .filter(filterQuery)
+                .filter(filterQuery).distinct()
                 .select_related(
                     "user",
                     "businessBadge",
@@ -68,7 +69,10 @@ class SEARCH_CONTROLLER:
                 .order_by("-timestamp")[offset:limit]
             )
 
+
             businesses = await sync_to_async(list)(queryset)
+
+            # await MY_METHODS.printStatus(f'queryset {businesses}')
             # fetch business data:
             business_data = await SEARCH_TASKS.GetQueryData(
                                 businesses_query=businesses,

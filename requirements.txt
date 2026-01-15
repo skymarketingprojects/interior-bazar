@@ -29,8 +29,10 @@ django-quill-editor==0.1.40
 django-storages==1.14.2
 djangorestframework==3.14.0
 djangorestframework-simplejwt==5.3.1
+dnspython==2.8.0
 docutils==0.16
 dotsi==0.0.3
+email-validator==2.3.0
 frozenlist==1.4.1
 gunicorn==22.0.0
 h11==0.14.0

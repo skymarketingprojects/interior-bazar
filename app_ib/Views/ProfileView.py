@@ -14,6 +14,10 @@ from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 from app_ib.Controllers.Profile.ProfileController import PROFILE_CONTROLLER
 from app_ib.Controllers.Plans.PlanController import PLAN_CONTROLLER
+from app_ib.Controllers.Profile.Validators.ProfileValidators import (
+    ProfileCreateOrUpdateSchema
+)
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 async def CreateProfileView(request):
@@ -21,12 +25,10 @@ async def CreateProfileView(request):
         # Get user instance
         user_ins = request.user
         # Convert request.data to dot notation object
-        data = MY_METHODS.json_to_object(request.data)
-        
+        # data = MY_METHODS.json_to_object(request.data)
+        data = ProfileCreateOrUpdateSchema(**request.data)   
         # Call Auth Controller to Create User
-        auth_resp = await  asyncio.gather(PROFILE_CONTROLLER.CreateOrUpdateProfile(
-            user_ins=user_ins, data=data))
-        auth_resp = auth_resp[0]
+        auth_resp = await PROFILE_CONTROLLER.CreateOrUpdateProfile(user_ins=user_ins, data=data)
 
         return ServerResponse(
             response=auth_resp.response,
@@ -41,7 +43,7 @@ async def CreateProfileView(request):
             message=RESPONSE_MESSAGES.user_profile_create_error,
             code=RESPONSE_CODES.error,
             data={
-                NAMES.ERROR: str(e)
+                NAMES.ERROR: str(e).split('\n')[-1]
             })
 
 @api_view(['POST'])
@@ -50,12 +52,10 @@ async def CreateOrUpdateProfileImageView(request):
     try:
         # Get user instance
         user_ins = request.user
-        profile_image = request.FILES.get(NAMES.PROFILE_IMAGE_URL)        
+        profile_image = request.FILES.get(NAMES.PROFILE_IMAGE_URL)     
         # Call Auth Controller to Create User
-        auth_resp = await  asyncio.gather(PROFILE_CONTROLLER.CreateOrUpdateProfileImage(
-            user_ins=user_ins, profile_image=profile_image))
-
-        auth_resp = auth_resp[0]
+        auth_resp = await PROFILE_CONTROLLER.CreateOrUpdateProfileImage(
+            user_ins=user_ins, profile_image=profile_image)
 
         return ServerResponse(
             response=auth_resp.response,
