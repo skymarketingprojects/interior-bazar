@@ -1,125 +1,227 @@
-from app_ib.models import LeadQuery,PlanQuery
+from app_ib.models import LeadQuery, PlanQuery
 from asgiref.sync import sync_to_async
 from django.utils import timezone
 from datetime import timedelta
 from django.utils.dateparse import parse_datetime
 from django.core.paginator import Paginator
-from app_ib.Utils.MyMethods import MY_METHODS
-from django.db.models import Q
+from django.db.models import Q,Count
+from app_ib.decorators.ViewDecorator import taskExceptionHandler
+from django.db.models import QuerySet
+
 class LEAD_TASKS:
-    
+
     @classmethod
+    @taskExceptionHandler
     async def GetTotalAssignedLeads(cls):
-        try:
-            assingedLeads = await sync_to_async(
-                lambda: LeadQuery.objects.filter(business__isnull=False).count()
-            )()
-            return assingedLeads
-        except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in GetTotalPlatformLeads: {e}")
-            return None
-    
+        assignedLeads = await sync_to_async(
+            lambda: LeadQuery.objects.filter(business__isnull=False).count()
+        )()
+        return True, assignedLeads
+
+
     @classmethod
-    async def GetPlatformLeads(cls):  
-        try:
-            assignedLeadsCount = await sync_to_async(
-                lambda: PlanQuery.objects.filter().count()
-            )()
-            return assignedLeadsCount
-        except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in GetTotalAssignedLeads: {e}")
-            return None
+    @taskExceptionHandler
+    async def GetPlatformLeads(cls):
+        platformLeadsCount = await sync_to_async(
+            lambda: PlanQuery.objects.count()
+        )()
+        return True, platformLeadsCount
+
+
     @classmethod
-    async def GetTotalUnassignedLeads(cls):  
-        try:
-            unassignedCount = await sync_to_async(
-                lambda: LeadQuery.objects.filter(business__isnull=True).count()
-            )()
-            return unassignedCount
-        except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in GetTotalAssignedLeads: {e}")
-            return None
-    
+    @taskExceptionHandler
+    async def GetTotalUnassignedLeads(cls):
+        unassignedCount = await sync_to_async(
+            lambda: LeadQuery.objects.filter(business__isnull=True).count()
+        )()
+        return True, unassignedCount
+
+
     @classmethod
+    @taskExceptionHandler
     async def GetTotalLeads(cls):
-        try:
-            unassignedLeads = await cls.GetTotalUnassignedLeads()
-            assignedLeads = await cls.GetTotalAssignedLeads()
-            platformLeads = await cls.GetPlatformLeads()
-            return unassignedLeads + assignedLeads + platformLeads
-        except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in GetTotalLeads: {e}")
-            return None
-    
+        status1, unassignedLeads = await cls.GetTotalUnassignedLeads()
+        status2, assignedLeads = await cls.GetTotalAssignedLeads()
+        status3, platformLeads = await cls.GetPlatformLeads()
+
+        total = (unassignedLeads or 0) + (assignedLeads or 0) + (platformLeads or 0)
+        return True, total
+
+
     @classmethod
+    @taskExceptionHandler
     async def GetTodayLeads(cls):
-        try:
-            today = timezone.now().date()
-            todayLeads = await sync_to_async(
-                lambda: LeadQuery.objects.filter(timestamp__date=today).count()
-            )()
-            return todayLeads
-        except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in GetTodayLeads: {e}")
-            return None
+        today = timezone.now().date()
+        todayLeads = await sync_to_async(
+            lambda: LeadQuery.objects.filter(timestamp__date=today).count()
+        )()
+        return True, todayLeads
 
 
     @classmethod
+    @taskExceptionHandler
     async def GetLeadTiles(cls, start_date=None, end_date=None, search_query=None, page_number=1, page_size=10):
-        try:
-            leads = LeadQuery.objects.all()
 
-            # Apply date filters if provided
-            if start_date:
-                start_date = parse_datetime(start_date)
-                leads = leads.filter(timestamp__gte=start_date)
-            if end_date:
-                end_date = parse_datetime(end_date)
-                leads = leads.filter(timestamp__lte=end_date)
+        leads = LeadQuery.objects.all()
 
-            # Apply search query if provided (search across name, phone, email, city)
-            if search_query:
-                leads = leads.filter(
-                    Q(name__icontains=search_query) |
-                    Q(phone__icontains=search_query) |
-                    Q(email__icontains=search_query) |
-                    Q(city__icontains=search_query)
-                )
+        # Date filters
+        if start_date:
+            start_date = parse_datetime(start_date)
+            leads = leads.filter(timestamp__gte=start_date)
 
-            # Pagination: Apply Django Paginator
-            paginator = Paginator(leads, page_size)  # Set the number of items per page
-            page = paginator.page(page_number)  # Get the specific page
+        if end_date:
+            end_date = parse_datetime(end_date)
+            leads = leads.filter(timestamp__lte=end_date)
 
-            lead_list = await sync_to_async(list)(page.object_list)
-            results = []
+        # Search filter
+        if search_query:
+            leads = leads.filter(
+                Q(name__icontains=search_query) |
+                Q(phone__icontains=search_query) |
+                Q(email__icontains=search_query) |
+                Q(city__icontains=search_query)
+            )
 
-            for lead in lead_list:
-                business_name = lead.business.businessName if lead.business else None
+        paginator = Paginator(leads, page_size)
+        page = paginator.page(page_number)
 
-                results.append({
-                    "date": lead.timestamp,
-                    "name": lead.name,
-                    "phone": lead.phone,
-                    "email": lead.email,
-                    "requirements": lead.interested,
-                    "detail": lead.query,
-                    "country": lead.country,
-                    "city": lead.city,
-                    "assigned": business_name,
-                    "view": f"/leads/{lead.id}/view"
-                })
+        lead_list:list[LeadQuery] = await sync_to_async(list)(page.object_list)
 
-            # Return paginated response
-            return {
-                "results": results,
-                "totalPages": paginator.num_pages,
-                "currentPage": page_number,
-                "totalItems": paginator.count,
-                "hasNext": page.has_next(),
-                "hasPrevious": page.has_previous()
+        results = []
+        for lead in lead_list:
+            business_name = lead.business.businessName if lead.business else None
+
+            results.append({
+                "date": lead.timestamp,
+                "name": lead.name,
+                "phone": lead.phone,
+                "email": lead.email,
+                "requirements": lead.interested,
+                "detail": lead.query,
+                "country": lead.country,
+                "city": lead.city,
+                "assigned": business_name,
+                "view": f"/leads/{lead.id}/view"
+            })
+
+        paginated_response = {
+            "results": results,
+            "totalPages": paginator.num_pages,
+            "currentPage": page_number,
+            "totalItems": paginator.count,
+            "hasNext": page.has_next(),
+            "hasPrevious": page.has_previous()
+        }
+
+        return True, paginated_response
+
+
+class ADMIN_PANEL_LEAD_TASKS_V2:
+
+    @classmethod
+    @taskExceptionHandler
+    async def GetLeadMetrics(cls, lead_qs:QuerySet, plan_qs:QuerySet=None):
+
+        today = timezone.now().date()
+
+        def _agg():
+            base = lead_qs.aggregate(
+                total=Count("id"),
+
+                assigned=Count(
+                    "id",
+                    filter=Q(business__isnull=False)
+                ),
+
+                unassigned=Count(
+                    "id",
+                    filter=Q(business__isnull=True)
+                ),
+
+                today=Count(
+                    "id",
+                    filter=Q(timestamp__date=today)
+                ),
+            )
+
+            # Dynamic status counts
+            status_counts = dict(
+                lead_qs
+                .values("status")
+                .annotate(count=Count("id"))
+                .values_list("status", "count")
+            )
+
+            base["status_metrics"] = status_counts
+
+            if plan_qs is not None:
+                base["platform"] = plan_qs.count()
+            else:
+                base["platform"] = 0
+
+            base["final_total"] = base["total"] + base["platform"]
+
+            return base
+
+
+        return True, await sync_to_async(_agg)()
+
+
+    @classmethod
+    @taskExceptionHandler
+    async def GetLeadTiles(
+        cls,
+        lead_qs:QuerySet,
+        start_date=None,
+        end_date=None,
+        search_query=None,
+        page_number=1,
+        page_size=10
+    ):
+
+        if start_date:
+            lead_qs = lead_qs.filter(
+                timestamp__gte=parse_datetime(start_date)
+            )
+
+        if end_date:
+            lead_qs = lead_qs.filter(
+                timestamp__lte=parse_datetime(end_date)
+            )
+
+        if search_query:
+            lead_qs = lead_qs.filter(
+                Q(name__icontains=search_query) |
+                Q(phone__icontains=search_query) |
+                Q(email__icontains=search_query) |
+                Q(city__icontains=search_query)
+            )
+
+        paginator = Paginator(lead_qs.select_related("business"), page_size)
+        page = await sync_to_async(paginator.page)(page_number)
+        rows:list[LeadQuery] = await sync_to_async(list)(page.object_list)
+
+        results = [
+            {
+                "date": l.timestamp,
+                "name": l.name,
+                "phone": l.phone,
+                "email": l.email,
+                "requirements": l.interested,
+                "detail": l.query,
+                "country": l.country,
+                "city": l.city,
+                "assigned": l.business.businessName if l.business else None,
+                "view": f"/leads/{l.id}/view"
             }
+            for l in rows
+        ]
 
-        except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in GetLeadTiles: {e}")
-            return None
-    
+        return True, {
+            "results": results,
+            "totalPages": paginator.num_pages,
+            "currentPage": page_number,
+            "totalItems": paginator.count,
+            "hasNext": page.has_next(),
+            "hasPrevious": page.has_previous()
+        }

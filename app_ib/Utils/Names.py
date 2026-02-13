@@ -1,6 +1,7 @@
 class NAMES:
     ERROR = 'error'
     BUSINESS = 'business'
+    ADMIN = 'admin'
 
     #random
     RANDOM_SQ_IMAGE = 'https://picsum.photos/500/500?random={num}'
@@ -42,6 +43,7 @@ class NAMES:
     TAG='tag'
     DMY_FORMAT='%d-%m-%Y'
     YMD_FORMAT='%Y-%m-%d'
+    DMY_12M = "%d %b %Y, %I:%M %p"
     HM_FORMAT='%H:%M'
 
     PRODUCT='product'
@@ -75,6 +77,7 @@ class NAMES:
 
     #stockMedia
     PAGE='page'
+    SIZE='size'
     SECTION='section'
 
     #search
@@ -157,6 +160,7 @@ class NAMES:
     REMARK='remark'
     DATE='date'
     ASSIGNED='assigned'
+    LEAD_STATUS='leadStatus'
     LEADFOR='leadFor'
     CANDIDATE='candidates'
     ITEM_ID='itemId'
@@ -284,6 +288,7 @@ class NAMES:
     KEY='key'
     EXPIRE_IN='expireIn'
     ACCESS='access'
+    HAS_ACCESS='hasAccess'
     REFRESH='refresh'
     ACCESS_TOKEN='accessToken'
     REFRESH_TOKEN='refreshToken'
@@ -382,6 +387,33 @@ class NAMES:
     YOUTUBE='youtube'
     FACEBOOK='facebook'
     TWITTER='twitter'
+
+    #RBAC
+    PERMISSION='permission'
+
+    ACCESS_LIST='accessList'
+    USERS='users'
+    OWNER='owner'
+
+    USER_IDS='userIds'
+    ACCESS_IDS='accessIds'
+
+
+
+
+
+class ACCESSLIST:
+
+    #access list
+    ACCESS_LEAD_VIEW = "lead:view"
+    ACCESS_LEAD_ASSIGN = "lead:assign"
+    ACCESS_LEAD_MATCH = "lead:match"
+    ACCESS_ANALYTICS_VIEW = "analytics:view"
+    ACCESS_BUSINESS_VIEW = "business:view"
+    ACCESS_QUERY_VIEW = "query:view"
+    ACCESS_FINANCE_VIEW = "finance:view"
+    ACCESS_ADMIN = "admin:access"
+
 
 
     

@@ -27,6 +27,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 ENV = APPMODE.DEV if env('ENV', default='DEV') == 'DEV' else APPMODE.DEV
 print(f'Environment Mode: {ENV}')
+# print(f'Environment Mode: {ENV}')
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
@@ -70,15 +71,16 @@ INSTALLED_APPS = [
     'interior_business',
     'interior_products',
     'interior_advertisement',
+    'rbac_module',
     # 'interior_notification',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -244,6 +246,9 @@ CORS_ORIGIN_ALLOW_ALL = True
 # r"^https://\w+\.granthamapi\.store$",
 # ]
 CSRF_TRUSTED_ORIGINS = [
+    'http://127.0.0.1:8000',
+    'http://localhost:5173',
+    'https://localhost:8000',
     'http://interiorbazzar.com',
     'https://interiorbazzar.com',
     'http://dev.interiorbazzar.com',
@@ -253,6 +258,7 @@ CSRF_TRUSTED_ORIGINS = [
     'http://testfrontend.interiorbazzar.com',
     'https://testfrontend.interiorbazzar.com'
 ]
+
 # DB
 DATABASES = {
     'default': {

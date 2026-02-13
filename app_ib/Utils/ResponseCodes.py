@@ -7,6 +7,10 @@ class RESPONSE_CODES:
     auth_error= 401
     already_exist= 409
     not_exist= 410
-
+    not_found= 404
+    validation_error= 422
+    forbidden= 403
+    conflict= 409
+    bad_request= 400
     
 

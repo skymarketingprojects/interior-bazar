@@ -5,10 +5,11 @@ from app_ib.Utils.Names import NAMES
 from app_ib.models import Business,CustomUser
 from interior_products.models import Product,Service,Catelogue
 from ..Validators.QueryValidators import LeadQueryCreateSchema,LeadQueryUpdateSchema,LeadQueryStatusSchema
+from interior_admin.Controllers.AdminLeads.Validators.AdminLeadsValidators import AdminLeadsCreateSchema,AdminLeadsUpdateSchema
 class LEAD_QUERY_TASK:
 
     @classmethod
-    async def CreateLeadQueryTask(self, data:LeadQueryCreateSchema,user:CustomUser=None):
+    async def CreateLeadQueryTask(self, data:LeadQueryCreateSchema|AdminLeadsCreateSchema,user:CustomUser=None):
         try:
             lead_query_ins = LeadQuery()
 
@@ -21,7 +22,12 @@ class LEAD_QUERY_TASK:
             lead_query_ins.state= data.state
             lead_query_ins.country= data.country
             lead_query_ins.tag= NAMES.QUERY_TAG
-            (f'type {data.type}')
+            
+            if data.stage:
+                lead_query_ins.stage= data.stage
+            if data.leadStatus:
+                lead_query_ins.leadStatus= data.leadStatus
+            
 
             if user:
                 lead_query_ins.user= user
@@ -56,7 +62,7 @@ class LEAD_QUERY_TASK:
             return None,str(e)
   
     @classmethod
-    async def UpdateLeadQueryTask(self, lead_query_ins:LeadQuery, data:LeadQueryUpdateSchema):
+    async def UpdateLeadQueryTask(self, lead_query_ins:LeadQuery, data:LeadQueryUpdateSchema|AdminLeadsUpdateSchema):
         try:
             lead_query_ins.name= data.name or lead_query_ins.name
             lead_query_ins.phone= data.phone or lead_query_ins.phone
@@ -70,6 +76,11 @@ class LEAD_QUERY_TASK:
             lead_query_ins.priority= data.priority or lead_query_ins.priority
             lead_query_ins.remark= data.remark or lead_query_ins.remark
             
+            if data.leadStatus:
+                lead_query_ins.leadStatus= data.leadStatus or lead_query_ins.leadStatus
+            if data.stage:
+                lead_query_ins.stage= data.stage or lead_query_ins.stage
+            
             # await MY_METHODS.printStatus(f'tag {data.tag}')
             
             await sync_to_async(lead_query_ins.save)()
@@ -80,6 +91,15 @@ class LEAD_QUERY_TASK:
             # await MY_METHODS.printStatus(f'Error in UpdateLeadQueryTask {str(e)}')
             return None
 
+    @classmethod
+    async def DeleteLeadQueryTask(self, lead_query_ins:LeadQuery):
+        try:
+            await sync_to_async(lead_query_ins.delete)()
+            return True,True
+            
+        except Exception as e:
+            # await MY_METHODS.printStatus(f'Error in DeleteLeadQueryTask {e}')
+            return False,
     @classmethod
     async def UpdateLeadQueryStatusTask(self, lead_query_ins:LeadQuery, data:LeadQueryStatusSchema):
         try:

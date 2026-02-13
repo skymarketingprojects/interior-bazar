@@ -181,11 +181,11 @@ class MY_METHODS:
             return False
         
     @staticmethod
-    async def printStatus(status):
+    async def printStatus(status, *args, **kwargs):
         if settings.ENV == APPMODE.PROD:
             return 0
         else:
-            print(status)
+            print(status, *args, **kwargs)
 
     @staticmethod
     async def get_time_ago(updated_at):

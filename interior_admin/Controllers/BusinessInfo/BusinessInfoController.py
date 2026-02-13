@@ -3,13 +3,13 @@ from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.Names import NAMES
 from app_ib.Utils.LocalResponse import LocalResponse
+from app_ib.models import Business
+from app_ib.decorators.ViewDecorator import controllerExceptionHandler
 
 from .Tasks.BusinessInfoTasks import BUSINESS_INFO_TASKS
-from .Validators.BusinessInfoValidators import BUSINESS_INFO_VALIDATORS
-from app_ib.Utils.MyMethods import MY_METHODS
-from app_ib.models import Business
 from django.core.paginator import Paginator
 import asyncio
+
 
 from django.conf import settings
 from app_ib.Utils.AppMode import APPMODE
@@ -33,7 +33,7 @@ class BUSINESS_INFO_CONTROLLER:
                         'business_lead_query__id'
                     ).order_by('-timestamp')
                 )()
-            else: 
+            else:
                 businessesIns = await sync_to_async(lambda: Business.objects.all().select_related('business_profile').only(
                         'id',
                         'businessName',
@@ -80,3 +80,14 @@ class BUSINESS_INFO_CONTROLLER:
                     NAMES.ERROR: str(e)
                 }
             )
+
+    @classmethod
+    @controllerExceptionHandler(
+        errorMessage=RESPONSE_MESSAGES.business_delete_error,
+        responseFunc=LocalResponse,
+        successMessage=RESPONSE_MESSAGES.business_delete_success
+    )
+    async def DeleteBusinessInfo(cls,businessId):
+        business = await sync_to_async(Business.objects.get)(id=businessId)
+        resp = await BUSINESS_INFO_TASKS.DeleteBusinessInfo(business)
+        

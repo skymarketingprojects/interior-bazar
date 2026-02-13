@@ -182,7 +182,9 @@ class PROFILE_CONTROLLER:
             )
 
     @classmethod
-    async def GetProfile(cls, userIns):
+    async def GetProfile(cls, userIns: CustomUser):
+        if userIns.type == NAMES.BUSINESS:
+            return await cls.GetProfileData(userIns, includePlan=True)
         return await cls.GetProfileData(userIns, includePlan=False)
 
     @classmethod

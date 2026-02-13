@@ -1,107 +1,84 @@
 import asyncio
 from adrf.decorators import api_view
+
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
-from app_ib.Utils.ResponseCodes import RESPONSE_CODES
-from app_ib.Utils.Names import NAMES
-from interior_admin.Controllers.AdminPanel.AdminPanelController import ADMIN_PANEL_CONTROLLER
+from app_ib.Utils.Names import NAMES, ACCESSLIST
+from app_ib.decorators.ViewDecorator import exceptionHandler
+
 from app_ib.Controllers.FunnelQuery.FunnelQueryController import FUNNEL_QUERY_CONTROLLER
+from interior_admin.Controllers.AdminPanel.AdminPanelController import ADMIN_PANEL_CONTROLLER, ADMIN_PANEL_CONTROLLER_V2
+
 import asyncio
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
-@api_view(['POST'])
-#@permission_classes([IsAuthenticated])
-async def GetBusinessTilesStatsView(request):
-    try:
-        # Convert request.data to dot notation object
-        data = request.data
+from rest_framework.request import Request
 
-        start_date = data.get(NAMES.START_DATE, None)
-        end_date = data.get(NAMES.END_DATE, None)
-        page_number = data.get(NAMES.PAGE_NUMBER, 1)
-        page_size = data.get(NAMES.PAGE_SIZE, 10) 
+from interior_admin.Validators.adminValidators import hasAccess
 
-        # Call the controller to get business tiles data
-        final_response = await asyncio.gather(
-            ADMIN_PANEL_CONTROLLER.GetBusinessTilesStats(
-                start_date=start_date,
-                end_date=end_date,
-                page_number=page_number,
-                page_size=page_size
-            )
-        )
-        final_response = final_response[0]
+class AdminPanelViewsV1:
 
-        return ServerResponse(
-            response=final_response.response,
-            code=final_response.code,
-            message=final_response.message,
-            data=final_response.data
+    @api_view(['POST'])
+    @permission_classes([IsAuthenticated])
+    @exceptionHandler(
+        errorMessage=RESPONSE_MESSAGES.business_tile_fetch_error,
+        responseFunc=ServerResponse
         )
+    async def GetBusinessTilesStatsView(request:Request):
+            hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+            # Convert request.data to dot notation object
+            data = request.data
 
-    except Exception as e:
-        return ServerResponse(
-            response=RESPONSE_MESSAGES.error,
-            message=RESPONSE_MESSAGES.business_tile_fetch_error,
-            code=RESPONSE_CODES.error,
-            data={
-                NAMES.ERROR: str(e)
-            }
-        )
-@api_view(['GET'])
-#@permission_classes([IsAuthenticated])
-async def GetAdminDashboardStatsView(request):
-    try:
-        # No filters needed for this endpoint
-        final_response = await asyncio.gather(
-            ADMIN_PANEL_CONTROLLER.GetAdminDashboardStats()
-        )
-        final_response = final_response[0]
+            start_date = data.get(NAMES.START_DATE, None)
+            end_date = data.get(NAMES.END_DATE, None)
+            page_number = data.get(NAMES.PAGE_NUMBER, 1)
+            page_size = data.get(NAMES.PAGE_SIZE, 10) 
 
-        return ServerResponse(
-            response=final_response.response,
-            code=final_response.code,
-            message=final_response.message,
-            data=final_response.data
-        )
+            # Call the controller to get business tiles data
+            final_response = await ADMIN_PANEL_CONTROLLER.GetBusinessTilesStats(
+                    start_date=start_date,
+                    end_date=end_date,
+                    page_number=page_number,
+                    page_size=page_size
+                )
 
-    except Exception as e:
-        return ServerResponse(
-            response=RESPONSE_MESSAGES.error,
-            message=RESPONSE_MESSAGES.dashboard_fetch_error,
-            code=RESPONSE_CODES.error,
-            data={
-                NAMES.ERROR: str(e)
-            }
-        )
-@api_view(['GET'])
-#@permission_classes([IsAuthenticated])
-async def GetPlatformLeadsStatsView(request):
-    try:
+            return final_response
+
+    @api_view(['GET'])
+    @permission_classes([IsAuthenticated])
+    @exceptionHandler(
+        errorMessage=RESPONSE_MESSAGES.dashboard_fetch_error,
+        responseFunc=ServerResponse
+    )
+    async def GetAdminDashboardStatsView(request):
+        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+        
+        final_response = await ADMIN_PANEL_CONTROLLER.GetAdminDashboardStats()
+
+        return final_response
+
+
+    @api_view(['GET'])
+    @permission_classes([IsAuthenticated])
+    @exceptionHandler(
+        errorMessage=RESPONSE_MESSAGES.platform_leads_fetch_error,
+        responseFunc=ServerResponse
+    )
+    async def GetPlatformLeadsStatsView(request):
+        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_LEAD_VIEW)
+        
         final_response = await ADMIN_PANEL_CONTROLLER.GetAllLeadsStats()
-        # final_response = final_response[0]
 
-        return ServerResponse(
-            response=final_response.response,
-            code=final_response.code,
-            message=final_response.message,
-            data=final_response.data
-        )
-
-    except Exception as e:
-        return ServerResponse(
-            response=RESPONSE_MESSAGES.error,
-            message=RESPONSE_MESSAGES.platform_leads_fetch_error,
-            code=RESPONSE_CODES.error,
-            data={
-                NAMES.ERROR: str(e)
-            }
-        )
-@api_view(['POST'])
-#@permission_classes([IsAuthenticated])
-async def GetAssignedLeadsTilesView(request):
-    try:
-        # Convert request.data to dot notation object
+        return final_response
+    @api_view(['POST'])
+    @permission_classes([IsAuthenticated])
+    @exceptionHandler(
+        errorMessage=RESPONSE_MESSAGES.assigned_leads_fetch_error,
+        responseFunc=ServerResponse
+    )
+    async def GetAssignedLeadsTilesView(request):
+        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_LEAD_VIEW)
+        
         data = request.data
 
         start_date = data.get(NAMES.START_DATE, None)
@@ -110,188 +87,269 @@ async def GetAssignedLeadsTilesView(request):
         page_size = data.get(NAMES.PAGE_SIZE, 10)  # Default to 10 items per page
 
         # Call the controller to get assigned leads data (paginated)
-        final_response = await asyncio.gather(
-            ADMIN_PANEL_CONTROLLER.GetPaginatedLeadsStats(
+        final_response = await ADMIN_PANEL_CONTROLLER.GetPaginatedLeadsStats(
                 start_date=start_date,
                 end_date=end_date,
                 search_query=None,  # Assigned leads would be filtered by business assignment
                 page_number=page_number,
                 page_size=page_size
             )
-        )
-        final_response = final_response[0]
 
-        return ServerResponse(
-            response=final_response.response,
-            code=final_response.code,
-            message=final_response.message,
-            data=final_response.data
-        )
+        return final_response
 
-    except Exception as e:
-        return ServerResponse(
-            response=RESPONSE_MESSAGES.error,
-            message=RESPONSE_MESSAGES.assigned_leads_fetch_error,
-            code=RESPONSE_CODES.error,
-            data={
-                NAMES.ERROR: str(e)
-            }
-        )
-
-@api_view(['GET'])
-#@permission_classes([IsAuthenticated])
-async def GetDashboardDataView(request):
-    try:
+    @api_view(['GET'])
+    @permission_classes([IsAuthenticated])
+    @exceptionHandler(
+        errorMessage=RESPONSE_MESSAGES.dashboard_fetch_error,
+        responseFunc=ServerResponse
+    )
+    async def GetDashboardDataView(request):
+        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+        
         final_response = await ADMIN_PANEL_CONTROLLER.GetDashboardData()
 
-        return ServerResponse(
-            response=final_response.response,
-            code=final_response.code,
-            message=final_response.message,
-            data=final_response.data
-        )
-    except Exception as e:
-        return ServerResponse(
-            response=RESPONSE_MESSAGES.error,
-            message="Failed to fetch dashboard data.",
-            code=RESPONSE_CODES.error,
-            data={NAMES.ERROR: str(e)}
-        )
-@api_view(['GET'])
-#@permission_classes([IsAuthenticated])
-async def GetAllUserBusinessStatsView(request):
-    try:
-        final_response = await asyncio.gather(
-            ADMIN_PANEL_CONTROLLER.GetAllUserBusinessStats()
-        )
-        final_response = final_response[0]
+        return final_response
+    @api_view(['GET'])
+    @permission_classes([IsAuthenticated])
+    @exceptionHandler(
+        errorMessage=RESPONSE_MESSAGES.dashboard_fetch_error,
+        responseFunc=ServerResponse
+    )
+    async def GetAllUserBusinessStatsView(request):
+        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+        
+        final_response = await ADMIN_PANEL_CONTROLLER.GetAllUserBusinessStats()
 
-        return ServerResponse(
-            response=final_response.response,
-            code=final_response.code,
-            message=final_response.message,
-            data=final_response.data
-        )
-    except Exception as e:
-        return ServerResponse(
-            response=RESPONSE_MESSAGES.error,
-            message="Failed to fetch user/business stats.",
-            code=RESPONSE_CODES.error,
-            data={NAMES.ERROR: str(e)}
-        )
-
-@api_view(['GET'])
-#@permission_classes([IsAuthenticated])
-async def GetDailyUsersStatsView(request):
-    try:
-        final_response = await ADMIN_PANEL_CONTROLLER.GetDailyUserData()
+        return final_response
         
 
-        return ServerResponse(
-            response=final_response.response,
-            code=final_response.code,
-            message=final_response.message,
-            data=final_response.data
-        )
-    except Exception as e:
-        return ServerResponse(
-            response=RESPONSE_MESSAGES.error,
-            message="Failed to fetch daily users.",
-            code=RESPONSE_CODES.error,
-            data={NAMES.ERROR: str(e)}
-        )
+    @api_view(['GET'])
+    @permission_classes([IsAuthenticated])
+    @exceptionHandler(
+        errorMessage=RESPONSE_MESSAGES.dashboard_fetch_error,
+        responseFunc=ServerResponse
+    )
+    async def GetDailyUsersStatsView(request):
+        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+        final_response = await ADMIN_PANEL_CONTROLLER.GetDailyUserData()
+            
+        return final_response
 
-@api_view(['GET'])
-#@permission_classes([IsAuthenticated])
-async def GetTodaySignupsStatsView(request):
-    try:
-        final_response = await asyncio.gather(
-            ADMIN_PANEL_CONTROLLER.GetTodaySignupsStats()
-        )
-        final_response = final_response[0]
+    @api_view(['GET'])
+    @permission_classes([IsAuthenticated])
+    @exceptionHandler(
+        errorMessage=RESPONSE_MESSAGES.dashboard_fetch_error,
+        responseFunc=ServerResponse
+    )
+    async def GetTodaySignupsStatsView(request):
+        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+        
+        final_response = await ADMIN_PANEL_CONTROLLER.GetTodaySignupsStats()
 
-        return ServerResponse(
-            response=final_response.response,
-            code=final_response.code,
-            message=final_response.message,
-            data=final_response.data
-        )
-    except Exception as e:
-        return ServerResponse(
-            response=RESPONSE_MESSAGES.error,
-            message="Failed to fetch today signups.",
-            code=RESPONSE_CODES.error,
-            data={NAMES.ERROR: str(e)}
-        )
+        return final_response
 
 
-@api_view(['GET'])
-#@permission_classes([IsAuthenticated])
-async def GetChartsStatsView(request):
-    
-    try:
-        # No filters needed (filters are handled inside task by daily/weekly/monthly buckets)
-        final_response = await asyncio.gather(
-            ADMIN_PANEL_CONTROLLER.GetChartsStats()
-        )
-        final_response = final_response[0]
+    @api_view(['GET'])
+    @permission_classes([IsAuthenticated])
+    @exceptionHandler(
+        errorMessage=RESPONSE_MESSAGES.dashboard_fetch_error,
+        responseFunc=ServerResponse
+    )
+    async def GetChartsStatsView(request):
+        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+            
+        final_response = await ADMIN_PANEL_CONTROLLER.GetChartsStats()
 
-        return ServerResponse(
-            response=final_response.response,
-            code=final_response.code,
-            message=final_response.message,
-            data=final_response.data
-        )
-    except Exception as e:
-        return ServerResponse(
-            response=RESPONSE_MESSAGES.error,
-            message="Failed to fetch charts.",
-            code=RESPONSE_CODES.error,
-            data={NAMES.ERROR: str(e)}
-        )
-    
-@api_view(['GET'])
-#@permission_classes([IsAuthenticated])
-async def GetFunnelQueriesView(request,pageNumber, pageSize):
-    try:
-        # Call Funnel Query Controller to Get Funnel Queries
+        return final_response
+        
+    @api_view(['GET'])
+    @permission_classes([IsAuthenticated])
+    @exceptionHandler(
+        errorMessage=RESPONSE_MESSAGES.query_fetch_error,
+        responseFunc=ServerResponse
+    )
+    async def GetFunnelQueriesView(request,pageNumber, pageSize):
+        hasAccess(user=request.user, accessName=NAMES.GET_FUNNEL_QUERIES)
         final_response = await FUNNEL_QUERY_CONTROLLER.GetFunnelQueries(pageNumber=pageNumber, pageSize=pageSize)
 
-        return ServerResponse(
-            response=final_response.response,
-            code=final_response.code,
-            message=final_response.message,
-            data=final_response.data)
+        return final_response
 
-    except Exception as e:
-        return ServerResponse(
-            response=RESPONSE_MESSAGES.error,
-            message=RESPONSE_MESSAGES.query_fetch_error,
-            code=RESPONSE_CODES.error,
-            data={
-                NAMES.ERROR: str(e)
-            })
-
-@api_view(['GET'])
-#@permission_classes([IsAuthenticated])
-async def GetTotalUsersView(request):
-    try:
-        # Call the controller to get total users count
+    @api_view(['GET'])
+    @permission_classes([IsAuthenticated])
+    @exceptionHandler(
+        errorMessage=RESPONSE_MESSAGES.query_fetch_error,
+        responseFunc=ServerResponse
+    )
+    async def GetTotalUsersView(request):
+        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
         final_response = await ADMIN_PANEL_CONTROLLER.GetTotalNoOfUsers()
 
-        return ServerResponse(
-            response=final_response.response,
-            code=final_response.code,
-            message=final_response.message,
-            data=final_response.data
-        )
+        return final_response
 
-    except Exception as e:
-        return ServerResponse(
-            response=RESPONSE_MESSAGES.error,
-            message="Failed to fetch total users.",
-            code=RESPONSE_CODES.error,
-            data={
-                NAMES.ERROR: str(e)
-            }
+class AdminPanelViewsV2:
+
+    @api_view(['POST'])
+    @permission_classes([IsAuthenticated])
+    @exceptionHandler(
+        errorMessage=RESPONSE_MESSAGES.business_tile_fetch_error,
+        responseFunc=ServerResponse
         )
+    async def GetBusinessTilesStatsView(request: Request):
+            hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+            # Convert request.data to dot notation object
+            data = request.data
+
+            start_date = data.get(NAMES.START_DATE, None)
+            end_date = data.get(NAMES.END_DATE, None)
+            page_number = data.get(NAMES.PAGE_NUMBER, 1)
+            page_size = data.get(NAMES.PAGE_SIZE, 10)
+            plan = data.get(NAMES.PLAN, None)
+
+            # Call the controller to get business tiles data
+            final_response = await ADMIN_PANEL_CONTROLLER_V2.GetBusinessTilesStats(
+                    start_date=start_date,
+                    end_date=end_date,
+                    page_number=page_number,
+                    page_size=page_size,
+                    plan=plan
+                )
+
+            return final_response
+
+    @api_view(['GET'])
+    @permission_classes([IsAuthenticated])
+    @exceptionHandler(
+        errorMessage=RESPONSE_MESSAGES.dashboard_fetch_error,
+        responseFunc=ServerResponse
+    )
+    async def GetAdminDashboardStatsView(request):
+        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+        final_response = await ADMIN_PANEL_CONTROLLER_V2.GetAdminDashboardStats()
+
+        return final_response
+
+
+    @api_view(['GET'])
+    @permission_classes([IsAuthenticated])
+    @exceptionHandler(
+        errorMessage=RESPONSE_MESSAGES.platform_leads_fetch_error,
+        responseFunc=ServerResponse
+    )
+    async def GetPlatformLeadsStatsView(request):
+        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_LEAD_VIEW)
+        final_response = await ADMIN_PANEL_CONTROLLER_V2.GetAllLeadsStats()
+
+        return final_response
+    
+    @api_view(['POST'])
+    @permission_classes([IsAuthenticated])
+    @exceptionHandler(
+        errorMessage=RESPONSE_MESSAGES.assigned_leads_fetch_error,
+        responseFunc=ServerResponse
+    )
+    async def GetAssignedLeadsTilesView(request):
+        hasAccess(user=request.user, accessName=NAMES.GET_ASSIGNED_LEADS_STATS)
+        data = request.data
+
+        start_date = data.get(NAMES.START_DATE, None)
+        end_date = data.get(NAMES.END_DATE, None)
+        page_number = data.get(NAMES.PAGE_NUMBER, 1)  # Default to page 1
+        page_size = data.get(NAMES.PAGE_SIZE, 10)  # Default to 10 items per page
+
+        # Call the controller to get assigned leads data (paginated)
+        final_response = await ADMIN_PANEL_CONTROLLER_V2.GetPaginatedLeadsStats(
+                start_date=start_date,
+                end_date=end_date,
+                search_query=None,  # Assigned leads would be filtered by business assignment
+                page_number=page_number,
+                page_size=page_size
+            )
+
+        return final_response
+
+    @api_view(['GET'])
+    @permission_classes([IsAuthenticated])
+    @exceptionHandler(
+        errorMessage=RESPONSE_MESSAGES.dashboard_fetch_error,
+        responseFunc=ServerResponse
+    )
+    async def GetDashboardDataView(request):
+        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+        final_response = await ADMIN_PANEL_CONTROLLER_V2.GetDashboardData()
+
+        return final_response
+    
+    @api_view(['GET'])
+    @permission_classes([IsAuthenticated])
+    @exceptionHandler(
+        errorMessage=RESPONSE_MESSAGES.dashboard_fetch_error,
+        responseFunc=ServerResponse
+    )
+    async def GetAllUserBusinessStatsView(request):
+        hasAccess(user=request.user, accessName=NAMES.GET_ALL_USER_BUSINESS_STATS)
+        final_response = await ADMIN_PANEL_CONTROLLER_V2.GetAllUserBusinessStats()
+
+        return final_response
+        
+
+    @api_view(['GET'])
+    @permission_classes([IsAuthenticated])
+    @exceptionHandler(
+        errorMessage=RESPONSE_MESSAGES.dashboard_fetch_error,
+        responseFunc=ServerResponse
+    )
+    async def GetDailyUsersStatsView(request):
+        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+        final_response = await ADMIN_PANEL_CONTROLLER_V2.GetDailyUserData()
+            
+        return final_response
+
+    @api_view(['GET'])
+    @permission_classes([IsAuthenticated])
+    @exceptionHandler(
+        errorMessage=RESPONSE_MESSAGES.dashboard_fetch_error,
+        responseFunc=ServerResponse
+    )
+    async def GetTodaySignupsStatsView(request):
+        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+        final_response = await ADMIN_PANEL_CONTROLLER_V2.GetTodaySignupsStats()
+
+        return final_response
+
+
+    @api_view(['GET'])
+    @permission_classes([IsAuthenticated])
+    @exceptionHandler(
+        errorMessage=RESPONSE_MESSAGES.dashboard_fetch_error,
+        responseFunc=ServerResponse
+    )
+    async def GetChartsStatsView(request):
+        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+            
+        final_response = await ADMIN_PANEL_CONTROLLER_V2.GetChartsStats()
+
+        return final_response
+        
+    @api_view(['GET'])
+    @permission_classes([IsAuthenticated])
+    @exceptionHandler(
+        errorMessage=RESPONSE_MESSAGES.query_fetch_error,
+        responseFunc=ServerResponse
+    )
+    async def GetFunnelQueriesView(request,pageNumber, pageSize):
+        hasAccess(user=request.user, accessName=NAMES.GET_FUNNEL_QUERIES)
+        final_response = await FUNNEL_QUERY_CONTROLLER.GetFunnelQueries(pageNumber=pageNumber, pageSize=pageSize)
+
+        return final_response
+
+    @api_view(['GET'])
+    @permission_classes([IsAuthenticated])
+    @exceptionHandler(
+        errorMessage=RESPONSE_MESSAGES.query_fetch_error,
+        responseFunc=ServerResponse
+    )
+    async def GetTotalUsersView(request):
+        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+        final_response = await ADMIN_PANEL_CONTROLLER_V2.GetTotalNoOfUsers()
+
+        return final_response

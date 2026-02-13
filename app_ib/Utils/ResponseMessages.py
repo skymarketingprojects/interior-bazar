@@ -22,6 +22,17 @@ class RESPONSE_MESSAGES:
     username_already_taken = "Username already taken"
     user_profile_deleted_error="Unable to delete user profile"
 
+    #user
+    user_fetch_success="User fetched successfully"
+    user_fetch_error="Unable to fetch user"
+
+    user_not_found="User not found"
+    user_create_success="User created successfully"
+    user_create_error="Unable to create user"
+    user_update_success="User updated successfully"
+    user_update_error="Unable to update user"
+    user_delete_success="User deleted successfully"
+    user_delete_error="Unable to delete user"
     #lead
     assigned_leads_fetch_error="Unable to fetch assigned leads"
     query_assigned_success = "lead assigned successful"
@@ -64,9 +75,7 @@ class RESPONSE_MESSAGES:
     incorrect_username= ' Username does not exist'
 
     unauthorized= 'Unauthorized'
-
-
-
+    authorized= 'Authorized'
 
     ############################################
     #Business
@@ -77,6 +86,8 @@ class RESPONSE_MESSAGES:
     business_update_error = 'Unable to update business'
 
     business_fetch_error= 'Unable to fetch business detail'
+    business_delete_error= 'Unable to delete business'
+    business_delete_success= 'Business deleted successfully'
     business_fetch_success= 'Business detail fetched'
     business_already_exist = "Business already exist"
 
@@ -119,10 +130,6 @@ class RESPONSE_MESSAGES:
     ############################################
     country_list_fetch_success= 'Country list fetched successfully'
     country_list_fetch_error= 'Unable to fetch country list'
-
-
-
-
 
     ############################################
     #Query
@@ -385,8 +392,92 @@ class RESPONSE_MESSAGES:
     reel_section_fetch_success= 'Reel section fetched successfully'
     reel_section_fetch_error= 'Unable to fetch reel section'
 
+    #access
+    access_list_fetched= 'Access list fetched successfully'
+    access_list_fetch_error= 'Unable to fetch access list'
+    access_create_success= 'Access created successfully'
+    access_create_error= 'Unable to create access'
+    access_update_success= 'Access updated successfully'
+    access_update_error= 'Unable to update access'
+    access_delete_success= 'Access deleted successfully'
+    access_delete_error= 'Unable to delete access'
+
+    #roles
+    role_list_fetch_error= 'Unable to fetch role list'
+    role_list_fetched= 'Role list fetched successfully'
+    role_fetch_error= 'Unable to fetch role'
+    role_not_found= 'Role not found'
+    role_fetched= 'Role fetched successfully'
+    role_create_success= 'Role created successfully'
+    role_create_error= 'Unable to create role'
+    role_update_success= 'Role updated successfully'
+    role_update_error= 'Unable to update role'
+    role_delete_success= 'Role deleted successfully'
+    role_delete_error= 'Unable to delete role'
+
+    # admin user
+    user_data_fetched= 'User data fetched successfully'
+    user_data_fetch_error= 'Unable to fetch user data'
+
+    # business tile
+    business_tile_fetch_error= 'Unable to fetch business tile'
+    business_tile_fetch_success= 'Business tile fetched successfully'
+
+    #dashboard
+    dashboard_fetch_error= 'Unable to fetch dashboard'
+    dashboard_fetch_success= 'Dashboard fetched successfully'
+
+    platform_leads_fetch_error= 'Unable to fetch platform leads'
+    platform_leads_fetch_success= 'Platform leads fetched successfully'
+
+    # resource 
+    resource_already_exists= 'Resource already exists'
+    resource_not_found= 'Resource not found'
+    permission_denied= 'Permission denied'
+    bad_request= 'Bad request'
+
+    # analysis
+    lead_tile_fetch_error= 'Unable to fetch lead tile'
+    lead_tile_fetch_success= 'Lead tile fetched successfully'
+
+    paginated_leads_fetch_success= 'Paginated leads fetched successfully'
+    paginated_leads_fetch_error= 'Unable to fetch paginated leads'
+
+    user_business_fetch_error= 'Unable to fetch user business'
+    user_business_fetch_success= 'User business fetched successfully'
+
+    today_signups_fetch_error= 'Unable to fetch today signups'
+    today_signups_fetch_success= 'Today signups fetched successfully'
+
+    user_business_fetch_error= 'Unable to fetch user business'
+    user_business_fetch_success= 'User business fetched successfully'
+
+    charts_fetch_error= 'Unable to fetch charts'
+    charts_fetch_success= 'Charts fetched successfully'
+
+    total_users_fetch_error= 'Unable to fetch total users'
+    total_users_fetch_success= 'Total users fetched successfully'
+
+    daily_user_fetch_error= 'Unable to fetch daily user'
+    daily_user_fetch_success= 'Daily user fetched successfully'
+
+    dashboard_data_fetch_error= 'Unable to fetch dashboard data'
+    dashboard_data_fetch_success= 'Dashboard data fetched successfully'
+
+    # finance
+    finance_fetch_error= 'Unable to fetch finance'
+    finance_fetch_success= 'Finance fetched successfully'
+
+    # access
+    access_fetch_error= 'Unable to fetch access'
+    access_fetched= 'Access fetched successfully'
+
+
+
 class VALIDATION_MESSAGES:
     password_length= 'Password must be at least 8 characters long'
     password_must_contain_digit= 'Password must contain at least one digit'
     password_must_contain_letter= 'Password must contain at least one letter'
+    validation_error= 'Validation error'
+    validation_success= 'Validation success'
 

@@ -1,10 +1,74 @@
-from asgiref.sync import sync_to_async
-from app_ib.models import CustomUser
 
-class ADMIN_LEADS_VALIDATORS:
-    
-    @classmethod
-    async def IsAdmin(self,user:CustomUser):
-        if user.type == 'admin':
-            return True
-        return False
+from app_ib.Utils.BaseValidator import BaseValidator
+from typing import Optional, List, Literal
+from datetime import datetime
+from pydantic import Field, EmailStr, validator
+
+
+
+class AdminLeadQueryFilters(BaseValidator):
+
+    pageNo: Optional[int] = Field(default=1)
+    pageSize: Optional[int] = Field(default=10)
+    assigned: Optional[bool] = Field(default=None)
+    timeFrom: Optional[datetime] = Field(default=None)
+    timeTo: Optional[datetime] = Field(default=None)
+    tags: Optional[List[str]] = Field(default=None)
+    leadStatus: Optional[List[str]] = Field(default=None)
+    stages: Optional[List[str]] = Field(default=None)
+
+class AdminLeadsCreateSchema:
+    name: str = Field(..., min_length=1, max_length=100)
+    phone: str = Field(..., min_length=7, max_length=15)
+    email: Optional[EmailStr] = None
+
+    interested: Optional[str] = None
+    query: Optional[str] = None
+    leadStatus: Optional[str] = None
+    stage: Optional[str] = None
+
+    city: Optional[str] = None
+    state: Optional[str] = None
+    country: Optional[str] = None
+
+    type: Optional[Literal[
+        'product',
+        'service',
+        'catalogue'
+    ]] = None
+
+    itemId: Optional[int] = Field(None, gt=0)
+
+    @validator("phone", allow_reuse=True)
+    def validate_phone(cls, v):
+        if not v.isdigit():
+            raise ValueError("phone must contain digits only")
+        return v
+
+class AdminLeadsUpdateSchema:
+    name: Optional[str] = Field(..., min_length=1, max_length=100)
+    phone: Optional[str] = Field(..., min_length=7, max_length=15)
+    email: Optional[EmailStr] = None
+
+    interested: Optional[str] = None
+    query: Optional[str] = None
+    leadStatus: Optional[str] = None
+    stage: Optional[str] = None
+
+    city: Optional[str] = None
+    state: Optional[str] = None
+    country: Optional[str] = None
+
+    type: Optional[Literal[
+        'product',
+        'service',
+        'catalogue'
+    ]] = None
+
+    itemId: Optional[int] = Field(None, gt=0)
+
+    @validator("phone", allow_reuse=True)
+    def validate_phone(cls, v):
+        if not v.isdigit():
+            raise ValueError("phone must contain digits only")
+        return v

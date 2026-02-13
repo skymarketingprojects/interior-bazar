@@ -17,5 +17,5 @@ class INTERIOR_SERVICE_TASKS:
             return True,data
         except Exception as e:
             # await MY_METHODS.printStatus(f'Error in GetServiceData: {e}')
-            return False
+            return False,str(e)
 

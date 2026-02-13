@@ -1,8 +1,9 @@
 from asgiref.sync import sync_to_async
-from app_ib.models import Business
-from app_ib.Utils.MyMethods import MY_METHODS
+from app_ib.models import Business, BusinessPlan
 from app_ib.Utils.Names import NAMES
+from app_ib.decorators.ViewDecorator import taskExceptionHandler
 
+from django.db.models import QuerySet
 class BUSINESS_INFO_TASKS:
     
     @classmethod
@@ -11,7 +12,7 @@ class BUSINESS_INFO_TASKS:
             assignLeads = business.business_lead_query.count()
             platformLeads = 0
             totalLeads = assignLeads + platformLeads
-            plans = business.business_plan.all()
+            plans:QuerySet[BusinessPlan] = business.business_plan.all()
             planData = []
             if plans:
                 # plans = plans.first()
@@ -40,3 +41,10 @@ class BUSINESS_INFO_TASKS:
         except Exception as e:
             # await MY_METHODS.printStatus(f'Error in GetBusinessInfo: {e}')
             return None
+
+    @classmethod
+    @taskExceptionHandler
+    async def DeleteBusinessInfo(self, business:Business):
+        await sync_to_async(business.delete)()
+        return True,True
+        

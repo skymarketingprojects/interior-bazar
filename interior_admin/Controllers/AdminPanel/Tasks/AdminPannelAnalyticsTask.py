@@ -2,216 +2,200 @@ from app_ib.models import CustomUser, Business, BusinessPlan
 from collections import defaultdict
 from asgiref.sync import sync_to_async
 from django.utils import timezone
-from django.db.models import Q, Count
+from django.db.models import Q, Count,QuerySet
 from datetime import timedelta
 from django.db.models.functions import TruncDate, TruncWeek, TruncMonth
-from app_ib.Utils.MyMethods import MY_METHODS
 from django.conf import settings
 from app_ib.Utils.AppMode import APPMODE
+from app_ib.decorators.ViewDecorator import taskExceptionHandler
+
 
 class ANALYTICS_TASKS:
 
     # 1. Total Clients
     @classmethod
+    @taskExceptionHandler
     async def GetTotalClients(cls):
-        try:
-            clients_count = 0
-            if settings.ENV == APPMODE.PROD:
-                clients_count = await sync_to_async(
-                    lambda: CustomUser.objects.filter(type="client", selfCreated=False).count()
-                )()
-            else:
-                clients_count = await sync_to_async(
-                    lambda: CustomUser.objects.filter(type="client").count()
-                )()
-            return clients_count
-        except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in GetTotalClients: {e}")
-            return None
+        clients_count = 0
+        if settings.ENV == APPMODE.PROD:
+            clients_count = await sync_to_async(
+                lambda: CustomUser.objects.filter(type="client", selfCreated=False).count()
+            )()
+        else:
+            clients_count = await sync_to_async(
+                lambda: CustomUser.objects.filter(type="client").count()
+            )()
+        return True, clients_count
+
 
     # 2. Total Business
     @classmethod
+    @taskExceptionHandler
     async def GetTotalBusiness(cls):
-        try:
-            business_count = 0
-            if settings.ENV == APPMODE.PROD:
-                business_count = await sync_to_async(
-                    lambda: Business.objects.filter(selfCreated=False).count()
-                )()
-            else:
-                business_count = await sync_to_async(
-                    lambda: Business.objects.all().count()
-                )()
-            return business_count
-        except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in GetTotalBusiness: {e}")
-            return None
+        business_count = 0
+        if settings.ENV == APPMODE.PROD:
+            business_count = await sync_to_async(
+                lambda: Business.objects.filter(selfCreated=False).count()
+            )()
+        else:
+            business_count = await sync_to_async(
+                lambda: Business.objects.all().count()
+            )()
+        return True, business_count
+
 
     # 3. Total Users
     @classmethod
+    @taskExceptionHandler
     async def GetTotalUsers(cls):
-        try:
-            users_count = 0
-            if settings.ENV == APPMODE.PROD:
-                users_count = await sync_to_async(
-                    lambda: CustomUser.objects.filter(selfCreated=False).count()
-                )()
-            else:
-                users_count = await sync_to_async(
-                    lambda: CustomUser.objects.all().count()
-                )()
-            return users_count
-        except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in GetTotalUsers: {e}")
-            return None
+        users_count = 0
+        if settings.ENV == APPMODE.PROD:
+            users_count = await sync_to_async(
+                lambda: CustomUser.objects.filter(selfCreated=False).count()
+            )()
+        else:
+            users_count = await sync_to_async(
+                lambda: CustomUser.objects.all().count()
+            )()
+        return True, users_count
 
-    # 4. Today Signups (Clients / Business / Users)
+
+    # 4. Today Signups
     @classmethod
+    @taskExceptionHandler
     async def GetTodaySignups(cls):
-        try:
-            today = timezone.now().date()
+        today = timezone.now().date()
 
-            clients_today = 0
-            business_today = 0
-            users_today = 0
-            
-            if settings.ENV == APPMODE.PROD:
-                clients_today = await sync_to_async(
-                    lambda: CustomUser.objects.filter(type="client", timestamp__date=today,selfCreated = False).count()
-                )()
-                business_today = await sync_to_async(
-                    lambda: Business.objects.filter(timestamp__date=today,selfCreated = False).count()
-                )()
-                users_today = await sync_to_async(
-                    lambda: CustomUser.objects.filter(timestamp__date=today,selfCreated = False).count()
-                )()
-            else:
-                clients_today = await sync_to_async(
-                    lambda: CustomUser.objects.filter(type="client", timestamp__date=today).count()
-                )()
+        clients_today = 0
+        business_today = 0
+        users_today = 0
 
-                business_today = await sync_to_async(
-                    lambda: Business.objects.filter(timestamp__date=today).count()
-                )()
+        if settings.ENV == APPMODE.PROD:
+            clients_today = await sync_to_async(
+                lambda: CustomUser.objects.filter(type="client", timestamp__date=today, selfCreated=False).count()
+            )()
+            business_today = await sync_to_async(
+                lambda: Business.objects.filter(timestamp__date=today, selfCreated=False).count()
+            )()
+            users_today = await sync_to_async(
+                lambda: CustomUser.objects.filter(timestamp__date=today, selfCreated=False).count()
+            )()
+        else:
+            clients_today = await sync_to_async(
+                lambda: CustomUser.objects.filter(type="client", timestamp__date=today).count()
+            )()
+            business_today = await sync_to_async(
+                lambda: Business.objects.filter(timestamp__date=today).count()
+            )()
+            users_today = await sync_to_async(
+                lambda: CustomUser.objects.filter(timestamp__date=today).count()
+            )()
 
-                users_today = await sync_to_async(
-                    lambda: CustomUser.objects.filter(timestamp__date=today).count()
-                )()
+        return True, {
+            "clients": clients_today,
+            "businesses": business_today,
+            "users": users_today
+        }
 
-            return {
-                "clients": clients_today,
-                "businesses": business_today,
-                "users": users_today
-            }
-        except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in GetTodaySignups: {e}")
-            return None
+
     @classmethod
+    @taskExceptionHandler
     async def GetTodayUserSignups(cls):
-        try:
-            today = timezone.now().date()
-            
-            users_today = 0
-            if settings.ENV == APPMODE.PROD:
-                users_today = await sync_to_async(
-                    lambda: CustomUser.objects.filter(timestamp__date=today,selfCreated = False).count()
-                )()
-            else:
-                users_today = await sync_to_async(
-                    lambda: CustomUser.objects.filter(timestamp__date=today).count()
-                )()
+        today = timezone.now().date()
 
-            return users_today
-        except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in GetTodaySignups: {e}")
-            return None
-    # 5. Business Active / Inactive (daily-weekly-monthly)
+        users_today = 0
+        if settings.ENV == APPMODE.PROD:
+            users_today = await sync_to_async(
+                lambda: CustomUser.objects.filter(timestamp__date=today, selfCreated=False).count()
+            )()
+        else:
+            users_today = await sync_to_async(
+                lambda: CustomUser.objects.filter(timestamp__date=today).count()
+            )()
+
+        return True, users_today
+
+
+    # 5. Business Active / Inactive
     @classmethod
+    @taskExceptionHandler
     async def GetBusinessStatus(cls):
-        try:
-            now = timezone.now()
+        now = timezone.now()
 
-            def get_counts(start_date):
-                active = 0
-                inactive = 0
-                if settings.ENV == APPMODE.PROD:
-                    active = Business.objects.filter(
-                        businessplan__isActive=True,
-                        timestamp__gte=start_date,
-                        selfCreated = False
-                    ).count()
-                    inactive = Business.objects.filter(
-                        Q(businessplan__isnull=True) |
-                        Q(businessplan__isActive=False),
-                        timestamp__gte=start_date,
-                        selfCreated = False
-                    ).count()
-                else:
-                    active = Business.objects.filter(
-                        businessplan__isActive=True,
-                        timestamp__gte=start_date
-                    ).count()
-                    inactive = Business.objects.filter(
-                        Q(businessplan__isnull=True) |
-                        Q(businessplan__isActive=False),
-                        timestamp__gte=start_date
-                    ).count()
-                return {"active": active, "inactive": inactive}
+        def get_counts(start_date):
+            active = 0
+            inactive = 0
+            if settings.ENV == APPMODE.PROD:
+                active = Business.objects.filter(
+                    businessplan__isActive=True,
+                    timestamp__gte=start_date,
+                    selfCreated=False
+                ).count()
+                inactive = Business.objects.filter(
+                    Q(businessplan__isnull=True) |
+                    Q(businessplan__isActive=False),
+                    timestamp__gte=start_date,
+                    selfCreated=False
+                ).count()
+            else:
+                active = Business.objects.filter(
+                    businessplan__isActive=True,
+                    timestamp__gte=start_date
+                ).count()
+                inactive = Business.objects.filter(
+                    Q(businessplan__isnull=True) |
+                    Q(businessplan__isActive=False),
+                    timestamp__gte=start_date
+                ).count()
+            return {"active": active, "inactive": inactive}
 
-            data = {
-                "daily": get_counts(now - timedelta(days=1)),
-                "weekly": get_counts(now - timedelta(weeks=1)),
-                "monthly": get_counts(now - timedelta(days=30)),
-            }
-            return data
-        except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in GetBusinessStatus: {e}")
-            return None
+        data = {
+            "daily": get_counts(now - timedelta(days=1)),
+            "weekly": get_counts(now - timedelta(weeks=1)),
+            "monthly": get_counts(now - timedelta(days=30)),
+        }
 
-    # 6. Chart Data (generic function for clients, businesses, users)
+        return True, data
+
+
+    # 6. Chart Data
     @classmethod
+    @taskExceptionHandler
     async def GetChartData(cls, queryset, trunc_func, date_field="timestamp"):
-        try:
-            data = list(
-                queryset.annotate(period=trunc_func(date_field))
-                        .values("period")
-                        .annotate(count=Count("id"))
-                        .order_by("period")
-            )
-            if data:
-                return data
-            return []
-        except Exception:
-            return []
+        data = list(
+            queryset.annotate(period=trunc_func(date_field))
+                    .values("period")
+                    .annotate(count=Count("id"))
+                    .order_by("period")
+        )
+        if data:
+            return True, data
+        return True, []
+
 
     @classmethod
+    @taskExceptionHandler
     async def GetGroupedChartData(cls, model_map: dict, date_field="timestamp"):
-        # await MY_METHODS.printStatus("Entering GetGroupedChartData...")
 
         periods = {
             "daily": TruncDate,
-            # "weekly": TruncWeek,
-            # "monthly": TruncMonth,
         }
 
         results = {
             "daily": [],
-            # "weekly": [],
-            # "monthly": [],
         }
 
         for period_label, trunc_func in periods.items():
-            # Use defaultdict to merge counts from multiple models by period
+
             period_counts = defaultdict(lambda: defaultdict(int))
 
             for model_label, queryset in model_map.items():
-                data = await cls.GetChartData(queryset, trunc_func, date_field)
+                status, data = await cls.GetChartData(queryset, trunc_func, date_field)
+
                 for item in data:
-                    # await MY_METHODS.printStatus(f"[{model_label} - {period_label}]: {item}")
                     period_str = item["period"].isoformat()
                     period_counts[period_str][model_label] = item["count"]
 
-            # Transform merged data into a list of dicts
             merged_data = []
             for period, counts in sorted(period_counts.items()):
                 entry = {"date": period}
@@ -221,77 +205,198 @@ class ANALYTICS_TASKS:
 
             results[period_label] = merged_data
 
-        # await MY_METHODS.printStatus("Exiting GetGroupedChartData...")
+        return True, results["daily"]
 
-        return results["daily"]
-    # 6.a Chart for Clients
+
     @classmethod
+    @taskExceptionHandler
     async def GetClientChart(cls):
-        data = {"daily": [], "weekly": [], "monthly": []}
         if settings.ENV == APPMODE.PROD:
-            data = await cls.GetChartData(CustomUser.objects.filter(type="client",selfCreated = False))
+            status, data = await cls.GetChartData(
+                CustomUser.objects.filter(type="client", selfCreated=False),
+                TruncDate
+            )
         else:
-            data = await cls.GetChartData(CustomUser.objects.filter(type="client"))
-        return data
+            status, data = await cls.GetChartData(
+                CustomUser.objects.filter(type="client"),
+                TruncDate
+            )
+        return True, data
 
-    # 6.b Chart for Businesses
+
     @classmethod
+    @taskExceptionHandler
     async def GetBusinessChart(cls):
-        data = {"daily": [], "weekly": [], "monthly": []}
         if settings.ENV == APPMODE.PROD:
-            data = await cls.GetChartData(Business.objects.filter(selfCreated = False))
+            status, data = await cls.GetChartData(
+                Business.objects.filter(selfCreated=False),
+                TruncDate
+            )
         else:
-            data = await cls.GetChartData(Business)
-        return data
-    # 6.c Chart for Users
+            status, data = await cls.GetChartData(
+                Business.objects.all(),
+                TruncDate
+            )
+        return True, data
+
+
     @classmethod
+    @taskExceptionHandler
     async def GetUserChart(cls):
-        data  = {"daily": [], "weekly": [], "monthly": []}
         if settings.ENV == APPMODE.PROD:
-            data = await cls.GetChartData(CustomUser.objects.filter(selfCreated = False))
+            status, data = await cls.GetChartData(
+                CustomUser.objects.filter(selfCreated=False),
+                TruncDate
+            )
         else:
-            data = await cls.GetChartData(CustomUser)
-        return data
+            status, data = await cls.GetChartData(
+                CustomUser.objects.all(),
+                TruncDate
+            )
+        return True, data
+
 
     @classmethod
+    @taskExceptionHandler
     async def GetDailyUsersTask(cls):
-        try:
-            # Step 1: Query daily lead counts
-            daily_counts = 0
-            if settings.ENV == APPMODE.PROD:
-                daily_counts = await sync_to_async(
-                    lambda: list(
-                        CustomUser.objects.filter(selfCreated = False)
-                        .annotate(date=TruncDate('timestamp'))
-                        .values('date')
-                        .annotate(count=Count('id'))
-                        .order_by('date')
+
+        daily_counts = 0
+        if settings.ENV == APPMODE.PROD:
+            daily_counts = await sync_to_async(
+                lambda: list(
+                    CustomUser.objects.filter(selfCreated=False)
+                    .annotate(date=TruncDate('timestamp'))
+                    .values('date')
+                    .annotate(count=Count('id'))
+                    .order_by('date')
+                )
+            )()
+        else:
+            daily_counts = await sync_to_async(
+                lambda: list(
+                    CustomUser.objects
+                    .annotate(date=TruncDate('timestamp'))
+                    .values('date')
+                    .annotate(count=Count('id'))
+                    .order_by('date')
+                )
+            )()
+
+        cumulative = []
+        total = 0
+        for item in daily_counts:
+            total += item['count']
+            cumulative.append({
+                'date': item['date'].isoformat(),
+                'users': total
+            })
+
+        return True, cumulative
+
+
+class ADMIN_ANALYTICS_TASKS_V2:
+
+    @classmethod
+    @taskExceptionHandler
+    async def GetSystemTotals(
+        cls,
+        user_qs:QuerySet,
+        client_qs:QuerySet,
+        business_qs:QuerySet
+    ):
+
+        def _calc():
+            return {
+                "users": user_qs.count(),
+                "clients": client_qs.count(),
+                "business": business_qs.count()
+            }
+
+        return True, await sync_to_async(_calc)()
+
+
+    @classmethod
+    @taskExceptionHandler
+    async def GetTodayTotals(
+        cls,
+        user_qs:QuerySet,
+        client_qs:QuerySet,
+        business_qs:QuerySet
+    ):
+
+        today = timezone.now().date()
+
+        def _calc():
+            return {
+                "users": user_qs.filter(timestamp__date=today).count(),
+                "clients": client_qs.filter(timestamp__date=today).count(),
+                "business": business_qs.filter(timestamp__date=today).count()
+            }
+
+        return True, await sync_to_async(_calc)()
+
+
+    @classmethod
+    @taskExceptionHandler
+    async def GetBusinessStatus(cls, business_qs:QuerySet):
+
+        now = timezone.now()
+
+        def _agg(start_date):
+            qs = business_qs.filter(timestamp__gte=start_date)
+
+            return qs.aggregate(
+                active=Count(
+                    "id",
+                    filter=Q(businessplan__isActive=True)
+                ),
+                inactive=Count(
+                    "id",
+                    filter=(
+                        Q(businessplan__isnull=True) |
+                        Q(businessplan__isActive=False)
                     )
-                )()
-            else:
-                daily_counts = await sync_to_async(
-                    lambda: list(
-                        CustomUser.objects
-                        .annotate(date=TruncDate('timestamp'))
-                        .values('date')
-                        .annotate(count=Count('id'))
-                        .order_by('date')
-                    )
-                )()
+                )
+            )
 
-            # Step 2: Build cumulative data
-            cumulative = []
-            total = 0
-            for item in daily_counts:
-                total += item['count']
-                cumulative.append({
-                    'date': item['date'].isoformat(),  # Make JSON serializable
-                    'users': total
-                })
+        return True, {
+            "daily": await sync_to_async(_agg)(now - timedelta(days=1)),
+            "weekly": await sync_to_async(_agg)(now - timedelta(days=7)),
+            "monthly": await sync_to_async(_agg)(now - timedelta(days=30)),
+        }
 
-            return cumulative
 
-        except Exception as e:
-            # Log or handle error if needed
-            # await MY_METHODS.printStatus(f"Error in GetUsersDataTask: {e}")
-            return None
+    @classmethod
+    @taskExceptionHandler
+    async def GetGroupedChartData(cls, model_map: dict[str, QuerySet]):
+
+        def _calc():
+
+            period_counts = defaultdict(lambda: defaultdict(int))
+            all_labels = list(model_map.keys())
+
+            for label, qs in model_map.items():
+                rows = list(
+                    qs.annotate(date=TruncDate("timestamp"))
+                    .values("date")
+                    .annotate(count=Count("id"))
+                    .order_by("date")
+                )
+
+                for r in rows:
+                    period_counts[r["date"].isoformat()][label] = r["count"]
+
+            result = []
+            for date, counts in sorted(period_counts.items()):
+                entry = {"date": date}
+
+                # Ensure ALL labels exist for every date
+                for label in all_labels:
+                    entry[label] = counts.get(label, 0)
+
+                result.append(entry)
+
+            return result
+
+        return True, await sync_to_async(_calc)()
+

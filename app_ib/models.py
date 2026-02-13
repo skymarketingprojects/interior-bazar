@@ -6,6 +6,7 @@ import uuid
 from django.db import models,transaction
 from .Utils.ModelHelper import indexShifting
 from app_ib.Utils.MyMethods import MY_METHODS
+from django.utils.text import slugify
 
 from interior_notification.signals import business_changed
 # Custom User Manager
@@ -44,6 +45,13 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f'date: {self.timestamp} username: {self.username}'
+
+    def save(self, *args, **kwargs):
+        if not self.unique_id:
+            self.unique_id = uuid.uuid4()
+        if not self.my_id:
+            self.my_id = f"{slugify(self.username)}-{uuid.uuid4()}"
+        super().save(*args, **kwargs)
 
 class UserProfile(models.Model):
     user= models.OneToOneField(CustomUser,on_delete=models.CASCADE, null=True, blank=True,related_name='user_profile')
@@ -194,6 +202,8 @@ class LeadQuery(models.Model):
     state= models.CharField(max_length=500,default='',null=True,blank=True)
     country= models.CharField(max_length=500,default='',null=True,blank=True)
     status= models.TextField(default='',null=True,blank=True)
+    leadStatus= models.TextField(default='',null=True,blank=True)
+    stage= models.TextField(default='',null=True,blank=True)
     tag= models.TextField(default='',null=True,blank=True)
     priority= models.TextField(default='',null=True,blank=True)
     remark= models.TextField(default='',null=True,blank=True)

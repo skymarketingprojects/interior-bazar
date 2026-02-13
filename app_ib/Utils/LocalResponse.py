@@ -1,5 +1,5 @@
 import dotsi
-def LocalResponse(response='', message='', data={}, code=1):
+def LocalResponse(response:bool=True, message:str='', data={}, code:int=1):
     obj = {
         'response': response,
         'code': code,
