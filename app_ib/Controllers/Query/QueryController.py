@@ -10,7 +10,7 @@ from app_ib.Utils.Names import NAMES
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.models import LeadQuery, Business,CustomUser
 from app_ib.Controllers.Query.Tasks.QueryTasks import LEAD_QUERY_TASK
-from .Validators.QueryValidators import leadQuerysData,leadData
+from .Validators.QueryValidators import LeadQueryCreateSchema,LeadQueryUpdateSchema,LeadQueryStatusSchema,LeadQueryFilterSchema
 from django.db.models import Q
 
 class LEAD_QUERY_CONTROLLER:
@@ -44,7 +44,7 @@ class LEAD_QUERY_CONTROLLER:
                     NAMES.ERROR: str(e)
                 })
     @classmethod
-    async def CreateLeadQuery(self,data,user:CustomUser=None):
+    async def CreateLeadQuery(self,data:LeadQueryCreateSchema,user:CustomUser=None):
         try:
 
             create_query_resp,data = await  LEAD_QUERY_TASK.CreateLeadQueryTask(data=data,user=user)
@@ -74,7 +74,7 @@ class LEAD_QUERY_CONTROLLER:
                 })
 
     @classmethod
-    async def UpdateLeadQuery(self, data:leadData):
+    async def UpdateLeadQuery(self, data:LeadQueryUpdateSchema):
         try:
             lead_query_ins= None
             is_query_exist = await sync_to_async(LeadQuery.objects.filter(id=data.id).exists)()
@@ -112,7 +112,7 @@ class LEAD_QUERY_CONTROLLER:
                 })
 
     @classmethod
-    async def UpdateLeadQueryStatus(self, data,user:CustomUser=None):
+    async def UpdateLeadQueryStatus(self, data:LeadQueryStatusSchema,user:CustomUser=None):
         try:
             lead_query_ins= None
             is_query_exist = await sync_to_async(LeadQuery.objects.filter(id=data.id).exists)()
@@ -260,7 +260,7 @@ class LEAD_QUERY_CONTROLLER:
                 })
 
     @classmethod
-    async def GetBusinessQueries(self, user_ins,queryParams:leadQuerysData):
+    async def GetBusinessQueries(self, user_ins,queryParams:LeadQueryFilterSchema):
         try:
             lead_query_ins= None
 

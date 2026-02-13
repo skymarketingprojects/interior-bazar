@@ -54,7 +54,9 @@ class CATELOG_TASKS:
                 "ytLink": catelog.ytLink,
                 "uploadedForTime": time_ago,
                 "categories":prodCategory,
-                "subCategories":prodSubCategory
+                "subCategories":prodSubCategory,
+                "phone":catelog.business.user.user_profile.phone,
+                "countryCode":catelog.business.user.user_profile.countryCode
             }
             # await MY_METHODS.printStatus(f"data {data}")
             return data

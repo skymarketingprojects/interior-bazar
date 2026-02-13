@@ -6,23 +6,39 @@ from django_quill.fields import QuillField
 class ProductCategory(models.Model):
     value = models.CharField(max_length=250)
     lable = models.CharField(max_length=250)
+    shortValue = models.CharField(max_length=250,null=True,blank=True)
     imageSQUrl = models.CharField(max_length=2250,null=True,blank=True)
     imageRTUrl = models.CharField(max_length=2250,null=True,blank=True)
     trending = models.BooleanField(default=False)
+    index = models.IntegerField(default=0)
    
     def __str__(self):
         return f'product category - {self.lable}'
+    
+    def save(self, *args, **kwargs):
+        if not self.index:
+            self.index = self.__class__.objects.all().count()+1
+        indexShifting(instance=self,filter_attr='index')
+        super().save(*args, **kwargs)
 
 class ProductSubCategory(models.Model):
     category = models.ForeignKey(ProductCategory,on_delete=models.CASCADE,related_name="prodsubcat")
     value = models.CharField(max_length=250)
     lable = models.CharField(max_length=250)
+    shortValue = models.CharField(max_length=250,null=True,blank=True)
     imageSQUrl = models.CharField(max_length=2250,null=True,blank=True)
     imageRTUrl = models.CharField(max_length=2250,null=True,blank=True)
     trending = models.BooleanField(default=False)
+    index = models.IntegerField(default=0)
    
     def __str__(self):
         return f'product sub category - {self.lable}'
+    
+    def save(self, *args, **kwargs):
+        if not self.index:
+            self.index = self.__class__.objects.all().count()+1
+        indexShifting(instance=self,filter_attr='index')
+        super().save(*args, **kwargs)
 
 #catelog
 class Catelogue(models.Model):
@@ -40,6 +56,7 @@ class Catelogue(models.Model):
 
     catalogCategory = models.ManyToManyField(ProductCategory,related_name='catCatelogues')
     subCategory = models.ManyToManyField(ProductSubCategory,related_name='catSubCatelogues')
+    updatedAt = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
         indexShifting(instance=self,filter_attr='business')
@@ -49,7 +66,7 @@ class Catelogue(models.Model):
         return self.title
 
 class CatelogueImage(models.Model):
-    catelougeImage = models.URLField()
+    catelougeImage = models.URLField(max_length=2250)
     catelouge = models.ForeignKey(Catelogue, on_delete=models.CASCADE,related_name='catelogueImages')
     index = models.IntegerField(default=1)
     link = models.URLField(null=True, blank=True)
@@ -82,6 +99,8 @@ class Product(models.Model):
     category = models.ManyToManyField(ProductCategory,related_name='catProducts')
     subCategory = models.ManyToManyField(ProductSubCategory,related_name='subcatProducts')
 
+    updatedAt = models.DateTimeField(auto_now=True)
+
     def __str__(self):
         return self.title
     
@@ -91,7 +110,7 @@ class Product(models.Model):
         super(Product, self).save(*args, **kwargs)
     
 class ProductImage(models.Model):
-    image = models.URLField()
+    image = models.URLField(max_length=2250)
     product = models.ForeignKey(Product, on_delete=models.CASCADE,related_name='productImages')
     index = models.IntegerField(default=1)
     link = models.URLField(null=True, blank=True)
@@ -129,6 +148,7 @@ class Service(models.Model):
     subCategory = models.ManyToManyField(ProductSubCategory,related_name='subcatServices')
     
     index = models.IntegerField(default=1)
+    updatedAt = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.title
@@ -139,7 +159,7 @@ class Service(models.Model):
         super(Service, self).save(*args, **kwargs)
     
 class ServiceImage(models.Model):
-    image = models.URLField()
+    image = models.URLField(max_length=2250)
     service = models.ForeignKey(Service, on_delete=models.CASCADE,related_name='serviceImages')
     index = models.IntegerField(default=1)
     link = models.URLField(null=True, blank=True)

@@ -9,27 +9,23 @@ from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.Controllers.Plans.PlanController import PLAN_CONTROLLER
 from interior_notification.signals import userSignupSignal
 import asyncio
+from app_ib.Controllers.Profile.Validators.ProfileValidators import (
+    ProfileCreateOrUpdateSchema
+)
 
 class PROFILE_CONTROLLER:
 ###########################################
  # Create or update Profile
  ########################################### 
     @classmethod 
-    async def CreateOrUpdateProfile(self, user_ins , data):
+    async def CreateOrUpdateProfile(self, user_ins , data:ProfileCreateOrUpdateSchema):
         try:
-            # Test
-            # await MY_METHODS.printStatus(f'user instance {user_ins}')
-            # await MY_METHODS.printStatus(f'name {data.name}')
-            # await MY_METHODS.printStatus(f'email {data.email}')
-            # await MY_METHODS.printStatus(f'phone {data.phone}')
 
             is_user_profile_created = await sync_to_async(UserProfile.objects.filter(user=user_ins).exists)()
-            # await MY_METHODS.printStatus(f'is user profile created {is_user_profile_created}')
             
             if(is_user_profile_created):
                 user_profile_ins = await sync_to_async(UserProfile.objects.get)(user=user_ins)
                 is_profile_updated= await PROFILE_TASKS.UpdateProfileTask(user_profile_ins=user_profile_ins,data=data)
-                # await MY_METHODS.printStatus(f'is profile created {is_profile_updated}')
 
                 if(is_profile_updated):
                     profile_data = await PROFILE_TASKS.GetProfileDataTask(user_profile_ins=user_profile_ins)
@@ -47,7 +43,6 @@ class PROFILE_CONTROLLER:
                     
             else:
                 is_profile_created= await PROFILE_TASKS.CreateProfileTask(user_ins=user_ins,data=data)
-                # await MY_METHODS.printStatus(f' is profile updated {is_profile_created}')
                 asyncio.create_task(sync_to_async(userSignupSignal.send)(sender=user_ins.user_profile.__class__,instance=user_ins.user_profile,created=True))
                 
                 if(is_profile_created):
@@ -80,14 +75,9 @@ class PROFILE_CONTROLLER:
     @classmethod 
     async def CreateOrUpdateProfileImage(self, user_ins:CustomUser , profile_image):
         try:
-            # Test
-            # await MY_METHODS.printStatus(f'user instance {user_ins}')
-            # await MY_METHODS.printStatus(f'profile image {profile_image}')
             
             is_user_profile_created = await sync_to_async(UserProfile.objects.filter(user=user_ins).exists)()
-            # await MY_METHODS.printStatus(f'is user profile created {is_user_profile_created}')
 
-            # Update Profile Image if already exist : 
             if is_user_profile_created:
                 user_profile_ins = await sync_to_async(UserProfile.objects.get)(user=user_ins)
                 is_profile_image_updated = await PROFILE_TASKS.UpdateProfileImageTask(user_profile_ins=user_profile_ins,profile_image=profile_image)
@@ -109,7 +99,6 @@ class PROFILE_CONTROLLER:
             # Create Profile Image if not exist : 
             else:
                 is_profile_image_created= await PROFILE_TASKS.CreateProfileImageTask(user_ins=user_ins,profile_image=profile_image)
-                # await MY_METHODS.printStatus(f' is profile image created {is_profile_image_created}')
 
                 if(is_profile_image_created):
                     return LocalResponse(

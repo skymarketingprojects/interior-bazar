@@ -12,6 +12,7 @@ from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.models import Business
 from django.http import HttpRequest
+from app_ib.Utils.Names import NAMES
 
 class ProductView(AsyncAPIView):
     """
@@ -438,15 +439,17 @@ async def GetRelatedServices(request, serviceId: int)->ServerResponse:
 
 # get all
 @api_view(['GET'])
-async def GetAllCatelogsView(request:HttpRequest):
+async def GetAllCatelogsView(request):
     try:
-        pageNo= int(request.GET.get("pageNo",1))
-        pageSize = int(request.GET.get('pageSize',10))
-        filterType = request.GET.get('type',None)
-        filterId = request.GET.get('tabId',None)
-        state = request.GET.get('state',None)
-        query = request.GET.get('query',None)
+        pageNo= int(request.query_params.get("pageNo",1))
+        pageSize = int(request.query_params.get('pageSize',10))
+        filterType = request.query_params.get('type',None)
+        filterId = request.query_params.get('tabId',None)
+        state = request.query_params.get('state',None)
+        query = request.query_params.get('query',None)
+        # await MY_METHODS.printStatus(f'filterType: {filterType}, filterId: {filterId}, state: {state}, query: {query}')
         catelogResponse = await CATELOG_CONTROLLER.GetAllCatelog(page=pageNo,size=pageSize,filterType=filterType,id=filterId,state=state,query=query)
+        # await MY_METHODS.printStatus(f'catelogResponse: {catelogResponse}')
         return ServerResponse(
             response=catelogResponse.response,
             message=catelogResponse.message,
@@ -590,6 +593,9 @@ async def GetTabsView(request):
         #     resp= await BUSS_CONTROLLER.GetAllBusinessTab()
         # else:
         #     resp= await CATELOG_CONTROLLER.GetCatelougeTab()
+        resp.data.sort(
+                key=lambda x: (x.get(NAMES.LABEL) or "").lower()
+            )
 
         return ServerResponse(
             response=resp.response,

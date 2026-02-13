@@ -2,6 +2,9 @@ from asgiref.sync import sync_to_async
 from app_ib.models import Location, Business,Country,State
 from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.Utils.Names import NAMES
+from app_ib.Controllers.ClientLocation.Validators.ClientLocationValidators import (
+    ClientLocationCreateOrUpdateSchema
+)
 
 class CLIENT_LOC_TASKS:
 
@@ -28,7 +31,7 @@ class CLIENT_LOC_TASKS:
 
 
     @classmethod
-    async def UpdateClientLocTask(self,client_loc_ins:Location, data):
+    async def UpdateClientLocTask(self,client_loc_ins:Location, data:ClientLocationCreateOrUpdateSchema):
         try:
             state = await sync_to_async(State.objects.filter(id=data.state.id).first)()
             country = await sync_to_async(Country.objects.filter(id=data.country.id).first)()

@@ -7,7 +7,8 @@ urlpatterns = [
     path('related/<int:businessId>/',SearchView.GetRelatedBusinessView, name='GetRelatedBusinessView'),
     path('nearby/',SearchView.GetNearbyBusinessView, name='GetAllNearbyBusinessView'),
     path('nearby/<int:businessId>/',SearchView.GetNearbyBusinessView, name='GetnearbyBusinessView'),
-     #########################################################
+
+    #########################################################
     # Business:  
     #########################################################
     path('detail//header/<int:businessId>/',BusinessView.GetBusinessHeaderView, name='GetBusinessHeaderView'),
@@ -26,7 +27,6 @@ urlpatterns = [
     #########################################################
     # Business Profile: 
     #########################################################
-
     path('profile/create-update/', BusinessProfileView.CreateOrUpdateBusinessProfileView, name='CreateOrUpdateBusinessProfileView'),
     path('profile/<int:id>/', BusinessProfileView.GetBusinessProfileByBussIDView, name='GetBusinessProfileByBussIDView'),
     path('primary-image/create-or-update/', BusinessProfileView.CreateOrUpdatePrimaryImageView, name='CreateOrUpdateProfileImageView'),

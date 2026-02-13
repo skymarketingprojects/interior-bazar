@@ -36,7 +36,7 @@ class BUSS_TASK:
 
             return newCategory.id
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in CreateCaegoryTask {e}')
+            # await MY_METHODS.printStatus(f'Error in CreateCaegoryTask {e}')
             return None
     
     @classmethod
@@ -47,11 +47,11 @@ class BUSS_TASK:
                 lable=lable,
                 value=data.label
             )
-            await MY_METHODS.printStatus(f' CreateSegmentTask {newSegment}')
+            # await MY_METHODS.printStatus(f' CreateSegmentTask {newSegment}')
 
             return newSegment.id
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in CreateSegmentTask {e}')
+            # await MY_METHODS.printStatus(f'Error in CreateSegmentTask {e}')
             return None
 
     @classmethod
@@ -116,7 +116,7 @@ class BUSS_TASK:
             return data,True
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in GetBusinessHeaderTask: {e}')
+            # await MY_METHODS.printStatus(f'Error in GetBusinessHeaderTask: {e}')
             return str(e),False
 
 
@@ -435,8 +435,13 @@ class BUSS_TASK:
                 NAMES.LABEL: businesstype.lable,
                 NAMES.VALUE: businesstype.value,
                 NAMES.IMAGE_SQ_URL: sqUrl,
-                NAMES.IMAGE_RT_URL: rtUrl
+                NAMES.IMAGE_RT_URL: rtUrl,
+                NAMES.TRENDING: businesstype.trending
             }
+            try:
+                typeData[NAMES.SHORT_VALUE] = businesstype.shortValue
+            except:
+                pass
 
             return typeData
         except Exception as e:
@@ -458,8 +463,10 @@ class BUSS_TASK:
                 NAMES.ID: businesstype.id,
                 NAMES.LABEL: businesstype.lable,
                 NAMES.VALUE: businesstype.value,
+                NAMES.SHORT_VALUE: businesstype.shortValue,
                 NAMES.IMAGE_SQ_URL: sqUrl,
-                NAMES.IMAGE_RT_URL: rtUrl
+                NAMES.IMAGE_RT_URL: rtUrl,
+                NAMES.TRENDING: businesstype.trending
             }
 
             return typeData

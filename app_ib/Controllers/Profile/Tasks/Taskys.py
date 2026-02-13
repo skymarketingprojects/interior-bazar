@@ -2,10 +2,13 @@ from asgiref.sync import sync_to_async
 from app_ib.models import UserProfile
 from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.Utils.Names import NAMES
+from app_ib.Controllers.Profile.Validators.ProfileValidators import (
+    ProfileCreateOrUpdateSchema
+)
 
 class PROFILE_TASKS:
     @classmethod
-    async def CreateProfileTask(self, user_ins, data):
+    async def CreateProfileTask(self, user_ins, data:ProfileCreateOrUpdateSchema):
         try:
             user_profile_ins = UserProfile()
             user_profile_ins.user = user_ins
@@ -22,7 +25,7 @@ class PROFILE_TASKS:
             return None
 
     @classmethod
-    async def UpdateProfileTask(self, user_profile_ins:UserProfile, data):
+    async def UpdateProfileTask(self, user_profile_ins:UserProfile, data:ProfileCreateOrUpdateSchema):
         try:
             user_profile_ins.name = data.name
             user_profile_ins.email = data.email

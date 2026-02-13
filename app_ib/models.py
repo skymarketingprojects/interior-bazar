@@ -82,6 +82,7 @@ class BusinessCategory(models.Model):
     imageRTUrl = models.CharField(max_length=2250,null=True,blank=True)
     value = models.CharField(max_length=250)
     lable = models.CharField(max_length=250)
+    shortValue = models.CharField(max_length=250,null=True,blank=True)
     trending = models.BooleanField(default=False)
     index = models.IntegerField(default=0)
     def __str__(self):
@@ -99,6 +100,7 @@ class BusinessSegment(models.Model):
     imageRTUrl = models.CharField(max_length=2250,null=True,blank=True)
     value = models.CharField(max_length=250)
     lable = models.CharField(max_length=250)
+    shortValue = models.CharField(max_length=250,null=True,blank=True)
     trending = models.BooleanField(default=False)
     def __str__(self):
         return f'business segment - {self.lable}'
@@ -469,6 +471,7 @@ class StockMedia(models.Model):
 class OfferText(models.Model):
     text = QuillField(null=True, blank=True)
     link = models.URLField(max_length=2250, null=True, blank=True)
+    color = models.CharField(max_length=100, default='', null=True, blank=True)
     show = models.BooleanField(default=False)
     def __str__(self):
         return f' pk {self.pk} text:{self.text}'
@@ -527,3 +530,32 @@ class DaySchedule(models.Model):
 
     def __str__(self):
         return f"{self.business.businessName} - {self.get_day_display()}"
+
+
+class OurClients(models.Model):
+    image = models.URLField(max_length=2250)
+    name = models.CharField(max_length=2250)
+    index = models.IntegerField(default=1, null=True, blank=True)
+
+    def __str__(self):
+        return f' pk {self.pk} name:{self.name}'
+    
+    def save(self, *args, **kwargs):
+        if not self.index:
+            self.index = self.__class__.objects.all().count()+1
+        indexShifting(instance=self,filter_attr='index')
+        super().save(*args, **kwargs)
+
+class ReelSection(models.Model):
+    video = models.URLField(max_length=2250)
+    name = models.CharField(max_length=2250)
+    index = models.IntegerField(default=1, null=True, blank=True)
+
+    def __str__(self):
+        return f' pk {self.pk} name:{self.name}'
+    
+    def save(self, *args, **kwargs):
+        if not self.index:
+            self.index = self.__class__.objects.all().count()+1
+        indexShifting(instance=self,filter_attr='index')
+        super().save(*args, **kwargs)

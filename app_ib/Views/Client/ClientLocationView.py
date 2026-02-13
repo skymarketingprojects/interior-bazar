@@ -8,21 +8,19 @@ from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.Names import NAMES
 from app_ib.Controllers.ClientLocation.ClientLocationController import CLIENT_LOCATION_CONTROLLER
-
+from app_ib.Controllers.ClientLocation.Validators.ClientLocationValidators import (
+    ClientLocationCreateOrUpdateSchema
+)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 async def CreateOrUpdateClientLocationView(request):
     try:
         # Convert request.data to dot notation object
-        data = MY_METHODS.json_to_object(request.data)
+        # data = MY_METHODS.json_to_object(request.data)
+        data = ClientLocationCreateOrUpdateSchema(**request.data)
         user_ins = request.user
-        # await MY_METHODS.printStatus(f'user_ins {user_ins}')
-        # Call Auth Controller to Create User
-        final_response = await  asyncio.gather(
-            CLIENT_LOCATION_CONTROLLER.CreateOrUpdateClientLocation(user_ins=user_ins, data=data))
-        # await MY_METHODS.printStatus(f'final_response {final_response}')
-        final_response = final_response[0]
+        final_response = await CLIENT_LOCATION_CONTROLLER.CreateOrUpdateClientLocation(user_ins=user_ins, data=data)
 
         return ServerResponse(
             response=final_response.response,
@@ -44,10 +42,8 @@ async def CreateOrUpdateClientLocationView(request):
 @api_view(['GET'])
 async def GetClientLocationByIDView(request,id):
     try:
-        # Call Auth Controller to Create User
         final_response = await  asyncio.gather(CLIENT_LOCATION_CONTROLLER.GetClientLocByUserIns(id=id))
         
-        # await MY_METHODS.printStatus(f'final_response {final_response}')
         final_response = final_response[0]
 
         return ServerResponse(
@@ -57,10 +53,9 @@ async def GetClientLocationByIDView(request,id):
             data=final_response.data)
 
     except Exception as e:
-        # await MY_METHODS.printStatus(f'Error: {e}')
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
-            message=RESPONSE_MESSAGES.client_register_error,
+            message=RESPONSE_MESSAGES.error,
             code=RESPONSE_CODES.error,
             data={
                 NAMES.ERROR: str(e)

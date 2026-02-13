@@ -32,6 +32,8 @@ class NAMES:
     CREATED_AT='createdAt'
     LABEL='label'
     VALUE='value'
+    SHORT_VALUE='shortValue'
+    TRENDING='trending'
 
     IMAGE='image'
     DATA='data'
@@ -239,6 +241,7 @@ class NAMES:
     TEXT='text'
     LINK='link'
     SHOW='show'
+    COLOR='color'
 
     #funnel
     LEADS='leads'

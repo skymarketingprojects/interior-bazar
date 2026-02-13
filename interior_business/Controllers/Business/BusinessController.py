@@ -228,6 +228,11 @@ class BUSS_CONTROLLER:
                 if segmentData:
                     segmentData[NAMES.TYPE]=NAMES.SEGMENT
                     category_list.append(segmentData)
+            
+            category_list.sort(
+                key=lambda x: (x.get(NAMES.LABEL) or "").lower()
+            )
+
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.business_category_fetch_success,
@@ -283,7 +288,7 @@ class BUSS_CONTROLLER:
                     code=RESPONSE_CODES.error,
                     data={})
             businessType = await sync_to_async(BusinessType.objects.get)(pk=typeId)
-            await MY_METHODS.printStatus(f'businessType {businessType}')
+            # await MY_METHODS.printStatus(f'businessType {businessType}')
             segmentInstances = []
             if query:
                 segmentInstances = await sync_to_async(list)(businessType.business_type_segment.filter(lable__icontains=query))

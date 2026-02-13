@@ -4,11 +4,11 @@ from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.Utils.Names import NAMES
 from app_ib.models import Business,CustomUser
 from interior_products.models import Product,Service,Catelogue
-from ..Validators.QueryValidators import leadData
+from ..Validators.QueryValidators import LeadQueryCreateSchema,LeadQueryUpdateSchema,LeadQueryStatusSchema
 class LEAD_QUERY_TASK:
 
     @classmethod
-    async def CreateLeadQueryTask(self, data:leadData,user=None):
+    async def CreateLeadQueryTask(self, data:LeadQueryCreateSchema,user:CustomUser=None):
         try:
             lead_query_ins = LeadQuery()
 
@@ -56,7 +56,7 @@ class LEAD_QUERY_TASK:
             return None,str(e)
   
     @classmethod
-    async def UpdateLeadQueryTask(self, lead_query_ins:LeadQuery, data:leadData):
+    async def UpdateLeadQueryTask(self, lead_query_ins:LeadQuery, data:LeadQueryUpdateSchema):
         try:
             lead_query_ins.name= data.name or lead_query_ins.name
             lead_query_ins.phone= data.phone or lead_query_ins.phone
@@ -81,7 +81,7 @@ class LEAD_QUERY_TASK:
             return None
 
     @classmethod
-    async def UpdateLeadQueryStatusTask(self, lead_query_ins:LeadQuery, data):
+    async def UpdateLeadQueryStatusTask(self, lead_query_ins:LeadQuery, data:LeadQueryStatusSchema):
         try:
             lead_query_ins.status= data.status            
             await sync_to_async(lead_query_ins.save)()

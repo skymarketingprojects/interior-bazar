@@ -150,7 +150,9 @@ class SERVICES_TASKS:
                 'displayPrice':service.displayPrice,
                 'index':service.index,
                 "categories":prodCategory,
-                "subCategories":prodSubCategory
+                "subCategories":prodSubCategory,
+                "phone":service.business.user.user_profile.phone,
+                "countryCode":service.business.user.user_profile.countryCode
             }
             return serviceData
         except Exception as e:

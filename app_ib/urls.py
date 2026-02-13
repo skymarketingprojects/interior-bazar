@@ -33,6 +33,9 @@ urlpatterns = [
     path('test/', views.TestView, name='TestView'),
     path('test-mail/', views.TestMailView, name='TestMailView'),
 
+    path("v1/common/our-clients/", views.GetOurClients, name="GetClientsView"),
+    path("v1/common/reels/", views.GetReelSection, name="GetReels"),
+
     #########################################################
     # Authentication: 
     #########################################################

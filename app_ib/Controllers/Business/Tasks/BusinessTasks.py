@@ -218,7 +218,7 @@ class BUSS_TASK:
             return data
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in GetBusinessInfoForSearch: {e}')
+            # await MY_METHODS.printStatus(f'Error in GetBusinessInfoForSearch: {e}')
             return None
 
     @classmethod
