@@ -118,6 +118,8 @@ class ADMIN_PANEL_TASKS:
                 "assignedLead": assigned_leads_count,
                     "platformLead": platform_leads_count,
                 "totalLeads": total_leads,
+                "buyIntent": plan.buyIntent if plan else "",
+                "planId": plan.id if plan else 0,
                 "date": timezone.now().date()
             })
 
