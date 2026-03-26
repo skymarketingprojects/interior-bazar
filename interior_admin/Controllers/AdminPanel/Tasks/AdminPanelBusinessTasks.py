@@ -309,7 +309,19 @@ class ADMIN_PANEL_BUSINESS_TASKS_V2:
     @taskExceptionHandler
     async def UpdateBusinessPlanIntent(cls, planId:int, buyIntent:str):
         await MY_METHODS.printStatus(f'UpdateBusinessPlanIntent planId:{planId}, buyIntent:{buyIntent}')
-        plan = await sync_to_async(BusinessPlan.objects.get)(pk=planId)
+        
+        # First try to find by planId (pk)
+        plan = await sync_to_async(BusinessPlan.objects.filter(pk=planId).first)()
+        
+        # Fallback: if plan isn't found, check if frontend accidentally sent business_id instead
+        if not plan:
+            plan = await sync_to_async(
+                lambda: BusinessPlan.objects.filter(business_id=planId).order_by('-id').first()
+            )()
+            
+        if not plan:
+            raise Exception("BusinessPlan matching query does not exist.")
+            
         plan.buyIntent = buyIntent
         await sync_to_async(plan.save)()
         return True, None
