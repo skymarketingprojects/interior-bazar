@@ -8,6 +8,7 @@ from .Validators.AdminLeadsValidators import AdminLeadQueryFilters
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.models import LeadQuery,Business
 from app_ib.Controllers.Query.Tasks.QueryTasks import LEAD_QUERY_TASK
+from app_ib.Utils.MyMethods import MY_METHODS
 
 from .Tasks.AdminLeadsTasks import ADMIN_LEADS_TASKS
 from interior_admin.Controllers.AdminLeads.Validators.AdminLeadsValidators import AdminLeadsCreateSchema,AdminLeadsUpdateSchema
@@ -112,36 +113,105 @@ class ADMIN_LEADS_CONTROLLER_V2:
         successMessage=RESPONSE_MESSAGES.query_fetch_success
     )
     async def GetQueries(self,queryParams:AdminLeadQueryFilters):
+        await MY_METHODS.printStatus(f'GetAdminQueryView queryParams:-{queryParams}')
         lead_query= None
         filters = Q()
 
         # Assigned / Unassigned (business FK presence)
         if queryParams.assigned is not None:
-            if queryParams.assigned:
+            assigned = queryParams.assigned
+            if isinstance(assigned, str):
+                assigned = str(assigned).lower() in ['true', '1', 'yes']
+            
+            if assigned:
                 filters &= Q(business__isnull=False)
             else:
                 filters &= Q(business__isnull=True)
-
-        # Lead Status (TextField single value)
+        await MY_METHODS.printStatus(f'GetAdminQueryView filters:-{filters}')
+        # Lead Status (model = TextField single, check in list)
         if queryParams.leadStatus:
-            filters &= Q(leadStatus__iexact=queryParams.leadStatus)
+            leadStatus = queryParams.leadStatus
+            if isinstance(leadStatus, str):
+                leadStatus = [s.strip() for s in leadStatus.split(',') if s.strip()]
+            
+            lead_status_q = Q()
+            for s in leadStatus:
+                # Check both leadStatus and status fields in DB as they are often used interchangeably
+                # Using icontains handles cases where data is stored as '"status": "open"' inside a list/object
+                lead_status_q |= Q(leadStatus__icontains=s) | Q(status__icontains=s)
+            filters &= lead_status_q
 
         # Time range (independent safe bounds)
         if queryParams.timeFrom:
             filters &= Q(timestamp__gte=queryParams.timeFrom)
 
         if queryParams.timeTo:
-            filters &= Q(timestamp__lte=queryParams.timeTo)
+             filters &= Q(timestamp__lte=queryParams.timeTo)
 
         # Tags (model = TextField single, not relation)
         if queryParams.tags:
-            filters &= Q(tag__in=queryParams.tags)
+            tags = queryParams.tags
+            if isinstance(tags, str):
+                tags = [s.strip() for s in tags.split(',') if s.strip()]
+            
+            tags_q = Q()
+            for t in tags:
+                tags_q |= Q(tag__icontains=t)
+            filters &= tags_q
 
         # Stages (model = single TextField)
         if queryParams.stages:
-            filters &= Q(stage__in=queryParams.stages)
-
+            stages = queryParams.stages
+            await MY_METHODS.printStatus(f'stages:-{stages}')
+            if isinstance(stages, str):
+                stages = [s.strip() for s in stages.split(',') if s.strip()]
+            await MY_METHODS.printStatus(f'stages:-{stages}')
             
+            stages_q = Q()
+            for sg in stages:
+
+                stages_q |= Q(stage__icontains=sg)
+            filters &= stages_q
+            await MY_METHODS.printStatus(f'filters:-{filters}')
+        # Status (Category)
+        if queryParams.status:
+            status = queryParams.status
+            if isinstance(status, str):
+                status = [s.strip() for s in status.split(',') if s.strip()]
+            
+            status_q = Q()
+            for st in status:
+                # Also check leadStatus for status parameter for completeness
+                status_q |= Q(status__icontains=st) | Q(leadStatus__icontains=st)
+            filters &= status_q
+
+        # Search query
+        if queryParams.searchText:
+            search_filters = Q(
+                Q(name__icontains=queryParams.searchText) |
+                Q(phone__icontains=queryParams.searchText) |
+                Q(email__icontains=queryParams.searchText) |
+                Q(city__icontains=queryParams.searchText)
+            )
+            
+            # If search text is numeric, also search by ID
+            stripped_search_text = queryParams.searchText.strip()
+            if stripped_search_text.isdigit():
+                search_filters |= Q(pk=int(stripped_search_text))
+                
+            filters &= search_filters
+
+        if queryParams.category:
+            category = queryParams.category
+            if isinstance(category, str):
+                category = [s.strip() for s in category.split(',') if s.strip()]
+            
+            category_q = Q()
+            for ct in category:
+                category_q |= Q(category__icontains=ct)
+            filters &= category_q
+
+        # Step 2: Query leads
         lead_query = await sync_to_async(
             lambda: LeadQuery.objects.filter(filters).order_by('-timestamp')
         )()
@@ -184,6 +254,7 @@ class ADMIN_LEADS_CONTROLLER_V2:
     async def updateQuery(self,data:AdminLeadsUpdateSchema,leadId:int):
         lead = await sync_to_async(LeadQuery.objects.get)(pk=leadId)
         data = await LEAD_QUERY_TASK.UpdateLeadQueryTask(data=data,lead_query_ins=lead)
+        await MY_METHODS.printStatus(f'UpdateAdminQueryView data:-{data}')
         if data:
             return True,data
         return False,data

@@ -2,7 +2,7 @@ from django.urls import path, include
 
 from .views import AdminPanelViewsV1, AdminPanelViewsV2
 from .Views.AdminLeadsViews import AdminLeadsViewsV1,AdminLeadsViewsV2
-from .Views.AdminUserViews import AdminUserViews
+from .Views.AdminUserViews import AdminUserViews, SendUserCredentialsView
 
 from .Views import AdminLeadsViews, BusinessInfoViews,PannelSearchViews,MatchLeadsViews,FinanceViews
 urlpatterns = [
@@ -27,6 +27,7 @@ urlpatterns = [
     path('v2/chart/', AdminPanelViewsV2.GetChartsStatsView, name='get_chart_view_v2'),
     path('v2/total-users/', AdminPanelViewsV2.GetTotalUsersView, name='get_chart_view_v2'),
     path('v2/analytics/users/', AdminPanelViewsV2.GetDailyUsersStatsView, name='get_daily_users_view_v2'),
+    path('v2/analytics/leads/', AdminPanelViewsV2.GetLeadAnalyticsView, name='get_lead_analytics_v2'),
     path('v2/analytics/', AdminPanelViewsV2.GetDashboardDataView, name='get_daily_users_view_v2'),
 
 
@@ -42,6 +43,7 @@ urlpatterns = [
     path('businesses/<int:pageNo>/<int:pageSize>/', BusinessInfoViews.GetAdminBusinessDataView, name='business_data_pagination'),
     path('v2/businesses/', BusinessInfoViews.GetAdminBusinessDataViewV2, name='business_data_pagination_v2'),
     path('v2/businesses/<int:businessId>/', BusinessInfoViews.DeleteBusinessDataView, name='business_delete'),
+    path('v2/business/plan/',AdminPanelViewsV2.UpdatePlanIntentView, name='update_plan_intent'),
     
     ############################################################
     # leads
@@ -66,5 +68,6 @@ urlpatterns = [
 
     path('users/', AdminUserViews.as_view(), name='users_view'),
     path('users/<int:userId>', AdminUserViews.as_view(), name='users_view_with_id'),
+    path('users/<int:userId>/send-credentials/', SendUserCredentialsView.as_view(), name='send_user_credentials'),
     
 ]

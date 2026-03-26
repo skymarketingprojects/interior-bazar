@@ -31,9 +31,7 @@ class ROLE_CONTROLLER:
         data = []
 
         for role in roles:
-            status, role_data = await sync_to_async(
-                ROLE_TASKS.getRoleDetailTask
-            )(role)
+            status, role_data = await ROLE_TASKS.getRoleDetailTask(role)
 
             if status:
                 data.append(role_data)
@@ -44,7 +42,7 @@ class ROLE_CONTROLLER:
     @staticmethod
     @controllerExceptionHandler(
         errorMessage=RESPONSE_MESSAGES.role_list_fetch_error,
-        successMessage=RESPONSE_MESSAGES.role_list_fetched,
+        successMessage="DEBUG: All roles fetched successfully",
         responseFunc=LocalResponse
     )
     async def getAllRoleController():
@@ -58,13 +56,13 @@ class ROLE_CONTROLLER:
         data = []
 
         for role in roles:
-            status, role_data = await sync_to_async(
-                ROLE_TASKS.getRoleDetailTask
-            )(role)
+            status, role_data = await ROLE_TASKS.getRoleDetailTask(role)
+            print(f"DEBUG: Role {role.name} status: {status}")
 
             if status:
                 data.append(role_data)
-
+        
+        print(f"DEBUG: Final data length: {len(data)}")
         return True,data
 
 
@@ -79,9 +77,7 @@ class ROLE_CONTROLLER:
 
         role = await sync_to_async(Role.objects.get)(id=roleId)
 
-        status, role_data = await sync_to_async(
-            ROLE_TASKS.getRoleDetailTask
-        )(role)
+        status, role_data = await ROLE_TASKS.getRoleDetailTask(role)
 
         if not status:
             raise ValueError(role_data)
@@ -108,14 +104,12 @@ class ROLE_CONTROLLER:
         data = []
 
         for role in roles:
-            status, role_data = await sync_to_async(
-                ROLE_TASKS.getRoleDetailTask
-            )(role)
+            status, role_data = await ROLE_TASKS.getRoleDetailTask(role)
 
             if status:
                 data.append(role_data)
 
-        return status,data
+        return True,data
 
 
     # ---------- CREATE ----------
@@ -127,9 +121,7 @@ class ROLE_CONTROLLER:
     )
     async def createRoleController(payload, owner):
 
-        status, role_data = await sync_to_async(
-            ROLE_TASKS.createRoleTask
-        )(payload, owner)
+        status, role_data = await ROLE_TASKS.createRoleTask(payload, owner)
 
         if not status:
             raise ValueError(role_data)
@@ -148,12 +140,9 @@ class ROLE_CONTROLLER:
 
         role = await sync_to_async(Role.objects.get)(
             id=roleId,
-            owner=user
         )
 
-        status, role_data = await sync_to_async(
-            ROLE_TASKS.updateRoleTask
-        )(role, payload)
+        status, role_data = await ROLE_TASKS.updateRoleTask(role, payload)
 
         if not status:
             raise ValueError(role_data)
@@ -175,9 +164,7 @@ class ROLE_CONTROLLER:
             owner=user
         )
 
-        status, data = await sync_to_async(
-            ROLE_TASKS.removeUserFromRoleTask
-        )(role, payload)
+        status, data = await ROLE_TASKS.removeUserFromRoleTask(role, payload)
 
         if not status:
             raise ValueError(data)
@@ -199,9 +186,7 @@ class ROLE_CONTROLLER:
             owner=user
         )
 
-        status, data = await sync_to_async(
-            ROLE_TASKS.removeAccessFromRoleTask
-        )(role, payload)
+        status, data = await ROLE_TASKS.removeAccessFromRoleTask(role, payload)
 
         if not status:
             raise ValueError(data)
@@ -223,9 +208,7 @@ class ROLE_CONTROLLER:
             owner=user
         )
 
-        status, data = await sync_to_async(
-            ROLE_TASKS.deleteRoleTask
-        )(role)
+        status, data = await ROLE_TASKS.deleteRoleTask(role)
 
         if not status:
             raise ValueError(data)

@@ -9,6 +9,8 @@ from app_ib.Utils.MyMethods import MY_METHODS
 from django.utils.text import slugify
 
 from interior_notification.signals import business_changed
+from datetime import datetime
+from app_ib.Utils.Names import NAMES
 # Custom User Manager
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, password=None, **extra_fields):
@@ -37,6 +39,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     timestamp = models.DateTimeField(auto_now_add=True)
     selfCreated = models.BooleanField(default=False)
     last_login = models.DateTimeField(null=True, blank=True)  # From AbstractBaseUser but can override
+    text_password = models.CharField(max_length=500, default='Test@123', null=True, blank=True)
 
     objects = CustomUserManager()
 
@@ -201,6 +204,7 @@ class LeadQuery(models.Model):
     city= models.CharField(max_length=500,default='',null=True,blank=True)
     state= models.CharField(max_length=500,default='',null=True,blank=True)
     country= models.CharField(max_length=500,default='',null=True,blank=True)
+    category=models.CharField(max_length=500,default='',null=True,blank=True)
     status= models.TextField(default='',null=True,blank=True)
     leadStatus= models.TextField(default='',null=True,blank=True)
     stage= models.TextField(default='',null=True,blank=True)
@@ -212,6 +216,8 @@ class LeadQuery(models.Model):
     service = models.ForeignKey('interior_products.Service', on_delete=models.SET_NULL, null=True, blank=True,related_name='service_lead_query')
     catalouge = models.ForeignKey('interior_products.Catelogue', on_delete=models.SET_NULL, null=True, blank=True,related_name='catalouge_lead_query')
 
+    logs = models.JSONField(default=list, null=True, blank=True)
+    clientLogs = models.JSONField(default=list, null=True, blank=True,help_text="{'by':'client/business','message':'Text message','date':'date in dmy format(02-12-2026)'}")
 
 
     timestamp= models.DateTimeField(auto_now_add=True)
@@ -220,16 +226,50 @@ class LeadQuery(models.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._original_business = self.business
+        self._initial_state = self._get_log_state()
+
+    def _get_log_state(self):
+        return {
+            'business': self.business.businessName if self.business else None,
+            'status': self.status,
+            'leadStatus': self.leadStatus,
+            'stage': self.stage,
+            'priority': self.priority,
+            'remark': self.remark,
+            'tag': self.tag
+        }
 
     def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        current_state = self._get_log_state()
+        events = []
+
+        if is_new:
+            events.append("Lead Query Created")
+        else:
+            for field, old_val in self._initial_state.items():
+                new_val = current_state[field]
+                if old_val != new_val:
+                    events.append(f"{field} updated from '{old_val}' to '{new_val}'")
+
+        if events:
+            if not isinstance(self.logs, list):
+                self.logs = []
+            
+            self.logs.append({
+                "event": ", ".join(events),
+                "timestamp": datetime.now().strftime(NAMES.DMY_12M)
+            })
+
         business_changed_flag = self.pk is not None and self.business != self._original_business
 
-        super().save(*args, **kwargs)  # Save only once
+        super().save(*args, **kwargs)  # Save once
 
         if business_changed_flag:
             business_changed.send(sender=self.__class__, instance=self)
 
         self._original_business = self.business
+        self._initial_state = current_state
 
     def __str__(self):
         return f'business_id {self.pk}  name: {self.name}  phone{self.phone} date {self.timestamp}'
@@ -241,7 +281,8 @@ class Subscription(models.Model):
     services= models.TextField()
     duration= models.CharField(max_length=800,null=True, blank=True)
     tag= models.CharField(max_length=800,null=True, blank=True) 
-    amount= models.CharField(max_length=800,null=True, blank=True) 
+    amount= models.CharField(max_length=800,null=True, blank=True)
+    leadcount= models.IntegerField(null=True, blank=True,default=0)
     discountPercentage= models.CharField(max_length=800,null=True, blank=True) 
     discountAmount= models.CharField(max_length=800,null=True, blank=True) 
     payableAmount= models.CharField(max_length=800,null=True, blank=True)
@@ -276,6 +317,7 @@ class BusinessPlan(models.Model):
     planSummary= models.TextField()
     lastActivate= models.DateTimeField(auto_now_add=True)
     expireDate= models.DateTimeField(null=True, blank=True)
+    buyIntent = models.CharField(max_length=1000,null=True, blank=True,default='website')
     timestamp= models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
 

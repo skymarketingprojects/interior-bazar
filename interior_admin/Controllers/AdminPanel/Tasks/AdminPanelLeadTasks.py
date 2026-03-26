@@ -90,8 +90,8 @@ class LEAD_TASKS:
         results = []
         for lead in lead_list:
             business_name = lead.business.businessName if lead.business else None
-
             results.append({
+                "id": lead.id,
                 "date": lead.timestamp,
                 "name": lead.name,
                 "phone": lead.phone,
@@ -126,19 +126,19 @@ class ADMIN_PANEL_LEAD_TASKS_V2:
 
         def _agg():
             base = lead_qs.aggregate(
-                total=Count("id"),
+                totalLeads=Count("id"),
 
-                assigned=Count(
+                assignedLeads=Count(
                     "id",
                     filter=Q(business__isnull=False)
                 ),
 
-                unassigned=Count(
+                unassignedLeads=Count(
                     "id",
                     filter=Q(business__isnull=True)
                 ),
 
-                today=Count(
+                todayLeads=Count(
                     "id",
                     filter=Q(timestamp__date=today)
                 ),
@@ -151,15 +151,36 @@ class ADMIN_PANEL_LEAD_TASKS_V2:
                 .annotate(count=Count("id"))
                 .values_list("status", "count")
             )
+            admin_status = dict(
+                lead_qs
+                .values("leadStatus")
+                .annotate(count=Count("id"))
+                .values_list("leadStatus", "count")
+            )
+            stage_metrics = dict(
+                lead_qs
+                .values("stage")
+                .annotate(count=Count("id"))
+                .values_list("stage", "count")
+            )
+            category_metrics = dict(
+                lead_qs
+                .values("category")
+                .annotate(count=Count("id"))
+                .values_list("category", "count")
+            )
 
-            base["status_metrics"] = status_counts
+            base["statusMetrics"] = status_counts
+            base["adminStatusMetrics"] = admin_status
+            base["stageMetrics"] = stage_metrics
+            base["categoryMetrics"] = category_metrics
 
             if plan_qs is not None:
-                base["platform"] = plan_qs.count()
+                base["platformLeads"] = plan_qs.count()
             else:
-                base["platform"] = 0
+                base["platformLeads"] = 0
 
-            base["final_total"] = base["total"] + base["platform"]
+            base["finalTotal"] = base["totalLeads"] + base["platformLeads"]
 
             return base
 
@@ -203,6 +224,7 @@ class ADMIN_PANEL_LEAD_TASKS_V2:
 
         results = [
             {
+                "id": l.id,
                 "date": l.timestamp,
                 "name": l.name,
                 "phone": l.phone,

@@ -29,7 +29,7 @@ class ACCESS_CONTROLLER:
             if status:
                 AccessDataList.append(data)
 
-        return AccessDataList
+        return True, AccessDataList
 
     @staticmethod
     @controllerExceptionHandler(
@@ -51,7 +51,7 @@ class ACCESS_CONTROLLER:
             if status:
                 AccessDataList.append(data)
 
-        return AccessDataList
+        return True, AccessDataList
 
     @classmethod
     @controllerExceptionHandler(
@@ -71,10 +71,10 @@ class ACCESS_CONTROLLER:
         async for role in User.roles.all().aiterator():
             response = await cls.getAccessListByRole(role)
 
-            if response.success == RESPONSE_MESSAGES.success:
+            if response.response == RESPONSE_MESSAGES.success:
                 access_set.update(response.data)
 
-        return list(access_set)
+        return True, list(access_set)
 
     @staticmethod
     @controllerExceptionHandler(

@@ -24,9 +24,7 @@ class ROLE_TASKS:
     @taskExceptionHandler
     async def getRoleDetailTask(cls, role: Role):
 
-        acceessResponse = await sync_to_async(
-            ACCESS_CONTROLLER.getAccessListByRole
-        )(role)
+        acceessResponse = await ACCESS_CONTROLLER.getAccessListByRole(role)
 
         if acceessResponse.code != RESPONSE_CODES.success:
             return False, acceessResponse.message

@@ -4,11 +4,12 @@ from adrf.decorators import api_view
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.Names import NAMES, ACCESSLIST
+from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.decorators.ViewDecorator import exceptionHandler
 
 from app_ib.Controllers.FunnelQuery.FunnelQueryController import FUNNEL_QUERY_CONTROLLER
 from interior_admin.Controllers.AdminPanel.AdminPanelController import ADMIN_PANEL_CONTROLLER, ADMIN_PANEL_CONTROLLER_V2
-
+from .Controllers.AdminPanel.Validators.AdminPanelValidators import UpdatePlanIntent
 import asyncio
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -25,7 +26,7 @@ class AdminPanelViewsV1:
         responseFunc=ServerResponse
         )
     async def GetBusinessTilesStatsView(request:Request):
-            hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+            await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
             # Convert request.data to dot notation object
             data = request.data
 
@@ -51,7 +52,7 @@ class AdminPanelViewsV1:
         responseFunc=ServerResponse
     )
     async def GetAdminDashboardStatsView(request):
-        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
         
         final_response = await ADMIN_PANEL_CONTROLLER.GetAdminDashboardStats()
 
@@ -65,7 +66,7 @@ class AdminPanelViewsV1:
         responseFunc=ServerResponse
     )
     async def GetPlatformLeadsStatsView(request):
-        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_LEAD_VIEW)
+        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_LEAD_VIEW)
         
         final_response = await ADMIN_PANEL_CONTROLLER.GetAllLeadsStats()
 
@@ -77,7 +78,7 @@ class AdminPanelViewsV1:
         responseFunc=ServerResponse
     )
     async def GetAssignedLeadsTilesView(request):
-        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_LEAD_VIEW)
+        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_LEAD_VIEW)
         
         data = request.data
 
@@ -104,11 +105,15 @@ class AdminPanelViewsV1:
         responseFunc=ServerResponse
     )
     async def GetDashboardDataView(request):
-        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+
+        await MY_METHODS.printStatus("GetDashboardDataView")
         
         final_response = await ADMIN_PANEL_CONTROLLER.GetDashboardData()
+        await MY_METHODS.printStatus("resp",final_response)
 
         return final_response
+    
     @api_view(['GET'])
     @permission_classes([IsAuthenticated])
     @exceptionHandler(
@@ -116,7 +121,7 @@ class AdminPanelViewsV1:
         responseFunc=ServerResponse
     )
     async def GetAllUserBusinessStatsView(request):
-        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
         
         final_response = await ADMIN_PANEL_CONTROLLER.GetAllUserBusinessStats()
 
@@ -130,7 +135,7 @@ class AdminPanelViewsV1:
         responseFunc=ServerResponse
     )
     async def GetDailyUsersStatsView(request):
-        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
         final_response = await ADMIN_PANEL_CONTROLLER.GetDailyUserData()
             
         return final_response
@@ -142,7 +147,7 @@ class AdminPanelViewsV1:
         responseFunc=ServerResponse
     )
     async def GetTodaySignupsStatsView(request):
-        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
         
         final_response = await ADMIN_PANEL_CONTROLLER.GetTodaySignupsStats()
 
@@ -156,7 +161,7 @@ class AdminPanelViewsV1:
         responseFunc=ServerResponse
     )
     async def GetChartsStatsView(request):
-        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
             
         final_response = await ADMIN_PANEL_CONTROLLER.GetChartsStats()
 
@@ -169,7 +174,7 @@ class AdminPanelViewsV1:
         responseFunc=ServerResponse
     )
     async def GetFunnelQueriesView(request,pageNumber, pageSize):
-        hasAccess(user=request.user, accessName=NAMES.GET_FUNNEL_QUERIES)
+        await hasAccess(user=request.user, accessName=NAMES.GET_FUNNEL_QUERIES)
         final_response = await FUNNEL_QUERY_CONTROLLER.GetFunnelQueries(pageNumber=pageNumber, pageSize=pageSize)
 
         return final_response
@@ -181,7 +186,7 @@ class AdminPanelViewsV1:
         responseFunc=ServerResponse
     )
     async def GetTotalUsersView(request):
-        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
         final_response = await ADMIN_PANEL_CONTROLLER.GetTotalNoOfUsers()
 
         return final_response
@@ -195,7 +200,7 @@ class AdminPanelViewsV2:
         responseFunc=ServerResponse
         )
     async def GetBusinessTilesStatsView(request: Request):
-            hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+            await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
             # Convert request.data to dot notation object
             data = request.data
 
@@ -223,7 +228,7 @@ class AdminPanelViewsV2:
         responseFunc=ServerResponse
     )
     async def GetAdminDashboardStatsView(request):
-        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
         final_response = await ADMIN_PANEL_CONTROLLER_V2.GetAdminDashboardStats()
 
         return final_response
@@ -236,7 +241,7 @@ class AdminPanelViewsV2:
         responseFunc=ServerResponse
     )
     async def GetPlatformLeadsStatsView(request):
-        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_LEAD_VIEW)
+        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_LEAD_VIEW)
         final_response = await ADMIN_PANEL_CONTROLLER_V2.GetAllLeadsStats()
 
         return final_response
@@ -248,7 +253,7 @@ class AdminPanelViewsV2:
         responseFunc=ServerResponse
     )
     async def GetAssignedLeadsTilesView(request):
-        hasAccess(user=request.user, accessName=NAMES.GET_ASSIGNED_LEADS_STATS)
+        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_LEAD_VIEW)
         data = request.data
 
         start_date = data.get(NAMES.START_DATE, None)
@@ -274,7 +279,7 @@ class AdminPanelViewsV2:
         responseFunc=ServerResponse
     )
     async def GetDashboardDataView(request):
-        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
         final_response = await ADMIN_PANEL_CONTROLLER_V2.GetDashboardData()
 
         return final_response
@@ -286,7 +291,7 @@ class AdminPanelViewsV2:
         responseFunc=ServerResponse
     )
     async def GetAllUserBusinessStatsView(request):
-        hasAccess(user=request.user, accessName=NAMES.GET_ALL_USER_BUSINESS_STATS)
+        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_BUSINESS_VIEW)
         final_response = await ADMIN_PANEL_CONTROLLER_V2.GetAllUserBusinessStats()
 
         return final_response
@@ -299,7 +304,7 @@ class AdminPanelViewsV2:
         responseFunc=ServerResponse
     )
     async def GetDailyUsersStatsView(request):
-        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
         final_response = await ADMIN_PANEL_CONTROLLER_V2.GetDailyUserData()
             
         return final_response
@@ -311,7 +316,7 @@ class AdminPanelViewsV2:
         responseFunc=ServerResponse
     )
     async def GetTodaySignupsStatsView(request):
-        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
         final_response = await ADMIN_PANEL_CONTROLLER_V2.GetTodaySignupsStats()
 
         return final_response
@@ -324,7 +329,7 @@ class AdminPanelViewsV2:
         responseFunc=ServerResponse
     )
     async def GetChartsStatsView(request):
-        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
             
         final_response = await ADMIN_PANEL_CONTROLLER_V2.GetChartsStats()
 
@@ -337,7 +342,7 @@ class AdminPanelViewsV2:
         responseFunc=ServerResponse
     )
     async def GetFunnelQueriesView(request,pageNumber, pageSize):
-        hasAccess(user=request.user, accessName=NAMES.GET_FUNNEL_QUERIES)
+        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_LEAD_VIEW)
         final_response = await FUNNEL_QUERY_CONTROLLER.GetFunnelQueries(pageNumber=pageNumber, pageSize=pageSize)
 
         return final_response
@@ -349,7 +354,31 @@ class AdminPanelViewsV2:
         responseFunc=ServerResponse
     )
     async def GetTotalUsersView(request):
-        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
         final_response = await ADMIN_PANEL_CONTROLLER_V2.GetTotalNoOfUsers()
+
+        return final_response
+    @api_view(['GET'])
+    @permission_classes([IsAuthenticated])
+    @exceptionHandler(
+        errorMessage=RESPONSE_MESSAGES.lead_tile_fetch_error,
+        responseFunc=ServerResponse
+    )
+    async def GetLeadAnalyticsView(request):
+        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
+        final_response = await ADMIN_PANEL_CONTROLLER_V2.GetLeadAnalyticsStats()
+
+        return final_response
+
+    @api_view(['POST'])
+    @permission_classes([IsAuthenticated])
+    @exceptionHandler(
+        errorMessage=RESPONSE_MESSAGES.plan_intent_update_error,
+        responseFunc=ServerResponse
+    )
+    async def UpdatePlanIntentView(request:Request):
+        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_BUSINESS_VIEW)
+        data = UpdatePlanIntent(**request.data)
+        final_response = await ADMIN_PANEL_CONTROLLER_V2.UpdatePlanIntent(data=data)
 
         return final_response

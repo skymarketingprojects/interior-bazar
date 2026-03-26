@@ -6,6 +6,8 @@ from app_ib.models import Business,CustomUser
 from interior_products.models import Product,Service,Catelogue
 from ..Validators.QueryValidators import LeadQueryCreateSchema,LeadQueryUpdateSchema,LeadQueryStatusSchema
 from interior_admin.Controllers.AdminLeads.Validators.AdminLeadsValidators import AdminLeadsCreateSchema,AdminLeadsUpdateSchema
+from datetime import datetime
+
 class LEAD_QUERY_TASK:
 
     @classmethod
@@ -14,19 +16,33 @@ class LEAD_QUERY_TASK:
             lead_query_ins = LeadQuery()
 
             # using getattr to not get error when field is absent
-            lead_query_ins.name= data.name
-            lead_query_ins.phone=data.phone
-            lead_query_ins.email= data.email
-            lead_query_ins.interested= data.interested 
-            lead_query_ins.query= data.query
-            lead_query_ins.state= data.state
-            lead_query_ins.country= data.country
+            lead_query_ins.name= getattr(data, 'name', None) or ""
+            lead_query_ins.phone= getattr(data, 'phone', None) or ""
+            lead_query_ins.email= getattr(data, 'email', None) or ""
+            lead_query_ins.interested= getattr(data, 'interested', None) or ""
+            lead_query_ins.query= getattr(data, 'query', None) or ""
+            lead_query_ins.state= getattr(data, 'state', None) or ""
+            lead_query_ins.country= getattr(data, 'country', None) or ""
             lead_query_ins.tag= NAMES.QUERY_TAG
+
+            try:
+                for logs in data.clientLogs:
+                    logData={'by':logs.by,'message':logs.message,'date':datetime.now().strftime(NAMES.DMY_HM_FORMAT)}
+                    currentLogs = lead_query_ins.clientLogs
+                    currentLogs.append(logData)
+                    lead_query_ins.clientLogs = currentLogs
+
+            except Exception as e:
+                # await MY_METHODS.printStatus(f'clientLogs not found {str(e)}')
+                pass
             
-            if data.stage:
-                lead_query_ins.stage= data.stage
-            if data.leadStatus:
-                lead_query_ins.leadStatus= data.leadStatus
+            stage = getattr(data, 'stage', None)
+            if stage:
+                lead_query_ins.stage = stage
+            
+            lead_status = getattr(data, 'leadStatus', None)
+            if lead_status:
+                lead_query_ins.leadStatus = lead_status
             
 
             if user:
@@ -64,22 +80,37 @@ class LEAD_QUERY_TASK:
     @classmethod
     async def UpdateLeadQueryTask(self, lead_query_ins:LeadQuery, data:LeadQueryUpdateSchema|AdminLeadsUpdateSchema):
         try:
-            lead_query_ins.name= data.name or lead_query_ins.name
-            lead_query_ins.phone= data.phone or lead_query_ins.phone
-            lead_query_ins.email= data.email or lead_query_ins.email
-            lead_query_ins.interested= data.interested or lead_query_ins.interested
-            lead_query_ins.query= data.query or lead_query_ins.query
-            lead_query_ins.state= data.state or lead_query_ins.state
-            lead_query_ins.country= data.country or lead_query_ins.country
-            lead_query_ins.status= data.status or lead_query_ins.status
-            lead_query_ins.tag= data.tag or lead_query_ins.tag
-            lead_query_ins.priority= data.priority or lead_query_ins.priority
-            lead_query_ins.remark= data.remark or lead_query_ins.remark
+            lead_query_ins.name= getattr(data, NAMES.NAME, None) or lead_query_ins.name
+            lead_query_ins.phone= getattr(data, NAMES.PHONE, None) or lead_query_ins.phone
+            lead_query_ins.email= getattr(data, NAMES.EMAIL, None) or lead_query_ins.email
+            lead_query_ins.interested= getattr(data, NAMES.INTRESTED, None) or lead_query_ins.interested
+            lead_query_ins.query= getattr(data, NAMES.QUERY, None) or lead_query_ins.query
+            lead_query_ins.state= getattr(data, NAMES.STATE, None) or lead_query_ins.state
+            lead_query_ins.country= getattr(data, NAMES.COUNTRY, None) or lead_query_ins.country
+            lead_query_ins.status= getattr(data, NAMES.STATUS, None) or lead_query_ins.status
+            lead_query_ins.tag= getattr(data, NAMES.TAG, None) or lead_query_ins.tag
+            lead_query_ins.priority= getattr(data, NAMES.PRIORITY, None) or lead_query_ins.priority
+            lead_query_ins.remark= getattr(data, NAMES.REMARK, None) or lead_query_ins.remark
+            lead_query_ins.city= getattr(data, NAMES.CITY, None) or lead_query_ins.city
+
+            try:
+                for logs in data.clientLogs:
+                    logData={'by':logs.by,'message':logs.message,'date':datetime.now().strftime(NAMES.DMY_HM_FORMAT)}
+                    currentLogs = lead_query_ins.clientLogs
+                    currentLogs.append(logData)
+                    lead_query_ins.clientLogs = currentLogs
+
+            except Exception as e:
+                # await MY_METHODS.printStatus(f'clientLogs not found {str(e)}')
+                pass
             
-            if data.leadStatus:
-                lead_query_ins.leadStatus= data.leadStatus or lead_query_ins.leadStatus
-            if data.stage:
-                lead_query_ins.stage= data.stage or lead_query_ins.stage
+            lead_status = getattr(data, NAMES.LEAD_STATUS, None)
+            if lead_status:
+                lead_query_ins.leadStatus = lead_status or lead_query_ins.leadStatus
+            
+            stage = getattr(data, NAMES.STAGE, None)
+            if stage:
+                lead_query_ins.stage = stage or lead_query_ins.stage
             
             # await MY_METHODS.printStatus(f'tag {data.tag}')
             
@@ -88,7 +119,7 @@ class LEAD_QUERY_TASK:
             return data
             
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in UpdateLeadQueryTask {str(e)}')
+            await MY_METHODS.printStatus(f'Error in UpdateLeadQueryTask {str(e)}')
             return None
 
     @classmethod
@@ -158,7 +189,8 @@ class LEAD_QUERY_TASK:
                 NAMES.REMARK:lead_query_ins.remark,
                 NAMES.DATE:lead_query_ins.timestamp.strftime(NAMES.DMY_FORMAT),
                 NAMES.ASSIGNED:assignedbusiness,
-                NAMES.LEADFOR:leadFor.title if leadFor else None
+                NAMES.LEADFOR:leadFor.title if leadFor else None,
+                NAMES.CLIENT_LOGS:lead_query_ins.clientLogs
 
             }
             return data

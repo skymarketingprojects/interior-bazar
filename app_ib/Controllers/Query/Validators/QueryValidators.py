@@ -91,6 +91,9 @@ class LeadQueryCreateSchema(BaseValidator):
 
     itemId: Optional[int] = Field(None, gt=0)
 
+    leadStatus: Optional[str] = None
+    stage: Optional[str] = None
+
     @validator("phone", allow_reuse=True)
     def validate_phone(cls, v):
         if not v.isdigit():
@@ -115,6 +118,8 @@ class LeadQueryUpdateSchema(BaseValidator):
     tag: Optional[str] = None
     priority: Optional[str] = None
     remark: Optional[str] = None
+    leadStatus: Optional[str] = None
+    stage: Optional[str] = None
 
     @validator("phone", allow_reuse=True)
     def validate_phone(cls, v):

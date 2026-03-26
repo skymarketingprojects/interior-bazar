@@ -472,6 +472,10 @@ class RESPONSE_MESSAGES:
     access_fetch_error= 'Unable to fetch access'
     access_fetched= 'Access fetched successfully'
 
+    # plan intent
+    plan_intent_update_error= 'Unable to update plan intent'
+    plan_intent_update_success= 'Plan intent updated successfully'
+
 
 
 class VALIDATION_MESSAGES:

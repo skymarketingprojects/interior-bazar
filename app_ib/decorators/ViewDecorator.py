@@ -29,7 +29,7 @@ def exceptionHandler(
                 if inspect.isawaitable(result):
                     result = await result
                 
-                await MY_METHODS.printStatus(f"Result: {result}")
+                # await MY_METHODS.printStatus(f"Result: {result}")
                 if viewResponse:
 
                     return responseFunc(

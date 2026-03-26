@@ -1,4 +1,4 @@
-from app_ib.models import CustomUser, Business, BusinessPlan
+from app_ib.models import CustomUser, Business, BusinessPlan, LeadQuery
 from collections import defaultdict
 from asgiref.sync import sync_to_async
 from django.utils import timezone
@@ -400,3 +400,66 @@ class ADMIN_ANALYTICS_TASKS_V2:
 
         return True, await sync_to_async(_calc)()
 
+
+    @classmethod
+    @taskExceptionHandler
+    async def GetLeadAnalyticsData(cls, lead_qs: QuerySet):
+        def _calc():
+            def normalize(val):
+                if not val: return "Unknown"
+                return str(val).strip().title()
+
+            period_data = defaultdict(lambda: {
+                "totalLeads": 0,
+                "newLeads": 0,
+                "assignedLeads": 0,
+                "tags": defaultdict(int),
+                "stages": defaultdict(int),
+                "leadStatuses": defaultdict(int),
+                "statuses": defaultdict(int)
+            })
+
+            rows = list(
+                lead_qs.annotate(date=TruncDate("timestamp"))
+                .values(
+                    "date", "status", "leadStatus", "stage", "tag", "business"
+                )
+                .order_by("date")
+            )
+
+            for r in rows:
+                date_str = r["date"].isoformat()
+                day_stats = period_data[date_str]
+
+                day_stats["totalLeads"] += 1
+                
+                # New leads logic (status normalized to 'New')
+                if normalize(r["status"]) == "New":
+                    day_stats["newLeads"] += 1
+                
+                # Assigned leads logic (business is not None)
+                if r["business"] is not None:
+                    day_stats["assignedLeads"] += 1
+
+                # Group categorical fields
+                day_stats["tags"][normalize(r["tag"] or "No Tag")] += 1
+                day_stats["stages"][normalize(r["stage"] or "No Stage")] += 1
+                day_stats["leadStatuses"][normalize(r["leadStatus"] or "No Lead Status")] += 1
+                day_stats["statuses"][normalize(r["status"] or "No Status")] += 1
+
+            # Convert defaultdicts to regular dicts for JSON serialization
+            result = []
+            for date, stats in sorted(period_data.items()):
+                result.append({
+                    "date": date,
+                    "totalLeads": stats["totalLeads"],
+                    "newLeads": stats["newLeads"],
+                    "assignedLeads": stats["assignedLeads"],
+                    "tags": dict(stats["tags"]),
+                    "stages": dict(stats["stages"]),
+                    "leadStatuses": dict(stats["leadStatuses"]),
+                    "statuses": dict(stats["statuses"])
+                })
+            return result
+
+        return True, await sync_to_async(_calc)()

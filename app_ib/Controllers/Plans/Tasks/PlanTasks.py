@@ -91,6 +91,7 @@ class PLAN_TASKS:
             businessPlanIns.isActive= False
             businessPlanIns.transactionId= transectionId
             businessPlanIns.expireDate= expiry_date
+            businessPlanIns.buyIntent = NAMES.WEBSITE
             await sync_to_async(businessPlanIns.save)()
 
             data = await self.GetBusinessPlanData(businessPlanIns)

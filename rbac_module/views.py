@@ -8,6 +8,7 @@ from adrf.decorators import api_view
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import ACCESSLIST
 from app_ib.decorators.ViewDecorator import exceptionHandler
 
 from rbac_module.Controllers.RoleController.RoleController import ROLE_CONTROLLER
@@ -17,20 +18,23 @@ from rbac_module.Controllers.RoleController.Validators.RoleValidators import (
     RoleAccessUpdateSchema,
     RoleAssignUsersSchema
 )
-
+from interior_admin.Validators.adminValidators import hasAccess
 
 class RoleCollectionView(AsyncAPIView):
     permission_classes = [IsAuthenticated]
-
+    
     @exceptionHandler(
         errorMessage=RESPONSE_MESSAGES.role_list_fetch_error,
         responseFunc=ServerResponse
     )
-    async def get(self, request: Request) -> ServerResponse:
+    async def get(self, request: Request, roleId: int = None) -> ServerResponse:
 
-        result = await ROLE_CONTROLLER.getRolesByOwnerController(
-            user=request.user
-        )
+        if roleId:
+            result = await ROLE_CONTROLLER.getRoleDetailController(
+                roleId=roleId
+            )
+        else:
+            result = await ROLE_CONTROLLER.getAllRoleController()
 
         return result
 
@@ -40,11 +44,12 @@ class RoleCollectionView(AsyncAPIView):
         responseFunc=ServerResponse
     )
     async def post(self, request: Request) -> ServerResponse:
+        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_RBAC)
 
         validated = RoleCreateSchema(**request.data)
 
         result = await ROLE_CONTROLLER.createRoleController(
-            payload=validated.dict(),
+            payload=validated,
             owner=request.user
         )
 
@@ -56,6 +61,7 @@ class RoleCollectionView(AsyncAPIView):
         responseFunc=ServerResponse
     )
     async def put(self, request: Request, roleId: int) -> ServerResponse:
+        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_RBAC)
 
         validated = RoleUpdateSchema(**request.data)
 
@@ -73,6 +79,7 @@ class RoleCollectionView(AsyncAPIView):
         responseFunc=ServerResponse
     )
     async def delete(self, request: Request, roleId: int) -> ServerResponse:
+        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_RBAC)
 
         result = await ROLE_CONTROLLER.deleteRoleController(
             user=request.user,
@@ -89,6 +96,7 @@ class RoleCollectionView(AsyncAPIView):
     responseFunc=ServerResponse
 )
 async def removeAccessView(request: Request, roleId: int) -> ServerResponse:
+    await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_RBAC)
 
     validated = RoleAccessUpdateSchema(**request.data)
 
@@ -108,6 +116,7 @@ async def removeAccessView(request: Request, roleId: int) -> ServerResponse:
     responseFunc=ServerResponse
 )
 async def removeUserView(request: Request, roleId: int) -> ServerResponse:
+    await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_RBAC)
 
     validated = RoleAssignUsersSchema(**request.data)
 

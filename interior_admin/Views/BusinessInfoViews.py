@@ -45,7 +45,8 @@ async def GetAdminBusinessDataViewV2(request:Request):
     try:
         hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_BUSINESS_VIEW)
         pageNo = request.query_params.get(NAMES.PAGE_NO, 1)
-        pageSize = request.query_params.get(NAMES.PAGE_SIZE, 1)
+        pageSize = request.query_params.get(NAMES.PAGE_SIZE, 10)
+
         # Call Auth Controller to Create User
         # await MY_METHODS.printStatus(f'GetAdminBusinessDataView called with pageNo,pageSize:-{pageNo},{pageSize}')
         final_response = await BUSINESS_INFO_CONTROLLER.GetBusinessInfo( pageNo=pageNo,size=pageSize)

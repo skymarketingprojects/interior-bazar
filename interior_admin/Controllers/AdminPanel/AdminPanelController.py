@@ -1,5 +1,6 @@
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.Names import NAMES
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.Utils.MyMethods import MY_METHODS
 
@@ -10,6 +11,8 @@ from .Tasks.AdminPannelAnalyticsTask import ANALYTICS_TASKS
 from .Tasks.AdminPanelBusinessTasks import ADMIN_PANEL_BUSINESS_TASKS_V2
 from .Tasks.AdminPanelLeadTasks import ADMIN_PANEL_LEAD_TASKS_V2
 from .Tasks.AdminPannelAnalyticsTask import ADMIN_ANALYTICS_TASKS_V2
+from .Validators.AdminPanelValidators import UpdatePlanIntent
+
 
 from django.conf import settings
 from app_ib.Utils.AppMode import APPMODE
@@ -221,7 +224,8 @@ class ADMIN_PANEL_CONTROLLER:
         successMessage=RESPONSE_MESSAGES.dashboard_data_fetch_success
     )
     async def GetDashboardData(cls):
-        total_users, total_businesses, total_queries, today_signups = await asyncio.gather(
+        await MY_METHODS.printStatus('Fetching dashboard data...')
+        (total_users_status, total_users), (total_businesses_status, total_businesses), (total_queries_status, total_queries), (today_signups_status, today_signups) = await asyncio.gather(
             ADMIN_PANEL_TASKS.GetTotalUsers(),
             ADMIN_PANEL_TASKS.GetTotalBusinesses(),
             LEAD_TASKS.GetTotalLeads(),
@@ -233,9 +237,10 @@ class ADMIN_PANEL_CONTROLLER:
             "totalBusinesses": total_businesses,
             "totalQueries": total_queries,
             "todaySignups": today_signups
-        }
+        } 
+        await MY_METHODS.printStatus(response_data)
 
-        return response_data
+        return True,response_data
     
 
 
@@ -251,11 +256,14 @@ class ADMIN_PANEL_CONTROLLER_V2:
     async def GetBusinessTilesStats(cls, start_date=None, end_date=None, page_number=1, page_size=2,plan=None):
 
         business_qs = None
+        await MY_METHODS.printStatus('Fetching business tiles...')
         if plan:
+            # await MY_METHODS.printStatus( 'Fetching business tiles for plan:',plan)
             business_qs = Business.objects.filter(
-                business_plan__plan_id=plan
+                business_plan__plan__title__iexact=plan
             )
         else:
+            # await MY_METHODS.printStatus('Fetching business tiles for all plans...')
             business_qs = Business.objects.all()
 
 
@@ -286,24 +294,23 @@ class ADMIN_PANEL_CONTROLLER_V2:
             business_qs = business_qs.filter(selfCreated=False)  # Correct usage in classmethod
 
         # Kick off both async tasks
-        metrics_task = ADMIN_PANEL_BUSINESS_TASKS_V2.GetBusinessMetrics(business_qs)
-        tiles_task = ADMIN_PANEL_BUSINESS_TASKS_V2.GetBusinessTiles(business_qs=business_qs)
+        # metrics_task = ADMIN_PANEL_BUSINESS_TASKS_V2.GetBusinessMetrics(business_qs)
+        metrics_data = await ADMIN_PANEL_BUSINESS_TASKS_V2.GetBusinessMetrics(business_qs)
+        # tiles_task = ADMIN_PANEL_BUSINESS_TASKS_V2.GetBusinessTiles(business_qs=business_qs)
 
         # Each task returns (status, data)
-        (metrics_status, metrics_data), (tiles_status, tiles_data) = await asyncio.gather(
-            metrics_task, tiles_task
-        )
+        # (metrics_status, metrics_data), (tiles_status, tiles_data) = await asyncio.gather(
+        #     metrics_task, tiles_task
+        # )
 
         # Build dashboard using the returned data
-        dashboard_data = {
-            "totalBusinesses": metrics_data.get("total", 0),
-            "totalActiveBusinesses": metrics_data.get("active", 0),
-            "totalInactiveBusinesses": metrics_data.get("inactive", 0),
-            "weeklySignups": metrics_data.get("weekly_signup", 0),
-            "businessTiles": tiles_data  # Already contains results + pagination
-        }
+        # dashboard_data = {
+        #     **metrics_data,
+        #     "businessTiles": tiles_data  # Already contains results + pagination
+        # }
 
-        return True,dashboard_data
+        # return True,dashboard_data
+        return metrics_data
 
 
 
@@ -334,14 +341,9 @@ class ADMIN_PANEL_CONTROLLER_V2:
         (metricstatus,metrics),(GetAllLeadsStats,tiles) = await asyncio.gather(metrics_task, tiles_task)
 
         response_data = {
-            "unassignedLeads": metrics["unassigned"],
-            "assignedLeads": metrics["assigned"],
-            "platformLeads": metrics["platform"],
-            "totalLeads": metrics["final_total"],
-            "todayLeads": metrics["today"],
-            "leadTiles": tiles,
+            **metrics,
         }
-
+        response_data["leadTiles"] = tiles
         return True,response_data
 
 
@@ -460,9 +462,9 @@ class ADMIN_PANEL_CONTROLLER_V2:
         if settings.ENV == APPMODE.PROD:
             user_qs = user_qs.filter(selfCreated=False)
 
-        result = await ADMIN_PANEL_BUSINESS_TASKS_V2.GetUserMetrics(user_qs)
+        status,result = await ADMIN_PANEL_BUSINESS_TASKS_V2.GetUserMetrics(user_qs)
 
-        return result
+        return status,result[NAMES.TOTAL]
 
 
     # ---------------- DAILY USERS ----------------
@@ -511,7 +513,7 @@ class ADMIN_PANEL_CONTROLLER_V2:
             business_qs=business_qs
         )
 
-        users, business, leads, today = await asyncio.gather(
+        (users_status, users), (business_status, business), (lead_status, leads), (today_status, today) = await asyncio.gather(
             users_task,
             business_task,
             lead_task,
@@ -524,3 +526,25 @@ class ADMIN_PANEL_CONTROLLER_V2:
             "totalQueries": leads["final_total"],
             "todaySignups": today["users"]
         }
+
+    # ---------------- LEAD ANALYTICS ----------------
+    @classmethod
+    @controllerExceptionHandler(
+        errorMessage=RESPONSE_MESSAGES.lead_tile_fetch_error,
+        responseFunc=LocalResponse,
+        successMessage=RESPONSE_MESSAGES.lead_tile_fetch_success
+    )
+    async def GetLeadAnalyticsStats(cls):
+        lead_qs = LeadQuery.objects.all()
+        result = await ADMIN_ANALYTICS_TASKS_V2.GetLeadAnalyticsData(lead_qs)
+        return result
+
+    @classmethod
+    @controllerExceptionHandler(
+        errorMessage=RESPONSE_MESSAGES.plan_intent_update_error,
+        responseFunc=LocalResponse,
+        successMessage=RESPONSE_MESSAGES.plan_intent_update_success
+    )
+    async def UpdatePlanIntent(cls, data:UpdatePlanIntent):
+        result = await ADMIN_PANEL_BUSINESS_TASKS_V2.UpdateBusinessPlanIntent(planId=data.planId, buyIntent=data.buyIntent)
+        return result

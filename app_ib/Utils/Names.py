@@ -3,6 +3,8 @@ class NAMES:
     BUSINESS = 'business'
     ADMIN = 'admin'
 
+    TOTAL = 'total'
+
     #random
     RANDOM_SQ_IMAGE = 'https://picsum.photos/500/500?random={num}'
     RANDOM_RT_IMAGE = 'https://picsum.photos/1000/500?random={num}'
@@ -45,6 +47,7 @@ class NAMES:
     YMD_FORMAT='%Y-%m-%d'
     DMY_12M = "%d %b %Y, %I:%M %p"
     HM_FORMAT='%H:%M'
+    DMY_HM_FORMAT = "%d-%m-%Y %H:%M"
 
     PRODUCT='product'
     CATALOUGE='catalogue'
@@ -158,10 +161,12 @@ class NAMES:
     STATUS='status'
     PRIORITY='priority'
     REMARK='remark'
+    LOGS='logs'
     DATE='date'
     ASSIGNED='assigned'
     LEAD_STATUS='leadStatus'
     LEADFOR='leadFor'
+    CLIENT_LOGS='clientLogs'
     CANDIDATE='candidates'
     ITEM_ID='itemId'
 
@@ -174,6 +179,9 @@ class NAMES:
     ROLE='role'
     USER='user'
     PLAN='plan'
+    LAST_PURCHASE='lastPurchase'
+    EXPIRE='expire'
+    LEADS_KOTA='leadsKota'
     PROFILE_IMAGE_URL='profileImageUrl'
     COUNTRY_CODE='countryCode'
     PROFILE_IMAGE='profileImage'
@@ -413,6 +421,7 @@ class ACCESSLIST:
     ACCESS_QUERY_VIEW = "query:view"
     ACCESS_FINANCE_VIEW = "finance:view"
     ACCESS_ADMIN = "admin:access"
+    ACCESS_RBAC = "rbac:fullAccess"
 
 
 
