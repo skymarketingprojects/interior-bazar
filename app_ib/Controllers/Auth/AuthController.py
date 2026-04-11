@@ -106,7 +106,7 @@ class AUTH_CONTROLLER:
 
             # Login User
             login_user = await AUTH_TASK.LoginUser(data.username, data.password)
-            # await MY_METHODS.printStatus(f'login_user {login_user}')
+            await MY_METHODS.printStatus(f'login_user {login_user}')
 
             if login_user:
                 # Generate Token and build final response data

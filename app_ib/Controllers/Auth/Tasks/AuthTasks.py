@@ -79,7 +79,7 @@ class AUTH_TASK:
                 return user
             return False
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in IsUserExist {e}')
+            await MY_METHODS.printStatus(f'Error in IsUserExist {e}')
             return False
 
     @classmethod
