@@ -138,10 +138,10 @@ class Business(models.Model):
     # badge = models.TextField(null=True, blank=True)
     businessBadge= models.ForeignKey(BusinessBadge, on_delete=models.SET_NULL, null=True, blank=True)
     bio = models.TextField( null=True, blank=True)
-    timestamp= models.DateTimeField(auto_now_add=True)
+    timestamp= models.DateTimeField(auto_now_add=True, db_index=True)
     updatedAt = models.DateTimeField(auto_now=True)
 
-    selfCreated = models.BooleanField(default=False)
+    selfCreated = models.BooleanField(default=False, db_index=True)
 
     def __str__(self):
         return f'business name - {self.businessName} : pk: {self.pk}'
@@ -205,9 +205,9 @@ class LeadQuery(models.Model):
     state= models.CharField(max_length=500,default='',null=True,blank=True)
     country= models.CharField(max_length=500,default='',null=True,blank=True)
     category=models.CharField(max_length=500,default='',null=True,blank=True)
-    status= models.TextField(default='',null=True,blank=True)
+    status= models.TextField(default='',null=True,blank=True, db_index=True)
     leadStatus= models.TextField(default='',null=True,blank=True)
-    stage= models.TextField(default='',null=True,blank=True)
+    stage= models.TextField(default='',null=True,blank=True, db_index=True)
     tag= models.TextField(default='',null=True,blank=True)
     priority= models.TextField(default='',null=True,blank=True)
     remark= models.TextField(default='',null=True,blank=True)
@@ -220,7 +220,7 @@ class LeadQuery(models.Model):
     clientLogs = models.JSONField(default=list, null=True, blank=True,help_text="{'by':'client/business','message':'Text message','date':'date in dmy format(02-12-2026)'}")
 
 
-    timestamp= models.DateTimeField(auto_now_add=True)
+    timestamp= models.DateTimeField(auto_now_add=True, db_index=True)
     updatedAt = models.DateTimeField(auto_now=True)
 
     def __init__(self, *args, **kwargs):

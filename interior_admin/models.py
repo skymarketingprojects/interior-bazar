@@ -15,11 +15,11 @@ class GMBBusiness(models.Model):
     socialLinks = models.JSONField(default=list, blank=True)
     waMessage = models.URLField(null=True, blank=True)
     assignedUser = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_gmb_leads')
-    rankingRate = models.FloatField(default=0.0)
-    tier = models.CharField(max_length=1, null=True, blank=True)
-    platform = models.CharField(max_length=100, default=NAMES.DEFAULT_PLATFORM)
+    rankingRate = models.FloatField(default=0.0, db_index=True)
+    tier = models.CharField(max_length=1, null=True, blank=True, db_index=True)
+    platform = models.CharField(max_length=100, default=NAMES.DEFAULT_PLATFORM, db_index=True)
     remark = models.TextField(null=True, blank=True)
-    category = models.CharField(max_length=255, null=True, blank=True)
+    category = models.CharField(max_length=255, null=True, blank=True, db_index=True)
     
     logs = models.JSONField(default=list, null=True, blank=True)
     

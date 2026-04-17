@@ -35,8 +35,8 @@ class AdminPanelViewsV1:
             page_number = data.get(NAMES.PAGE_NUMBER, 1)
             page_size = data.get(NAMES.PAGE_SIZE, 10) 
 
-            # Call the controller to get business tiles data
-            final_response = await ADMIN_PANEL_CONTROLLER.GetBusinessTilesStats(
+            # Call the controller to get business tiles data (V2 optimized)
+            final_response = await ADMIN_PANEL_CONTROLLER_V2.GetBusinessTilesStats(
                     start_date=start_date,
                     end_date=end_date,
                     page_number=page_number,
@@ -54,7 +54,7 @@ class AdminPanelViewsV1:
     async def GetAdminDashboardStatsView(request):
         await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
         
-        final_response = await ADMIN_PANEL_CONTROLLER.GetAdminDashboardStats()
+        final_response = await ADMIN_PANEL_CONTROLLER_V2.GetAdminDashboardStats()
 
         return final_response
 
@@ -68,7 +68,7 @@ class AdminPanelViewsV1:
     async def GetPlatformLeadsStatsView(request):
         await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_LEAD_VIEW)
         
-        final_response = await ADMIN_PANEL_CONTROLLER.GetAllLeadsStats()
+        final_response = await ADMIN_PANEL_CONTROLLER_V2.GetAllLeadsStats()
 
         return final_response
     @api_view(['POST'])
@@ -87,8 +87,8 @@ class AdminPanelViewsV1:
         page_number = data.get(NAMES.PAGE_NUMBER, 1)  # Default to page 1
         page_size = data.get(NAMES.PAGE_SIZE, 10)  # Default to 10 items per page
 
-        # Call the controller to get assigned leads data (paginated)
-        final_response = await ADMIN_PANEL_CONTROLLER.GetPaginatedLeadsStats(
+        # Call the controller to get assigned leads data (paginated) (V2 optimized)
+        final_response = await ADMIN_PANEL_CONTROLLER_V2.GetPaginatedLeadsStats(
                 start_date=start_date,
                 end_date=end_date,
                 search_query=None,  # Assigned leads would be filtered by business assignment
@@ -109,7 +109,7 @@ class AdminPanelViewsV1:
 
         await MY_METHODS.printStatus("GetDashboardDataView")
         
-        final_response = await ADMIN_PANEL_CONTROLLER.GetDashboardData()
+        final_response = await ADMIN_PANEL_CONTROLLER_V2.GetDashboardData()
         await MY_METHODS.printStatus("resp",final_response)
 
         return final_response
@@ -123,7 +123,7 @@ class AdminPanelViewsV1:
     async def GetAllUserBusinessStatsView(request):
         await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
         
-        final_response = await ADMIN_PANEL_CONTROLLER.GetAllUserBusinessStats()
+        final_response = await ADMIN_PANEL_CONTROLLER_V2.GetAllUserBusinessStats()
 
         return final_response
         
@@ -136,7 +136,7 @@ class AdminPanelViewsV1:
     )
     async def GetDailyUsersStatsView(request):
         await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
-        final_response = await ADMIN_PANEL_CONTROLLER.GetDailyUserData()
+        final_response = await ADMIN_PANEL_CONTROLLER_V2.GetDailyUserData()
             
         return final_response
 
@@ -149,7 +149,7 @@ class AdminPanelViewsV1:
     async def GetTodaySignupsStatsView(request):
         await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
         
-        final_response = await ADMIN_PANEL_CONTROLLER.GetTodaySignupsStats()
+        final_response = await ADMIN_PANEL_CONTROLLER_V2.GetTodaySignupsStats()
 
         return final_response
 
@@ -163,7 +163,7 @@ class AdminPanelViewsV1:
     async def GetChartsStatsView(request):
         await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
             
-        final_response = await ADMIN_PANEL_CONTROLLER.GetChartsStats()
+        final_response = await ADMIN_PANEL_CONTROLLER_V2.GetChartsStats()
 
         return final_response
         
@@ -187,7 +187,7 @@ class AdminPanelViewsV1:
     )
     async def GetTotalUsersView(request):
         await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ANALYTICS_VIEW)
-        final_response = await ADMIN_PANEL_CONTROLLER.GetTotalNoOfUsers()
+        final_response = await ADMIN_PANEL_CONTROLLER_V2.GetTotalNoOfUsers()
 
         return final_response
 

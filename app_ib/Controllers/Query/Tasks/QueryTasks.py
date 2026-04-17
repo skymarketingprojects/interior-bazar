@@ -2,238 +2,167 @@ from asgiref.sync import sync_to_async
 from app_ib.models import LeadQuery
 from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.Utils.Names import NAMES
-from app_ib.models import Business,CustomUser
-from interior_products.models import Product,Service,Catelogue
-from ..Validators.QueryValidators import LeadQueryCreateSchema,LeadQueryUpdateSchema,LeadQueryStatusSchema
-from interior_admin.Controllers.AdminLeads.Validators.AdminLeadsValidators import AdminLeadsCreateSchema,AdminLeadsUpdateSchema
+from app_ib.models import Business, CustomUser
+from interior_products.models import Product, Service, Catelogue
+from ..Validators.QueryValidators import LeadQueryCreateSchema, LeadQueryUpdateSchema, LeadQueryStatusSchema
+from interior_admin.Controllers.AdminLeads.Validators.AdminLeadsValidators import AdminLeadsCreateSchema, AdminLeadsUpdateSchema
 from datetime import datetime
 
 class LEAD_QUERY_TASK:
 
     @classmethod
-    async def CreateLeadQueryTask(self, data:LeadQueryCreateSchema|AdminLeadsCreateSchema,user:CustomUser=None):
+    async def CreateLeadQueryTask(cls, data: LeadQueryCreateSchema | AdminLeadsCreateSchema, user: CustomUser = None):
         try:
             lead_query_ins = LeadQuery()
-
-            # using getattr to not get error when field is absent
-            lead_query_ins.name= getattr(data, 'name', None) or ""
-            lead_query_ins.phone= getattr(data, 'phone', None) or ""
-            lead_query_ins.email= getattr(data, 'email', None) or ""
-            lead_query_ins.interested= getattr(data, 'interested', None) or ""
-            lead_query_ins.query= getattr(data, 'query', None) or ""
-            lead_query_ins.state= getattr(data, 'state', None) or ""
-            lead_query_ins.country= getattr(data, 'country', None) or ""
-            lead_query_ins.tag= NAMES.QUERY_TAG
+            lead_query_ins.name = getattr(data, 'name', None) or ""
+            lead_query_ins.phone = getattr(data, 'phone', None) or ""
+            lead_query_ins.email = getattr(data, 'email', None) or ""
+            lead_query_ins.interested = getattr(data, 'interested', None) or ""
+            lead_query_ins.query = getattr(data, 'query', None) or ""
+            lead_query_ins.state = getattr(data, 'state', None) or ""
+            lead_query_ins.country = getattr(data, 'country', None) or ""
+            lead_query_ins.tag = NAMES.QUERY_TAG
 
             try:
                 for logs in data.clientLogs:
-                    logData={'by':logs.by,'message':logs.message,'date':datetime.now().strftime(NAMES.DMY_HM_FORMAT)}
+                    logData = {'by': logs.by, 'message': logs.message, 'date': datetime.now().strftime(NAMES.DMY_HM_FORMAT)}
                     currentLogs = lead_query_ins.clientLogs
                     currentLogs.append(logData)
                     lead_query_ins.clientLogs = currentLogs
-
-            except Exception as e:
-                # await MY_METHODS.printStatus(f'clientLogs not found {str(e)}')
-                pass
+            except: pass
             
             stage = getattr(data, 'stage', None)
-            if stage:
-                lead_query_ins.stage = stage
+            if stage: lead_query_ins.stage = stage
             
             lead_status = getattr(data, 'leadStatus', None)
-            if lead_status:
-                lead_query_ins.leadStatus = lead_status
-            
+            if lead_status: lead_query_ins.leadStatus = lead_status
 
-            if user:
-                lead_query_ins.user= user
+            if user: lead_query_ins.user = user
 
             leadfor = None
             try:
-                if data.type==NAMES.PRODUCT:
+                if data.type == NAMES.PRODUCT:
                     leadfor = await sync_to_async(Product.objects.get)(id=data.itemId)
-                    lead_query_ins.product= leadfor
+                    lead_query_ins.product = leadfor
                 elif data.type == NAMES.CATALOUGE:
                     leadfor = await sync_to_async(Catelogue.objects.get)(id=data.itemId)
-                    lead_query_ins.catalouge= leadfor
+                    lead_query_ins.catalouge = leadfor
                 elif data.type == NAMES.SERVICE:
                     leadfor = await sync_to_async(Service.objects.get)(id=data.itemId)
-                    lead_query_ins.service= leadfor
-            except Exception as e:
-                # await MY_METHODS.printStatus(f'type or id not found {str(e)}')
-                pass
+                    lead_query_ins.service = leadfor
+            except: pass
             
             if leadfor:
-                lead_query_ins.business= leadfor.business
+                lead_query_ins.business = leadfor.business
             elif user:
-                lead_query_ins.business= user.user_business
+                lead_query_ins.business = await sync_to_async(lambda: getattr(user, 'user_business', None))()
 
             await sync_to_async(lead_query_ins.save)()
-
-            respData = await self.GetLeadQueryTask(lead_query_ins)
-            return True,respData
+            respData = await cls.GetLeadQueryTask(lead_query_ins)
+            return True, respData
             
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in CreateLeadQueryTask {e}')
-            return None,str(e)
-  
+            return None, str(e)
+
     @classmethod
-    async def UpdateLeadQueryTask(self, lead_query_ins:LeadQuery, data:LeadQueryUpdateSchema|AdminLeadsUpdateSchema):
+    async def UpdateLeadQueryTask(cls, lead_query_ins: LeadQuery, data: LeadQueryUpdateSchema | AdminLeadsUpdateSchema):
         try:
-            lead_query_ins.name= getattr(data, NAMES.NAME, None) or lead_query_ins.name
-            lead_query_ins.phone= getattr(data, NAMES.PHONE, None) or lead_query_ins.phone
-            lead_query_ins.email= getattr(data, NAMES.EMAIL, None) or lead_query_ins.email
-            lead_query_ins.interested= getattr(data, NAMES.INTRESTED, None) or lead_query_ins.interested
-            lead_query_ins.query= getattr(data, NAMES.QUERY, None) or lead_query_ins.query
-            lead_query_ins.state= getattr(data, NAMES.STATE, None) or lead_query_ins.state
-            lead_query_ins.country= getattr(data, NAMES.COUNTRY, None) or lead_query_ins.country
-            lead_query_ins.status= getattr(data, NAMES.STATUS, None) or lead_query_ins.status
-            lead_query_ins.tag= getattr(data, NAMES.TAG, None) or lead_query_ins.tag
-            lead_query_ins.priority= getattr(data, NAMES.PRIORITY, None) or lead_query_ins.priority
-            lead_query_ins.remark= getattr(data, NAMES.REMARK, None) or lead_query_ins.remark
-            lead_query_ins.city= getattr(data, NAMES.CITY, None) or lead_query_ins.city
+            # ... simple field sets
+            for attr in [NAMES.NAME, NAMES.PHONE, NAMES.EMAIL, NAMES.INTRESTED, NAMES.QUERY, NAMES.STATE, NAMES.COUNTRY, NAMES.STATUS, NAMES.TAG, NAMES.PRIORITY, NAMES.REMARK, NAMES.CITY]:
+                val = getattr(data, attr, None)
+                if val: setattr(lead_query_ins, attr, val)
 
             try:
                 for logs in data.clientLogs:
-                    logData={'by':logs.by,'message':logs.message,'date':datetime.now().strftime(NAMES.DMY_HM_FORMAT)}
+                    logData = {'by': logs.by, 'message': logs.message, 'date': datetime.now().strftime(NAMES.DMY_HM_FORMAT)}
                     currentLogs = lead_query_ins.clientLogs
                     currentLogs.append(logData)
                     lead_query_ins.clientLogs = currentLogs
-
-            except Exception as e:
-                # await MY_METHODS.printStatus(f'clientLogs not found {str(e)}')
-                pass
+            except: pass
             
             lead_status = getattr(data, NAMES.LEAD_STATUS, None)
-            if lead_status:
-                lead_query_ins.leadStatus = lead_status or lead_query_ins.leadStatus
+            if lead_status: lead_query_ins.leadStatus = lead_status
             
             stage = getattr(data, NAMES.STAGE, None)
-            if stage:
-                lead_query_ins.stage = stage or lead_query_ins.stage
-            
-            # await MY_METHODS.printStatus(f'tag {data.tag}')
+            if stage: lead_query_ins.stage = stage
             
             await sync_to_async(lead_query_ins.save)()
-            data = await self.GetLeadQueryTask(lead_query_ins)
-            return data
-            
+            return await cls.GetLeadQueryTask(lead_query_ins)
         except Exception as e:
             await MY_METHODS.printStatus(f'Error in UpdateLeadQueryTask {str(e)}')
             return None
 
     @classmethod
-    async def DeleteLeadQueryTask(self, lead_query_ins:LeadQuery):
+    async def DeleteLeadQueryTask(cls, lead_query_ins: LeadQuery):
         try:
             await sync_to_async(lead_query_ins.delete)()
-            return True,True
-            
-        except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in DeleteLeadQueryTask {e}')
-            return False,
+            return True, True
+        except: return False, None
+
     @classmethod
-    async def UpdateLeadQueryStatusTask(self, lead_query_ins:LeadQuery, data:LeadQueryStatusSchema):
+    async def BulkSerializeLeads(cls, lead_list):
+        """
+        High-performance bulk serialization for LeadQuery instances.
+        Replicates exact legacy format.
+        """
+        results = []
+        for lead in lead_list:
+            try:
+                assigned_business = lead.business.businessName if lead.business else None
+                lead_for_obj = lead.product or lead.catalouge or lead.service
+                
+                results.append({
+                    NAMES.ID: lead.pk,
+                    NAMES.NAME: lead.name,
+                    NAMES.PHONE: lead.phone,
+                    NAMES.EMAIL: lead.email,
+                    NAMES.INTRESTED: lead.interested,
+                    NAMES.QUERY: lead.query,
+                    NAMES.STATE: lead.state,
+                    NAMES.CITY: lead.city,
+                    NAMES.COUNTRY: lead.country,
+                    NAMES.STATUS: lead.status,
+                    NAMES.TAG: lead.tag,
+                    NAMES.PRIORITY: lead.priority,
+                    NAMES.REMARK: lead.remark,
+                    NAMES.DATE: lead.timestamp.strftime(NAMES.DMY_FORMAT),
+                    NAMES.ASSIGNED: assigned_business,
+                    NAMES.LEADFOR: lead_for_obj.title if lead_for_obj else None,
+                    NAMES.CLIENT_LOGS: lead.clientLogs
+                })
+            except: pass
+        return results
+
+    @classmethod
+    async def GetLeadQueryTask(cls, lead_query_ins: LeadQuery):
+        """
+        Individual fetch using the same bulk logic for consistency.
+        """
+        # Ensure relationships are loaded if possible, otherwise bulk logic handles it
+        data_list = await cls.BulkSerializeLeads([lead_query_ins])
+        return data_list[0] if data_list else None
+
+    @classmethod
+    async def GetLeadQueriesTask(cls, queryParams=None):
+        """
+        Optimized bulk fetch for LeadQuery lists.
+        """
         try:
-            lead_query_ins.status= data.status            
-            await sync_to_async(lead_query_ins.save)()
-            data = await self.GetLeadQueryTask(lead_query_ins)
-            return data
+            # Apply select_related to avoid N+1 queries during serialization
+            queryset = LeadQuery.objects.filter(queryParams).select_related(
+                'business', 'product', 'catalouge', 'service'
+            ).order_by(f'-{NAMES.TIMESTAMP}')
             
+            lead_list = await sync_to_async(list)(queryset)
+            return await cls.BulkSerializeLeads(lead_list)
         except Exception as e:
-            (f'Error in CreateLeadQueryTask {e}')
+            print(f'Error in GetLeadQueriesTask: {e}')
             return None
 
     @classmethod
-    async def UpdateLeadQueryPriorityTask(self, lead_query_ins:LeadQuery, data):
-        try:
-            lead_query_ins.priority= data.priority
-            await sync_to_async(lead_query_ins.save)()
-            data = await self.GetLeadQueryTask(lead_query_ins)
-            return data
-            
-        except Exception as e:
-            (f'Error in CreateLeadQueryTask {e}')
-            return None
-
-    @classmethod
-    async def UpdateLeadQueryRemarkTask(self, lead_query_ins:LeadQuery, data):
-        try:
-            lead_query_ins.remark= data.remark            
-            await sync_to_async(lead_query_ins.save)()
-            data = await self.GetLeadQueryTask(lead_query_ins)
-            return data
-            
-        except Exception as e:
-            (f'Error in CreateLeadQueryTask {e}')
-            return None
-
-
-    @classmethod
-    async def GetLeadQueryTask(self, lead_query_ins:LeadQuery):
-        try:
-            assignedbusiness = lead_query_ins.business.businessName if lead_query_ins.business else None
-            leadFor:Product = lead_query_ins.product if lead_query_ins.product else lead_query_ins.catalouge if lead_query_ins.catalouge else lead_query_ins.service
-            data = {
-                NAMES.ID:lead_query_ins.pk,
-                NAMES.NAME:lead_query_ins.name, 
-                NAMES.PHONE:lead_query_ins.phone, 
-                NAMES.EMAIL:lead_query_ins.email, 
-                NAMES.INTRESTED:lead_query_ins.interested, 
-                NAMES.QUERY:lead_query_ins.query, 
-                NAMES.STATE:lead_query_ins.state, 
-                NAMES.CITY:lead_query_ins.city, 
-                NAMES.COUNTRY:lead_query_ins.country, 
-                NAMES.STATUS:lead_query_ins.status, 
-                NAMES.TAG:lead_query_ins.tag, 
-                NAMES.PRIORITY:lead_query_ins.priority, 
-                NAMES.REMARK:lead_query_ins.remark,
-                NAMES.DATE:lead_query_ins.timestamp.strftime(NAMES.DMY_FORMAT),
-                NAMES.ASSIGNED:assignedbusiness,
-                NAMES.LEADFOR:leadFor.title if leadFor else None,
-                NAMES.CLIENT_LOGS:lead_query_ins.clientLogs
-
-            }
-            return data
-            
-        except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in CreateLeadQueryTask {e}')
-            return None
-
-
-    @classmethod
-    async def GetLeadQueriesTask(self,queryParams=None):
-        try:
-            query_data = []
-            async for lead_query in LeadQuery.objects.filter(queryParams).order_by(f'-{NAMES.TIMESTAMP}'):
-                data = {
-                    NAMES.ID: lead_query.pk,
-                    NAMES.NAME: lead_query.name,
-                    NAMES.PHONE: lead_query.phone,
-                    NAMES.EMAIL: lead_query.email,
-                    NAMES.INTRESTED: lead_query.interested,
-                    NAMES.QUERY: lead_query.query,
-                    NAMES.STATE: lead_query.state,
-                    NAMES.COUNTRY: lead_query.country,
-                    NAMES.STATUS: lead_query.status,
-                    NAMES.TAG: lead_query.tag,
-                    NAMES.PRIORITY: lead_query.priority,
-                    NAMES.REMARK: lead_query.remark,
-                }
-                query_data.append(data)
-
-            return query_data
-
-        except Exception as e:
-            (f'Error in GetLeadQueryTask: {e}')
-            return None
-
-    @classmethod
-    async def AssignLeadQueryTask(self,leadQueryIns:LeadQuery,business:Business):
+    async def AssignLeadQueryTask(cls, leadQueryIns: LeadQuery, business: Business):
         try:
             leadQueryIns.business = business
             await sync_to_async(leadQueryIns.save)()
-            leadData = await self.GetLeadQueryTask(leadQueryIns)
-            return leadData
-        except Exception as e:
-            (f'Error in  AssignLeadQueryTask- {e}')
-            return False
+            return await cls.GetLeadQueryTask(leadQueryIns)
+        except: return False

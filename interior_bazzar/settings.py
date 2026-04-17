@@ -20,7 +20,7 @@ import environ
 env = environ.Env()
 environ.Env.read_env()
 
-os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
+# os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"  # Removed for performance/safety audit
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -119,8 +119,8 @@ WSGI_APPLICATION = 'interior_bazzar.wsgi.application'
 
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
-        "LOCATION": "my_cache_table",
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "unique-snowflake",
     }
 }
 
@@ -272,6 +272,7 @@ if MODE == 'prod':
             'PASSWORD': env('DATABASE_PASSWORD'),
             'HOST': env('DATABASE_HOST'),
             'PORT': env('DATABASE_PORT'),
+            'CONN_MAX_AGE': 60,
         }
     }
 else:
@@ -279,6 +280,7 @@ else:
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
+            'CONN_MAX_AGE': 60,
         }
     }
     

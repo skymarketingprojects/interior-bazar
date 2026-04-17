@@ -22,10 +22,10 @@ class SEARCH_CONTROLLER:
     @classmethod
     async def GetBusinessUsingPagination(self,pageNo):
         try:
-            # Getting all business instance: 
-            businesses_query = await sync_to_async(list)(Business.objects.all())
+            # Getting all business instance as a QuerySet (Optimized)
+            businesses_query = Business.objects.all()
 
-            # fetch business data:
+            # fetch business data (Optimized to handle QuerySet)
             business_data= await SEARCH_TASKS.GetQueryData(businesses_query=businesses_query,pageNo=pageNo)
 
             return LocalResponse(
@@ -46,14 +46,16 @@ class SEARCH_CONTROLLER:
     @classmethod
     async def GetTopBusiness(self,index):
         try:
-            # Getting all business instance: 
-            businesses_query = await sync_to_async(list)(Business.objects.all())
+            # Getting all business instance as a QuerySet (Optimized)
+            businesses_query = Business.objects.all()
 
-            # fetch business data:
+            # fetch business data (Optimized to handle QuerySet)
             business_data= await SEARCH_TASKS.GetQueryData(businesses_query=businesses_query,pageNo=index)
 
-            business_data[NAMES.TOP_SELLER] = business_data[NAMES.DATA][:5]
-            business_data[NAMES.BUSINESSES] = business_data.pop(NAMES.DATA)
+            # Ensure data key exists before manipulation
+            if business_data and NAMES.DATA in business_data:
+                business_data[NAMES.TOP_SELLER] = business_data[NAMES.DATA][:5]
+                business_data[NAMES.BUSINESSES] = business_data.pop(NAMES.DATA)
 
             return LocalResponse(
                 code=RESPONSE_CODES.success,

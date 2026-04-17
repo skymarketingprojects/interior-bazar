@@ -1,4 +1,4 @@
-from app_ib.models import Business,Location,BusinessBadge,BusinessType,BusinessCategory,BusinessSegment,BusinessProfile
+from app_ib.models import Business, Location, BusinessBadge, BusinessType, BusinessCategory, BusinessSegment, BusinessProfile
 import asyncio
 from asgiref.sync import sync_to_async
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
@@ -8,34 +8,26 @@ from app_ib.Controllers.BussLocation.Tasks.BusinessLocationTasks import BUSS_LOC
 from app_ib.Utils.MyMethods import MY_METHODS
 from django.db.models import Prefetch
 
-from app_ib.models import BusinessSegment,CustomUser
+from app_ib.models import BusinessSegment, CustomUser
+
 class BUSS_TASK:
     @classmethod
-    async def CreateBusinessTask(cls, user_ins:CustomUser, data):
+    async def CreateBusinessTask(cls, user_ins: CustomUser, data):
         try:
             badge = await sync_to_async(lambda: BusinessBadge.objects.filter(isDefault=True).first())()
-
-            # Get business type (FK)
             business_type_id = getattr(data.businessType, NAMES.ID, None)
             business_type = await sync_to_async(lambda: BusinessType.objects.filter(id=business_type_id).first())()
 
-            # Validate and fetch segments (max 5)
             segment_ids = [seg.id for seg in getattr(data, NAMES.SEGMENTS, [])]
-            if len(segment_ids) > 5:
-                return None  # Too many segments
+            if len(segment_ids) > 5: return None
             segments = await sync_to_async(lambda: list(BusinessSegment.objects.filter(id__in=segment_ids)))()
-            if len(segments) != len(segment_ids):
-                return None  # Invalid segment IDs
+            if len(segments) != len(segment_ids): return None
 
-            # Validate and fetch categories (max 3)
             category_ids = [cat.id for cat in getattr(data, NAMES.CATEGORIES, [])]
-            if len(category_ids) > 3:
-                return None  # Too many categories
+            if len(category_ids) > 3: return None
             categories = await sync_to_async(lambda: list(BusinessCategory.objects.filter(id__in=category_ids)))()
-            if len(categories) != len(category_ids):
-                return None  # Invalid category IDs
+            if len(categories) != len(category_ids): return None
 
-            # Create Business instance
             business_ins = Business()
             business_ins.user = user_ins
             business_ins.businessName = getattr(data, NAMES.BUSINESS_NAME, NAMES.EMPTY)
@@ -50,52 +42,38 @@ class BUSS_TASK:
             business_ins.businessType = business_type
             business_ins.businessBadge = badge
 
-            # Optional legacy text (store labels)
-            # business_ins.segment = ', '.join([s.lable for s in segments])
-            # business_ins.catigory = ', '.join([c.lable for c in categories])
-
             await sync_to_async(business_ins.save)()
-
-            # Set M2M relations
             await sync_to_async(business_ins.businessSegment.set)(segments)
             await sync_to_async(business_ins.businessCategory.set)(categories)
 
             return True
-
         except Exception as e:
             return None
+
     @classmethod
-    async def UpdateBusinessTask(cls, business_ins:Business, data):
+    async def UpdateBusinessTask(cls, business_ins: Business, data):
         try:
-            # Related instances (nullable)
             loc = getattr(business_ins, NAMES.BUSINESS_LOCATION, None)
             prof = getattr(business_ins, NAMES.BUSINESS_PROFILE, None)
 
-            # --- ForeignKey: BusinessType ---
             if hasattr(data, NAMES.BUSINESS_TYPE) and getattr(data.businessType, NAMES.ID, None):
                 business_type = await sync_to_async(BusinessType.objects.filter(id=data.businessType.id).first)()
-                if business_type:
-                    business_ins.businessType = business_type
+                if business_type: business_ins.businessType = business_type
 
-            # --- M2M: BusinessSegment (max 5) ---
             segments = getattr(data, NAMES.SEGMENTS, None)
             if isinstance(segments, list) and len(segments) <= 5:
                 segment_ids = [s.id for s in segments]
                 segment_objs = await sync_to_async(lambda: list(BusinessSegment.objects.filter(id__in=segment_ids)))()
                 if len(segment_objs) == len(segment_ids):
                     await sync_to_async(business_ins.businessSegment.set)(segment_objs)
-                    # business_ins.segment = ', '.join([s.lable for s in segment_objs])  # legacy
 
-            # --- M2M: BusinessCategory (max 3) ---
             categories = getattr(data, NAMES.CATEGORIES, None)
             if isinstance(categories, list) and len(categories) <= 3:
                 category_ids = [c.id for c in categories]
                 category_objs = await sync_to_async(lambda: list(BusinessCategory.objects.filter(id__in=category_ids)))()
                 if len(category_objs) == len(category_ids):
                     await sync_to_async(business_ins.businessCategory.set)(category_objs)
-                    # business_ins.catigory = ', '.join([c.lable for c in category_objs])  # legacy
 
-            # --- Simple Fields ---
             business_ins.businessName = getattr(data, NAMES.BUSINESS_NAME, business_ins.businessName)
             business_ins.gst = getattr(data, NAMES.GST, business_ins.gst)
             business_ins.since = getattr(data, NAMES.SINCE, business_ins.since)
@@ -106,104 +84,107 @@ class BUSS_TASK:
             business_ins.coverImageUrl = getattr(data, NAMES.COVER_IMAGE_URL, business_ins.coverImageUrl)
             await sync_to_async(business_ins.save)()
 
-            # --- Business Location (if exists) ---
-            if loc:
-                await BUSS_LOC_TASK.UpdateBusinessLocTask(loc, data)
-            else:
-                await BUSS_LOC_TASK.CreateBusinessLocTask(business_ins, data)
+            if loc: await BUSS_LOC_TASK.UpdateBusinessLocTask(loc, data)
+            else: await BUSS_LOC_TASK.CreateBusinessLocTask(business_ins, data)
 
-            # --- Business Profile (if exists) ---
             if prof and hasattr(data, NAMES.YOUTUBELINK):
                 prof.youtubeLink = getattr(data, NAMES.YOUTUBELINK)
                 await sync_to_async(prof.save)()
 
             return await cls.GetBusinessInfo(business_ins.id)
-
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in UpdateBusinessTask: {e}')
             return None
 
     @classmethod
+    async def BulkSerializeBusinessInfo(cls, business_list):
+        """
+        High-performance bulk serialization for Business instances.
+        Maintains EXACT legacy output format.
+        """
+        results = []
+        for business in business_list:
+            try:
+                # 1. Relations
+                loc_ins = getattr(business, 'business_location', None)
+                prof_ins = getattr(business, 'business_profile', None)
+                
+                # 2. M2Ms (already pre-fetched in the list)
+                segments = list(business.businessSegment.all())
+                categories = list(business.businessCategory.all())
+                
+                segment_data = [cls.GetBusinessTypeDataSync(seg) for seg in segments]
+                category_data = [cls.GetBusinessTypeDataSync(cat) for cat in categories]
+
+                data = {
+                    NAMES.BUSINESS_NAME: business.businessName,
+                    NAMES.SEGMENTS: segment_data,
+                    NAMES.CATEGORIES: category_data,
+                    NAMES.WHATSAPP: business.whatsapp,
+                    NAMES.GST: business.gst,
+                    NAMES.COVER_IMAGE_URL: business.coverImageUrl,
+                    NAMES.SINCE: business.since,
+                    NAMES.ID: business.id,
+                    NAMES.BIO: business.bio,
+                    NAMES.UPDATED_AT: business.updatedAt,
+                    NAMES.BADGE: business.businessBadge.imageUrl if business.businessBadge else None,
+                    NAMES.TIMESTAMP: business.timestamp
+                }
+
+                if business.businessType:
+                    data[NAMES.BUSINESS_TYPE] = cls.GetBusinessTypeDataSync(business.businessType)
+
+                if loc_ins:
+                    state_data = {NAMES.ID: loc_ins.locationState.id, NAMES.NAME: loc_ins.locationState.name} if loc_ins.locationState else None
+                    country_data = {NAMES.ID: loc_ins.locationCountry.id, NAMES.NAME: loc_ins.locationCountry.code} if loc_ins.locationCountry else None
+                    
+                    data[NAMES.LOCATION_LINK] = loc_ins.locationLink
+                    data[NAMES.PINCODE] = loc_ins.pinCode
+                    data[NAMES.CITY] = loc_ins.city
+                    data[NAMES.STATE] = state_data
+                    data[NAMES.COUNTRY] = country_data
+
+                if prof_ins:
+                    data[NAMES.YOUTUBE_LINK] = prof_ins.youtubeLink
+
+                results.append(data)
+            except: pass
+        return results
+
+    @classmethod
     async def GetBusinessInfo(cls, id):
+        """
+        Optimized single fetch with pre-fetching.
+        """
         try:
-            business_ins = await sync_to_async(Business.objects.get)(pk=id)
-            business_loc_ins = getattr(business_ins, NAMES.BUSINESS_LOCATION, None)
-            business_prof_ins = getattr(business_ins, NAMES.BUSINESS_PROFILE, None)
-
-            # Get related segments and categories (as objects)
-            segments = await sync_to_async(lambda: list(business_ins.businessSegment.all()))()
-            categories = await sync_to_async(lambda: list(business_ins.businessCategory.all()))()
-
-            # Serialize them
-            segment_data = [await cls.GetBusinessTypeData(seg) for seg in segments]
-            category_data = [await cls.GetBusinessTypeData(cat) for cat in categories]
-            # await MY_METHODS.printStatus(f'category {category_data},categories {categories}')
-
-            data = {
-                NAMES.BUSINESS_NAME: business_ins.businessName,
-                NAMES.SEGMENTS: segment_data,
-                NAMES.CATEGORIES: category_data,
-                NAMES.WHATSAPP: business_ins.whatsapp,
-                NAMES.GST: business_ins.gst,
-                NAMES.COVER_IMAGE_URL: business_ins.coverImageUrl,
-                NAMES.SINCE: business_ins.since,
-                NAMES.ID: business_ins.id,
-                NAMES.BIO: business_ins.bio,
-                NAMES.UPDATED_AT: business_ins.updatedAt,
-                NAMES.BADGE: business_ins.businessBadge.imageUrl if business_ins.businessBadge else None,
-                NAMES.TIMESTAMP: business_ins.timestamp
-            }
-
-            # Serialize business type
-            if business_ins.businessType:
-                data[NAMES.BUSINESS_TYPE] = await cls.GetBusinessTypeData(business_ins.businessType)
-
-            # Location
-            if business_loc_ins:
-                location = await BUSS_LOC_TASK.GetBusinessLocTask(business_loc_ins)
-                data[NAMES.LOCATION_LINK] = location[NAMES.LOCATION_LINK]
-                data[NAMES.PINCODE] =location[NAMES.PINCODE]
-                data[NAMES.CITY] = location[NAMES.CITY]
-                data[NAMES.STATE] = location[NAMES.STATE]
-                data[NAMES.COUNTRY] = location[NAMES.COUNTRY]
-
-            # Profile
-            if business_prof_ins:
-                data[NAMES.YOUTUBE_LINK] = business_prof_ins.youtubeLink
-
-            return data
-
+            queryset = Business.objects.filter(pk=id).select_related(
+                'business_location', 'business_location__locationState', 
+                'business_location__locationCountry', 'business_profile',
+                'businessBadge', 'businessType'
+            ).prefetch_related('businessSegment', 'businessCategory')
+            
+            business_list = await sync_to_async(list)(queryset)
+            data_list = await cls.BulkSerializeBusinessInfo(business_list)
+            return data_list[0] if data_list else None
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in GetBusinessInfo: {e}')
             return None
 
     @classmethod
     async def GetBusinessInfoForSearch(cls, id):
+        """
+        Maintains legacy search serialization but uses optimized fetch.
+        """
         try:
-            business_ins = await sync_to_async(
-                Business.objects.select_related(NAMES.BUSINESSTYPE)
-                .prefetch_related(NAMES.BUSINESS_SEGMENT, NAMES.BUSINESS_CATEGORY)
-                .get
-            )(pk=id)
-
-            # Business profile image
-            business_profile: BusinessProfile = getattr(business_ins, NAMES.BUSINESS_PROFILE, None)
+            queryset = Business.objects.filter(pk=id).select_related(
+                'businessType', 'business_profile'
+            ).prefetch_related('businessSegment', 'businessCategory')
+            
+            business_ins = await sync_to_async(queryset.get)()
+            business_profile = getattr(business_ins, 'business_profile', None)
             business_image = business_profile.primaryImageUrl if business_profile else None
 
-            # Segments
-            segments = await sync_to_async(lambda: list(business_ins.businessSegment.all()))()
-            segment_data = [await cls.GetBusinessTypeData(seg) for seg in segments]
+            segment_data = [cls.GetBusinessTypeDataSync(seg) for seg in business_ins.businessSegment.all()]
+            category_data = [cls.GetBusinessTypeDataSync(cat) for cat in business_ins.businessCategory.all()]
 
-            # Categories
-            categories = await sync_to_async(lambda: list(business_ins.businessCategory.all()))()
-            category_data = [await cls.GetBusinessTypeData(cat) for cat in categories]
-
-            # Business Type
-            business_type_data = None
-            if business_ins.businessType:
-                business_type_data = await cls.GetBusinessTypeData(business_ins.businessType)
-
-            # Final response
             data = {
                 NAMES.ID: business_ins.id,
                 NAMES.BUSINESS_NAME: business_ins.businessName,
@@ -212,27 +193,22 @@ class BUSS_TASK:
                 NAMES.BUSINESS_IMAGE: business_image,
                 NAMES.SEGMENTS: segment_data,
                 NAMES.CATEGORIES: category_data,
-                NAMES.BUSINESS_TYPE: business_type_data,
+                NAMES.BUSINESS_TYPE: cls.GetBusinessTypeDataSync(business_ins.businessType) if business_ins.businessType else None,
             }
-
             return data
+        except: return None
 
-        except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in GetBusinessInfoForSearch: {e}')
-            return None
+    @staticmethod
+    def GetBusinessTypeDataSync(businesstype):
+        """Synchronous version for used inside bulk loops"""
+        return {
+            NAMES.IMAGE_SQ_URL: businesstype.imageSQUrl,
+            NAMES.IMAGE_RT_URL: businesstype.imageRTUrl,
+            NAMES.ID: businesstype.id,
+            NAMES.LABEL: businesstype.lable,
+            NAMES.VALUE: businesstype.value,
+        }
 
     @classmethod
-    async def GetBusinessTypeData(cls,businesstype:BusinessSegment):
-        try:
-            typeData={
-                NAMES.IMAGE_SQ_URL: businesstype.imageSQUrl,
-                NAMES.IMAGE_RT_URL: businesstype.imageRTUrl,
-                NAMES.ID: businesstype.id,
-                NAMES.LABEL: businesstype.lable,
-                NAMES.VALUE: businesstype.value,
-            }
-
-            return typeData
-        except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in GetAllBusinessTypes: {e}')
-            return None
+    async def GetBusinessTypeData(cls, businesstype):
+        return cls.GetBusinessTypeDataSync(businesstype)
