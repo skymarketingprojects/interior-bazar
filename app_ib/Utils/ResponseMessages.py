@@ -478,6 +478,18 @@ class RESPONSE_MESSAGES:
 
 
 
+    # GMB Leads
+    gmb_ingest_error= 'Error ingesting GMB data'
+    gmb_ingest_success= 'GMB data ingested successfully'
+    gmb_leads_fetch_error= 'Error fetching all leads'
+    gmb_leads_fetch_success= 'Leads fetched successfully'
+    gmb_my_leads_fetch_error= 'Error fetching your leads'
+    gmb_my_leads_fetch_success= 'My leads fetched successfully'
+    gmb_assign_error= 'Error assigning lead'
+    gmb_assign_success= 'Lead assigned successfully'
+    gmb_missing_ids= 'lead_id and user_id are required'
+    gmb_ingestion_failed= 'Ingestion failed'
+
 class VALIDATION_MESSAGES:
     password_length= 'Password must be at least 8 characters long'
     password_must_contain_digit= 'Password must contain at least one digit'

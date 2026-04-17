@@ -377,6 +377,41 @@ class NAMES:
     NEARBY_TAG='nearby'
     NORMAL_TAG='normal'
 
+    # GMB specific
+    REVIEW_COUNT = 'reviewCount'
+    WA_MESSAGE = 'waMessage'
+    ASSIGNED_USER = 'assignedUser'
+    ASSIGNED_USER_ID = 'assignedUserId'
+    RANKING_RATE = 'rankingRate'
+    TIER = 'tier'
+    PLATFORM = 'platform'
+    ADDRESS = 'address'
+    PROCESSED_COUNT = 'processedCount'
+    TOTAL_RECEIVED = 'totalReceived'
+    DEFAULT_PLATFORM = 'GMB'
+    SYSTEM_USER = 'System'
+    UNKNOWN_BUSINESS = 'Unknown'
+    GMB_LEAD_CREATED = 'GMB Lead Created'
+    TRIGGERED_BY = 'triggered_by'
+    EVENT = 'event'
+    DEFAULT_RATING = '0.0(0)'
+    WHATSAPP_GREETING = "Hello {business_name}, I saw your business on Google Maps and I am interested in your services."
+    STATUS_ASSIGNED = 'Assigned'
+    STATUS_KEY = 'status'
+    
+    TIER_A = 'A'
+    TIER_B = 'B'
+    TIER_C = 'C'
+    TIER_D = 'D'
+    TIER_E = 'E'
+
+    # Fallback keys from Scraper
+    BUSINESS_NAME_SNAKE = 'business_name'
+    MAP_LINK_SNAKE = 'map_link'
+    MAPS_LINK_SNAKE = 'maps_link'
+    SOCIAL_LINKS_SNAKE = 'social_links'
+    WEBSITE_URL = 'website_url'
+
     #relations
     BUSINESS_SOCIAL_MEDIA_RELATION='businessSocialMedia'
     BUSINESS_PROFILE_RELATION='business_profile'

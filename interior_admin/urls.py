@@ -4,7 +4,7 @@ from .views import AdminPanelViewsV1, AdminPanelViewsV2
 from .Views.AdminLeadsViews import AdminLeadsViewsV1,AdminLeadsViewsV2
 from .Views.AdminUserViews import AdminUserViews, SendUserCredentialsView
 
-from .Views import AdminLeadsViews, BusinessInfoViews,PannelSearchViews,MatchLeadsViews,FinanceViews
+from .Views import AdminLeadsViews, BusinessInfoViews, PannelSearchViews, MatchLeadsViews, FinanceViews, GMBLeadsViews
 urlpatterns = [
     path('paginate-business/', AdminPanelViewsV1.GetBusinessTilesStatsView, name='get_business_tiles_stats'),
     path('dashboard/', AdminPanelViewsV1.GetAdminDashboardStatsView, name='get_admin_dashboard_stats'),
@@ -69,5 +69,12 @@ urlpatterns = [
     path('users/', AdminUserViews.as_view(), name='users_view'),
     path('users/<int:userId>', AdminUserViews.as_view(), name='users_view_with_id'),
     path('users/<int:userId>/send-credentials/', SendUserCredentialsView.as_view(), name='send_user_credentials'),
-    
+
+    ############################################################
+    # GMB Leads (Flow from GEMINI.md & RANKING.md)
+    ############################################################
+    path('v1/ingest/gmb-data/', GMBLeadsViews.IngestGMBDataView, name='ingest_gmb_data'),
+    path('v1/admin/all-leads/', GMBLeadsViews.GetAllLeadsView, name='get_all_gmb_leads'),
+    path('v1/leads/my-leads/', GMBLeadsViews.GetMyLeadsView, name='get_my_gmb_leads'),
+    path('v1/leads/assign/', GMBLeadsViews.AssignLeadView, name='assign_gmb_lead'),
 ]
