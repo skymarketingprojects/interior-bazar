@@ -109,7 +109,7 @@ class BUSS_LOCATION_CONTROLLER:
     @classmethod
     async def GetCountryList(self):
         try:
-            countrys = await sync_to_async(Country.objects.all)()
+            countrys = await sync_to_async(lambda: list(Country.objects.all()))()
             countryListData = []
             for country in countrys:
                 countryListData.append(await BUSS_LOC_TASK.GetCountryDataTask(country=country))
@@ -138,7 +138,7 @@ class BUSS_LOCATION_CONTROLLER:
     @classmethod
     async def GetStateListByCountry(self,countryId):
         try:
-            states = await sync_to_async(State.objects.filter(country__id=countryId).all)()
+            states = await sync_to_async(lambda: list(State.objects.filter(country__id=countryId).all()))()
             stateListData = []
             for state in states:
                 stateListData.append(await BUSS_LOC_TASK.GetStateDataTask(state=state))

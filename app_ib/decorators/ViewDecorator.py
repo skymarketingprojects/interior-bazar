@@ -116,15 +116,16 @@ def exceptionHandler(
                     data={},
                 )
 
+
             # ❌ everything else (internal)
             except Exception as e:
-                await MY_METHODS.printStatus(f"Error: {str(e)}")
+                await MY_METHODS.printStatus(f"CRITICAL ERROR in {func.__name__}: {str(e)}")
 
                 return responseFunc(
                     response=RESPONSE_MESSAGES.error,
                     message=errorMessage,
                     code=RESPONSE_CODES.error,
-                    data={},
+                    data={'error': str(e)},
                 )
 
         if inspect.iscoroutinefunction(func):

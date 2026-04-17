@@ -24,26 +24,23 @@ class SEARCH_CONTROLLER:
     async def GetBusinessUsingPagination(self,pageNo,pageSize=10,tabId=None,tabType=None,state=None,query=None):
         try:
             # businesses_query=[]
-            filterQuery=Q()
+            filterQuery = Q()
             offset = (pageNo - 1) * pageSize
             limit = offset + pageSize
-
             if state:
-                filterQuery |= Q(business_location__locationState__value__iexact=state)
-                # filterQuery &= Q(business_location__state__iexact=state)
+                filterQuery &= Q(business_location__locationState__value__iexact=state)
             
             if tabId and tabType:
-                if tabType==NAMES.CATEGORY:
-                    await MY_METHODS.printStatus(f'category Id {tabId}')
-                    filterQuery &= Q(businessCategory__id=tabId)
-                elif tabType==NAMES.SEGMENT:
-                    await MY_METHODS.printStatus(f'sub category Id {tabId}')
-                    filterQuery &= Q(businessSegment__id=tabId)
+                if tabType == NAMES.CATEGORY:
+                    filterQuery &= Q(businessCategory__id=int(tabId))
+                elif tabType == NAMES.SUB_CATEGORY:
+                    filterQuery &= Q(businessSegment__id=int(tabId))
+
             if query:
-                await MY_METHODS.printStatus(f'Query {query}')
-                filterQuery |= Q(businessName__icontains=query)
-                filterQuery |= Q(businessSegment__lable__icontains=query)
-                filterQuery |= Q(businessCategory__lable__icontains=query)
+                q_obj = Q(businessName__icontains=query)
+                q_obj |= Q(businessSegment__lable__icontains=query)
+                q_obj |= Q(businessCategory__lable__icontains=query)
+                filterQuery &= q_obj
 
             # if not state and not tabId and not query:
             #     # await MY_METHODS.printStatus('No filter applied')

@@ -571,40 +571,39 @@ async def GetProductSubCategoriesView(request):
 @api_view(['GET'])
 async def GetTabsView(request):
     try:
-        filterFor= request.GET.get('type')
-        resp=None
-        functionList={
-            'product':PRODUCTS_CONTROLLER.GetProductTab,
-            'service':SERVICES_CONTROLLER.GetServiceTab,
-            'catelouge':CATELOG_CONTROLLER.GetCatelougeTab,
-            'business':BUSS_CONTROLLER.GetAllBusinessTab
+        filterFor = request.GET.get('type', '').lower()
+        resp = None
+        
+        # Mapping with typo tolerance
+        functionList = {
+            'product': PRODUCTS_CONTROLLER.GetProductTab,
+            'service': SERVICES_CONTROLLER.GetServiceTab,
+            'catelouge': CATELOG_CONTROLLER.GetCatelougeTab,
+            'catalogue': CATELOG_CONTROLLER.GetCatelougeTab, # Fix typo
+            'business': BUSS_CONTROLLER.GetAllBusinessTab
         }
+
         if filterFor in functionList:
-            resp= await functionList[filterFor]()
+            resp = await functionList[filterFor]()
         else:
-            resp= await CATELOG_CONTROLLER.GetCatelougeTab()
-        # if filterFor=='product':
-        #     resp= await PRODUCTS_CONTROLLER.GetProductTab()
-        # elif filterFor=='service':
-        #     resp= await SERVICES_CONTROLLER.GetServiceTab()
-        # elif filterFor=='catelouge':
-        #     resp= await CATELOG_CONTROLLER.GetCatelougeTab()
-        # elif filterFor.lower() == 'business':
-        #     resp= await BUSS_CONTROLLER.GetAllBusinessTab()
-        # else:
-        #     resp= await CATELOG_CONTROLLER.GetCatelougeTab()
-        resp.data.sort(
-                key=lambda x: (x.get(NAMES.LABEL) or "").lower()
-            )
+            # Default fallback
+            resp = await CATELOG_CONTROLLER.GetCatelougeTab()
+
+        # Safely convert to list and sort
+        tab_list = list(resp.data) if resp and hasattr(resp, 'data') and resp.data else []
+        
+        try:
+            tab_list.sort(key=lambda x: str(x.get(NAMES.LABEL) or x.get('lable') or "").lower())
+        except Exception:
+            pass # Ignore sorting errors if keys are missing
 
         return ServerResponse(
-            response=resp.response,
-            message=resp.message,
-            code=resp.code,
-            data=resp.data
+            response=resp.response if resp else True,
+            message=resp.message if resp else "Success",
+            code=resp.code if resp else RESPONSE_CODES.success,
+            data=tab_list
         )
     except Exception as e:
-        # await MY_METHODS.printStatus(f"Error fetching Tabs: {str(e)}")
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message="Error fetching Tabs",

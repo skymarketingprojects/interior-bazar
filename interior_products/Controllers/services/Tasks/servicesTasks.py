@@ -1,22 +1,95 @@
 from asgiref.sync import sync_to_async
-from interior_products.models import Service,ServiceImage,ProductSubCategory,ProductCategory
+from interior_products.models import Service, ServiceImage, ProductSubCategory, ProductCategory
 from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.models import Business
 import json
 from interior_products.Controllers.products.Tasks.productsTasks import PRODUCTS_TASKS
+from django.db.models import Prefetch
+import asyncio
 
 class SERVICES_TASKS:
-    @classmethod
-    async def deleteService(self,service:Service):
-        try:
-            service.delete()
-            return True
-        except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in deleteservice: {str(e)}")
-            return False
     
     @classmethod
-    async def updateService(self,service:Service,data:dict):
+    async def BulkSerializeServices(cls, service_list):
+        """High-performance bulk serialization for services."""
+        results = []
+        for service in service_list:
+            try:
+                # Optimized images (pre-fetched via to_attr if needed)
+                images = getattr(service, 'preloaded_images', service.serviceImages.all())
+                imageData = [{
+                    'id': img.id, 'imageUrl': img.image, 'index': img.index, 'link': img.link
+                } for img in images]
+
+                # Fast tags parsing
+                tags = []
+                if service.serviceTags:
+                    try: tags = json.loads(str(service.serviceTags).replace("'", '"'))
+                    except: pass
+
+                # Fast categories mapping (synchronous task layer)
+                cats = [PRODUCTS_TASKS.SerializeCategorySync(cat) for cat in service.category.all()]
+                subs = [PRODUCTS_TASKS.SerializeCategorySync(sub) for sub in service.subCategory.all()]
+
+                results.append({
+                    'id': service.id,
+                    'title': service.title,
+                    'originalPrice': service.orignalPrice,
+                    'price': service.orignalPrice,
+                    'discountType': service.discountType,
+                    'discountBy': service.discountBy,
+                    'description': service.description,
+                    'serviceTags': tags,
+                    'images': imageData,
+                    'displayPrice': service.displayPrice,
+                    'index': service.index,
+                    "categories": cats,
+                    "subCategories": subs,
+                    "phone": service.business.user.user_profile.phone if hasattr(service.business.user, 'user_profile') else "",
+                    "countryCode": service.business.user.user_profile.countryCode if hasattr(service.business.user, 'user_profile') else ""
+                })
+            except: pass
+        return results
+
+    @classmethod
+    async def getService(cls, service: Service):
+        # Full relationship fetch for single item
+        queryset = Service.objects.filter(pk=service.pk).select_related(
+            'business', 'business__user', 'business__user__user_profile'
+        ).prefetch_related('serviceImages', 'category', 'subCategory')
+        
+        objs = await sync_to_async(list)(queryset)
+        results = await cls.BulkSerializeServices(objs)
+        return results[0] if results else None
+
+    @classmethod
+    async def createService(cls, business: Business, data: dict):
+        try:
+            service = await sync_to_async(Service.objects.create)(
+                business=business, title=data.title, orignalPrice=data.price,
+                discountType=data.discountType, discountBy=data.discountBy,
+                description=data.description, serviceTags=data.serviceTags
+            )
+            
+            cat_ids = [cat.id for cat in getattr(data, 'categories', [])][:3]
+            sub_ids = [cat.id for cat in getattr(data, 'subCategories', [])][:3]
+            
+            cats, subs = await asyncio.gather(
+                sync_to_async(lambda: list(ProductCategory.objects.filter(id__in=cat_ids)))(),
+                sync_to_async(lambda: list(ProductSubCategory.objects.filter(id__in=sub_ids)))()
+            )
+            await sync_to_async(service.category.set)(cats)
+            await sync_to_async(service.subCategory.set)(subs)
+
+            if hasattr(data, 'images') and data.images:
+                img_objs = [ServiceImage(service=service, image=img.imageUrl, index=img.index, link=img.link) for img in data.images]
+                await sync_to_async(ServiceImage.objects.bulk_create)(img_objs)
+                
+            return await cls.getService(service)
+        except: return False
+
+    @classmethod
+    async def updateService(cls, service: Service, data: dict):
         try:
             service.title = data.title
             service.orignalPrice = data.price
@@ -24,137 +97,33 @@ class SERVICES_TASKS:
             service.discountBy = data.discountBy
             service.description = data.description
             service.serviceTags = data.serviceTags
-
-            categories = getattr(data, 'categories', None)
-            if isinstance(categories, list) and len(categories) <= 3:
-                category_ids = [c.id for c in categories]
-                category_objs = await sync_to_async(lambda: list(ProductCategory.objects.filter(id__in=category_ids)))()
-                if len(category_objs) == len(category_ids):
-                    await sync_to_async(service.category.set)(category_objs)
             
+            cat_ids = [c.id for c in getattr(data, 'categories', [])][:3]
+            sub_ids = [c.id for c in getattr(data, 'subCategories', [])][:3]
             
-            subCategories = getattr(data, 'subCategories', None)
-            if isinstance(subCategories, list) and len(subCategories) <= 3:
-                category_ids = [c.id for c in subCategories]
-                category_objs = await sync_to_async(lambda: list(ProductSubCategory.objects.filter(id__in=category_ids)))()
-                if len(category_objs) == len(category_ids):
-                    await sync_to_async(service.subCategory.set)(category_objs)
-
-            service.save()
-            try:
-                if data.images:
-                    for image in data.images:
-                        if image.id:
-                            await sync_to_async(ServiceImage.objects.filter(id=image.id).update)(
-                                image=image.imageUrl,
-                                index=image.index,
-                                link=image.link
-                            )
-                        else:
-                            await sync_to_async(ServiceImage.objects.create)(
-                                service=service,
-                                image=image.imageUrl,
-                                index=image.index,
-                                link=image.link
-                            )
-            except Exception as e:
-                # await MY_METHODS.printStatus(f"Error in updateservice: {str(e)}")
-                pass
-            data = await self.getService(service)
-            return data
-        except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in updateservice: {str(e)}")
-            return False
-    
-    @classmethod
-    async def createService(self,business:Business,data:dict):
-        try:
-
-            service = await sync_to_async(Service.objects.create)(
-                business=business,
-                title=data.title,
-                orignalPrice=data.price,
-                discountType=data.discountType,
-                discountBy=data.discountBy,
-                description=data.description,
-                serviceTags=data.serviceTags
+            cats, subs = await asyncio.gather(
+                sync_to_async(lambda: list(ProductCategory.objects.filter(id__in=cat_ids)))(),
+                sync_to_async(lambda: list(ProductSubCategory.objects.filter(id__in=sub_ids)))()
             )
-            category_ids = [cat.id for cat in getattr(data, 'categories', [])]
-            if len(category_ids) > 3:
-                return None
-            categories = await sync_to_async(lambda: list(ProductCategory.objects.filter(id__in=category_ids)))()
-            if len(categories) != len(category_ids):
-                return None
-            
+            await sync_to_async(service.category.set)(cats)
+            await sync_to_async(service.subCategory.set)(subs)
+            await sync_to_async(service.save)()
 
-            subCategoryIds = [cat.id for cat in getattr(data, 'subCategories', [])]
-            if len(subCategoryIds) > 3:
-                return None
-            subCategories = await sync_to_async(lambda: list(ProductSubCategory.objects.filter(id__in=subCategoryIds)))()
-            if len(subCategories) != len(subCategoryIds):
-                return None
-            
-            await sync_to_async(service.category.set)(categories)
-            await sync_to_async(service.subCategory.set)(subCategories)
-            try:
-                if data.images:
-                    for image in data.images:
+            if hasattr(data, 'images') and data.images:
+                for img in data.images:
+                    if img.id:
+                        await sync_to_async(ServiceImage.objects.filter(id=img.id).update)(
+                            image=img.imageUrl, index=img.index, link=img.link)
+                    else:
                         await sync_to_async(ServiceImage.objects.create)(
-                            service=service,
-                            image=image.imageUrl,
-                            index=image.index,
-                            link=image.link
-                        )
-            except Exception as e:
-                # await MY_METHODS.printStatus(f"Error in createService: {str(e)}")
-                pass
-            data = await self.getService(service)
-            return data
-        except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in createService: {str(e)}")
-            return False
-        
+                            service=service, image=img.imageUrl, index=img.index, link=img.link)
+            
+            return await cls.getService(service)
+        except: return False
+
     @classmethod
-    async def getService(self,service:Service):
+    async def deleteService(cls, service: Service):
         try:
-            serviceImages: list[ServiceImage] = await sync_to_async(service.serviceImages.all)()
-            serviceImageData = []
-            for image in serviceImages:
-                serviceImageData.append({
-                    'id':image.id,
-                    'imageUrl':image.image,
-                    'index':image.index,
-                    'link':image.link
-                })
-            tags = json.loads(str(service.serviceTags).replace("'",'"')) if service.serviceTags else []
-            prodCategory=[]
-            for cat in service.category.all():
-                data = await PRODUCTS_TASKS.getCategoriesDataTask(cat)
-                prodCategory.append(data)
-
-            prodSubCategory=[]
-
-            for subCat in service.subCategory.all():
-                data = await PRODUCTS_TASKS.getCategoriesDataTask(subCat)
-                prodSubCategory.append(data)
-            serviceData = {
-                'id':service.id,
-                'title':service.title,
-                'originalPrice':service.orignalPrice,
-                'price':service.orignalPrice,
-                'discountType':service.discountType,
-                'discountBy':service.discountBy,
-                'description':service.description,
-                'serviceTags':tags,
-                'images':serviceImageData,
-                'displayPrice':service.displayPrice,
-                'index':service.index,
-                "categories":prodCategory,
-                "subCategories":prodSubCategory,
-                "phone":service.business.user.user_profile.phone,
-                "countryCode":service.business.user.user_profile.countryCode
-            }
-            return serviceData
-        except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in getservice: {str(e)}")
-            return False
+            await sync_to_async(service.delete)()
+            return True
+        except: return False

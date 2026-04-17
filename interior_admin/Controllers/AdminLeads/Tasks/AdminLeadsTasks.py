@@ -4,8 +4,54 @@ from app_ib.models import LeadQuery
 
 
 class ADMIN_LEADS_TASKS:
+
     @classmethod
-    async def GetLeadQueryTask(self, lead_query_ins:LeadQuery):
+    async def BulkSerializeLeadQueries(cls, lead_queries: list):
+        """
+        High performance bulk serializer for LeadQuery objects.
+        Expects .select_related('business') for maximum speed.
+        """
+        if not lead_queries:
+            return []
+            
+        serialized_data = []
+        for lead in lead_queries:
+            try:
+                # Pre-calculating fields to avoid repeated lookups
+                assigned_business = lead.business.businessName if lead.business else None
+                
+                item = {
+                    NAMES.ID: lead.pk,
+                    NAMES.NAME: lead.name,
+                    NAMES.PHONE: lead.phone,
+                    NAMES.EMAIL: lead.email,
+                    NAMES.INTRESTED: lead.interested,
+                    NAMES.QUERY: lead.query,
+                    NAMES.STATE: lead.state,
+                    NAMES.CITY: lead.city,
+                    NAMES.COUNTRY: lead.country,
+                    NAMES.STATUS: lead.status,
+                    NAMES.TAG: lead.tag,
+                    NAMES.CATEGORY: lead.category,
+                    NAMES.PRIORITY: lead.priority,
+                    NAMES.REMARK: lead.remark,
+                    NAMES.LOGS: lead.logs,
+                    NAMES.DATE: lead.timestamp.strftime(NAMES.DMY_FORMAT) if lead.timestamp else None,
+                    NAMES.UPDATED_AT: lead.updatedAt.strftime(NAMES.DMY_FORMAT) if lead.updatedAt else None,
+                    NAMES.ASSIGNED: assigned_business,
+                    NAMES.LEAD_STATUS: lead.leadStatus,
+                    NAMES.STAGE: lead.stage,
+                    NAMES.CLIENT_LOGS: lead.clientLogs
+                }
+                serialized_data.append(item)
+            except Exception:
+                continue
+                
+        return serialized_data
+
+    @classmethod
+    async def GetLeadQueryTask(cls, lead_query_ins:LeadQuery):
+        """ Legacy support for single item serialization """
         try:
             assignedbusiness = lead_query_ins.business.businessName if lead_query_ins.business else None
             data = {
@@ -34,6 +80,5 @@ class ADMIN_LEADS_TASKS:
             }
             return data
             
-        except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in CreateLeadQueryTask {e}')
+        except Exception:
             return None

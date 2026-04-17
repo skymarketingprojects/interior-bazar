@@ -70,14 +70,13 @@ class ADS_TASKS:
     @classmethod
     async def GetActiveAdsCampaignTask(cls, query, category=None, segment=None,categoryType=None):
         try:
-            activeAds = await sync_to_async(AdCampaign.objects.filter)(query)
+            activeAds = await sync_to_async(list)(AdCampaign.objects.filter(query))
             # await MY_METHODS.printStatus(f'activeAds: {activeAds}')
             adsData = []
             for ad in activeAds:
                 status, data = await cls.GetAdAssetsTask(ad,category,segment,categoryType)
                 if status:
-                    for obj in data:
-                        adsData.append(obj)
+                    adsData.extend(data)
 
             return True, adsData
         except Exception as e:
@@ -407,8 +406,11 @@ class ADS_TASKS:
     async def GetAdPersonasTask(cls, AdCampaignIns):
         try:
             # await MY_METHODS.printStatus(f'AdCampaignIns: {AdCampaignIns}')
-            PersonasQS = await sync_to_async(lambda: AdPersona.objects.filter(campaign=AdCampaignIns).first())()
-            personaCategory = PersonasQS.categories.all()
+            PersonasQS = await sync_to_async(lambda: AdPersona.objects.filter(campaign=AdCampaignIns).select_related('segment').prefetch_related('categories').first())()
+            if not PersonasQS:
+                return False, "Persona not found"
+
+            personaCategory = await sync_to_async(list)(PersonasQS.categories.all())
             categoryData = [await BUSS_TASK.GetBusinessTypeData(cat) for cat in personaCategory]
             segment = PersonasQS.segment
             segmentData = await BUSS_TASK.GetBusinessTypeData(segment)

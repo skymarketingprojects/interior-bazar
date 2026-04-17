@@ -1,5 +1,5 @@
 from asgiref.sync import sync_to_async
-from interior_products.models import Product,ProductImage,Catelogue,ProductSpecification,ProductCategory,ProductSubCategory
+from interior_products.models import Product, ProductImage, Catelogue, ProductSpecification, ProductCategory, ProductSubCategory
 from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.models import Business
 import json
@@ -8,22 +8,21 @@ from app_ib.Utils.Names import NAMES
 class PRODUCTS_TASKS:
     
     @classmethod
-    async def deleteProduct(self,product:Product):
+    async def deleteProduct(cls, product: Product):
         try:
-            product.delete()
+            await sync_to_async(product.delete)()
             return True
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in deleteProduct: {str(e)}")
             return False
     
     @classmethod
-    async def updateProduct(self,product:Product,data:dict):
+    async def updateProduct(cls, product: Product, data: dict):
         try:
             catelouge = product.catelogue
             try:
-               catelouge = await sync_to_async(Catelogue.objects.get(id=data.catalogueId))()
-            except Exception as e:
-                pass
+                if hasattr(data, 'catalogueId') and data.catalogueId:
+                    catelouge = await sync_to_async(Catelogue.objects.get)(id=data.catalogueId)
+            except: pass
 
             product.title = data.title
             product.orignalPrice = data.price
@@ -40,228 +39,168 @@ class PRODUCTS_TASKS:
                 if len(category_objs) == len(category_ids):
                     await sync_to_async(product.category.set)(category_objs)
             
-            
             subCategories = getattr(data, 'subCategories', None)
             if isinstance(subCategories, list) and len(subCategories) <= 3:
-                category_ids = [c.id for c in subCategories]
-                category_objs = await sync_to_async(lambda: list(ProductSubCategory.objects.filter(id__in=category_ids)))()
-                if len(category_objs) == len(category_ids):
-                    await sync_to_async(product.subCategory.set)(category_objs)
+                sub_ids = [c.id for c in subCategories]
+                sub_objs = await sync_to_async(lambda: list(ProductSubCategory.objects.filter(id__in=sub_ids)))()
+                if len(sub_objs) == len(sub_ids):
+                    await sync_to_async(product.subCategory.set)(sub_objs)
 
-            
-            product.save()
-
+            await sync_to_async(product.save)()
 
             try:
-                if data.images:
+                if hasattr(data, 'images') and data.images:
                     for image in data.images:
-                        # await MY_METHODS.printStatus(f"updateProduct: {image['id']}")
-                        if image.id:
+                        if hasattr(image, 'id') and image.id:
                             await sync_to_async(ProductImage.objects.filter(id=image.id).update)(
-                                image=image.imageUrl,
-                                index=image.index,
-                                link=image.link
+                                image=image.imageUrl, index=image.index, link=image.link
                             )
                         else:
                             await sync_to_async(ProductImage.objects.create)(
-                                product=product,
-                                image=image.imageUrl,
-                                index=image.index,
-                                link=image.link
+                                product=product, image=image.imageUrl, index=image.index, link=image.link
                             )
+            except: pass
 
-
-            except Exception as e:
-                # await MY_METHODS.printStatus(f"Error in updateProduct: {str(e)}")
-                pass
-
-
-            specifications = {"sizeAvailabe":data.sizeAvailabe,"userManual":data.userManual,"detail":data.detail}
-            # await MY_METHODS.printStatus(f"updateProduct: {specifications}")
-
+            specifications = {"sizeAvailabe": getattr(data, 'sizeAvailabe', None), 
+                              "userManual": getattr(data, 'userManual', None), 
+                              "detail": getattr(data, 'detail', None)}
 
             for key, value in specifications.items():
-                if not value:
-                    continue
-                await self._create_or_update_spec(product, key, value)
-            data = await self.getProduct(product)
-
-
-            return data
-        
+                if value is not None:
+                    await cls._create_or_update_spec(product, key, value)
+            
+            return await cls.getProduct(product)
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in updateProduct: {str(e)}")
             return False
     
     @staticmethod
     async def _create_or_update_spec(product, title, description):
         try:
             await sync_to_async(ProductSpecification.objects.update_or_create)(
-                product=product,
-                title=title,
-                description=description
+                product=product, title=title, defaults={'description': description}
             )
             return True
-        except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in _create_or_update_spec: {str(e)}")
-            return False
+        except: return False
 
     @classmethod
-    async def createProduct(self,business:Business,data:dict):
+    async def createProduct(cls, business: Business, data: dict):
         try:
             product = await sync_to_async(Product.objects.create)(
-                business=business,
-                title=data.title,
-                orignalPrice=data.price,
-                discountType=data.discountType,
-                discountBy=data.discountBy,
-                description=data.description,
-                productTags=data.productTags,
+                business=business, title=data.title, orignalPrice=data.price,
+                discountType=data.discountType, discountBy=data.discountBy,
+                description=data.description, productTags=data.productTags,
             )
 
             category_ids = [cat.id for cat in getattr(data, 'categories', [])][:3]
-            categories=[]
-            if len(category_ids) <= 3:
+            if category_ids:
                 categories = await sync_to_async(lambda: list(ProductCategory.objects.filter(id__in=category_ids)))()
+                await sync_to_async(product.category.set)(categories)
             
-
-            subCategoryIds = [cat.id for cat in getattr(data, 'subCategories', [])][:3]
-            subCategories=[]
-            if len(subCategoryIds) <= 3:
-                subCategories = await sync_to_async(lambda: list(ProductSubCategory.objects.filter(id__in=subCategoryIds)))()
-            
-
-            await sync_to_async(product.category.set)(categories)
-            await sync_to_async(product.subCategory.set)(subCategories)
+            sub_ids = [cat.id for cat in getattr(data, 'subCategories', [])][:3]
+            if sub_ids:
+                subs = await sync_to_async(lambda: list(ProductSubCategory.objects.filter(id__in=sub_ids)))()
+                await sync_to_async(product.subCategory.set)(subs)
 
             try:
-                if data.images:
+                if hasattr(data, 'images') and data.images:
                     for image in data.images:
                         await sync_to_async(ProductImage.objects.create)(
-                            product=product,
-                            image=image.imageUrl,
-                            index=image.index,
-                            link=image.link
+                            product=product, image=image.imageUrl, index=image.index, link=image.link
                         )
-            except Exception as e:
-                # await MY_METHODS.printStatus(f"Error in createProduct image: {str(e)}")
-                pass
-            specifications = {"sizeAvailabe":data.sizeAvailabe,"userManual":data.userManual,"detail":data.detail}
-            for key,value in specifications.items():
+            except: pass
+
+            specifications = {"sizeAvailabe": getattr(data, 'sizeAvailabe', ""), 
+                              "userManual": getattr(data, 'userManual', ""), 
+                              "detail": getattr(data, 'detail', "")}
+            for key, value in specifications.items():
                 await sync_to_async(ProductSpecification.objects.create)(
-                    product=product,
-                    title=key,
-                    description=value
-            )
-            data = await self.getProduct(product)
-            return data
-        except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in createProduct: {str(e)}")
-            return False
-        
-    @classmethod
-    async def getProduct(self,product:Product):
-        try:
-            productImages = await sync_to_async(product.productImages.all)()
-            productImageData = []
-            for image in productImages:
-                productImageData.append({
-                    'id':image.id,
-                    'imageUrl':image.image,
-                    'index':image.index,
-                    'link':image.link
-                })
-            # await MY_METHODS.printStatus(f"Product tag Data: {product.productTags} of type {type(product.productTags)}")
-            tags = json.loads(str(product.productTags).replace("'",'"')) if product.productTags else []
-
-            prodCategory=[]
-            for cat in product.category.all():
-                data = await self.getCategoriesDataTask(cat)
-                prodCategory.append(data)
-
-            prodSubCategory=[]
-
-            for subCat in product.subCategory.all():
-                data = await self.getCategoriesDataTask(subCat)
-                prodSubCategory.append(data)
-
-            productData = {
-                'id':product.id,
-                'title':product.title,
-                'originalPrice':product.orignalPrice,
-                'price':product.orignalPrice,
-                'discountType':product.discountType,
-                'discountBy':product.discountBy,
-                'description':product.description,
-                'productTags':tags,
-                'images':productImageData,
-                'displayPrice':product.displayPrice,
-                'catalogueId':product.catelogue.id if product.catelogue else '',
-                'index':product.index,
-                "categories":prodCategory,
-                "subCategories":prodSubCategory,
-                "phone":product.business.user.user_profile.phone,
-                "countryCode":product.business.user.user_profile.countryCode
-            }
-            specifications:list[ProductSpecification] = await sync_to_async(product.productSpecifications.all)()
-            for specification in specifications:
-                productData[specification.title] = specification.description
-            return productData
-        except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in getProduct: {str(e)}")
-            return False
+                    product=product, title=key, description=value
+                )
+            return await cls.getProduct(product)
+        except: return False
 
     @classmethod
-    async def getProductCategoriesTask(self):
-        try:
-            categories = ProductCategory.objects.all()
-            data = []
-            for cat in categories:
-                data.append({
-                    "id":cat.id,
-                    "label":cat.lable,
-                    "value":cat.value,
-                    'imageSQUrl':cat.imageSQUrl,
-                    'imageRTUrl':cat.imageRTUrl
-                })
-            return data
-        except Exception as e:
-            # await MY_METHODS.printStatus(f"error in get product category {str(e)}")
-            return False
-    
-    @classmethod
-    async def getProductSubCategoriesTask(self):
-        try:
-            categories = ProductSubCategory.objects.all()
-            data = []
-            for cat in categories:
-                data.append({
-                    NAMES.ID:cat.id,
-                    NAMES.LABEL:cat.lable,
-                    NAMES.VALUE:cat.value,
-                    NAMES.SHORT_VALUE:cat.shortValue,
-                    NAMES.IMAGE_SQ_URL:cat.imageSQUrl,
-                    NAMES.IMAGE_RT_URL:cat.imageRTUrl,
-                    NAMES.TRENDING:cat.trending
-                })
-            return data
-        except Exception as e:
-            # await MY_METHODS.printStatus(f"error in get product category {str(e)}")
-            return False
-    
-    @classmethod
-    async def getCategoriesDataTask(self,catgories:ProductCategory):
-        try:
+    async def BulkSerializeProducts(cls, product_list):
+        """High-performance bulk serialization for products."""
+        def run_sync_serialization():
+            results = []
+            for product in product_list:
+                try:
+                    image_data = [{
+                        'id': img.id, 'imageUrl': img.image, 'index': img.index, 'link': img.link
+                    } for img in product.productImages.all()]
+                    
+                    tags = json.loads(str(product.productTags).replace("'", '"')) if product.productTags else []
+                    
+                    prod_categories = [cls.getCategoriesDataSync(cat) for cat in product.category.all()]
+                    prod_sub_categories = [cls.getCategoriesDataSync(sub) for sub in product.subCategory.all()]
+
+                    profile = None
+                    try: profile = product.business.user.user_profile
+                    except: pass
+
+                    product_data = {
+                        'id': product.id,
+                        'title': product.title,
+                        'originalPrice': product.orignalPrice,
+                        'price': product.orignalPrice,
+                        'discountType': product.discountType,
+                        'discountBy': product.discountBy,
+                        'description': product.description,
+                        'productTags': tags,
+                        'images': image_data,
+                        'displayPrice': product.displayPrice,
+                        'catalogueId': product.catelogue.id if product.catelogue else '',
+                        'index': product.index,
+                        "categories": prod_categories,
+                        "subCategories": prod_sub_categories,
+                        "phone": profile.phone if profile else "",
+                        "countryCode": profile.countryCode if profile else ""
+                    }
+
+                    for spec in product.productSpecifications.all():
+                        product_data[spec.title] = spec.description
+                    
+                    results.append(product_data)
+                except Exception as e:
+                    pass
+            return results
             
-            return {
-                    NAMES.ID:catgories.id,
-                    NAMES.LABEL:catgories.lable,
-                    NAMES.VALUE:catgories.value,
-                    NAMES.SHORT_VALUE:catgories.shortValue,
-                    NAMES.IMAGE_SQ_URL:catgories.imageSQUrl,
-                    NAMES.IMAGE_RT_URL:catgories.imageRTUrl,
-                    NAMES.TRENDING:catgories.trending
-                }
-        except Exception as e:
-            # await MY_METHODS.printStatus(f"error in get product category {str(e)}")
-            return False
+        return await sync_to_async(run_sync_serialization)()
+
+    @classmethod
+    async def getProduct(cls, product: Product):
+        """Single product fetch using optimized patterns."""
+        # Ensure relationships are loaded if possible
+        optimized_list = await cls.BulkSerializeProducts([product])
+        return optimized_list[0] if optimized_list else None
+
+    @staticmethod
+    def getCategoriesDataSync(cat):
+        return {
+            NAMES.ID: cat.id,
+            NAMES.LABEL: cat.lable,
+            NAMES.VALUE: cat.value,
+            NAMES.SHORT_VALUE: getattr(cat, 'shortValue', ''),
+            NAMES.IMAGE_SQ_URL: cat.imageSQUrl,
+            NAMES.IMAGE_RT_URL: cat.imageRTUrl,
+            NAMES.TRENDING: getattr(cat, 'trending', False)
+        }
+
+    @classmethod
+    async def getProductCategoriesTask(cls):
+        try:
+            queryset = await sync_to_async(lambda: list(ProductCategory.objects.all()))()
+            return [cls.getCategoriesDataSync(cat) for cat in queryset]
+        except: return False
+    
+    @classmethod
+    async def getProductSubCategoriesTask(cls):
+        try:
+            queryset = await sync_to_async(lambda: list(ProductSubCategory.objects.all()))()
+            return [cls.getCategoriesDataSync(cat) for cat in queryset]
+        except: return False
+    
+    @classmethod
+    async def getCategoriesDataTask(cls, cat):
+        return cls.getCategoriesDataSync(cat)

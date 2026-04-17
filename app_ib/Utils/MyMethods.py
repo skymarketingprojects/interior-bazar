@@ -189,11 +189,15 @@ class MY_METHODS:
 
     @staticmethod
     async def get_time_ago(updated_at):
+        return MY_METHODS.get_time_ago_sync(updated_at)
+
+    @staticmethod
+    def get_time_ago_sync(updated_at):
         if updated_at:
+            from django.utils import timezone
+            from datetime import timedelta
             # Calculate the time difference between now and updated_at
             time_diff = timezone.now() - updated_at
-            # await MY_METHODS.printStatus(f'time_diff {time_diff}')
-
             # Determine the number of seconds, minutes, hours, and days
             if time_diff < timedelta(minutes=1):
                 return "Just now"
@@ -216,36 +220,43 @@ class MY_METHODS:
     
     @staticmethod
     async def paginate_queryset(queryset, page=1, size=10):
-        """Paginate queryset using Django's Paginator and return PascalCase pagination."""
+        """Paginate queryset using manual slicing to avoid async context issues with Paginator."""
         try:
-            paginator = Paginator(queryset, size)
+            from asgiref.sync import sync_to_async
             
-            try:
-                page_obj = paginator.page(page)
-            except PageNotAnInteger:
-                page_obj = paginator.page(1)
-            except EmptyPage:
-                page_obj = paginator.page(paginator.num_pages)
-
-            results = list(page_obj.object_list)  # convert queryset slice to list if needed
-
+            # Ensure page and size are integers
+            page = int(page) if page else 1
+            size = int(size) if size else 10
+            if page < 1: page = 1
+            
+            # Calculate offset and limit
+            offset = (page - 1) * size
+            limit = offset + size
+            
+            # Force evaluation in sync thread
+            results = await sync_to_async(lambda: list(queryset[offset:limit]))()
+            total_items = await sync_to_async(queryset.count)()
+            
+            total_pages = (total_items + size - 1) // size if size > 0 else 0
+            
             return {
                 "results": results,
                 "pagination": {
-                    "pageNo": page_obj.number,
+                    "pageNo": page,
                     "pageSize": size,
-                    "totalItems": paginator.count,
-                    "totalPages": paginator.num_pages,
-                    "hasNext": page_obj.has_next(),
-                    "hasPrev": page_obj.has_previous()
+                    "totalItems": total_items,
+                    "totalPages": total_pages,
+                    "hasNext": page < total_pages,
+                    "hasPrev": page > 1
                 }
             }
         except Exception as e:
+            # Fallback for pagination errors
             print(f"Pagination error: {e}")
             return {
                 "results": [],
                 "pagination": {
-                    "pageNo": 1,
+                    "pageNo": page,
                     "pageSize": size,
                     "totalItems": 0,
                     "totalPages": 0,

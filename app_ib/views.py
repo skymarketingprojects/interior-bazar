@@ -59,7 +59,7 @@ async def TestMailView(request):
 @api_view(['GET'])
 async def GetOurClients(request):
     try:
-        clients = await sync_to_async(OurClients.objects.all)()
+        clients = await sync_to_async(lambda: list(OurClients.objects.all().order_by('index')))()
 
         data = []
         for client in clients:
@@ -86,7 +86,7 @@ async def GetOurClients(request):
 @api_view(['GET'])
 async def GetReelSection(request):
     try:
-        reels = await sync_to_async(ReelSection.objects.all)()
+        reels = await sync_to_async(lambda: list(ReelSection.objects.all().order_by('index')))()
 
         data = []
         for reel in reels:

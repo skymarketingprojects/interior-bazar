@@ -106,18 +106,21 @@ class ADMIN_LEADS_CONTROLLER:
                 })
 
 class ADMIN_LEADS_CONTROLLER_V2:
+
     @classmethod
     @controllerExceptionHandler(
         errorMessage=RESPONSE_MESSAGES.query_fetch_error,
         responseFunc=LocalResponse,
         successMessage=RESPONSE_MESSAGES.query_fetch_success
     )
-    async def GetQueries(self,queryParams:AdminLeadQueryFilters):
-        await MY_METHODS.printStatus(f'GetAdminQueryView queryParams:-{queryParams}')
-        lead_query= None
+    async def GetQueries(cls, queryParams: AdminLeadQueryFilters):
+        """
+        High performance paginated lead query retrieval.
+        Fixes async context issues with Paginator and improves speed via bulk serialization.
+        """
         filters = Q()
 
-        # Assigned / Unassigned (business FK presence)
+        # 1. Build filters (keeping existing logic)
         if queryParams.assigned is not None:
             assigned = queryParams.assigned
             if isinstance(assigned, str):
@@ -127,8 +130,7 @@ class ADMIN_LEADS_CONTROLLER_V2:
                 filters &= Q(business__isnull=False)
             else:
                 filters &= Q(business__isnull=True)
-        await MY_METHODS.printStatus(f'GetAdminQueryView filters:-{filters}')
-        # Lead Status (model = TextField single, check in list)
+
         if queryParams.leadStatus:
             leadStatus = queryParams.leadStatus
             if isinstance(leadStatus, str):
@@ -136,19 +138,15 @@ class ADMIN_LEADS_CONTROLLER_V2:
             
             lead_status_q = Q()
             for s in leadStatus:
-                # Check both leadStatus and status fields in DB as they are often used interchangeably
-                # Using icontains handles cases where data is stored as '"status": "open"' inside a list/object
                 lead_status_q |= Q(leadStatus__icontains=s) | Q(status__icontains=s)
             filters &= lead_status_q
 
-        # Time range (independent safe bounds)
         if queryParams.timeFrom:
             filters &= Q(timestamp__gte=queryParams.timeFrom)
 
         if queryParams.timeTo:
              filters &= Q(timestamp__lte=queryParams.timeTo)
 
-        # Tags (model = TextField single, not relation)
         if queryParams.tags:
             tags = queryParams.tags
             if isinstance(tags, str):
@@ -159,21 +157,16 @@ class ADMIN_LEADS_CONTROLLER_V2:
                 tags_q |= Q(tag__icontains=t)
             filters &= tags_q
 
-        # Stages (model = single TextField)
         if queryParams.stages:
             stages = queryParams.stages
-            await MY_METHODS.printStatus(f'stages:-{stages}')
             if isinstance(stages, str):
                 stages = [s.strip() for s in stages.split(',') if s.strip()]
-            await MY_METHODS.printStatus(f'stages:-{stages}')
             
             stages_q = Q()
             for sg in stages:
-
                 stages_q |= Q(stage__icontains=sg)
             filters &= stages_q
-            await MY_METHODS.printStatus(f'filters:-{filters}')
-        # Status (Category)
+
         if queryParams.status:
             status = queryParams.status
             if isinstance(status, str):
@@ -181,11 +174,9 @@ class ADMIN_LEADS_CONTROLLER_V2:
             
             status_q = Q()
             for st in status:
-                # Also check leadStatus for status parameter for completeness
                 status_q |= Q(status__icontains=st) | Q(leadStatus__icontains=st)
             filters &= status_q
 
-        # Search query
         if queryParams.searchText:
             search_filters = Q(
                 Q(name__icontains=queryParams.searchText) |
@@ -194,7 +185,6 @@ class ADMIN_LEADS_CONTROLLER_V2:
                 Q(city__icontains=queryParams.searchText)
             )
             
-            # If search text is numeric, also search by ID
             stripped_search_text = queryParams.searchText.strip()
             if stripped_search_text.isdigit():
                 search_filters |= Q(pk=int(stripped_search_text))
@@ -211,30 +201,40 @@ class ADMIN_LEADS_CONTROLLER_V2:
                 category_q |= Q(category__icontains=ct)
             filters &= category_q
 
-        # Step 2: Query leads
-        lead_query = await sync_to_async(
-            lambda: LeadQuery.objects.filter(filters).order_by('-timestamp')
-        )()
-
-        paginator = Paginator(lead_query, queryParams.pageSize)
-        page_obj = paginator.get_page(queryParams.pageNo)
-
-        # Step 3: Gather blog data concurrently
-        tasks = [ADMIN_LEADS_TASKS.GetLeadQueryTask(leads) for leads in page_obj]
-        leads_details = await asyncio.gather(*tasks)
-
-        # Step 4: Build and return plain dict response
-        blog_data = {
-            "leads": leads_details,
+        # 2. Synchronous Database Operations (Pagination + Selection)
+        def get_paginated_queries():
+            # Use select_related to avoid N+1 queries during serialization
+            queryset = LeadQuery.objects.filter(filters).select_related('business').order_by('-timestamp')
+            
+            paginator = Paginator(queryset, queryParams.pageSize)
+            page_obj = paginator.get_page(queryParams.pageNo)
+            
+            return {
+                "items": list(page_obj), # Force evaluation inside sync_to_async
                 "current_page": page_obj.number,
                 "hasNext": page_obj.has_next(),
                 "hasPrevious": page_obj.has_previous(),
                 "totalPages": paginator.num_pages,
-                "totalCount": len(lead_query),
-                "pageSize": queryParams.pageSize
+                "totalCount": paginator.count
+            }
+
+        page_data = await sync_to_async(get_paginated_queries)()
+
+        # 3. Bulk Serialization
+        leads_details = await ADMIN_LEADS_TASKS.BulkSerializeLeadQueries(page_data["items"])
+
+        # 4. Final Response Construction
+        response_data = {
+            "leads": leads_details,
+            "current_page": page_data["current_page"],
+            "hasNext": page_data["hasNext"],
+            "hasPrevious": page_data["hasPrevious"],
+            "totalPages": page_data["totalPages"],
+            "totalCount": page_data["totalCount"],
+            "pageSize": queryParams.pageSize
         }
 
-        return True,blog_data
+        return True, response_data
     
     @classmethod
     @controllerExceptionHandler(
