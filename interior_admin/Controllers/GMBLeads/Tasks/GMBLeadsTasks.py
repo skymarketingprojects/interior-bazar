@@ -2,14 +2,8 @@ from asgiref.sync import sync_to_async
 from django.db.models import Q
 from django.core.paginator import Paginator
 import asyncio
-from interior_admin.models import GMBBusiness, GMBActivityLog
-from interior_admin.Utils.RankingAlgo import RankingAlgo
-
-from asgiref.sync import sync_to_async
-from django.db.models import Q
-from django.core.paginator import Paginator
-import asyncio
 from typing import List, Dict, Any, Optional
+
 from interior_admin.models import GMBBusiness
 from interior_admin.Utils.RankingAlgo import RankingAlgo
 from app_ib.Utils.Names import NAMES
@@ -45,7 +39,7 @@ class GMBLeadsTasks:
         }
 
     @staticmethod
-    async def IngestSingleLeadTask(item: Dict[str, Any]) -> bool:
+    async def IngestSingleLeadTask(item: Dict[str, Any], trigger_user: Any = None) -> bool:
         """
         Processes a single lead. Wrapped for safety during bulk ingestion.
         """
@@ -57,7 +51,7 @@ class GMBLeadsTasks:
             ranking_info = RankingAlgo.calculate_score(item)
             wa_message = RankingAlgo.generate_wa_message(item.get(NAMES.PHONE) or item.get(NAMES.PHONE_SNAKE, ''), business_name)
             
-            await sync_to_async(GMBBusiness.objects.update_or_create)(
+            lead, _ = await sync_to_async(GMBBusiness.objects.update_or_create)(
                 businessName=business_name,
                 phone=item.get(NAMES.PHONE) or item.get(NAMES.PHONE_SNAKE, ''),
                 defaults={
@@ -67,7 +61,7 @@ class GMBLeadsTasks:
                     NAMES.ADDRESS.lower(): item.get(NAMES.ADDRESS) or item.get(NAMES.ADDRESS_SNAKE, ''),
                     "web": item.get(NAMES.WEBSITE) or item.get(NAMES.WEBSITE_URL) or item.get(NAMES.WEBSITE_LINK),
                     "mapLink": item.get(NAMES.MAP_LINK_SNAKE) or item.get(NAMES.MAPS_LINK_SNAKE) or item.get(NAMES.GMB_LINK),
-                    "socialLinks": item.get(NAMES.SOCIAL_LINKS, []) or item.get(NAMES.SOCIAL_LINKS_SNAKE, []),
+                    "socialLinks": item.get(NAMES.SOCIAL_LINKS) or item.get(NAMES.SOCIAL_LINKS_SNAKE) or [],
                     "waMessage": wa_message,
                     "rankingRate": ranking_info[NAMES.RANKING_RATE],
                     "tier": ranking_info[NAMES.TIER],
@@ -76,24 +70,54 @@ class GMBLeadsTasks:
                     "remark": item.get(NAMES.REMARK)
                 }
             )
+            
             return True
         except Exception as e:
             print(f"Error ingesting lead {item.get(NAMES.BUSINESS_NAME, NAMES.UNKNOWN_BUSINESS)}: {e}")
             return False
 
     @staticmethod
-    async def IngestGMBDataTask(data_list: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def IngestGMBDataTask(data_list: List[Dict[str, Any]], trigger_user: Any = None, assignable_users: List[Any] = None) -> Dict[str, Any]:
         """
         Bulk ingests GMB data. Continues processing even if individual records fail.
+        If assignable_users are provided, it performs a balanced distribution.
         """
         if not isinstance(data_list, list):
             data_list = [data_list]
             
-        tasks = [GMBLeadsTasks.IngestSingleLeadTask(item) for item in data_list]
+        tasks = [GMBLeadsTasks.IngestSingleLeadTask(item, trigger_user=trigger_user) for item in data_list]
         results = await asyncio.gather(*tasks)
+        
+        # If sales team exists, trigger auto-assignment for unassigned leads
+        if assignable_users:
+            await GMBLeadsTasks.AutoAssignUnassignedLeadsTask(assignable_users, trigger_user)
         
         processed_count = sum(1 for r in results if r)
         return {NAMES.PROCESSED_COUNT: processed_count, NAMES.TOTAL_RECEIVED: len(data_list)}
+
+    @staticmethod
+    async def AutoAssignUnassignedLeadsTask(assignable_users: List[Any], trigger_user: Any = None) -> Dict[str, Any]:
+        """
+        Scans for all unassigned leads and distributes them across assignable_users.
+        """
+        if not assignable_users:
+            return {NAMES.PROCESSED_COUNT: 0, "message": "No assignable users found"}
+            
+        # Fetch all unassigned leads
+        unassigned_leads = await sync_to_async(lambda: list(GMBBusiness.objects.filter(assignedUser__isnull=True).order_by('createdAt')))()
+        
+        if not unassigned_leads:
+            return {NAMES.PROCESSED_COUNT: 0}
+
+        # Balanced distribution (round-robin)
+        for i, lead in enumerate(unassigned_leads):
+            target_user = assignable_users[i % len(assignable_users)]
+            lead.assignedUser = target_user
+            lead.status = NAMES.STATUS_ASSIGNED
+            lead._triggered_by = trigger_user
+            await sync_to_async(lead.save)()
+            
+        return {NAMES.PROCESSED_COUNT: len(unassigned_leads)}
 
     @staticmethod
     async def PaginateGMBLeadsTask(filters_q: Q, sort_field: str, page_no: int, page_size: int) -> Dict[str, Any]:
@@ -130,6 +154,44 @@ class GMBLeadsTasks:
         lead_ins._triggered_by = trigger_user_ins
         await sync_to_async(lead_ins.save)()
         return {NAMES.STATUS_KEY: NAMES.STATUS_ASSIGNED, NAMES.USER: target_user_ins.username}
+
+    @staticmethod
+    async def UpdateGMBLeadTask(lead_ins: GMBBusiness, data: Any, trigger_user: Any) -> Dict[str, Any]:
+        """
+        Updates specific fields of a GMB lead.
+        """
+        update_data = data.dict(exclude_none=True)
+        
+        for field, value in update_data.items():
+            if hasattr(lead_ins, field):
+                setattr(lead_ins, field, value)
+        
+        # Set trigger user for logging
+        lead_ins._triggered_by = trigger_user
+        await sync_to_async(lead_ins.save)()
+        
+        return await GMBLeadsTasks.GetGMBBusinessTask(lead_ins)
+
+    @staticmethod
+    async def CreateSingleLeadTask(item: Dict[str, Any], trigger_user: Any) -> Dict[str, Any]:
+        """
+        Creates a single lead and assigns it to the trigger_user.
+        """
+        success = await GMBLeadsTasks.IngestSingleLeadTask(item, trigger_user=trigger_user)
+        if success:
+            business_name = item.get(NAMES.BUSINESS_NAME) or item.get(NAMES.BUSINESS_NAME_SNAKE)
+            phone = item.get(NAMES.PHONE) or item.get(NAMES.PHONE_SNAKE, '')
+            
+            lead = await sync_to_async(GMBBusiness.objects.get)(businessName=business_name, phone=phone)
+            
+            if trigger_user and trigger_user.is_authenticated:
+                lead.assignedUser = trigger_user
+                lead.status = NAMES.STATUS_ASSIGNED
+                lead._triggered_by = trigger_user
+                await sync_to_async(lead.save)()
+            
+            return await GMBLeadsTasks.GetGMBBusinessTask(lead)
+        return None
 
 GMB_LEADS_TASKS = GMBLeadsTasks()
 

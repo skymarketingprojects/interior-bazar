@@ -489,6 +489,10 @@ class RESPONSE_MESSAGES:
     gmb_assign_success= 'Lead assigned successfully'
     gmb_missing_ids= 'lead_id and user_id are required'
     gmb_ingestion_failed= 'Ingestion failed'
+    gmb_update_error= 'Error updating lead'
+    gmb_update_success= 'Lead updated successfully'
+    gmb_create_error= 'Error creating lead'
+    gmb_create_success= 'Lead created successfully'
 
 class VALIDATION_MESSAGES:
     password_length= 'Password must be at least 8 characters long'

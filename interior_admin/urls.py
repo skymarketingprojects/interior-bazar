@@ -77,4 +77,10 @@ urlpatterns = [
     path('v1/admin/all-leads/', GMBLeadsViews.GetAllLeadsView, name='get_all_gmb_leads'),
     path('v1/leads/my-leads/', GMBLeadsViews.GetMyLeadsView, name='get_my_gmb_leads'),
     path('v1/leads/assign/', GMBLeadsViews.AssignLeadView, name='assign_gmb_lead'),
+    path('v1/leads/<int:leadId>/', GMBLeadsViews.UpdateGMBLeadView, name='update_gmb_lead'),
+    path('v1/leads/create/', GMBLeadsViews.CreateSingleLeadView, name='create_gmb_lead'),
+    # Superadmin Management & Distribution
+    path('v1/admins/', GMBLeadsViews.ListGMBAdminsView, name='list_gmb_admins'),
+    path('v1/leads/user/<int:userId>/', GMBLeadsViews.GetUserLeadsView, name='get_user_gmb_leads'),
+    path('v1/leads/auto-assign/', GMBLeadsViews.AutoAssignLeadsView, name='auto_assign_gmb_leads'),
 ]

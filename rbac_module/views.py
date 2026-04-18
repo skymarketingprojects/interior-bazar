@@ -44,7 +44,7 @@ class RoleCollectionView(AsyncAPIView):
         responseFunc=ServerResponse
     )
     async def post(self, request: Request) -> ServerResponse:
-        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_RBAC)
+        await hasAccess(request=request)
 
         validated = RoleCreateSchema(**request.data)
 
@@ -61,7 +61,7 @@ class RoleCollectionView(AsyncAPIView):
         responseFunc=ServerResponse
     )
     async def put(self, request: Request, roleId: int) -> ServerResponse:
-        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_RBAC)
+        await hasAccess(request=request)
 
         validated = RoleUpdateSchema(**request.data)
 
@@ -79,7 +79,7 @@ class RoleCollectionView(AsyncAPIView):
         responseFunc=ServerResponse
     )
     async def delete(self, request: Request, roleId: int) -> ServerResponse:
-        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_RBAC)
+        await hasAccess(request=request)
 
         result = await ROLE_CONTROLLER.deleteRoleController(
             user=request.user,
@@ -96,7 +96,7 @@ class RoleCollectionView(AsyncAPIView):
     responseFunc=ServerResponse
 )
 async def removeAccessView(request: Request, roleId: int) -> ServerResponse:
-    await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_RBAC)
+    await hasAccess(request=request)
 
     validated = RoleAccessUpdateSchema(**request.data)
 
@@ -116,7 +116,7 @@ async def removeAccessView(request: Request, roleId: int) -> ServerResponse:
     responseFunc=ServerResponse
 )
 async def removeUserView(request: Request, roleId: int) -> ServerResponse:
-    await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_RBAC)
+    await hasAccess(request=request)
 
     validated = RoleAssignUsersSchema(**request.data)
 

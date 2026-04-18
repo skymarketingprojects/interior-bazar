@@ -137,8 +137,12 @@ class PROFILE_CONTROLLER:
             user_data = {
                 NAMES.USERNAME: userIns.username,
                 NAMES.ROLE: userIns.type,
-                NAMES.ID: userIns.id
+                NAMES.ID: userIns.id,
+                'isSuperAdmin': False
             }
+
+            if userIns.type == NAMES.ADMIN:
+                user_data['isSuperAdmin'] = await sync_to_async(userIns.roles.filter(is_full_access=True).exists)()
 
             if is_user_profile_created:
                 user_profile_ins = await sync_to_async(UserProfile.objects.get)(user=userIns)
@@ -183,8 +187,14 @@ class PROFILE_CONTROLLER:
 
     @classmethod
     async def GetProfile(cls, userIns: CustomUser):
-        if userIns.type == NAMES.BUSINESS:
-            return await cls.GetProfileData(userIns, includePlan=True)
+        # Always try to include plan if user has a business or is marked as business type
+        # This ensures planId is available immediately after login (fixing the "refresh to see plan" bug)
+        try:
+            has_business = await sync_to_async(lambda: hasattr(userIns, 'user_business'))()
+            if has_business or userIns.type == NAMES.BUSINESS:
+                return await cls.GetProfileData(userIns, includePlan=True)
+        except:
+            pass
         return await cls.GetProfileData(userIns, includePlan=False)
 
     @classmethod

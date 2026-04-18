@@ -11,6 +11,7 @@ class Access(models.Model):
 
 class Role(models.Model):
     name = models.CharField(max_length=255, unique=True)
+    is_full_access = models.BooleanField(default=False)
     access = models.ManyToManyField(Access, related_name="roles", blank=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="roles", blank=True)

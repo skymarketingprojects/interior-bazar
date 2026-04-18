@@ -27,7 +27,7 @@ class AdminLeadsViewsV1:
         responseFunc=ServerResponse
     )
     async def GetAdminQueryView(request:Request,pageNo,pageSize):
-        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_QUERY_VIEW)
+        await hasAccess(request=request)
         user = request.user
         # Call Auth Controller to Create User
         final_response = await  ADMIN_LEADS_CONTROLLER.GetQueries(user_ins=user,pageNo=pageNo,size=pageSize)
@@ -41,7 +41,7 @@ class AdminLeadsViewsV1:
         responseFunc=ServerResponse
     )
     async def AssignQueryView(request:Request):
-            await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_QUERY_VIEW)
+            await hasAccess(request=request)
             user = request.user
             data = request.data
             businessId = data.get(NAMES.BUSINESS_ID,None)
@@ -63,7 +63,7 @@ class AdminLeadsViewsV2:
         )
         async def get(self,request:Request):
             user = request.user
-            await hasAccess(user=user, accessName=ACCESSLIST.ACCESS_QUERY_VIEW)
+            await hasAccess(request=request)
             
             # Extract all query params to allow full filtration
             params = AdminLeadQueryFilters(**request.query_params.dict())
@@ -79,7 +79,7 @@ class AdminLeadsViewsV2:
             responseFunc=ServerResponse
         )
         async def post(self,request:Request):
-            await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_QUERY_VIEW)
+            await hasAccess(request=request)
             data = AdminLeadsCreateSchema(**request.data)
             # Call Auth Controller to Create User
             final_response = await  ADMIN_LEADS_CONTROLLER_V2.createQuery(data=data)
@@ -91,7 +91,7 @@ class AdminLeadsViewsV2:
             responseFunc=ServerResponse
         )
         async def put(self,request:Request,leadId):
-            await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_QUERY_VIEW)
+            await hasAccess(request=request)
             data = AdminLeadsUpdateSchema(**request.data)
             # Call Auth Controller to Create User
             final_response = await  ADMIN_LEADS_CONTROLLER_V2.updateQuery(data=data,leadId=leadId)
@@ -103,7 +103,7 @@ class AdminLeadsViewsV2:
             responseFunc=ServerResponse
         )
         async def delete(self,request:Request,leadId):
-            await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_QUERY_VIEW)
+            await hasAccess(request=request)
             final_response = await  ADMIN_LEADS_CONTROLLER_V2.deleteQuery(leadId=leadId)
 
             return final_response
@@ -116,7 +116,7 @@ class AdminLeadsViewsV2:
     )
     async def AssignQueryView(request:Request):
             user = request.user
-            await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_QUERY_VIEW)
+            await hasAccess(request=request)
             data = request.data
 
             businessId = data.get(NAMES.BUSINESS_ID,None)

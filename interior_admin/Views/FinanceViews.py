@@ -20,7 +20,7 @@ from rest_framework.request import Request
     responseFunc=ServerResponse
 )
 async def getFinanceDataView(request: Request):
-    hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_FINANCE_VIEW)
+    await hasAccess(request=request)
     
     final_response = await FINANCE_CONTROLLER.GetFinanceData()
     return final_response

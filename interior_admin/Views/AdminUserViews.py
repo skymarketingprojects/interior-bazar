@@ -26,7 +26,7 @@ class AdminUserViews(APIView):
         responseFunc=ServerResponse
     )
     async def get(self, request:Request,userId=None):
-        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ADMIN)
+        await hasAccess(request=request)
         resp:LocalResponse = None
         if userId:
             resp = await ADMIN_USER_CONTROLLER.GetUserDataController(userId=int(userId))
@@ -41,7 +41,7 @@ class AdminUserViews(APIView):
         responseFunc=ServerResponse
     )
     async def post(self, request:Request):
-        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ADMIN)
+        await hasAccess(request=request)
 
         data = CreateAdminUser(**request.data)
         resp  = await ADMIN_USER_CONTROLLER.createAdminUserController(
@@ -55,7 +55,7 @@ class AdminUserViews(APIView):
         responseFunc=ServerResponse
     )
     async def put(self, request:Request,userId):
-        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ADMIN)
+        await hasAccess(request=request)
         data = UpdateAdminUser(**request.data)
         resp = await ADMIN_USER_CONTROLLER.updateAdminUserController(
             owner=request.user,
@@ -70,7 +70,7 @@ class AdminUserViews(APIView):
         responseFunc=ServerResponse
     )
     async def delete(self, request:Request,userId):
-        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ADMIN)
+        await hasAccess(request=request)
         resp = await ADMIN_USER_CONTROLLER.deleteAdminUserController(
             owner=request.user,
             userId=userId
@@ -86,7 +86,7 @@ class SendUserCredentialsView(APIView):
         responseFunc=ServerResponse
     )
     async def post(self, request:Request,userId):
-        await hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_ADMIN)
+        await hasAccess(request=request)
         resp = await ADMIN_USER_CONTROLLER.sendUserCredentialsController(
             owner=request.user,
             userId=userId

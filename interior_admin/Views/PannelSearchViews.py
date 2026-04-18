@@ -17,7 +17,7 @@ from rest_framework.request import Request
 @permission_classes([IsAuthenticated])
 async def SearchQueryView(request:Request,query):
     try:
-        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_LEAD_ASSIGN)
+        await hasAccess(request=request)
         result =  await PANEL_SEARCH_CONTROLLER.GetSearchResults(Query=query)
         return ServerResponse(
             response=result.response,
@@ -38,7 +38,7 @@ async def SearchQueryView(request:Request,query):
 @permission_classes([IsAuthenticated])
 async def GetBusinessByIdView(request:Request,Id):
     try:
-        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_LEAD_ASSIGN)
+        await hasAccess(request=request)
         result =  await PANEL_SEARCH_CONTROLLER.GetBusinessByID(Id=Id)
         return ServerResponse(
             response=result.response,

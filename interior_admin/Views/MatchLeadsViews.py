@@ -12,7 +12,7 @@ from interior_admin.Validators.adminValidators import hasAccess
 async def MatchLeadsView(request):
     try:
         userIns = request.user
-        hasAccess(user=userIns, accessName=ACCESSLIST.ACCESS_LEAD_MATCH)
+        await hasAccess(request=request)
         queryId = request.query_params.get(NAMES.QUERY_ID)
         result = await MATCH_LEADS_CONTROLLER.GetBusinessCandidates(userIns=userIns,queryId=queryId)
         return ServerResponse(

@@ -16,7 +16,7 @@ from interior_admin.Validators.adminValidators import hasAccess
 @permission_classes([IsAuthenticated])
 async def GetAdminBusinessDataView(request,pageNo,pageSize):
     try:
-        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_BUSINESS_VIEW)
+        await hasAccess(request=request)
         # Call Auth Controller to Create User
         # await MY_METHODS.printStatus(f'GetAdminBusinessDataView called with pageNo,pageSize:-{pageNo},{pageSize}')
         final_response = await BUSINESS_INFO_CONTROLLER.GetBusinessInfo( pageNo=pageNo,size=pageSize)
@@ -43,7 +43,7 @@ async def GetAdminBusinessDataView(request,pageNo,pageSize):
 @permission_classes([IsAuthenticated])
 async def GetAdminBusinessDataViewV2(request:Request):
     try:
-        hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_BUSINESS_VIEW)
+        await hasAccess(request=request)
         pageNo = request.query_params.get(NAMES.PAGE_NO, 1)
         pageSize = request.query_params.get(NAMES.PAGE_SIZE, 10)
 
@@ -76,7 +76,7 @@ async def GetAdminBusinessDataViewV2(request:Request):
     responseFunc=ServerResponse
 )
 async def DeleteBusinessDataView(request:Request,businessId):
-    hasAccess(user=request.user, accessName=ACCESSLIST.ACCESS_BUSINESS_VIEW)
+    await hasAccess(request=request)
     # Call Auth Controller to Create User
     final_response = await BUSINESS_INFO_CONTROLLER.DeleteBusinessInfo(businessId=businessId)
     return final_response

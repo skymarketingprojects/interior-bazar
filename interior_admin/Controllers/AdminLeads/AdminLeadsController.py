@@ -12,7 +12,7 @@ from app_ib.Utils.MyMethods import MY_METHODS
 
 from .Tasks.AdminLeadsTasks import ADMIN_LEADS_TASKS
 from interior_admin.Controllers.AdminLeads.Validators.AdminLeadsValidators import AdminLeadsCreateSchema,AdminLeadsUpdateSchema
-from interior_admin.Validators.adminValidators import hasAccess
+# removed hasAccess import
 from django.db.models import Q
 from django.core.paginator import Paginator
 import asyncio

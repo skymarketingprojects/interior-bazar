@@ -43,20 +43,22 @@ class RankingAlgo:
         rating_value, review_count = RankingAlgo.extract_rating_info(rating_str)
         
         # 1. Data Completeness Score
-        f_name = RankingAlgo.WEIGHT_NAME
-        f_phone = RankingAlgo.WEIGHT_PHONE if data.get(NAMES.PHONE.lower()) else 0
-        f_website = RankingAlgo.WEIGHT_WEBSITE if data.get('web') or data.get(NAMES.WEBSITE_URL) else 0
-        f_address = RankingAlgo.WEIGHT_ADDRESS if data.get(NAMES.ADDRESS.lower()) else 0
-        f_category = RankingAlgo.WEIGHT_CATEGORY if data.get(NAMES.CATEGORY) else 0
+        f_name = RankingAlgo.WEIGHT_NAME if data.get(NAMES.BUSINESS_NAME) or data.get('businessName') else 0
+        f_phone = RankingAlgo.WEIGHT_PHONE if data.get(NAMES.PHONE) or data.get('phone') else 0
+        f_website = RankingAlgo.WEIGHT_WEBSITE if data.get('web') or data.get(NAMES.WEBSITE_URL) or data.get('website') else 0
+        f_address = RankingAlgo.WEIGHT_ADDRESS if data.get(NAMES.ADDRESS) or data.get('address') else 0
+        f_category = RankingAlgo.WEIGHT_CATEGORY if data.get(NAMES.CATEGORY) or data.get('category') else 0
         
         # 2. Social Presence Score
-        social_links = data.get(NAMES.SOCIAL_LINKS, []) or data.get(NAMES.SOCIAL_LINKS_SNAKE, [])
+        social_links = data.get(NAMES.SOCIAL_LINKS) or data.get(NAMES.SOCIAL_LINKS_SNAKE) or []
         if isinstance(social_links, str):
             import json
             try:
                 social_links = json.loads(social_links)
             except:
                 social_links = [social_links] if social_links else []
+        elif not isinstance(social_links, list):
+            social_links = []
         
         social_score = min(len(social_links) / RankingAlgo.MAX_NORMALIZED_SOCIAL, 1) * RankingAlgo.WEIGHT_SOCIAL
 
