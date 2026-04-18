@@ -39,7 +39,7 @@ class RankingAlgo:
         """
         Calculates a lead score (0.0 to 1.0) and assigns a Tier (A-E).
         """
-        rating_str = data.get(NAMES.RATING.lower(), NAMES.DEFAULT_RATING)
+        rating_str = data.get(NAMES.RATING.lower()) or NAMES.DEFAULT_RATING
         rating_value, review_count = RankingAlgo.extract_rating_info(rating_str)
         
         # 1. Data Completeness Score

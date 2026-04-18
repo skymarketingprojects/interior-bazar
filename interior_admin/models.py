@@ -4,16 +4,16 @@ from datetime import datetime
 from app_ib.Utils.Names import NAMES
 
 class GMBBusiness(models.Model):
-    businessName = models.CharField(max_length=255)
+    businessName = models.CharField(max_length=500)
     rating = models.CharField(max_length=50, help_text="Store in format 4.8(32)")
     ratingValue = models.FloatField(default=0.0)
     reviewCount = models.IntegerField(default=0)
     address = models.TextField(null=True, blank=True)
-    phone = models.CharField(max_length=20, null=True, blank=True)
-    web = models.URLField(null=True, blank=True)
-    mapLink = models.URLField(null=True, blank=True)
+    phone = models.CharField(max_length=100, null=True, blank=True)
+    web = models.URLField(max_length=500, null=True, blank=True)
+    mapLink = models.URLField(max_length=500, null=True, blank=True)
     socialLinks = models.JSONField(default=list, null=True, blank=True)
-    waMessage = models.URLField(null=True, blank=True)
+    waMessage = models.URLField(max_length=500, null=True, blank=True)
     assignedUser = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_gmb_leads')
     rankingRate = models.FloatField(default=0.0)
     tier = models.CharField(max_length=1, null=True, blank=True)

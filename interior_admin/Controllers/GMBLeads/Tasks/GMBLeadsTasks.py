@@ -45,7 +45,7 @@ class GMBLeadsTasks:
         Processes a single lead. Wrapped for safety during bulk ingestion.
         """
         try:
-            business_name = item.get(NAMES.BUSINESS_NAME) or item.get(NAMES.BUSINESS_NAME_SNAKE)
+            business_name = item.get(NAMES.BUSINESS_NAME) or item.get(NAMES.BUSINESS_NAME_SNAKE) or item.get('title') or item.get('name')
             if not business_name:
                 return False
             
@@ -56,7 +56,7 @@ class GMBLeadsTasks:
                 businessName=business_name,
                 phone=item.get(NAMES.PHONE) or item.get(NAMES.PHONE_SNAKE, ''),
                 defaults={
-                    NAMES.RATING.lower(): item.get(NAMES.RATING, NAMES.DEFAULT_RATING),
+                    NAMES.RATING.lower(): item.get(NAMES.RATING) or NAMES.DEFAULT_RATING,
                     NAMES.RATING_VALUE: ranking_info[NAMES.RATING_VALUE],
                     NAMES.REVIEW_COUNT: ranking_info[NAMES.REVIEW_COUNT],
                     NAMES.ADDRESS.lower(): item.get(NAMES.ADDRESS) or item.get(NAMES.ADDRESS_SNAKE, ''),
@@ -75,7 +75,13 @@ class GMBLeadsTasks:
             
             return True
         except Exception as e:
-            print(f"Error ingesting lead {item.get(NAMES.BUSINESS_NAME, NAMES.UNKNOWN_BUSINESS)}: {e}")
+            msg = f"Error ingesting lead {item.get(NAMES.BUSINESS_NAME, NAMES.UNKNOWN_BUSINESS)}: {e}"
+            print(msg)
+            try:
+                with open("/Users/nikhil/Desktop/Offfice/interior_bazar/ingest_errors.log", "a") as f:
+                    f.write(msg + "\n")
+            except:
+                pass
             return False
 
     @staticmethod
@@ -87,8 +93,10 @@ class GMBLeadsTasks:
         if not isinstance(data_list, list):
             data_list = [data_list]
             
-        tasks = [GMBLeadsTasks.IngestSingleLeadTask(item, trigger_user=trigger_user) for item in data_list]
-        results = await asyncio.gather(*tasks)
+        results = []
+        for item in data_list:
+            res = await GMBLeadsTasks.IngestSingleLeadTask(item, trigger_user=trigger_user)
+            results.append(res)
         
         # If sales team exists, trigger auto-assignment for unassigned leads
         if assignable_users:
@@ -194,7 +202,5 @@ class GMBLeadsTasks:
             
             return await GMBLeadsTasks.GetGMBBusinessTask(lead)
         return None
-
-GMB_LEADS_TASKS = GMBLeadsTasks()
 
 GMB_LEADS_TASKS = GMBLeadsTasks()
