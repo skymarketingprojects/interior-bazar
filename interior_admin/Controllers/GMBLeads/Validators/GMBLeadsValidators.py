@@ -9,6 +9,7 @@ class GMBLeadQueryFilters(BaseValidator):
     platform: Optional[str] = Field(default=None)
     status: Optional[str] = Field(default=None)
     city: Optional[str] = Field(default=None)
+    state: Optional[str] = Field(default=None)
     zip: Optional[str] = Field(default=None)
     has_website: Optional[bool] = Field(default=None)
     has_social: Optional[bool] = Field(default=None)
@@ -22,6 +23,7 @@ class GMBLeadUpdateSchema(BaseValidator):
     rankingRate: Optional[float] = Field(default=None)
     tier: Optional[str] = Field(default=None)
     category: Optional[str] = Field(default=None)
+    state: Optional[str] = Field(default=None)
 
 class GMBLeadCreateSchema(BaseValidator):
     businessName: str
@@ -32,5 +34,6 @@ class GMBLeadCreateSchema(BaseValidator):
     map_link: Optional[str] = Field(default=None)
     social_links: Optional[List[str]] = Field(default=None)
     category: Optional[str] = Field(default=None)
+    state: Optional[str] = Field(default=None)
     remark: Optional[str] = Field(default=None)
     platform: Optional[str] = Field(default="GMB")

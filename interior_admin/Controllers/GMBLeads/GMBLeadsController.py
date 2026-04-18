@@ -48,6 +48,8 @@ class GMBLeadsController:
             filters &= Q(status__icontains=queryParams.status)
         if queryParams.city:
             filters &= Q(address__icontains=queryParams.city or "")
+        if queryParams.state:
+            filters &= Q(state__icontains=queryParams.state)
         if queryParams.zip:
             filters &= Q(address__icontains=queryParams.zip or "")
         

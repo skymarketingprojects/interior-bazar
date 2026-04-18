@@ -21,6 +21,7 @@ class GMBBusiness(models.Model):
     remark = models.TextField(null=True, blank=True)
     category = models.CharField(max_length=255, null=True, blank=True)
     status = models.CharField(max_length=50, default='New')
+    state = models.CharField(max_length=100, null=True, blank=True)
     
     logs = models.JSONField(default=list, null=True, blank=True)
     
@@ -37,7 +38,8 @@ class GMBBusiness(models.Model):
             NAMES.RANKING_RATE: self.rankingRate,
             NAMES.REMARK: self.remark,
             NAMES.TIER: self.tier,
-            NAMES.STATUS_KEY: self.status
+            NAMES.STATUS_KEY: self.status,
+            NAMES.STATE: self.state
         }
 
     def save(self, *args, **kwargs):

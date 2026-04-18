@@ -34,6 +34,7 @@ class GMBLeadsTasks:
             NAMES.REMARK: business.remark,
             NAMES.CATEGORY: business.category,
             NAMES.LOGS: business.logs,
+            NAMES.STATE: business.state,
             NAMES.CREATED_AT: business.createdAt.isoformat() if business.createdAt else None,
             NAMES.UPDATED_AT: business.updatedAt.isoformat() if business.updatedAt else None,
         }
@@ -67,6 +68,7 @@ class GMBLeadsTasks:
                     "tier": ranking_info[NAMES.TIER],
                     "platform": item.get(NAMES.PLATFORM, NAMES.DEFAULT_PLATFORM),
                     "category": item.get(NAMES.CATEGORY),
+                    "state": item.get(NAMES.STATE) or item.get("state_name") or item.get("region"),
                     "remark": item.get(NAMES.REMARK)
                 }
             )
