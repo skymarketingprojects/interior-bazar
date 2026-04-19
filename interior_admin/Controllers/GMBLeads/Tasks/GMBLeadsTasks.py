@@ -23,6 +23,7 @@ class GMBLeadsTasks:
             NAMES.ADDRESS: business.address,
             NAMES.PHONE: business.phone,
             NAMES.WEBSITE: business.web,
+            NAMES.STATUS: business.status,
             NAMES.GMB_LINK: business.mapLink,
             NAMES.SOCIAL_LINKS: business.socialLinks,
             NAMES.WA_MESSAGE: business.waMessage,
