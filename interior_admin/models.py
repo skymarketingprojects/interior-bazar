@@ -39,8 +39,11 @@ class GMBBusiness(models.Model):
             NAMES.REMARK: self.remark,
             NAMES.TIER: self.tier,
             NAMES.STATUS_KEY: self.status,
-            NAMES.STATE: self.state
+            NAMES.STATE: self.state,
+            NAMES.ADDRESS: self.address,
+            NAMES.PHONE: self.phone
         }
+
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
