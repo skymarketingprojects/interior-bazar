@@ -172,15 +172,40 @@ class GMBLeadsTasks:
         """
         update_data = data.dict(exclude_none=True)
         
+        # UI sends 'location', but model uses 'address'
+        if 'location' in update_data:
+            update_data['address'] = update_data.pop('location')
+            
         for field, value in update_data.items():
             if hasattr(lead_ins, field):
                 setattr(lead_ins, field, value)
         
+        # Regenerate WhatsApp message if phone changes
+        if 'phone' in update_data:
+            lead_ins.waMessage = RankingAlgo.generate_wa_message(lead_ins.phone, lead_ins.businessName)
+
+        # Recalculate ranking if relevant fields changed
+        ranking_trigger_fields = {'address', 'phone', 'category', 'web'}
+        if any(f in update_data for f in ranking_trigger_fields):
+            ranking_payload = {
+                NAMES.BUSINESS_NAME: lead_ins.businessName,
+                NAMES.PHONE: lead_ins.phone,
+                NAMES.ADDRESS: lead_ins.address,
+                "web": lead_ins.web,
+                NAMES.CATEGORY: lead_ins.category,
+                NAMES.RATING.lower(): lead_ins.rating,
+                "socialLinks": lead_ins.socialLinks
+            }
+            ranking_info = RankingAlgo.calculate_score(ranking_payload)
+            lead_ins.rankingRate = ranking_info[NAMES.RANKING_RATE]
+            lead_ins.tier = ranking_info[NAMES.TIER]
+
         # Set trigger user for logging
         lead_ins._triggered_by = trigger_user
         await sync_to_async(lead_ins.save)()
         
         return await GMBLeadsTasks.GetGMBBusinessTask(lead_ins)
+
 
     @staticmethod
     async def CreateSingleLeadTask(item: Dict[str, Any], trigger_user: Any) -> Dict[str, Any]:

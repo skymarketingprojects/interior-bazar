@@ -24,6 +24,9 @@ class GMBLeadUpdateSchema(BaseValidator):
     tier: Optional[str] = Field(default=None)
     category: Optional[str] = Field(default=None)
     state: Optional[str] = Field(default=None)
+    phone: Optional[str] = Field(default=None)
+    location: Optional[str] = Field(default=None)
+
 
 class GMBLeadCreateSchema(BaseValidator):
     businessName: str
