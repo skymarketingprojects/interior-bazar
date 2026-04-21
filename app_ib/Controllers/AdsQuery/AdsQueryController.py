@@ -15,7 +15,7 @@ class ADS_QUERY_CONTROLLER:
         try:
             
             create_query_resp = await  ADS_QUERY_TASKS.CreateAdsQueryTask(data=data,user=user)
-            # await MY_METHODS.printStatus(f'create query resp {create_query_resp}')
+            pass
 
             if create_query_resp:
                 return LocalResponse(
@@ -46,14 +46,14 @@ class ADS_QUERY_CONTROLLER:
         try:
 
             is_query_exist = await sync_to_async(LeadQuery.objects.filter(id=data.id).exists)()
-            # await MY_METHODS.printStatus(f'is_query_exist {is_query_exist}')
+            pass
 
             if(is_query_exist):
                 lead_query_ins = await sync_to_async(LeadQuery.objects.get)(id=data.id)
-                # await MY_METHODS.printStatus(f'lead_query_ins {lead_query_ins}')   
+                pass
                 
                 create_query_resp = await  ADS_QUERY_TASKS.VerifyAdsQueryTask(lead_query_ins=lead_query_ins,data=data)
-                # await MY_METHODS.printStatus(f'verify query resp {create_query_resp}')
+                pass
 
                 if create_query_resp:
                     return LocalResponse(

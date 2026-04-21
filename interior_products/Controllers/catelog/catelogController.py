@@ -25,7 +25,7 @@ class CATELOG_CONTROLLER:
                 if data:
                     catelogData.append(data)
             
-            # await MY_METHODS.printStatus(f"catelog data: {catelogData}")
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.catelog_fetch_success,
@@ -34,7 +34,7 @@ class CATELOG_CONTROLLER:
                 )
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error during GetCatelogForBusiness: {e}')
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.catelog_fetch_error,
@@ -54,7 +54,7 @@ class CATELOG_CONTROLLER:
                 )
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error during GetCatelog: {e}')
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.catelog_fetch_error,
@@ -111,7 +111,7 @@ class CATELOG_CONTROLLER:
                 )
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error during GetCatelog: {e}')
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.catelog_fetch_error,
@@ -137,7 +137,7 @@ class CATELOG_CONTROLLER:
                 )
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error during CreateCatelog: {e}')
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.catelog_create_error,
@@ -173,7 +173,7 @@ class CATELOG_CONTROLLER:
                 )
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error during UpdateCatelog: {e}')
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.catelog_update_error,
@@ -208,7 +208,7 @@ class CATELOG_CONTROLLER:
                 )
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error during DeleteCatelog: {e}')
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.catelog_delete_error,
@@ -278,7 +278,7 @@ class CATELOG_CONTROLLER:
                 data=tabData
                 )
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error during GetCatelougeTab: {str(e)}')
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.catelog_table_error,

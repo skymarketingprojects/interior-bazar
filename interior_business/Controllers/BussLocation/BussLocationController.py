@@ -18,18 +18,18 @@ class BUSS_LOCATION_CONTROLLER:
             business_loc_ins= None
 
             is_business_exist = await sync_to_async(Business.objects.filter(user=user_ins).exists)()
-            # await MY_METHODS.printStatus(f'is_business_exist {is_business_exist}')
+            pass
 
             if(is_business_exist):
                  business_ins = await sync_to_async(Business.objects.get)(user=user_ins)
 
             # Check if business already exist
             is_business_loc_exist = await sync_to_async(Location.objects.filter(business=business_ins).exists)()
-            # await MY_METHODS.printStatus(f'is_business_loc_exist {is_business_loc_exist}')
+            pass
 
             if is_business_loc_exist:
                 business_loc_ins = await sync_to_async(Location.objects.get)(business=business_ins)
-                # await MY_METHODS.printStatus(f'update business location')
+                pass
                 update_resp = await BUSS_LOC_TASK.UpdateBusinessLocTask(
                     business_loc_ins=business_loc_ins, data=data)
                 if update_resp:
@@ -46,7 +46,7 @@ class BUSS_LOCATION_CONTROLLER:
                         data={})
 
             else:
-                # await MY_METHODS.printStatus(f'create business location')
+                pass
                 create_resp = await BUSS_LOC_TASK.CreateBusinessLocTask(
                     business_ins=business_ins, data=data)
                 if create_resp:
@@ -127,7 +127,7 @@ class BUSS_LOCATION_CONTROLLER:
                     data={})
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in GetCountryList {e}')
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.country_list_fetch_error,
@@ -156,7 +156,7 @@ class BUSS_LOCATION_CONTROLLER:
                     data={})
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in GetStateListByCountry {e}')
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.country_list_fetch_error,

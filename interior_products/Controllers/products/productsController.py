@@ -40,7 +40,7 @@ class PRODUCTS_CONTROLLER:
                 data=productData
             )
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in getProduct: {str(e)}")
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.product_fetch_error,
@@ -71,7 +71,7 @@ class PRODUCTS_CONTROLLER:
                 related_qs = Product.objects.filter(filterQuery).order_by('index')
             else:
                 related_qs = Product.objects.all().order_by('index')
-            # await MY_METHODS.printStatus(f"related_qs: {related_qs}")
+            pass
 
             if not related_qs.count():
                 return LocalResponse(
@@ -105,7 +105,7 @@ class PRODUCTS_CONTROLLER:
                 data=paginated['pagination']
             )
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in getProduct: {str(e)}")
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.product_fetch_error,
@@ -119,7 +119,7 @@ class PRODUCTS_CONTROLLER:
             products = await sync_to_async(
             lambda: business.products.all().order_by('index')
         )()
-            # await MY_METHODS.printStatus(f'Products found: {products.count()} for business: {business.id}')
+            pass
             productsData = []
             for product in products:
                 productData = await PRODUCTS_TASKS.getProduct(product)
@@ -132,7 +132,7 @@ class PRODUCTS_CONTROLLER:
                 data=productsData
             )
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in getProducts: {str(e)}")
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.products_fetch_error,
@@ -158,7 +158,7 @@ class PRODUCTS_CONTROLLER:
                 data=product
             )
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in createProduct: {str(e)}")
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.product_create_error,
@@ -193,7 +193,7 @@ class PRODUCTS_CONTROLLER:
             )
             
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in updateProduct: {str(e)}")
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.product_update_error,
@@ -227,7 +227,7 @@ class PRODUCTS_CONTROLLER:
                 data=product
             )
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in deleteProduct: {str(e)}")
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.product_delete_error,

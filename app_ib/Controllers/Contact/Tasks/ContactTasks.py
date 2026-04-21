@@ -7,7 +7,7 @@ class CONTACT_TASKS:
     @classmethod
     async def CreateContactTask(self,data):
         try:
-            # await MY_METHODS.printStatus(f'create contact task data {data}')
+            pass
             contact_ins= await sync_to_async(Contact.objects.create)(
                 tag=data.tag,
                 name = data.name,
@@ -18,7 +18,7 @@ class CONTACT_TASKS:
                 detail = data.detail,
                 attachment = getattr(data, NAMES.ATTACHMENT, None)
             )
-            # await MY_METHODS.printStatus(f'contact ins {contact_ins}')
+            pass
 
             if contact_ins:
                 return True
@@ -26,5 +26,5 @@ class CONTACT_TASKS:
                 return False
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f'create contact task error {str(e)}')
+            pass
             return False

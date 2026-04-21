@@ -42,7 +42,7 @@ class SERVICES_CONTROLLER:
                 data=serviceData
             )
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in getService: {str(e)}")
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.service_fetch_error,
@@ -96,7 +96,7 @@ class SERVICES_CONTROLLER:
                 data=paginated['pagination']
             )
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in getService: {str(e)}")
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.service_fetch_error,
@@ -121,7 +121,7 @@ class SERVICES_CONTROLLER:
                 data=servicesData
             )
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in get Services: {str(e)}")
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.services_fetch_error,
@@ -147,7 +147,7 @@ class SERVICES_CONTROLLER:
                 data=service
             )
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in createservice: {str(e)}")
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.service_create_error,
@@ -182,7 +182,7 @@ class SERVICES_CONTROLLER:
             )
             
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in updateservice: {str(e)}")
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.service_update_error,
@@ -216,7 +216,7 @@ class SERVICES_CONTROLLER:
                 data=service
             )
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in deleteservice: {str(e)}")
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.service_delete_error,

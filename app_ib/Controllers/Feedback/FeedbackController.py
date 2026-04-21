@@ -17,11 +17,11 @@ class FEEDBACK_CONTROLLER:
     async def CreateFeedback(self,user_ins,data):
         try:
             # Test Data
-            # await MY_METHODS.printStatus(f'name: {data.contact}')
-            # await MY_METHODS.printStatus(f'name: {data.feedback}')
+            pass
+            pass
 
             feedback_create_resp_data = await FEEDBACK_TASKS.CreateFeedbackTask(user_ins=user_ins,data=data)
-            # await MY_METHODS.printStatus(f'create query resp {feedback_create_resp_data}')
+            pass
 
             if feedback_create_resp_data:
                 return LocalResponse(
@@ -38,7 +38,7 @@ class FEEDBACK_CONTROLLER:
                     data={})
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in CreateFeedback: {e}')
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.feedback_generate_error,
@@ -52,16 +52,16 @@ class FEEDBACK_CONTROLLER:
     async def UpdateFeedbackStatus(self,data):
         try:
             # Test Data
-            # await MY_METHODS.printStatus(f'id: {data.id}')
-            # await MY_METHODS.printStatus(f'status: {data.status}')
+            pass
+            pass
 
             is_feedback_exist= await sync_to_async(Feedback.objects.filter(id=data.id).exists)()
             if(is_feedback_exist):
                 feedback_ins=await sync_to_async(Feedback.objects.get)(id=data.id)
-                # await MY_METHODS.printStatus(f'feedback ins {feedback_ins}')
+                pass
 
                 udpdate_feedback_response = await  FEEDBACK_TASKS.UdpateFeedbackTask(feedback_ins=feedback_ins, data=data)
-                # await MY_METHODS.printStatus(f'udpate feedback resp {udpdate_feedback_response}')
+                pass
 
                 if udpdate_feedback_response:
                     return LocalResponse(

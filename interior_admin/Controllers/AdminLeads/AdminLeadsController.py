@@ -70,7 +70,7 @@ class ADMIN_LEADS_CONTROLLER:
                 businessIns = await sync_to_async(Business.objects.get)(pk=businessId)
                 leadIns = await sync_to_async(LeadQuery.objects.get)(pk=leadId)
                 assignResult = await LEAD_QUERY_TASK.AssignLeadQueryTask(leadQueryIns=leadIns,business=businessIns)
-                # await MY_METHODS.printStatus(f"assigned {assignResult}")
+                pass
                 if assignResult:
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.success,
@@ -96,7 +96,7 @@ class ADMIN_LEADS_CONTROLLER:
                         code=RESPONSE_CODES.error,
                         data={"error":data})
         except Exception as e:
-            # await MY_METHODS.printStatus(f'fetch quries error {e}')
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.query_assigned_faliure,
@@ -113,7 +113,7 @@ class ADMIN_LEADS_CONTROLLER_V2:
         successMessage=RESPONSE_MESSAGES.query_fetch_success
     )
     async def GetQueries(self,queryParams:AdminLeadQueryFilters):
-        await MY_METHODS.printStatus(f'GetAdminQueryView queryParams:-{queryParams}')
+        pass
         lead_query= None
         filters = Q()
 
@@ -127,7 +127,7 @@ class ADMIN_LEADS_CONTROLLER_V2:
                 filters &= Q(business__isnull=False)
             else:
                 filters &= Q(business__isnull=True)
-        await MY_METHODS.printStatus(f'GetAdminQueryView filters:-{filters}')
+        pass
         # Lead Status (model = TextField single, check in list)
         if queryParams.leadStatus:
             leadStatus = queryParams.leadStatus
@@ -162,17 +162,17 @@ class ADMIN_LEADS_CONTROLLER_V2:
         # Stages (model = single TextField)
         if queryParams.stages:
             stages = queryParams.stages
-            await MY_METHODS.printStatus(f'stages:-{stages}')
+            pass
             if isinstance(stages, str):
                 stages = [s.strip() for s in stages.split(',') if s.strip()]
-            await MY_METHODS.printStatus(f'stages:-{stages}')
+            pass
             
             stages_q = Q()
             for sg in stages:
 
                 stages_q |= Q(stage__icontains=sg)
             filters &= stages_q
-            await MY_METHODS.printStatus(f'filters:-{filters}')
+            pass
         # Status (Category)
         if queryParams.status:
             status = queryParams.status
@@ -254,7 +254,7 @@ class ADMIN_LEADS_CONTROLLER_V2:
     async def updateQuery(self,data:AdminLeadsUpdateSchema,leadId:int):
         lead = await sync_to_async(LeadQuery.objects.get)(pk=leadId)
         data = await LEAD_QUERY_TASK.UpdateLeadQueryTask(data=data,lead_query_ins=lead)
-        await MY_METHODS.printStatus(f'UpdateAdminQueryView data:-{data}')
+        pass
         if data:
             return True,data
         return False,data
@@ -282,7 +282,7 @@ class ADMIN_LEADS_CONTROLLER_V2:
                 businessIns = await sync_to_async(Business.objects.get)(pk=businessId)
                 leadIns = await sync_to_async(LeadQuery.objects.get)(pk=leadId)
                 assignResult = await LEAD_QUERY_TASK.AssignLeadQueryTask(leadQueryIns=leadIns,business=businessIns)
-                # await MY_METHODS.printStatus(f"assigned {assignResult}")
+                pass
                 if assignResult:
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.success,
@@ -308,7 +308,7 @@ class ADMIN_LEADS_CONTROLLER_V2:
                         code=RESPONSE_CODES.error,
                         data={"error":data})
         except Exception as e:
-            # await MY_METHODS.printStatus(f'fetch quries error {e}')
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.query_assigned_faliure,

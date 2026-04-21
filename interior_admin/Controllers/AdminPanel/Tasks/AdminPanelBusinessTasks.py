@@ -43,7 +43,7 @@ class ADMIN_PANEL_TASKS:
     @classmethod
     @taskExceptionHandler
     async def GetTotalBusinesses(cls):
-        await MY_METHODS.printStatus(f'GetTotalBusinesses')
+        pass
         count = 0
         if settings.ENV == APPMODE.PROD:
             count = await sync_to_async(lambda: Business.objects.filter(selfCreated=False).count())()
@@ -310,7 +310,7 @@ class ADMIN_PANEL_BUSINESS_TASKS_V2:
     @classmethod
     @taskExceptionHandler
     async def UpdateBusinessPlanIntent(cls, planId:int, buyIntent:str):
-        await MY_METHODS.printStatus(f'UpdateBusinessPlanIntent planId:{planId}, buyIntent:{buyIntent}')
+        pass
         
         # First try to find by planId (pk)
         plan = await sync_to_async(BusinessPlan.objects.filter(pk=planId).first)()

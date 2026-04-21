@@ -27,9 +27,9 @@ async def GetBusinessByPaginationView(request):
         state = request.query_params.get(NAMES.STATE, None)
         query = request.query_params.get(NAMES.QUERY, None)
 
-        await MY_METHODS.printStatus(request)
+        pass
 
-        await MY_METHODS.printStatus(f'index {index} pageSize {pageSize} tabId {tabId} tabType {tabType} state {state} query {query}')
+        pass
 
         final_response = await SEARCH_CONTROLLER.GetBusinessUsingPagination(
             pageNo=index,

@@ -21,7 +21,7 @@ class PROFILE_TASKS:
             return True
             
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in CreateProfileTask {e}')
+            pass
             return None
 
     @classmethod
@@ -36,7 +36,7 @@ class PROFILE_TASKS:
             return True
             
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in UpdateProfileTask {e}')
+            pass
             return None
 
     @classmethod
@@ -49,7 +49,7 @@ class PROFILE_TASKS:
             return True
             
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in CreateProfileImageTask {e}')
+            pass
             return None
 
     @classmethod
@@ -60,7 +60,7 @@ class PROFILE_TASKS:
             return True
             
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in UpdateProfileImageTask {e}')
+            pass
             return None
 
 
@@ -77,5 +77,5 @@ class PROFILE_TASKS:
             return user_profile_data
             
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in GetProfileDataTask {e}')
+            pass
             return None

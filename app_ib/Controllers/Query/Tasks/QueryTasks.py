@@ -33,7 +33,7 @@ class LEAD_QUERY_TASK:
                     lead_query_ins.clientLogs = currentLogs
 
             except Exception as e:
-                # await MY_METHODS.printStatus(f'clientLogs not found {str(e)}')
+                pass
                 pass
             
             stage = getattr(data, 'stage', None)
@@ -60,7 +60,7 @@ class LEAD_QUERY_TASK:
                     leadfor = await sync_to_async(Service.objects.get)(id=data.itemId)
                     lead_query_ins.service= leadfor
             except Exception as e:
-                # await MY_METHODS.printStatus(f'type or id not found {str(e)}')
+                pass
                 pass
             
             if leadfor:
@@ -74,7 +74,7 @@ class LEAD_QUERY_TASK:
             return True,respData
             
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in CreateLeadQueryTask {e}')
+            pass
             return None,str(e)
   
     @classmethod
@@ -101,7 +101,7 @@ class LEAD_QUERY_TASK:
                     lead_query_ins.clientLogs = currentLogs
 
             except Exception as e:
-                # await MY_METHODS.printStatus(f'clientLogs not found {str(e)}')
+                pass
                 pass
             
             lead_status = getattr(data, NAMES.LEAD_STATUS, None)
@@ -112,14 +112,14 @@ class LEAD_QUERY_TASK:
             if stage:
                 lead_query_ins.stage = stage or lead_query_ins.stage
             
-            # await MY_METHODS.printStatus(f'tag {data.tag}')
+            pass
             
             await sync_to_async(lead_query_ins.save)()
             data = await self.GetLeadQueryTask(lead_query_ins)
             return data
             
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in UpdateLeadQueryTask {str(e)}')
+            pass
             return None
 
     @classmethod
@@ -129,7 +129,7 @@ class LEAD_QUERY_TASK:
             return True,True
             
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in DeleteLeadQueryTask {e}')
+            pass
             return False,
     @classmethod
     async def UpdateLeadQueryStatusTask(self, lead_query_ins:LeadQuery, data:LeadQueryStatusSchema):
@@ -196,7 +196,7 @@ class LEAD_QUERY_TASK:
             return data
             
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in CreateLeadQueryTask {e}')
+            pass
             return None
 
 

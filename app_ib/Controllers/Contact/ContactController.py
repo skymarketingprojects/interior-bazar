@@ -16,11 +16,11 @@ class CONTACT_CONTROLLER:
     async def CreateContact(self,data):
         try:
             # Test Data
-            # await MY_METHODS.printStatus(f'name: {data.contact}')
-            # await MY_METHODS.printStatus(f'name: {data.feedback}')
+            pass
+            pass
 
             contact_create_resp_data = await CONTACT_TASKS.CreateContactTask(data=data)
-            # await MY_METHODS.printStatus(f'create query resp {contact_create_resp_data}')
+            pass
 
             if contact_create_resp_data:
                 return LocalResponse(

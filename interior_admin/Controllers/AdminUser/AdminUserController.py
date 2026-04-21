@@ -105,7 +105,7 @@ class ADMIN_USER_CONTROLLER:
                 owner=owner,
                 data=data
             )
-            await MY_METHODS.printStatus("task_resp",task_resp)
+            pass
 
             if status:
                 return LocalResponse(
@@ -184,7 +184,7 @@ class ADMIN_USER_CONTROLLER:
             )
 
         except Exception as e:
-            await MY_METHODS.printStatus(f'[updateAdminUserController Error]: {e}')
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.user_update_error,

@@ -107,10 +107,10 @@ class AdminPanelViewsV1:
     async def GetDashboardDataView(request):
         await hasAccess(request=request)
 
-        await MY_METHODS.printStatus("GetDashboardDataView")
+        pass
         
         final_response = await ADMIN_PANEL_CONTROLLER.GetDashboardData()
-        await MY_METHODS.printStatus("resp",final_response)
+        pass
 
         return final_response
     

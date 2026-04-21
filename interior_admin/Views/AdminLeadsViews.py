@@ -46,7 +46,7 @@ class AdminLeadsViewsV1:
             data = request.data
             businessId = data.get(NAMES.BUSINESS_ID,None)
             leadId = data.get(NAMES.LEAD_ID,None)
-            # await MY_METHODS.printStatus(status=f"businessId {businessId}--lead {leadId}")
+            pass
             assignResponse = await ADMIN_LEADS_CONTROLLER.AssignLeadQuery(user_ins=user,businessId=businessId,leadId=leadId)
             return assignResponse
 
@@ -70,7 +70,7 @@ class AdminLeadsViewsV2:
             
             # Call Auth Controller to Fetch Queries
             final_response = await  ADMIN_LEADS_CONTROLLER_V2.GetQueries(queryParams=params)
-            await MY_METHODS.printStatus(f'GetAdminQueryView final response:-{final_response}')
+            pass
 
             return final_response
         
@@ -95,7 +95,7 @@ class AdminLeadsViewsV2:
             data = AdminLeadsUpdateSchema(**request.data)
             # Call Auth Controller to Create User
             final_response = await  ADMIN_LEADS_CONTROLLER_V2.updateQuery(data=data,leadId=leadId)
-            await MY_METHODS.printStatus(f'UpdateAdminQueryView final response:-{final_response}')
+            pass
             return final_response
         
         @exceptionHandler(
@@ -121,7 +121,7 @@ class AdminLeadsViewsV2:
 
             businessId = data.get(NAMES.BUSINESS_ID,None)
             leadId = data.get(NAMES.LEAD_ID,None)
-            # await MY_METHODS.printStatus(status=f"businessId {businessId}--lead {leadId}")
+            pass
             assignResponse = await ADMIN_LEADS_CONTROLLER_V2.AssignLeadQuery(user_ins=user,businessId=businessId,leadId=leadId)
             return assignResponse
         

@@ -17,22 +17,22 @@ async def CreatePlanView(request):
     try:
         # Convert request.data to dot notation object
         user_ins= request.user
-        # await MY_METHODS.printStatus(f'data {request}')  
+        pass
         data= request.data
-        # await MY_METHODS.printStatus(f'data {data}')
+        pass
         payment_proof= request.FILES.get(NAMES.ATTACHMENT_URL)
         data = MY_METHODS.json_to_object(data)
         final_response = None
         # Call Auth Controller to Create User
         if getattr(data, NAMES.ID, None):
             if data.id!='':
-                # await MY_METHODS.printStatus(f'verifying plan')
+                pass
                 final_response = await PLAN_CONTROLLER.VerifyPlan(data=data)
             else:
-                # await MY_METHODS.printStatus(f'creating plan')
+                pass
                 final_response =await PLAN_CONTROLLER.CreatePlan(payment_proof=payment_proof,data=data,user_ins= user_ins)
         else:
-            # await MY_METHODS.printStatus(f'creating plan')
+            pass
             final_response =await PLAN_CONTROLLER.CreatePlan(payment_proof=payment_proof,data=data,user_ins= user_ins)
         
         if not final_response:

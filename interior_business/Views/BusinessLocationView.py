@@ -26,7 +26,7 @@ async def CreateOrUpdateBusinessLocationView(request):
         # Call Auth Controller to Create User
         final_response = await  asyncio.gather(
             BUSS_LOCATION_CONTROLLER.CreateOrUpdateBusinessLocation(user_ins=user_ins, data=data))
-        # await MY_METHODS.printStatus(f'final_response {final_response}')
+        pass
         final_response = final_response[0]
 
         return ServerResponse(
@@ -36,7 +36,7 @@ async def CreateOrUpdateBusinessLocationView(request):
             data=final_response.data)
 
     except Exception as e:
-        # await MY_METHODS.printStatus(f'Error: {e}')
+        pass
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.business_register_error,
@@ -53,7 +53,7 @@ async def GetBusinessLocationView(request):
         # Call Auth Controller to Create User
         final_response = await  asyncio.gather(
             BUSS_LOCATION_CONTROLLER.GetBuisnessLocByBusinessID(business = request.user.user_business))
-        # await MY_METHODS.printStatus(f'final_response {final_response}')
+        pass
         final_response = final_response[0]
 
         return ServerResponse(
@@ -63,7 +63,7 @@ async def GetBusinessLocationView(request):
             data=final_response.data)
 
     except Exception as e:
-        # await MY_METHODS.printStatus(f'Error: {e}')
+        pass
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.business_register_error,
@@ -77,7 +77,7 @@ async def GetCountryListView(request):
     try:
         # Call Auth Controller to Create User
         final_response = await BUSS_LOCATION_CONTROLLER.GetCountryList()
-        # await MY_METHODS.printStatus(f'final_response {final_response}')
+        pass
 
         return ServerResponse(
             response=final_response.response,
@@ -86,7 +86,7 @@ async def GetCountryListView(request):
             data=final_response.data)
 
     except Exception as e:
-        # await MY_METHODS.printStatus(f'Error: {e}')
+        pass
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.business_register_error,
@@ -100,7 +100,7 @@ async def GetStateListByCountryIDView(request,countryId):
     try:
         # Call Auth Controller to Create User
         final_response = await BUSS_LOCATION_CONTROLLER.GetStateListByCountry(countryId=countryId)
-        # await MY_METHODS.printStatus(f'final_response {final_response}')
+        pass
 
         return ServerResponse(
             response=final_response.response,
@@ -109,7 +109,7 @@ async def GetStateListByCountryIDView(request,countryId):
             data=final_response.data)
 
     except Exception as e:
-        # await MY_METHODS.printStatus(f'Error: {e}')
+        pass
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.business_register_error,

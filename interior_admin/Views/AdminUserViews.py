@@ -62,7 +62,7 @@ class AdminUserViews(APIView):
             userId=userId,
             data=data
         )
-        await MY_METHODS.printStatus(resp)
+        pass
         return resp
     
     @exceptionHandler(

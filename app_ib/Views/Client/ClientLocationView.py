@@ -29,7 +29,7 @@ async def CreateOrUpdateClientLocationView(request):
             data=final_response.data)
 
     except Exception as e:
-        # await MY_METHODS.printStatus(f'Error: {e}')
+        pass
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.user_register_error,

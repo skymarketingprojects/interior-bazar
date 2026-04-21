@@ -188,7 +188,7 @@ class SEARCH_TASKS:
             return final_data
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error while fetching business {e}')
+            pass
             return None
 
     @staticmethod
@@ -196,7 +196,7 @@ class SEARCH_TASKS:
         if updated_at:
             # Calculate the time difference between now and updated_at
             time_diff = timezone.now() - updated_at
-            # await MY_METHODS.printStatus(f'time_diff {time_diff}')
+            pass
 
             # Determine the number of seconds, minutes, hours, and days
             if time_diff < timedelta(minutes=1):
@@ -289,8 +289,8 @@ class SEARCH_TASKS:
                     "businessSegment",
                 )
 
-            # await MY_METHODS.printStatus(f'nearby_query {nearby_query}')
+            pass
             return await self.GetQueryData(businesses_query=nearby_query, pageNo=pageNo)
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error while fetching business {e}')
+            pass
             return None

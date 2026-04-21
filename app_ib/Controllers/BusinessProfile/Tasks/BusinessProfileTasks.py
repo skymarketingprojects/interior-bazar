@@ -18,7 +18,7 @@ class BUSS_PROF_TASK:
             return True
             
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in CreateBusinessProfileTask {e}')
+            pass
             return None
 
     @classmethod
@@ -32,7 +32,7 @@ class BUSS_PROF_TASK:
             return True
             
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in UpdateBusinessProfileTask {e}')
+            pass
             return None
 
 
@@ -49,5 +49,5 @@ class BUSS_PROF_TASK:
             return business_prof_data
             
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in GetBusinessProfTask {e}')
+            pass
             return None

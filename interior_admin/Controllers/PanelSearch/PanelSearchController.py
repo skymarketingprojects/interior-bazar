@@ -26,7 +26,7 @@ class PANEL_SEARCH_CONTROLLER:
             )
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f'[GetSearchResults Error]: {e}')
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message='Failed to fetch search results.',
@@ -46,7 +46,7 @@ class PANEL_SEARCH_CONTROLLER:
             )
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f'[GetBusinessByID Error]: {e}')
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message='Failed to fetch business.',

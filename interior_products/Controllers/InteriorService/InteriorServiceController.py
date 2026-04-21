@@ -32,7 +32,7 @@ class INTERIOR_SERVICE_CONTROLLER:
                 data=paginated['pagination']
             )
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in getService: {str(e)}")
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.service_fetch_error,

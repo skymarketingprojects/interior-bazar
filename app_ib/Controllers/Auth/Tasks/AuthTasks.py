@@ -19,7 +19,7 @@ class AUTH_TASK:
             is_user_exist = await sync_to_async(CustomUser.objects.filter(username=username).exists)()
             return is_user_exist
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in IsUserExist {e}')
+            pass
             return None
 
     @classmethod
@@ -29,7 +29,7 @@ class AUTH_TASK:
             is_user_exist = await sync_to_async(CustomUser.objects.filter(email=email).exists)()
             return is_user_exist
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in IsUserExist {e}')
+            pass
             return None
         
     @classmethod
@@ -45,7 +45,7 @@ class AUTH_TASK:
             await sync_to_async(user_ins.save)()
             return user_ins
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in CreateUser {e}')
+            pass
             return None
 
     @classmethod
@@ -67,7 +67,7 @@ class AUTH_TASK:
             }
             return data
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in GenerateUserToken {e}')
+            pass
             return None
 
     @classmethod
@@ -79,7 +79,7 @@ class AUTH_TASK:
                 return user
             return False
         except Exception as e:
-            await MY_METHODS.printStatus(f'Error in IsUserExist {e}')
+            pass
             return False
 
     @classmethod
@@ -87,7 +87,7 @@ class AUTH_TASK:
         try:
             return True
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in IsUserExist {e}')
+            pass
             return None
 
     @classmethod
@@ -123,7 +123,7 @@ class AUTH_TASK:
                 link = f'{APPMODE_URL.PROD}v-1/forgot-password/{encoded_hash}'
             return link
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in GenerateForgotPasswordLink {e}')
+            pass
             return None
 
     #####################################
@@ -147,7 +147,7 @@ class AUTH_TASK:
             else:
                 return False
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Getting UserProfile instance error {e}')
+            pass
             return None
 
     #####################################
@@ -164,7 +164,7 @@ class AUTH_TASK:
             )
             return True
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in SendForgotPasswordEmail {e}')
+            pass
             return None
     
     ###############################################
@@ -181,7 +181,7 @@ class AUTH_TASK:
                 return False
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in ResetPassword {e}')
+            pass
             return None
 
 
@@ -196,7 +196,7 @@ class AUTH_TASK:
             time_difference =  await MY_METHODS.GetTimeDifferenceInMinutes(my_time=timestamp)
             return time_difference
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in DecodeHash {e}')
+            pass
             return None
 
     ###############################################
@@ -205,13 +205,13 @@ class AUTH_TASK:
     @classmethod
     async def ChangePassword(self, hash, password):
         try:
-            # await MY_METHODS.printStatus(f'hash {hash}')
-            # await MY_METHODS.printStatus(f'password {password}')
+            pass
+            pass
 
             decoded_json_str = base64.urlsafe_b64decode(hash.encode()).decode()
             decode_hash = json.loads(decoded_json_str)
             username = decode_hash[NAMES.USERNAME]
-            # await MY_METHODS.printStatus(f'username {username}')
+            pass
             
 
             user_ins = await sync_to_async(CustomUser.objects.get)(username=username)
@@ -220,5 +220,5 @@ class AUTH_TASK:
             return True
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in ResetPassword {e}')
+            pass
             return None

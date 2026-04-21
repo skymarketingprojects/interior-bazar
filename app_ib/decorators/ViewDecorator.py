@@ -29,7 +29,7 @@ def exceptionHandler(
                 if inspect.isawaitable(result):
                     result = await result
                 
-                # await MY_METHODS.printStatus(f"Result: {result}")
+                pass
                 if viewResponse:
 
                     return responseFunc(
@@ -59,7 +59,7 @@ def exceptionHandler(
                 raise 
 
             except PermissionDenied as e:
-                await MY_METHODS.printStatus(f"Error: {str(e)}")
+                pass
                 return responseFunc(
                     response=RESPONSE_MESSAGES.error,
                     message=RESPONSE_MESSAGES.permission_denied,
@@ -68,7 +68,7 @@ def exceptionHandler(
                 )
             # ✅ validation / bad input
             except ValidationError as e:
-                await MY_METHODS.printStatus(f"Error: {str(e)}")
+                pass
                 return responseFunc(
                     response=RESPONSE_MESSAGES.error,
                     message=str(e),
@@ -78,7 +78,7 @@ def exceptionHandler(
 
             # ✅ uniqueness / constraint conflicts
             except IntegrityError as e:
-                await MY_METHODS.printStatus(f"Error: {str(e)}")
+                pass
                 return responseFunc(
                     response=RESPONSE_MESSAGES.error,
                     message=RESPONSE_MESSAGES.resource_already_exists,
@@ -88,7 +88,7 @@ def exceptionHandler(
 
             # ✅ logical not found
             except ObjectDoesNotExist as e:
-                await MY_METHODS.printStatus(f"Error: {str(e)}")
+                pass
                 return responseFunc(
                     response=RESPONSE_MESSAGES.error,
                     message=RESPONSE_MESSAGES.resource_not_found,
@@ -98,7 +98,7 @@ def exceptionHandler(
 
             # ✅ permission / ownership issues
             except PermissionError as e:
-                await MY_METHODS.printStatus(f"Error: {str(e)}")
+                pass
                 return responseFunc(
                     response=RESPONSE_MESSAGES.error,
                     message=RESPONSE_MESSAGES.permission_denied,
@@ -108,7 +108,7 @@ def exceptionHandler(
 
             # ✅ bad input / state
             except (ValueError, TypeError, KeyError) as e:
-                await MY_METHODS.printStatus(f"Error: {str(e)}")
+                pass
                 return responseFunc(
                     response=RESPONSE_MESSAGES.error,
                     message=RESPONSE_MESSAGES.bad_request,
@@ -118,7 +118,7 @@ def exceptionHandler(
 
             # ❌ everything else (internal)
             except Exception as e:
-                await MY_METHODS.printStatus(f"Error: {str(e)}")
+                pass
 
                 return responseFunc(
                     response=RESPONSE_MESSAGES.error,

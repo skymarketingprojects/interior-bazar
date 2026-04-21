@@ -18,7 +18,7 @@ class CATELOG_TASKS:
                 "name": catelog.business.businessName
             }
             catalougeImages:list[CatelogueImage] = await sync_to_async(catelog.catelogueImages.all)()
-            # await MY_METHODS.printStatus(f"getCatelog: {catalougeImages}")
+            pass
             imageData = []
             for image in catalougeImages:
                 imageData.append({
@@ -35,13 +35,13 @@ class CATELOG_TASKS:
                 tempdata = await PRODUCTS_TASKS.getCategoriesDataTask(cat)
                 prodCategory.append(tempdata)
 
-            # await MY_METHODS.printStatus(f"sub category {prodCategory} ")
+            pass
             prodSubCategory=[]
 
             for subCat in catelog.subCategory.all():
                 tempdata = await PRODUCTS_TASKS.getCategoriesDataTask(subCat)
                 prodSubCategory.append(tempdata)
-            # await MY_METHODS.printStatus(f"sub category {prodSubCategory} ")
+            pass
             data = {
                 "id": catelog.id,
                 "title": catelog.title,
@@ -58,17 +58,17 @@ class CATELOG_TASKS:
                 "phone":catelog.business.user.user_profile.phone,
                 "countryCode":catelog.business.user.user_profile.countryCode
             }
-            # await MY_METHODS.printStatus(f"data {data}")
+            pass
             return data
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in getCatelog: {str(e)}")
+            pass
             return False
         
     @classmethod
     async def createCatelog(self, business:Business, data:dict):
         try:
-            # await MY_METHODS.printStatus(f"createCatelog: {data.type.id}")
-            # await MY_METHODS.printStatus(f"createCatelog: {data.ytLink}")
+            pass
+            pass
             catelogType = await sync_to_async(BusinessType.objects.get)(id=data.type.id)
             catelog = await sync_to_async(Catelogue.objects.create)(
                 business=business,
@@ -98,7 +98,7 @@ class CATELOG_TASKS:
             try:
                 if data.images:
                     for image in data.images:
-                        # await MY_METHODS.printStatus(f"createCatelog: {image}")
+                        pass
                         await sync_to_async(CatelogueImage.objects.create)(
                             catelouge=catelog,
                             catelougeImage=image.imageUrl,
@@ -106,12 +106,12 @@ class CATELOG_TASKS:
                             link=image.link
                         )
             except Exception as e:
-                # await MY_METHODS.printStatus(f"Error in createCatelog: {str(e)}")
+                pass
                 pass
             data = await self.getCatelog(catelog)
             return data
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in createCatelog: {str(e)}")
+            pass
             return False
         
     @classmethod
@@ -135,13 +135,13 @@ class CATELOG_TASKS:
                 category_objs = await sync_to_async(lambda: list(ProductSubCategory.objects.filter(id__in=category_ids)))()
                 if len(category_objs) == len(category_ids):
                     await sync_to_async(catelog.subCategory.set)(category_objs)
-            # await MY_METHODS.printStatus(f"update Catelog: {data.ytLink}")
+            pass
             try:
                 if data.type:
                     catelogType = BusinessType.objects.get(id=data.type.id)
                     catelog.catelogueType = catelogType
             except Exception as e:
-                # await MY_METHODS.printStatus(f"Error in updateCatelog: {str(e)}")
+                pass
                 pass
             try:
                 if data.images:
@@ -162,13 +162,13 @@ class CATELOG_TASKS:
                                 link=image.link
                             )
             except Exception as e:
-                # await MY_METHODS.printStatus(f"Error in createCatelog: {str(e)}")
+                pass
                 pass
             catelog.save()
             catdata = await self.getCatelog(catelog)
             return catdata
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in updateCatelog: {str(e)}")
+            pass
             return False
     @classmethod
     async def deleteCatelog(self,catelog:Catelogue):
@@ -176,6 +176,6 @@ class CATELOG_TASKS:
             catelog.delete()
             return True
         except Exception as e:
-            # await MY_METHODS.printStatus(f"Error in deleteCatelog: {str(e)}")
+            pass
             return False
 

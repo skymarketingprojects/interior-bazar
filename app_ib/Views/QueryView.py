@@ -45,7 +45,7 @@ async def GetQueryView(request):
 @api_view(['POST'])
 async def CreateQueryView(request):
     try:
-        # await MY_METHODS.printStatus(f'Request Data: {request.data}')
+        pass
         user = None
         reqdata:dict = request.data
         if request.user.is_authenticated:
@@ -65,7 +65,7 @@ async def CreateQueryView(request):
                 reqdata['state']   = reqdata.get('state') or location.locationState.name
                 reqdata['country'] = reqdata.get('country') or location.locationCountry.name
             except Exception as e:
-                # await MY_METHODS.printStatus(f'Error in CreateQueryView {e}')
+                pass
                 pass
                 
         # Convert request.data to dot notation object
@@ -114,7 +114,7 @@ async def UpdateQueryByIDView(request):
                 reqdata['state']   = reqdata.get('state') or location.locationState.name
                 reqdata['country'] = reqdata.get('country') or location.locationCountry.name
             except Exception as e:
-                # await MY_METHODS.printStatus(f'Error in UpdateQueryByIDView {e}')
+                pass
                 pass
         # Convert request.data to dot notation object
         data= LeadQueryUpdateSchema(**reqdata)
@@ -131,7 +131,7 @@ async def UpdateQueryByIDView(request):
             data=final_response.data)
 
     except Exception as e:
-        # await MY_METHODS.printStatus(f'Error: {str(e)}')
+        pass
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.query_update_error,

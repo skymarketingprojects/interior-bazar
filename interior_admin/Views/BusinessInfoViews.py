@@ -18,9 +18,9 @@ async def GetAdminBusinessDataView(request,pageNo,pageSize):
     try:
         await hasAccess(request=request)
         # Call Auth Controller to Create User
-        # await MY_METHODS.printStatus(f'GetAdminBusinessDataView called with pageNo,pageSize:-{pageNo},{pageSize}')
+        pass
         final_response = await BUSINESS_INFO_CONTROLLER.GetBusinessInfo( pageNo=pageNo,size=pageSize)
-        # await MY_METHODS.printStatus(f'GetAdminBusinessDataView final response:-{final_response}')
+        pass
 
 
         return ServerResponse(
@@ -30,7 +30,7 @@ async def GetAdminBusinessDataView(request,pageNo,pageSize):
             data=final_response.data)
 
     except Exception as e:
-        # await MY_METHODS.printStatus(f'GetAdminBusinessDataView{str(e)}')
+        pass
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.business_fetch_error,
@@ -48,9 +48,9 @@ async def GetAdminBusinessDataViewV2(request:Request):
         pageSize = request.query_params.get(NAMES.PAGE_SIZE, 10)
 
         # Call Auth Controller to Create User
-        # await MY_METHODS.printStatus(f'GetAdminBusinessDataView called with pageNo,pageSize:-{pageNo},{pageSize}')
+        pass
         final_response = await BUSINESS_INFO_CONTROLLER.GetBusinessInfo( pageNo=pageNo,size=pageSize)
-        # await MY_METHODS.printStatus(f'GetAdminBusinessDataView final response:-{final_response}')
+        pass
 
 
         return ServerResponse(
@@ -60,7 +60,7 @@ async def GetAdminBusinessDataViewV2(request:Request):
             data=final_response.data)
 
     except Exception as e:
-        # await MY_METHODS.printStatus(f'GetAdminBusinessDataView{str(e)}')
+        pass
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message=RESPONSE_MESSAGES.business_fetch_error,

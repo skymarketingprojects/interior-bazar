@@ -34,13 +34,13 @@ class SEARCH_CONTROLLER:
             
             if tabId and tabType:
                 if tabType==NAMES.CATEGORY:
-                    await MY_METHODS.printStatus(f'category Id {tabId}')
+                    pass
                     filterQuery &= Q(businessCategory__id=tabId)
                 elif tabType==NAMES.SEGMENT:
-                    await MY_METHODS.printStatus(f'sub category Id {tabId}')
+                    pass
                     filterQuery &= Q(businessSegment__id=tabId)
             if query:
-                await MY_METHODS.printStatus(f'Query {query}')
+                pass
                 filterQuery |= Q(businessName__icontains=query)
                 filterQuery |= Q(businessSegment__lable__icontains=query)
                 filterQuery |= Q(businessCategory__lable__icontains=query)
@@ -72,14 +72,14 @@ class SEARCH_CONTROLLER:
 
             businesses = await sync_to_async(list)(queryset)
 
-            # await MY_METHODS.printStatus(f'queryset {businesses}')
+            pass
             # fetch business data:
             business_data = await SEARCH_TASKS.GetQueryData(
                                 businesses_query=businesses,
                                 pageNo=pageNo,
                                 pageSize=pageSize
                             )
-            # await MY_METHODS.printStatus(f'business data {business_data}')
+            pass
 
             return LocalResponse(
                 code=RESPONSE_CODES.success,
@@ -88,7 +88,7 @@ class SEARCH_CONTROLLER:
                 data=business_data)
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in GetBusinessUsingPagination {e}')
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.business_fetch_error,

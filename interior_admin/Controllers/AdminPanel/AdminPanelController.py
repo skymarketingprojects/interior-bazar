@@ -224,7 +224,7 @@ class ADMIN_PANEL_CONTROLLER:
         successMessage=RESPONSE_MESSAGES.dashboard_data_fetch_success
     )
     async def GetDashboardData(cls):
-        await MY_METHODS.printStatus('Fetching dashboard data...')
+        pass
         (total_users_status, total_users), (total_businesses_status, total_businesses), (total_queries_status, total_queries), (today_signups_status, today_signups) = await asyncio.gather(
             ADMIN_PANEL_TASKS.GetTotalUsers(),
             ADMIN_PANEL_TASKS.GetTotalBusinesses(),
@@ -238,7 +238,7 @@ class ADMIN_PANEL_CONTROLLER:
             "totalQueries": total_queries,
             "todaySignups": today_signups
         } 
-        await MY_METHODS.printStatus(response_data)
+        pass
 
         return True,response_data
     
@@ -256,14 +256,14 @@ class ADMIN_PANEL_CONTROLLER_V2:
     async def GetBusinessTilesStats(cls, start_date=None, end_date=None, page_number=1, page_size=2,plan=None):
 
         business_qs = None
-        await MY_METHODS.printStatus('Fetching business tiles...')
+        pass
         if plan:
-            # await MY_METHODS.printStatus( 'Fetching business tiles for plan:',plan)
+            pass
             business_qs = Business.objects.filter(
                 business_plan__plan__title__iexact=plan
             )
         else:
-            # await MY_METHODS.printStatus('Fetching business tiles for all plans...')
+            pass
             business_qs = Business.objects.all()
 
 

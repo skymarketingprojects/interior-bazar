@@ -35,5 +35,5 @@ class ADMIN_LEADS_TASKS:
             return data
             
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in CreateLeadQueryTask {e}')
+            pass
             return None

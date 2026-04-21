@@ -26,7 +26,7 @@ class BUSS_LOC_TASK:
             return True
             
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in CreateBusinessLocTask {e}')
+            pass
             return None
 
     @classmethod
@@ -45,7 +45,7 @@ class BUSS_LOC_TASK:
             return True
             
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in UpdateBusinessLocTask {e}')
+            pass
             return None
 
     @classmethod
@@ -71,7 +71,7 @@ class BUSS_LOC_TASK:
             return business_loc_data
             
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in GetBusinessLocTask {e}')
+            pass
             return None
 
     @classmethod
@@ -84,7 +84,7 @@ class BUSS_LOC_TASK:
             }
             return countryData
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in GetCountryCodeTask {e}')
+            pass
             return None
         
     @classmethod
@@ -97,5 +97,5 @@ class BUSS_LOC_TASK:
             }
             return stateData
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in GetStateDataTask {e}')
+            pass
             return None

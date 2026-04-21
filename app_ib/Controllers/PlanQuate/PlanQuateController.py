@@ -17,13 +17,13 @@ class PLAN_QUATE_CONTROLLER:
     async def CreateQuate(self,data):
         try:
             # Test Data
-            # await MY_METHODS.printStatus(f'name: {data.phone}')
-            # await MY_METHODS.printStatus(f'name: {data.interested}')
-            # await MY_METHODS.printStatus(f'name: {data.email}')
-            # await MY_METHODS.printStatus(f'name: {data.note}')
+            pass
+            pass
+            pass
+            pass
 
             quate_create_resp_data = await  PLAN_QUATE_TASKS.CreateQuateTask(data=data)
-            # await MY_METHODS.printStatus(f'create query resp {quate_create_resp_data}')
+            pass
 
             if quate_create_resp_data:
                 return LocalResponse(
@@ -54,18 +54,18 @@ class PLAN_QUATE_CONTROLLER:
     async def VerifyQuate(self,data):
         try:
             # Test Data
-            # await MY_METHODS.printStatus(f'name: {data.phone}')
-            # await MY_METHODS.printStatus(f'name: {data.interested}')
-            # await MY_METHODS.printStatus(f'name: {data.email}')
-            # await MY_METHODS.printStatus(f'name: {data.note}')
+            pass
+            pass
+            pass
+            pass
 
             is_quate_exist= await sync_to_async(Quate.objects.filter(id=data.id).exists)()
             if(is_quate_exist):
                 quate_ins=await sync_to_async(Quate.objects.get)(id=data.id)
-                # await MY_METHODS.printStatus(f'quate ins {quate_ins}')
+                pass
 
                 verify_quate_response = await  PLAN_QUATE_TASKS.VerifyQuateTask(quate_ins=quate_ins, data=data)
-                # await MY_METHODS.printStatus(f'veruft quate resp {verify_quate_response}')
+                pass
 
                 if verify_quate_response:
                     return LocalResponse(

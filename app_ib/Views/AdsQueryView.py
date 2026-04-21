@@ -13,7 +13,7 @@ from app_ib.models import UserProfile,CustomUser,Location
 @api_view(['POST'])
 async def CreateAdsQueryView(request):
     try:
-        # await MY_METHODS.printStatus(f'Request Data: {request.data}')
+        pass
         user = None
         reqdata = request.data
         if request.user.is_authenticated:

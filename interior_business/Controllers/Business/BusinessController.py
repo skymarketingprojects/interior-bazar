@@ -82,7 +82,7 @@ class BUSS_CONTROLLER:
                     data={})
             # Create business
             business_ins = await BUSS_TASK.CreateBusinessTask(user_ins=user_ins, data=data)
-            # await MY_METHODS.printStatus(f'business_ins {business_ins}')
+            pass
             asyncio.create_task(sync_to_async(businessSignupSignal.send)(sender=Business,instance=Business.objects.get(user=user_ins),created=True))
             if not business_ins:
                 return LocalResponse(
@@ -115,7 +115,7 @@ class BUSS_CONTROLLER:
 
             if is_business_exist:
                 business_instance = await sync_to_async(Business.objects.get)(user=user_ins)
-                # await MY_METHODS.printStatus(f'business instance {business_instance}')
+                pass
                 
                 business_ins = await BUSS_TASK.UpdateBusinessTask(business_ins=business_instance, data=data)
                 if business_ins is None:
@@ -154,7 +154,7 @@ class BUSS_CONTROLLER:
 
             if is_business_exist:
                 business_data = await BUSS_TASK.GetBusinessInfo(id=id)
-                # await MY_METHODS.printStatus(f'business data {business_data}')
+                pass
 
                 if business_data is not None:
                     return LocalResponse(
@@ -269,7 +269,7 @@ class BUSS_CONTROLLER:
                 code=RESPONSE_CODES.success,
                 data=category_list)
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in category GET: {e}')
+            pass
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.business_category_fetch_error,
@@ -288,7 +288,7 @@ class BUSS_CONTROLLER:
                     code=RESPONSE_CODES.error,
                     data={})
             businessType = await sync_to_async(BusinessType.objects.get)(pk=typeId)
-            # await MY_METHODS.printStatus(f'businessType {businessType}')
+            pass
             segmentInstances = []
             if query:
                 segmentInstances = await sync_to_async(list)(businessType.business_type_segment.filter(lable__icontains=query))

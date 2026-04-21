@@ -18,7 +18,7 @@ class MATCH_LEADS_TASKS:
 
             businesses = await cls.MatchingBusinesses(city, state, country)
             pre_ranked = await cls.LocationScore(businesses, city, state, country)
-            # await MY_METHODS.printStatus(f'pre_ranked {pre_ranked}')
+            pass
             candidates = await cls.GetBusinessesCandidate(pre_ranked, interested_text)
 
             return {
@@ -28,7 +28,7 @@ class MATCH_LEADS_TASKS:
             }
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in MatchLeadTask: {e}')
+            pass
             return None
 
     @classmethod
@@ -55,7 +55,7 @@ class MATCH_LEADS_TASKS:
                 )()
             return businessList
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in MatchingBusinesses: {e}')
+            pass
             return None
 
 
@@ -131,5 +131,5 @@ class MATCH_LEADS_TASKS:
             return candidates
 
         except Exception as e:
-            # await MY_METHODS.printStatus(f'Error in GetBusinessesCandidate: {e}')
+            pass
             return []
