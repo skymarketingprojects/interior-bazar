@@ -1,4 +1,5 @@
 class NAMES:
+    NEW='New'
     ERROR = 'error'
     BUSINESS = 'business'
     ADMIN = 'admin'
@@ -188,6 +189,7 @@ class NAMES:
 
     #plan
     PENDING='pending'
+    PENDING_STATUS='Pending'
     STAGE='stage'
     ATTACHMENT_URL='attachmentUrl'
     CONFIRM='confirm'

@@ -41,9 +41,20 @@ async def GetAllLeadsView(request: Request):
     Endpoint: GET /api/v1/admin/all-leads/
     Access: Superadmin only (Checked via IsAdminUser or custom logic).
     """
+    print(f"\n[DEBUG] GetAllLeadsView: Request received from user: {request.user}")
     await hasAccess(request=request)
+    print(f"[DEBUG] GetAllLeadsView: Access granted for user: {request.user}")
+    
     queryParams = GMBLeadQueryFilters(**request.query_params.dict())
+    print(f"[DEBUG] GetAllLeadsView: Query Params: {queryParams}")
+    
     final_response = await GMB_LEADS_CONTROLLER.GetAllLeads(queryParams=queryParams)
+    print(f"[DEBUG] GetAllLeadsView: Controller response -> code: {final_response.code}, message: {final_response.message}")
+    if final_response.data:
+        print(f"[DEBUG] GetAllLeadsView: Data keys: {list(final_response.data.keys())}")
+        if 'leads' in final_response.data:
+            print(f"[DEBUG] GetAllLeadsView: Leads count: {len(final_response.data['leads'])}")
+
     return final_response
 
 @api_view(['GET'])
@@ -58,9 +69,20 @@ async def GetMyLeadsView(request: Request):
     Access: Authenticated Admin Users.
     Returns leads where assigned_user matches the requesting user.
     """
+    print(f"\n[DEBUG] GetMyLeadsView: Request received from user: {request.user}")
     await hasAccess(request=request)
+    print(f"[DEBUG] GetMyLeadsView: Access granted for user: {request.user}")
+
     queryParams = GMBLeadQueryFilters(**request.query_params.dict())
+    print(f"[DEBUG] GetMyLeadsView: Query Params: {queryParams}")
+
     final_response = await GMB_LEADS_CONTROLLER.GetMyLeads(user=request.user, queryParams=queryParams)
+    print(f"[DEBUG] GetMyLeadsView: Controller response -> code: {final_response.code}, message: {final_response.message}")
+    if final_response.data:
+        print(f"[DEBUG] GetMyLeadsView: Data keys: {list(final_response.data.keys())}")
+        if 'leads' in final_response.data:
+            print(f"[DEBUG] GetMyLeadsView: Leads count: {len(final_response.data['leads'])}")
+
     return final_response
 
 @api_view(['POST'])
@@ -183,5 +205,20 @@ async def AutoAssignLeadsView(request: Request):
         raise PermissionDenied("Access Restricted to Superadmins.")
         
     final_response = await GMB_LEADS_CONTROLLER.TriggerAutoAssignment(trigger_user=request.user)
+    return final_response
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+@exceptionHandler(
+    errorMessage=RESPONSE_MESSAGES.gmb_leads_fetch_error,
+    responseFunc=ServerResponse
+)
+async def GetGMBLeadsKPIsView(request: Request):
+    """
+    Endpoint: GET /api/v1/leads/kpis/
+    Returns unique values and counts for state, city, status, platform, and rating.
+    """
+    await hasAccess(request=request)
+    final_response = await GMB_LEADS_CONTROLLER.GetLeadsKPIs()
     return final_response
 

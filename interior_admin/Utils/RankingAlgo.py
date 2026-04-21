@@ -20,18 +20,28 @@ class RankingAlgo:
     @staticmethod
     def extract_rating_info(rating_str: str) -> Tuple[float, int]:
         """
-        Extracts numeric rating and review count from a string like '4.8(32)'.
+        Extracts numeric rating and review count from a string like '4.8(32)' or just '4.8'.
         """
         try:
-            if not rating_str or "(" not in rating_str:
+            if not rating_str:
                 return 0.0, 0
             
-            parts = rating_str.split("(")
-            rating_value = float(parts[0].strip())
-            review_count = int(parts[1].replace(")", "").strip())
-            return rating_value, review_count
+            # Case 1: Format '4.8(32)'
+            if "(" in rating_str:
+                parts = rating_str.split("(")
+                rating_value = float(parts[0].strip())
+                review_count = int(parts[1].replace(")", "").strip())
+                return rating_value, review_count
+            
+            # Case 2: Plain float string like '4.8'
+            try:
+                rating_value = float(str(rating_str).strip())
+                return rating_value, 0  # review count unknown
+            except ValueError:
+                return 0.0, 0
+                
         except Exception as e:
-            print(f"Error extracting rating info: {e}")
+            print(f"[DEBUG] RankingAlgo.extract_rating_info Error: {e}")
             return 0.0, 0
 
     @staticmethod
@@ -102,16 +112,18 @@ class RankingAlgo:
     @staticmethod
     def generate_wa_message(phone: Optional[str], business_name: str) -> Optional[str]:
         """
-        Generates a pre-filled WhatsApp link for engagement.
+        Generates a direct WhatsApp wa.me link by reusing MY_METHODS.formatPhoneInternational.
+        This handles leading zeros, international formatting, and mobile verification.
         """
         if not phone:
             return None
         
-        # Clean phone number (keep only digits)
-        clean_phone = "".join(filter(str.isdigit, str(phone)))
-        if not clean_phone.startswith('91') and len(clean_phone) == 10:
-            clean_phone = '91' + clean_phone
+        # Reuse central phone formatter/verifyer (defaults to India 91)
+        formatted = MY_METHODS.formatPhoneInternational(phone, "91")
+        
+        if formatted:
+            # wa.me link expects digits only (no '+')
+            clean_phone = formatted.lstrip('+')
+            return f"https://wa.me/{clean_phone}"
             
-        message = NAMES.WHATSAPP_GREETING.format(business_name=business_name)
-        encoded_message = urllib.parse.quote(message)
-        return f"https://wa.me/{clean_phone}?text={encoded_message}"
+        return None

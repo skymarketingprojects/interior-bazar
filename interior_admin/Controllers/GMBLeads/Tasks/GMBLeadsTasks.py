@@ -124,7 +124,7 @@ class GMBLeadsTasks:
         for i, lead in enumerate(unassigned_leads):
             target_user = assignable_users[i % len(assignable_users)]
             lead.assignedUser = target_user
-            lead.status = NAMES.STATUS_ASSIGNED
+            lead.status = NAMES.NEW
             lead._triggered_by = trigger_user
             await sync_to_async(lead.save)()
             
@@ -135,16 +135,23 @@ class GMBLeadsTasks:
         """
         Handles pagination logic for GMB leads.
         """
+        print(f"[DEBUG] PaginateGMBLeadsTask: Querying GMBBusiness with filters: {filters_q}")
+        print(f"[DEBUG] PaginateGMBLeadsTask: Sort field: {sort_field}")
+        
         leads_qs = await sync_to_async(
             lambda: GMBBusiness.objects.filter(filters_q).order_by(sort_field, f'-{NAMES.REVIEW_COUNT}', f'-{NAMES.RATING_VALUE}')
         )()
         
         total_count = await sync_to_async(leads_qs.count)()
+        print(f"[DEBUG] PaginateGMBLeadsTask: Total leads matching filters: {total_count}")
+        
         paginator = Paginator(leads_qs, page_size)
         page_obj = paginator.get_page(page_no)
+        print(f"[DEBUG] PaginateGMBLeadsTask: Fetched page {page_obj.number} of {paginator.num_pages}")
 
         tasks = [GMBLeadsTasks.GetGMBBusinessTask(lead) for lead in page_obj]
         leads_details = await asyncio.gather(*tasks)
+        print(f"[DEBUG] PaginateGMBLeadsTask: Serialized {len(leads_details)} leads for the current page")
 
         return {
             NAMES.LEADS: leads_details,
@@ -228,5 +235,61 @@ class GMBLeadsTasks:
             
             return await GMBLeadsTasks.GetGMBBusinessTask(lead)
         return None
+
+    @staticmethod
+    async def GetLeadsKPIsTask() -> Dict[str, Any]:
+        """
+        Returns unique values and counts for dashboard filters.
+        Normalized to ensure unique labels despite casing.
+        """
+        def get_aggregates():
+            from django.db.models import Count
+            
+            # Fields mapping: Frontend Key -> DB Field
+            mapping = {
+                "state": "state",
+                "city": "address",
+                "status": "status",
+                "platform": "platform",
+                "rating": "rating"
+            }
+            
+            raw_aggregates = {}
+            for fe_key, db_field in mapping.items():
+                raw_aggregates[fe_key] = list(
+                    GMBBusiness.objects.values(db_field)
+                    .annotate(count=Count('id'))
+                    .order_by(db_field)
+                )
+            return raw_aggregates, mapping
+
+        aggregates, field_mapping = await sync_to_async(get_aggregates)()
+        
+        formatted_data = {}
+        for fe_key, rows in aggregates.items():
+            db_field = field_mapping[fe_key]
+            normalized = {}
+            
+            for row in rows:
+                val = str(row[db_field] or "").strip()
+                if not val:
+                    continue
+                
+                # Normalize key to upper case to merge "Mumbai" and "mumbai"
+                norm_key = val.upper()
+                
+                if norm_key in normalized:
+                    normalized[norm_key]["count"] += row["count"]
+                else:
+                    normalized[norm_key] = {
+                        "label": val,  # Keep the casing of the first encountered version
+                        "value": val,
+                        "count": row["count"]
+                    }
+            
+            # Sort normalized values by label alphabet
+            formatted_data[fe_key] = sorted(normalized.values(), key=lambda x: x["label"])
+
+        return formatted_data
 
 GMB_LEADS_TASKS = GMBLeadsTasks()

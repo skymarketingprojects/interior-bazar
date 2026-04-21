@@ -41,6 +41,7 @@ class GMBLeadsController:
         """
         Builds common Q filters for platform, status, city, rating, etc.
         """
+        print(f"[DEBUG] _build_common_filters: Building filters with params: {queryParams}")
         filters = Q()
         if queryParams.platform:
             filters &= Q(platform__icontains=queryParams.platform)
@@ -66,8 +67,9 @@ class GMBLeadsController:
                 filters &= Q(socialLinks=[])
                 
         if queryParams.min_rating:
-            filters &= Q(ratingValue__gte=queryParams.min_rating)
+            filters &= Q(rating__gte=queryParams.min_rating)
             
+        print(f"[DEBUG] _build_common_filters: Resulting filters: {filters}")
         return filters
 
     @classmethod
@@ -80,11 +82,15 @@ class GMBLeadsController:
         """
         Retrieves all GMB leads with filtering and pagination.
         """
+        print(f"\n[DEBUG] GMBLeadsController.GetAllLeads: Entering with queryParams: {queryParams}")
         filters = cls._build_common_filters(queryParams)
 
         sort_field = queryParams.sort_by or NAMES.CREATED_AT
         if queryParams.order == 'desc':
             sort_field = f'-{sort_field}'
+        
+        print(f"[DEBUG] GMBLeadsController.GetAllLeads: Final Filter Q: {filters}")
+        print(f"[DEBUG] GMBLeadsController.GetAllLeads: Final Sort field: {sort_field}")
             
         data = await GMB_LEADS_TASKS.PaginateGMBLeadsTask(
             filters_q=filters,
@@ -92,6 +98,7 @@ class GMBLeadsController:
             page_no=queryParams.pageNo,
             page_size=queryParams.pageSize
         )
+        print(f"[DEBUG] GMBLeadsController.GetAllLeads: PaginateGMBLeadsTask returned {len(data.get(NAMES.LEADS, []))} leads")
         return True, data
 
     @classmethod
@@ -104,17 +111,25 @@ class GMBLeadsController:
         """
         Retrieves leads assigned to a specific user (Admins see all).
         """
+        print(f"\n[DEBUG] GMBLeadsController.GetMyLeads: Entering for user: {user.username if hasattr(user, 'username') else user}")
         # Check for full access (Admin bypass)
         # Using sync_to_async for ORM filter call on user roles
         is_admin = await sync_to_async(user.roles.filter(is_full_access=True).exists)()
+        print(f"[DEBUG] GMBLeadsController.GetMyLeads: User is_admin (full_access): {is_admin}")
         
         filters = cls._build_common_filters(queryParams)
         if not is_admin:
+            print(f"[DEBUG] GMBLeadsController.GetMyLeads: Non-admin user. Restricting leads to assignedUser: {user.username if hasattr(user, 'username') else user}")
             filters &= Q(assignedUser=user)
+        else:
+            print(f"[DEBUG] GMBLeadsController.GetMyLeads: Admin user detected. Bypassing assignedUser restriction (returning all leads).")
 
         sort_field = queryParams.sort_by or NAMES.CREATED_AT
         if queryParams.order == 'desc':
             sort_field = f'-{sort_field}'
+        
+        print(f"[DEBUG] GMBLeadsController.GetMyLeads: Final Filter Q: {filters}")
+        print(f"[DEBUG] GMBLeadsController.GetMyLeads: Final Sort field: {sort_field}")
             
         # Delegate to Task
         data = await GMB_LEADS_TASKS.PaginateGMBLeadsTask(
@@ -123,6 +138,7 @@ class GMBLeadsController:
             page_no=queryParams.pageNo,
             page_size=queryParams.pageSize
         )
+        print(f"[DEBUG] GMBLeadsController.GetMyLeads: PaginateGMBLeadsTask returned {len(data.get(NAMES.LEADS, []))} leads")
         return True, data
 
     @classmethod
@@ -255,6 +271,19 @@ class GMBLeadsController:
             assignable_users=assignable_users,
             trigger_user=trigger_user
         )
+        return True, data
+    
+    @classmethod
+    @controllerExceptionHandler(
+        errorMessage=RESPONSE_MESSAGES.gmb_leads_fetch_error,
+        responseFunc=LocalResponse,
+        successMessage=RESPONSE_MESSAGES.success
+    )
+    async def GetLeadsKPIs(cls) -> Tuple[bool, Dict[str, Any]]:
+        """
+        Retrieves unique values and counts for dashboard filters.
+        """
+        data = await GMB_LEADS_TASKS.GetLeadsKPIsTask()
         return True, data
 
 GMB_LEADS_CONTROLLER = GMBLeadsController()

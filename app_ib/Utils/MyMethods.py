@@ -49,19 +49,26 @@ class MY_METHODS:
 
     @staticmethod
     def GetCurrentTimeinStr():
-        return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+        return timezone.localtime(timezone.now()).strftime("%Y-%m-%d %H:%M:%S")
 
     @staticmethod
     def GetCurrentTimeinInt():
-        return int(time.time())
+        return int(timezone.now().timestamp())
     
     @staticmethod
     async def GetTimeDifferenceInMinutes(my_time):
-        timestamp = time.strptime(my_time, "%Y-%m-%d %H:%M:%S")
-        current_struct = time.localtime(time.time())
-        diff_sec = time.mktime(current_struct) - time.mktime(timestamp)
-        diff_min = diff_sec / 60
-        return int(diff_min)
+        """Calculates difference in minutes between current time and provided string time (IST)."""
+        try:
+            # Parse the IST string
+            from datetime import datetime
+            naive_dt = datetime.strptime(my_time, "%Y-%m-%d %H:%M:%S")
+            # Make it aware as per current TIME_ZONE (IST)
+            aware_dt = timezone.make_aware(naive_dt, timezone.get_current_timezone())
+            
+            diff = timezone.now() - aware_dt
+            return int(diff.total_seconds() / 60)
+        except Exception:
+            return 0
 
     @staticmethod
     def json_to_object(json_data):
@@ -293,44 +300,33 @@ class MY_METHODS:
     async def formatPhone(phone: str, country_code: str) -> str | None:
         """
         Cleans, formats, and validates a phone number into international (E.164) format.
-        
-        Args:
-            phone (str): The input phone number (can be messy or local format).
-            country_code (str): Country code, with or without '+' (e.g. '91' or '+91').
-
-        Returns:
-            str | None: Formatted international phone number (e.g. '+919090407368')
-                        or None if invalid.
+        Ensures it is a mobile number (starts with 6-9 for India).
         """
         if not phone or not isinstance(phone, str):
             return None
 
         try:
             # Normalize country_code (remove '+' if present)
-            country_code = re.sub(r"[^\d]", "", country_code or "")
-
-            phone = phone.strip()
-
-            # Already in international format
-            if re.match(r"^\+\d{10,15}$", phone):
-                return phone
+            country_code = re.sub(r"[^\d]", "", country_code or "91")
 
             # Remove all non-digit characters
-            cleaned = re.sub(r"[^\d]", "", phone)
+            cleaned = re.sub(r"[^\d]", "", phone.strip())
 
-            # Handle '00' prefix
-            if cleaned.startswith("00"):
-                cleaned = cleaned[2:]
-
-            # Remove leading zeros (common in local formats)
+            # Handle leading zeros (common in local formats)
             cleaned = cleaned.lstrip("0")
 
-            # Prepend country code if missing
-            if not cleaned.startswith(country_code):
-                cleaned = f"{country_code}{cleaned}"
+            # Detect and extract base number if country code is already present
+            if cleaned.startswith(country_code) and len(cleaned) > 10:
+                base_number = cleaned[len(country_code):]
+            else:
+                base_number = cleaned
 
-            # Add '+' prefix
-            formatted = f"+{cleaned}"
+            # Mobile Number Verification (India logic: 10 digits starting with 6-9)
+            if country_code == "91":
+                if len(base_number) != 10 or base_number[0] not in ['6', '7', '8', '9']:
+                    return None
+            
+            formatted = f"+{country_code}{base_number}"
 
             # Validate final format (E.164)
             if re.match(r"^\+\d{10,15}$", formatted):
@@ -340,50 +336,39 @@ class MY_METHODS:
 
         except Exception:
             return None
+
     @staticmethod
     def formatPhoneInternational(phone: str, country_code: str) -> str | None:
         """
+        Sync version of formatPhone.
         Cleans, formats, and validates a phone number into international (E.164) format.
-        
-        Args:
-            phone (str): The input phone number (can be messy or local format).
-            country_code (str): Country code, with or without '+' (e.g. '91' or '+91').
-
-        Returns:
-            str | None: Formatted international phone number (e.g. '+919090407368')
-                        or None if invalid.
         """
         if not phone or not isinstance(phone, str):
             return None
 
         try:
             # Normalize country_code (remove '+' if present)
-            country_code = re.sub(r"[^\d]", "", country_code or "")
-
-            phone = phone.strip()
-
-            # Already in international format
-            if re.match(r"^\+\d{10,15}$", phone):
-                return phone
+            country_code = re.sub(r"[^\d]", "", country_code or "91")
 
             # Remove all non-digit characters
-            cleaned = re.sub(r"[^\d]", "", phone)
+            cleaned = re.sub(r"[^\d]", "", phone.strip())
 
-            # Handle '00' prefix
-            if cleaned.startswith("00"):
-                cleaned = cleaned[2:]
-
-            # Remove leading zeros (common in local formats)
+            # Handle leading zeros
             cleaned = cleaned.lstrip("0")
 
-            # Prepend country code if missing
-            if not cleaned.startswith(country_code):
-                cleaned = f"{country_code}{cleaned}"
+            # Detect and extract base number if country code is already present
+            if cleaned.startswith(country_code) and len(cleaned) > 10:
+                base_number = cleaned[len(country_code):]
+            else:
+                base_number = cleaned
 
-            # Add '+' prefix
-            formatted = f"+{cleaned}"
+            # Mobile Number Verification (India logic: 10 digits starting with 6-9)
+            if country_code == "91":
+                if len(base_number) != 10 or base_number[0] not in ['6', '7', '8', '9']:
+                    return None
+            
+            formatted = f"+{country_code}{base_number}"
 
-            # Validate final format (E.164)
             if re.match(r"^\+\d{10,15}$", formatted):
                 return formatted
 
