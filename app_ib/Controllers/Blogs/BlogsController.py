@@ -10,13 +10,22 @@ from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from django.core.paginator import Paginator
 import asyncio
+from django.core.cache import cache
 from app_ib.models import Blog
 
 class BLOG_CONTROLLER:
     @classmethod
-    async def GetBlogsPagination(self, page,per_page=2):
-        try:
+    async def GetBlogsPagination(self, page, per_page=2):
+        cache_key = f"blogs_pagination_{page}_{per_page}"
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return LocalResponse(
+                code=RESPONSE_CODES.success,
+                response=RESPONSE_MESSAGES.success,
+                message=RESPONSE_MESSAGES.blog_fetch_success,
+                data=cached_data)
 
+        try:
             all_blogs = await sync_to_async(list)(
                 Blog.objects.all().order_by(f'-{NAMES.TIMESTAMP}')
             )
@@ -32,13 +41,17 @@ class BLOG_CONTROLLER:
             # Step 4: Build and return plain dict response
             blog_data = {
                 NAMES.BLOGS: blog_details,
-                    NAMES.CURRENT_PAGE: page_obj.number,
-                    NAMES.HAS_NEXT: page_obj.has_next(),
-                    NAMES.HAS_PREVIOUS: page_obj.has_previous(),
-                    NAMES.TOTAL_PAGES: paginator.num_pages,
-                    NAMES.TOTAL_COUNT: len(all_blogs),
-                    NAMES.PAGE_SIZE: per_page
+                NAMES.CURRENT_PAGE: page_obj.number,
+                NAMES.HAS_NEXT: page_obj.has_next(),
+                NAMES.HAS_PREVIOUS: page_obj.has_previous(),
+                NAMES.TOTAL_PAGES: paginator.num_pages,
+                NAMES.TOTAL_COUNT: len(all_blogs),
+                NAMES.PAGE_SIZE: per_page
             }
+            
+            # Cache the result for 1 hour
+            cache.set(cache_key, blog_data, 3600)
+            
             return LocalResponse(
                 code=RESPONSE_CODES.success,
                 response=RESPONSE_MESSAGES.success,
@@ -56,8 +69,16 @@ class BLOG_CONTROLLER:
 
     @classmethod
     async def GetAllBlogs(self):
-        try:
+        cache_key = "all_blogs_list"
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return LocalResponse(
+                code=RESPONSE_CODES.success,
+                response=RESPONSE_MESSAGES.success,
+                message=RESPONSE_MESSAGES.blog_fetch_success,
+                data=cached_data)
 
+        try:
             all_blogs = await sync_to_async(list)(
                 Blog.objects.all().order_by(f'-{NAMES.TIMESTAMP}')
             )
@@ -65,8 +86,10 @@ class BLOG_CONTROLLER:
             # Step 3: Gather blog data concurrently
             tasks = [BLOG_TASK.GetBlogData(blog) for blog in all_blogs]
             blog_details = await asyncio.gather(*tasks)
-
             
+            # Cache for 1 hour
+            cache.set(cache_key, blog_details, 3600)
+
             return LocalResponse(
                 code=RESPONSE_CODES.success,
                 response=RESPONSE_MESSAGES.success,
@@ -81,6 +104,7 @@ class BLOG_CONTROLLER:
                 data={
                     NAMES.ERROR: str(e)
                 })
+
 
     @classmethod
     async def GetBlogById(self, id):
