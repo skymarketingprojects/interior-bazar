@@ -2,7 +2,9 @@ from asgiref.sync import sync_to_async
 from django.db.models import Q
 from django.core.paginator import Paginator
 import asyncio
+import sentry_sdk
 from typing import List, Dict, Any, Optional
+
 
 from interior_admin.models import GMBBusiness
 from interior_admin.Utils.RankingAlgo import RankingAlgo
@@ -76,6 +78,7 @@ class GMBLeadsTasks:
             
             return True
         except Exception as e:
+            sentry_sdk.capture_exception(e)
             msg = f"Error ingesting lead {item.get(NAMES.BUSINESS_NAME, NAMES.UNKNOWN_BUSINESS)}: {e}"
             print(msg)
             try:
@@ -84,6 +87,7 @@ class GMBLeadsTasks:
             except:
                 pass
             return False
+
 
     @staticmethod
     async def IngestGMBDataTask(data_list: List[Dict[str, Any]], trigger_user: Any = None, assignable_users: List[Any] = None) -> Dict[str, Any]:

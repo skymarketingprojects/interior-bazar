@@ -1,5 +1,10 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+
+def trigger_error(request):
+    division_by_zero = 1 / 0
+
+
 def render_index(request, page_name):
     return render(request, 'index.html', {'page_name': page_name})
 

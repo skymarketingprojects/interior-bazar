@@ -17,10 +17,17 @@ from pathlib import Path
 from datetime import timedelta
 import os 
 import environ
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
+
 env = environ.Env()
 environ.Env.read_env()
 
+# Sentry Configuration moved below MODE definition
+
+
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -262,6 +269,27 @@ CSRF_TRUSTED_ORIGINS = [
 # DB Configuration based on MODE
 MODE = env('MODE', default='prod')
 print(f"Current App Mode: {MODE}")
+
+# Sentry Configuration (Only in PROD)
+SENTRY_DSN = env('SENTRY_DSN', default=None)
+if SENTRY_DSN and MODE == 'prod':
+    def before_send(event, hint):
+        # Ignore favicon.ico requests to avoid cluttering logs
+        request = event.get("request", {})
+        if request:
+            url = request.get("url", "")
+            if url and "favicon.ico" in url:
+                return None
+        return event
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration()],
+        traces_sample_rate=1.0,
+        send_default_pii=True,
+        before_send=before_send,
+    )
+
 
 if MODE == 'prod':
     DATABASES = {
