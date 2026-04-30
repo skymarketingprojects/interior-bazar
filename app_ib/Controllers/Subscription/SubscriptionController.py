@@ -7,6 +7,7 @@ from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.models import Subscription, Business
 from app_ib.Controllers.Subscription.Tasks.SubscriptionTasks import SUBSCRIPTION_TASKS
+from django.core.cache import cache
 
 
 class SUBSCRIPTION_CONTROLLER:
@@ -26,6 +27,8 @@ class SUBSCRIPTION_CONTROLLER:
                 pass
 
                 if create_subscription_resp:
+                    # Invalidate cache on success
+                    cache.delete("subscription_plans_list")
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.success,
                         message=RESPONSE_MESSAGES.subscription_create_success,
@@ -63,6 +66,8 @@ class SUBSCRIPTION_CONTROLLER:
                 pass
 
                 if update_subscription_resp:
+                    # Invalidate cache on success
+                    cache.delete("subscription_plans_list")
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.success,
                         message=RESPONSE_MESSAGES.subscription_update_success,
@@ -87,20 +92,31 @@ class SUBSCRIPTION_CONTROLLER:
 
     @classmethod
     async def GetSubscription(self):
+        cache_key = "subscription_plans_list"
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message=RESPONSE_MESSAGES.subscription_fetch_success,
+                code=RESPONSE_CODES.success,
+                data=cached_data
+            )
+
         try:
-            subscription_ins = await sync_to_async(Subscription.objects.all)()
-            pass
+            # Evaluate the queryset to a list before iterating
+            subscription_qs = await sync_to_async(Subscription.objects.all)()
+            subscription_ins = await sync_to_async(list)(subscription_qs)
 
             fetch_subscription_response = []
             for subscription in subscription_ins:
-                pass
                 subscription_response = await SUBSCRIPTION_TASKS.GetSubscriptionTask(subscription_ins=subscription)
 
                 if subscription_response:
                     fetch_subscription_response.append(subscription_response)
-            pass
 
             if fetch_subscription_response:
+                # Cache for 24 hours
+                cache.set(cache_key, fetch_subscription_response, 86400)
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
                     message=RESPONSE_MESSAGES.subscription_fetch_success,
