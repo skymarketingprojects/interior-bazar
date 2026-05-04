@@ -37,26 +37,28 @@ sitemaps = {
 }
 
 
+from django.views.decorators.cache import cache_page
+
 urlpatterns = [
     path('debug-sentry/', views.trigger_error),
     path('test/',TestView, name='test'),
 
-    path('', views.home, name='home'),
-    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
+    path('', cache_page(3600)(views.home), name='home'),
+    path('sitemap.xml', cache_page(86400)(sitemap), {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
     path('robots.txt', views.robots_txt, name='robots'),
     path('terms-of-use/', admin.site.urls),
     path('api/', include("app_ib.urls")),
 
     # path('seller-buyer/', views.seller_buyer, name='seller_buyer'),
-    path('blog/', views.blog, name='blog'),
-    path('blog/<slug:slug>/', views.blog_detail, name='blog_detail'),  # For individual blog posts
+    path('blog/', cache_page(3600)(views.blog), name='blog'),
+    path('blog/<slug:slug>/', cache_page(3600)(views.blog_detail), name='blog_detail'),  # For individual blog posts
     path('plan/', views.plan, name='plan'),
-    path('faq/', views.faqs, name='faqs'),
+    path('faq/', cache_page(86400)(views.faqs), name='faqs'),
 
-    path('disclaimer/', views.disclaimer, name='disclaimer'),
-    path('return-and-refund-policy/', views.return_and_refund_policy, name='return_and_refund_policy'),
-    path('terms-and-conditions/', views.terms_and_conditions, name='terms_and_conditions'),
-    path('privacy-policy/', views.privacy_policy, name='privacy_policy'),
+    path('disclaimer/', cache_page(86400)(views.disclaimer), name='disclaimer'),
+    path('return-and-refund-policy/', cache_page(86400)(views.return_and_refund_policy), name='return_and_refund_policy'),
+    path('terms-and-conditions/', cache_page(86400)(views.terms_and_conditions), name='terms_and_conditions'),
+    path('privacy-policy/', cache_page(86400)(views.privacy_policy), name='privacy_policy'),
     path('cookie-policy/', views.cookie_policy, name='cookie-policy'),
     path('legal/', views.legal, name='legal'),
     path('payment/', views.payment, name='payment'),
@@ -69,12 +71,13 @@ urlpatterns = [
     # path('important-links/', views.legal, name='legal'),
 
 
-    path('marketplace/', views.marketplace, name='marketplace'),
-    path('marketplace/business', views.marketBusiness, name='marketBusiness'),
-    path('marketplace/product', views.marketProduct, name='marketProduct'),
-    path('marketplace/catalogue', views.marketCatalogue, name='marketCatalogue'),
-    path('marketplace/service', views.marketService, name='marketService'),
+    path('marketplace/', cache_page(3600)(views.marketplace), name='marketplace'),
+    path('marketplace/business', cache_page(3600)(views.marketBusiness), name='marketBusiness'),
+    path('marketplace/product', cache_page(3600)(views.marketProduct), name='marketProduct'),
+    path('marketplace/catalogue', cache_page(3600)(views.marketCatalogue), name='marketCatalogue'),
+    path('marketplace/service', cache_page(3600)(views.marketService), name='marketService'),
 ]
+
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

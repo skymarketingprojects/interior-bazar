@@ -2,6 +2,7 @@ from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
 from app_ib import views
+from django.views.decorators.cache import cache_page
 from rest_framework_simplejwt.views import (TokenRefreshView)
 from app_ib.Views import AuthView, QueryView, FeedbackView
 from app_ib.Views import ProfileView
@@ -33,8 +34,8 @@ urlpatterns = [
     path('test/', views.TestView, name='TestView'),
     path('test-mail/', views.TestMailView, name='TestMailView'),
 
-    path("v1/common/our-clients/", views.GetOurClients, name="GetClientsView"),
-    path("v1/common/reels/", views.GetReelSection, name="GetReels"),
+    path("v1/common/our-clients/", cache_page(86400)(views.GetOurClients), name="GetClientsView"),
+    path("v1/common/reels/", cache_page(86400)(views.GetReelSection), name="GetReels"),
 
     #########################################################
     # Authentication: 
@@ -136,7 +137,7 @@ urlpatterns = [
     path('v1/blog/pagination/<int:page>/', BlogView.GetBlogsPaginationView, name='GetBlogsPagination'),
     path('v1/blog/<int:id>/', BlogView.GetBlogByIdView, name='GetBlogByTitleView'),
 
-    #########################################################
+    ##########################################################
     # Offer text
     ##########################################################
     path('v1/query/offer-text/', OfferTextView.GetOfferText, name='GetOfferTextView'),

@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+
 urlpatterns = [
     # ---------------- AD CAMPAIGN ----------------
     path("campaign/create/", views.CreateCampaignView, name="campaign-create"),
@@ -24,9 +25,9 @@ urlpatterns = [
 
     # ---------------- ENUM JSON ----------------
     path('enums/status/', views.getAdStatusEnum, name="status"),
-    path('enums/approval-mode/', views.getAdApprovalModeEnum, name= "approval-mode"),
-    path('enums/asset-type/', views.getAdAssetTypeEnum,name = "asset-type"),
-    path('enums/payment-status/', views.getAdPaymentStatusEnum,name="payment-status"),
-    path('enums/event-type/', views.getAdEventTypeEnum,name="event-type"),
-    path('enums/placement/', views.getAdPlacementEnum,name="placement"),
+    path('enums/approval-mode/', views.getAdApprovalModeEnum, name="approval-mode"),
+    path('enums/asset-type/', views.getAdAssetTypeEnum, name="asset-type"),
+    path('enums/payment-status/', views.getAdPaymentStatusEnum, name="payment-status"),
+    path('enums/event-type/', views.getAdEventTypeEnum, name="event-type"),
+    path('enums/placement/', views.getAdPlacementEnum, name="placement"),
 ]

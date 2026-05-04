@@ -6,11 +6,23 @@ from interior_bot.models import MessageBot
 from .Tasks.MessageBotTasks import MESSAGE_BOT_TASKS
 from app_ib.Utils.Names import NAMES
 
+from django.core.cache import cache
+
 class MESSAGE_BOT_CONTROLLER:
     
     @classmethod
     async def GetMessages(self):
         try:
+            cache_key = "bot_messages_all"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    code=RESPONSE_CODES.success,
+                    data=cached_data,
+                    message="messages found (cached)"
+                )
+
             messages = MessageBot.objects.all()
             if not messages:
                 return LocalResponse(
@@ -24,6 +36,10 @@ class MESSAGE_BOT_CONTROLLER:
             for message in messages:
                 data = await MESSAGE_BOT_TASKS.GetMessageQuestionTask(message)
                 messageData.append(data)
+            
+            # Cache for 24 hours
+            cache.set(cache_key, messageData, 86400)
+
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 code=RESPONSE_CODES.success,

@@ -12,22 +12,35 @@ from app_ib.models import LeadQuery, Business,CustomUser
 from app_ib.Controllers.Query.Tasks.QueryTasks import LEAD_QUERY_TASK
 from .Validators.QueryValidators import LeadQueryCreateSchema,LeadQueryUpdateSchema,LeadQueryStatusSchema,LeadQueryFilterSchema
 from django.db.models import Q
+from django.core.cache import cache
 
 class LEAD_QUERY_CONTROLLER:
 
     @classmethod
-    async def GetQueries(self,user_ins):
+    async def GetQueries(self, user_ins):
+        cache_key = f"user_queries_{user_ins.id}"
+        cached_data = await cache.aget(cache_key)
+        if cached_data:
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message=RESPONSE_MESSAGES.query_fetch_success,
+                code=RESPONSE_CODES.success,
+                data=cached_data)
+
         try:
-            lead_query_ins= None
-            lead_query_ins = await sync_to_async(
+            lead_query_qs = await sync_to_async(
+                
                 lambda: LeadQuery.objects.filter(user=user_ins).all().order_by(f'-{NAMES.TIMESTAMP}')
             )()
-            (f'lead_query_ins {lead_query_ins}')   
-            leads_data = []
+            lead_query_ins = await sync_to_async(list)(lead_query_qs)
 
+            leads_data = []
             for leads in lead_query_ins:
                 data = await LEAD_QUERY_TASK.GetLeadQueryTask(leads)
                 leads_data.append(data)
+
+            # Cache for 10 minutes
+            await cache.aset(cache_key, leads_data, 600)
 
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
@@ -51,6 +64,10 @@ class LEAD_QUERY_CONTROLLER:
             pass
 
             if create_query_resp:
+                # Invalidate cache for the user
+                if user:
+                    await cache.adelete(f"user_queries_{user.id}")
+                
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
                     message=RESPONSE_MESSAGES.query_generate_success,
@@ -88,11 +105,17 @@ class LEAD_QUERY_CONTROLLER:
                 pass
                 
                 if create_query_resp:
+                    # Invalidate cache for the user
+                    if lead_query_ins.user:
+                        await cache.adelete(f"user_queries_{lead_query_ins.user.id}")
+
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.success,
                         message=RESPONSE_MESSAGES.query_update_success,
                         code=RESPONSE_CODES.success,
-                        data=create_query_resp)
+                        data=create_query_resp
+                        )
+
 
                 else:
                     return LocalResponse(
@@ -126,11 +149,16 @@ class LEAD_QUERY_CONTROLLER:
                 (f'update query resp {create_query_resp}')
 
                 if create_query_resp:
+                    # Invalidate cache for the user
+                    if lead_query_ins.user:
+                        await cache.adelete(f"user_queries_{lead_query_ins.user.id}")
+
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.success,
                         message=RESPONSE_MESSAGES.query_update_success,
                         code=RESPONSE_CODES.success,
                         data=create_query_resp)
+
 
                 else:
                     return LocalResponse(
@@ -163,11 +191,16 @@ class LEAD_QUERY_CONTROLLER:
                 (f'update query resp {create_query_resp}')
 
                 if create_query_resp:
+                    # Invalidate cache for the user
+                    if lead_query_ins.user:
+                        await cache.adelete(f"user_queries_{lead_query_ins.user.id}")
+
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.success,
                         message=RESPONSE_MESSAGES.query_update_success,
                         code=RESPONSE_CODES.success,
                         data=create_query_resp)
+
 
                 else:
                     return LocalResponse(
@@ -200,11 +233,16 @@ class LEAD_QUERY_CONTROLLER:
                 (f'update query resp {create_query_resp}')
 
                 if create_query_resp:
+                    # Invalidate cache for the user
+                    if lead_query_ins.user:
+                        await cache.adelete(f"user_queries_{lead_query_ins.user.id}")
+
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.success,
                         message=RESPONSE_MESSAGES.query_update_success,
                         code=RESPONSE_CODES.success,
                         data=create_query_resp)
+
 
                 else:
                     return LocalResponse(

@@ -13,6 +13,10 @@ from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.Names import NAMES
 from interior_business.Controllers.BussLocation.BussLocationController import BUSS_LOCATION_CONTROLLER
+from django.core.cache import cache
+
+cache_get = sync_to_async(cache.get)
+cache_set = sync_to_async(cache.set)
 
 
 @api_view(['POST'])
@@ -75,45 +79,23 @@ async def GetBusinessLocationView(request):
 @api_view(['GET'])
 async def GetCountryListView(request):
     try:
-        # Call Auth Controller to Create User
+        cached = await cache_get("cache:location:countries")
+        if cached:
+            return ServerResponse(**cached)
         final_response = await BUSS_LOCATION_CONTROLLER.GetCountryList()
-        pass
-
-        return ServerResponse(
-            response=final_response.response,
-            code=final_response.code,
-            message=final_response.message,
-            data=final_response.data)
-
+        await cache_set("cache:location:countries", {'response': final_response.response, 'code': final_response.code, 'message': final_response.message, 'data': final_response.data}, timeout=604800)  # 7 days
+        return ServerResponse(response=final_response.response, code=final_response.code, message=final_response.message, data=final_response.data)
     except Exception as e:
-        pass
-        return ServerResponse(
-            response=RESPONSE_MESSAGES.error,
-            message=RESPONSE_MESSAGES.business_register_error,
-            code=RESPONSE_CODES.error,
-            data={
-                NAMES.ERROR: str(e)
-            })
-    
+        return ServerResponse(response=RESPONSE_MESSAGES.error, message=RESPONSE_MESSAGES.business_register_error, code=RESPONSE_CODES.error, data={NAMES.ERROR: str(e)})
 @api_view(['GET'])
-async def GetStateListByCountryIDView(request,countryId):
+async def GetStateListByCountryIDView(request, countryId):
     try:
-        # Call Auth Controller to Create User
+        cache_key = f"cache:location:states:{countryId}"
+        cached = await cache_get(cache_key)
+        if cached:
+            return ServerResponse(**cached)
         final_response = await BUSS_LOCATION_CONTROLLER.GetStateListByCountry(countryId=countryId)
-        pass
-
-        return ServerResponse(
-            response=final_response.response,
-            code=final_response.code,
-            message=final_response.message,
-            data=final_response.data)
-
+        await cache_set(cache_key, {'response': final_response.response, 'code': final_response.code, 'message': final_response.message, 'data': final_response.data}, timeout=604800)  # 7 days
+        return ServerResponse(response=final_response.response, code=final_response.code, message=final_response.message, data=final_response.data)
     except Exception as e:
-        pass
-        return ServerResponse(
-            response=RESPONSE_MESSAGES.error,
-            message=RESPONSE_MESSAGES.business_register_error,
-            code=RESPONSE_CODES.error,
-            data={
-                NAMES.ERROR: str(e)
-            })
+        return ServerResponse(response=RESPONSE_MESSAGES.error, message=RESPONSE_MESSAGES.business_register_error, code=RESPONSE_CODES.error, data={NAMES.ERROR: str(e)})

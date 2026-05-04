@@ -15,6 +15,12 @@ from adrf.views import APIView
 from django.views.decorators.csrf import csrf_exempt
 from app_ib.Utils.Names import NAMES
 from app_ib.models import CustomUser
+from django.core.cache import cache
+
+cache_get = sync_to_async(cache.get)
+cache_set = sync_to_async(cache.set)
+
+STRUCTURE_TTL = 604800  # 7 days
 
 
 @api_view(['POST'])
@@ -130,123 +136,69 @@ async def GetBusinessByUser(request):
 @api_view(['GET'])
 async def GetAllBusinessTypesView(request):
     try:
-        # Call Auth Controller to Create User
+        cached = await cache_get("cache:business:types")
+        if cached:
+            return ServerResponse(**cached)
         final_response = await BUSS_CONTROLLER.GetAllBusinessTypes()
-        pass
-
-        return ServerResponse(
-            response=final_response.response,
-            code=final_response.code,
-            message=final_response.message,
-            data=final_response.data)
-
+        await cache_set("cache:business:types", {'response': final_response.response, 'code': final_response.code, 'message': final_response.message, 'data': final_response.data}, timeout=STRUCTURE_TTL)
+        return ServerResponse(response=final_response.response, code=final_response.code, message=final_response.message, data=final_response.data)
     except Exception as e:
-        pass
-        return ServerResponse(
-            response=RESPONSE_MESSAGES.error,
-            message=RESPONSE_MESSAGES.business_type_fetch_error,
-            code=RESPONSE_CODES.error,
-            data={
-                NAMES.ERROR: str(e)
-            })
-    
+        return ServerResponse(response=RESPONSE_MESSAGES.error, message=RESPONSE_MESSAGES.business_type_fetch_error, code=RESPONSE_CODES.error, data={NAMES.ERROR: str(e)})
 
 @api_view(['GET'])
 async def GetAllBusinessTabView(request):
     try:
-        # Call Auth Controller to Create User
+        cached = await cache_get("cache:business:tab")
+        if cached:
+            return ServerResponse(**cached)
         final_response = await BUSS_CONTROLLER.GetAllBusinessTab()
-        pass
-
-        return ServerResponse(
-            response=final_response.response,
-            code=final_response.code,
-            message=final_response.message,
-            data=final_response.data)
-
+        await cache_set("cache:business:tab", {'response': final_response.response, 'code': final_response.code, 'message': final_response.message, 'data': final_response.data}, timeout=STRUCTURE_TTL)
+        return ServerResponse(response=final_response.response, code=final_response.code, message=final_response.message, data=final_response.data)
     except Exception as e:
-        pass
-        return ServerResponse(
-            response=RESPONSE_MESSAGES.error,
-            message=RESPONSE_MESSAGES.business_category_fetch_error,
-            code=RESPONSE_CODES.error,
-            data={
-                NAMES.ERROR: str(e)
-            })
+        return ServerResponse(response=RESPONSE_MESSAGES.error, message=RESPONSE_MESSAGES.business_category_fetch_error, code=RESPONSE_CODES.error, data={NAMES.ERROR: str(e)})
 
 @api_view(['GET'])
 async def GetAllBusinessCategoriesView(request):
     try:
         trending = request.query_params.get('trending', False)
         query = request.query_params.get('query', None)
-
-        # Call Auth Controller to Create User
-        final_response = await BUSS_CONTROLLER.GetAllBusinessCategories(trending=trending,query=query)
-        pass
-
-        return ServerResponse(
-            response=final_response.response,
-            code=final_response.code,
-            message=final_response.message,
-            data=final_response.data)
-
+        # Cache key includes query params to avoid serving wrong data
+        cache_key = f"cache:business:categories:{trending}:{query}"
+        cached = await cache_get(cache_key)
+        if cached:
+            return ServerResponse(**cached)
+        final_response = await BUSS_CONTROLLER.GetAllBusinessCategories(trending=trending, query=query)
+        await cache_set(cache_key, {'response': final_response.response, 'code': final_response.code, 'message': final_response.message, 'data': final_response.data}, timeout=STRUCTURE_TTL)
+        return ServerResponse(response=final_response.response, code=final_response.code, message=final_response.message, data=final_response.data)
     except Exception as e:
-        pass
-        return ServerResponse(
-            response=RESPONSE_MESSAGES.error,
-            message=RESPONSE_MESSAGES.business_category_fetch_error,
-            code=RESPONSE_CODES.error,
-            data={
-                NAMES.ERROR: str(e)
-            })
+        return ServerResponse(response=RESPONSE_MESSAGES.error, message=RESPONSE_MESSAGES.business_category_fetch_error, code=RESPONSE_CODES.error, data={NAMES.ERROR: str(e)})
 
 @api_view(['GET'])
-async def GetAllBusinessSegmentsByTypeView(request,typeId):
+async def GetAllBusinessSegmentsByTypeView(request, typeId):
     try:
         query = request.query_params.get('query', None)
-        pass
-        # Call Auth Controller to Create User
-        final_response = await BUSS_CONTROLLER.GetBusinessSegmentsByType(typeId=typeId,query=query)
-        pass
-
-        return ServerResponse(
-            response=final_response.response,
-            code=final_response.code,
-            message=final_response.message,
-            data=final_response.data)
-
+        # Cache key includes both typeId and query param
+        cache_key = f"cache:business:segments:{typeId}:{query}"
+        cached = await cache_get(cache_key)
+        if cached:
+            return ServerResponse(**cached)
+        final_response = await BUSS_CONTROLLER.GetBusinessSegmentsByType(typeId=typeId, query=query)
+        await cache_set(cache_key, {'response': final_response.response, 'code': final_response.code, 'message': final_response.message, 'data': final_response.data}, timeout=STRUCTURE_TTL)
+        return ServerResponse(response=final_response.response, code=final_response.code, message=final_response.message, data=final_response.data)
     except Exception as e:
-        pass
-        return ServerResponse(
-            response=RESPONSE_MESSAGES.error,
-            message=RESPONSE_MESSAGES.business_category_fetch_error,
-            code=RESPONSE_CODES.error,
-            data={
-                NAMES.ERROR: str(e)
-            })
+        return ServerResponse(response=RESPONSE_MESSAGES.error, message=RESPONSE_MESSAGES.business_category_fetch_error, code=RESPONSE_CODES.error, data={NAMES.ERROR: str(e)})
 
 @api_view(['GET'])
 async def GetExploreSectionsView(request):
     try:
-        # Call Auth Controller to Create User
+        cached = await cache_get("cache:business:explore")
+        if cached:
+            return ServerResponse(**cached)
         final_response = await BUSS_CONTROLLER.GetExploreSections()
-        pass
-
-        return ServerResponse(
-            response=final_response.response,
-            code=final_response.code,
-            message=final_response.message,
-            data=final_response.data)
-
+        await cache_set("cache:business:explore", {'response': final_response.response, 'code': final_response.code, 'message': final_response.message, 'data': final_response.data}, timeout=STRUCTURE_TTL)
+        return ServerResponse(response=final_response.response, code=final_response.code, message=final_response.message, data=final_response.data)
     except Exception as e:
-        pass
-        return ServerResponse(
-            response=RESPONSE_MESSAGES.error,
-            message=RESPONSE_MESSAGES.business_category_fetch_error,
-            code=RESPONSE_CODES.error,
-            data={
-                NAMES.ERROR: str(e)
-            })
+        return ServerResponse(response=RESPONSE_MESSAGES.error, message=RESPONSE_MESSAGES.business_category_fetch_error, code=RESPONSE_CODES.error, data={NAMES.ERROR: str(e)})
 
 @api_view(['GET'])
 async def GetBusinessHeaderView(request):

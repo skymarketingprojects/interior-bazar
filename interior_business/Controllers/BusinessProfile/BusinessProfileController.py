@@ -13,14 +13,26 @@ from app_ib.models import BusinessProfile, Business
 from interior_business.Controllers.BusinessProfile.Tasks.BusinessProfileTasks import BUSS_PROF_TASK
 from asgiref.sync import sync_to_async
 import asyncio
+from django.core.cache import cache
+
 
 class BUSS_PROFILE_CONTROLLER:
 
     @classmethod
     async def GetBusinessProfileForDisplay(self, business_id):
         try:
+            cache_key = f"business_profile_display_{business_id}"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.business_prof_fetch_success,
+                    code=RESPONSE_CODES.success,
+                    data=cached_data)
+
             get_resp = await BUSS_PROF_TASK.GetBusinessProfileTask(business_id=business_id)
             if NAMES.ERROR not in get_resp:
+                cache.set(cache_key, get_resp, 3600)  # Cache for 1 hour
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
                     message=RESPONSE_MESSAGES.business_prof_fetch_success,
@@ -40,6 +52,7 @@ class BUSS_PROFILE_CONTROLLER:
                 data={
                     NAMES.ERROR: str(e)
                 })
+
   
     @classmethod
     async def CreateOrUpdateBusinessProfile(self, user_ins, data):
@@ -104,6 +117,15 @@ class BUSS_PROFILE_CONTROLLER:
     @classmethod
     async def GetBuisnessProfByBusinessID(self,id):
         try:
+            cache_key = f"business_profile_full_{id}"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.business_prof_fetch_success,
+                    code=RESPONSE_CODES.success,
+                    data=cached_data)
+
             business_ins = None
             business_prof_ins= None
 
@@ -122,6 +144,7 @@ class BUSS_PROFILE_CONTROLLER:
                 update_resp = await BUSS_PROF_TASK.GetBusinessProfTask(
                     business_prof_ins=business_prof_ins)
                 if update_resp:
+                    cache.set(cache_key, update_resp, 3600)  # Cache for 1 hour
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.success,
                         message=RESPONSE_MESSAGES.business_prof_fetch_success,
@@ -143,6 +166,7 @@ class BUSS_PROFILE_CONTROLLER:
                 data={
                     NAMES.ERROR: str(e)
                 })
+
 
     @classmethod 
     async def CreateOrUpdatePrimaryImage(self, user_ins, primary_image):

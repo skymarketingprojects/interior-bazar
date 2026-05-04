@@ -1,4 +1,7 @@
 from asgiref.sync import sync_to_async
+from django.core.cache import cache
+import hashlib
+
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.LocalResponse import LocalResponse
@@ -18,6 +21,16 @@ class SERVICES_CONTROLLER:
     @classmethod
     async def getService(self,serviceId:int)->LocalResponse:
         try:
+            cache_key = f"service_detail_{serviceId}"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.service_fetch_success,
+                    code=RESPONSE_CODES.success,
+                    data=cached_data
+                )
+
             service = await sync_to_async(Service.objects.get)(id=serviceId)
             if not service:
                 return LocalResponse(
@@ -35,12 +48,14 @@ class SERVICES_CONTROLLER:
                     data={'error':RESPONSE_MESSAGES.service_fetch_error}
                 )
             
+            cache.set(cache_key, serviceData, 3600)  # Cache for 1 hour
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.service_fetch_success,
                 code=RESPONSE_CODES.success,
                 data=serviceData
             )
+
         except Exception as e:
             pass
             return LocalResponse(
@@ -53,6 +68,17 @@ class SERVICES_CONTROLLER:
     @classmethod
     async def getAllService(self,page,size,filterType=None,id=None,state=None,query=None)->LocalResponse:
         try:
+            params = f"{page}_{size}_{filterType}_{id}_{state}_{query}"
+            cache_key = f"all_services_pagi_{hashlib.md5(params.encode()).hexdigest()}"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.service_fetch_success,
+                    code=RESPONSE_CODES.success,
+                    data=cached_data
+                )
+
             serviceData=[]
             related_qs = []
             filterQuery=Q()
@@ -89,12 +115,14 @@ class SERVICES_CONTROLLER:
                     serviceData.append(data)
             paginated['pagination']['data'] = serviceData
             
+            cache.set(cache_key, paginated['pagination'], 3600)  # Cache for 1 hour
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.service_fetch_success,
                 code=RESPONSE_CODES.success,
                 data=paginated['pagination']
             )
+
         except Exception as e:
             pass
             return LocalResponse(
@@ -106,6 +134,16 @@ class SERVICES_CONTROLLER:
     @classmethod
     async def getServicesForBusiness(self,business:Business)->LocalResponse:
         try:
+            cache_key = f"services_business_{business.id}"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.services_fetch_success,
+                    code=RESPONSE_CODES.success,
+                    data=cached_data
+                )
+
             services:Service = await sync_to_async(
             lambda: business.services.all().order_by('index')
         )()
@@ -114,12 +152,15 @@ class SERVICES_CONTROLLER:
                 serviceData = await SERVICES_TASKS.getService(service)
                 if serviceData:
                     servicesData.append(serviceData)
+            
+            cache.set(cache_key, servicesData, 3600)  # Cache for 1 hour
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.services_fetch_success,
                 code=RESPONSE_CODES.success,
                 data=servicesData
             )
+
         except Exception as e:
             pass
             return LocalResponse(
@@ -228,6 +269,16 @@ class SERVICES_CONTROLLER:
     @classmethod
     async def GetRelatedServices(cls, serviceId: int, page: int = 1, size: int = 10):
         try:
+            cache_key = f"related_services_{serviceId}_{page}_{size}"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message="Related services fetched successfully",
+                    code=RESPONSE_CODES.success,
+                    data=cached_data
+                )
+
             service = Service.objects.get(id=serviceId)
             related_qs = Service.objects.filter(
                                 Q(title__icontains=service.title.split(" ")[0])
@@ -244,12 +295,14 @@ class SERVICES_CONTROLLER:
                     serviceData.append(data)
             paginated['pagination']['data'] = serviceData
 
+            cache.set(cache_key, paginated["pagination"], 3600)  # Cache for 1 hour
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
-                message="Related catelogues fetched successfully",
+                message="Related services fetched successfully",
                 code=RESPONSE_CODES.success,
                 data=paginated["pagination"]
             )
+
         except Exception as e:
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
@@ -261,6 +314,16 @@ class SERVICES_CONTROLLER:
     @classmethod
     async def GetServiceTab(cls):
         try:
+            cache_key = "service_tab_data"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.service_tab_success,
+                    code=RESPONSE_CODES.success,
+                    data=cached_data
+                )
+
             categorys = ProductCategory.objects.all()
             tabData = []
             for category in categorys:
@@ -276,12 +339,15 @@ class SERVICES_CONTROLLER:
                     if subCategoryData:
                         subCategoryData['type']='subCategory'
                         tabData.append(subCategoryData)
+            
+            cache.set(cache_key, tabData, 86400)  # Cache for 24 hours
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.service_tab_success,
                 code=RESPONSE_CODES.success,
                 data=tabData
                 )
+
         except Exception as e:
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,

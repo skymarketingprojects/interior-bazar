@@ -1,4 +1,7 @@
 from asgiref.sync import sync_to_async
+from django.core.cache import cache
+import hashlib
+
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.LocalResponse import LocalResponse
@@ -18,6 +21,16 @@ class CATELOG_CONTROLLER:
     @classmethod
     async def GetCatelogForBusiness(self, business):
         try:
+            cache_key = f"catalogues_business_{business.id}"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.catelog_fetch_success,
+                    code=RESPONSE_CODES.success,
+                    data=cached_data
+                    )
+
             catelogs = Catelogue.objects.filter(business=business)
             catelogData= []
             for catelog in catelogs:
@@ -25,13 +38,14 @@ class CATELOG_CONTROLLER:
                 if data:
                     catelogData.append(data)
             
-            pass
+            cache.set(cache_key, catelogData, 3600)  # Cache for 1 hour
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.catelog_fetch_success,
                 code=RESPONSE_CODES.success,
                 data=catelogData
                 )
+
 
         except Exception as e:
             pass
@@ -44,14 +58,26 @@ class CATELOG_CONTROLLER:
     @classmethod
     async def GetCatelog(self, catelogId):
         try:
+            cache_key = f"catalogue_detail_{catelogId}"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.catelog_fetch_success,
+                    code=RESPONSE_CODES.success,
+                    data=cached_data
+                    )
+
             catelog = Catelogue.objects.get(pk=catelogId)
             catelogData = await CATELOG_TASKS.getCatelog(catelog)
+            cache.set(cache_key, catelogData, 3600)  # Cache for 1 hour
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.catelog_fetch_success,
                 code=RESPONSE_CODES.success,
                 data=catelogData
                 )
+
 
         except Exception as e:
             pass
@@ -66,6 +92,17 @@ class CATELOG_CONTROLLER:
     @classmethod
     async def GetAllCatelog(self,page,size,filterType=None,id=None,query=None,state=None):
         try:
+            params = f"{page}_{size}_{filterType}_{id}_{query}_{state}"
+            cache_key = f"all_catalogues_pagi_{hashlib.md5(params.encode()).hexdigest()}"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.catelog_fetch_success,
+                    code=RESPONSE_CODES.success,
+                    data=cached_data
+                    )
+
             catelogData = []
             related_qs = []
             filterQuery=Q()
@@ -102,13 +139,14 @@ class CATELOG_CONTROLLER:
 
             paginated['pagination']['data'] = catelogData
             
-
+            cache.set(cache_key, paginated['pagination'], 3600)  # Cache for 1 hour
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.catelog_fetch_success,
                 code=RESPONSE_CODES.success,
                 data=paginated['pagination']
                 )
+
 
         except Exception as e:
             pass
@@ -219,6 +257,16 @@ class CATELOG_CONTROLLER:
     @classmethod
     async def GetRelatedCatelogs(cls, catelogId: int, page: int = 1, size: int = 10):
         try:
+            cache_key = f"related_catalogues_{catelogId}_{page}_{size}"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message="Related catelogues fetched successfully",
+                    code=RESPONSE_CODES.success,
+                    data=cached_data
+                )
+
             catelog = Catelogue.objects.get(id=catelogId)
             related_qs = Catelogue.objects.filter(
                             Q(category=catelog.category)
@@ -234,12 +282,15 @@ class CATELOG_CONTROLLER:
                     catelogData.append(data)
 
             paginated['pagination']['data'] = catelogData
+            
+            cache.set(cache_key, paginated["pagination"], 3600)  # Cache for 1 hour
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message="Related catelogues fetched successfully",
                 code=RESPONSE_CODES.success,
                 data=paginated["pagination"]
             )
+
         except Exception as e:
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
@@ -251,6 +302,16 @@ class CATELOG_CONTROLLER:
     @classmethod
     async def GetCatelougeTab(cls):
         try:
+            cache_key = "catalogue_tab_data"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.catelog_table_success,
+                    code=RESPONSE_CODES.success,
+                    data=cached_data
+                    )
+
             categorys = ProductCategory.objects.all()
             tabData = []
 
@@ -271,12 +332,14 @@ class CATELOG_CONTROLLER:
                         subCategoryData['type']='subCategory'
                         tabData.append(subCategoryData)
 
+            cache.set(cache_key, tabData, 86400)  # Cache for 24 hours
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.catelog_table_success,
                 code=RESPONSE_CODES.success,
                 data=tabData
                 )
+
         except Exception as e:
             pass
             return LocalResponse(

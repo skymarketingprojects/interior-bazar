@@ -14,6 +14,8 @@ from .Validators.GMBLeadsValidators import GMBLeadQueryFilters, GMBLeadUpdateSch
 from app_ib.models import CustomUser
 
 from rbac_module.models import Role, Access
+from django.core.cache import cache
+
 class GMBLeadsController:
     # Permission required to be considered part of the "Sales Team" for GMB leads
     SALES_TEAM_PERMISSION = "interior_bazzar:get_my_gmb_leads:get"
@@ -283,7 +285,16 @@ class GMBLeadsController:
         """
         Retrieves unique values and counts for dashboard filters.
         """
+        cache_key = "gmb_leads_kpis"
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return True, cached_data
+
         data = await GMB_LEADS_TASKS.GetLeadsKPIsTask()
+        
+        # Cache for 5 minutes
+        cache.set(cache_key, data, 300)
+
         return True, data
 
 GMB_LEADS_CONTROLLER = GMBLeadsController()

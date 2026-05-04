@@ -18,6 +18,7 @@ from django.conf import settings
 from app_ib.Utils.AppMode import APPMODE
 
 import asyncio
+from django.core.cache import cache
 from app_ib.models import CustomUser, Business, LeadQuery, PlanQuery, BusinessPlan, Subscription
 from app_ib.decorators.ViewDecorator import controllerExceptionHandler
 
@@ -51,6 +52,11 @@ class ADMIN_PANEL_CONTROLLER:
         """
         Returns full dashboard stats with totals and all tile data (no filters).
         """
+        cache_key = "admin_dashboard_stats_v1"
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return True, cached_data
+
         results = await asyncio.gather(
             ADMIN_PANEL_TASKS.GetTotalBusinesses(),
             ADMIN_PANEL_TASKS.GetTotalActiveBusinesses(),
@@ -74,6 +80,9 @@ class ADMIN_PANEL_CONTROLLER:
             "weeklySignups": weekly_signups,
             "businessTiles": all_tiles
         }
+        
+        # Cache for 5 minutes
+        cache.set(cache_key, dashboard_data, 300)
 
         return True,dashboard_data
 
@@ -173,7 +182,15 @@ class ADMIN_PANEL_CONTROLLER:
         """
         Get today's signups for clients, businesses, and users.
         """
+        cache_key = "today_signups_stats_v1"
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return cached_data
+
         today_signups = await ANALYTICS_TASKS.GetTodaySignups()
+        
+        # Cache for 5 minutes
+        cache.set(cache_key, today_signups, 300)
 
         return today_signups
 
@@ -186,6 +203,11 @@ class ADMIN_PANEL_CONTROLLER:
         successMessage=RESPONSE_MESSAGES.charts_fetch_success
     )
     async def GetChartsStats(cls):
+        cache_key = "admin_charts_stats_v1"
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return cached_data
+
         model_map = {
             "clients": CustomUser.objects.filter(type="client"),
             "businesses": Business.objects.all(),
@@ -193,6 +215,9 @@ class ADMIN_PANEL_CONTROLLER:
         }
 
         chart_data = await ANALYTICS_TASKS.GetGroupedChartData(model_map)
+        
+        # Cache for 10 minutes
+        cache.set(cache_key, chart_data, 600)
 
         return chart_data
 
@@ -203,7 +228,15 @@ class ADMIN_PANEL_CONTROLLER:
         successMessage=RESPONSE_MESSAGES.total_users_fetch_success
     )
     async def GetTotalNoOfUsers(cls):
+        cache_key = "total_users_count"
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return cached_data
+
         result = await ADMIN_PANEL_TASKS.GetTotalUsers()
+        
+        # Cache for 10 minutes
+        cache.set(cache_key, result, 600)
         return result
 
     @classmethod
@@ -224,7 +257,11 @@ class ADMIN_PANEL_CONTROLLER:
         successMessage=RESPONSE_MESSAGES.dashboard_data_fetch_success
     )
     async def GetDashboardData(cls):
-        pass
+        cache_key = "admin_dashboard_data_core_v1"
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return True, cached_data
+
         (total_users_status, total_users), (total_businesses_status, total_businesses), (total_queries_status, total_queries), (today_signups_status, today_signups) = await asyncio.gather(
             ADMIN_PANEL_TASKS.GetTotalUsers(),
             ADMIN_PANEL_TASKS.GetTotalBusinesses(),
@@ -238,7 +275,9 @@ class ADMIN_PANEL_CONTROLLER:
             "totalQueries": total_queries,
             "todaySignups": today_signups
         } 
-        pass
+        
+        # Cache for 5 minutes
+        cache.set(cache_key, response_data, 300)
 
         return True,response_data
     
@@ -289,6 +328,11 @@ class ADMIN_PANEL_CONTROLLER_V2:
         successMessage=RESPONSE_MESSAGES.dashboard_fetch_success
     )
     async def GetAdminDashboardStats(cls):
+        cache_key = "admin_dashboard_stats_v2"
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return cached_data
+
         business_qs = Business.objects.all()
         if settings.ENV == APPMODE.PROD:
             business_qs = business_qs.filter(selfCreated=False)  # Correct usage in classmethod
@@ -296,20 +340,10 @@ class ADMIN_PANEL_CONTROLLER_V2:
         # Kick off both async tasks
         # metrics_task = ADMIN_PANEL_BUSINESS_TASKS_V2.GetBusinessMetrics(business_qs)
         metrics_data = await ADMIN_PANEL_BUSINESS_TASKS_V2.GetBusinessMetrics(business_qs)
-        # tiles_task = ADMIN_PANEL_BUSINESS_TASKS_V2.GetBusinessTiles(business_qs=business_qs)
-
-        # Each task returns (status, data)
-        # (metrics_status, metrics_data), (tiles_status, tiles_data) = await asyncio.gather(
-        #     metrics_task, tiles_task
-        # )
-
-        # Build dashboard using the returned data
-        # dashboard_data = {
-        #     **metrics_data,
-        #     "businessTiles": tiles_data  # Already contains results + pagination
-        # }
-
-        # return True,dashboard_data
+        
+        # Cache for 5 minutes
+        cache.set(cache_key, metrics_data, 300)
+        
         return metrics_data
 
 
@@ -405,6 +439,10 @@ class ADMIN_PANEL_CONTROLLER_V2:
         successMessage=RESPONSE_MESSAGES.today_signups_fetch_success
     )
     async def GetTodaySignupsStats(cls):
+        cache_key = "today_signups_stats_v2"
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return cached_data
 
         user_qs = CustomUser.objects.all()
         client_qs = CustomUser.objects.filter(type="client")
@@ -421,6 +459,9 @@ class ADMIN_PANEL_CONTROLLER_V2:
             business_qs=business_qs
         )
 
+        # Cache for 5 minutes
+        cache.set(cache_key, today_data, 300)
+
         return today_data
 
 
@@ -432,6 +473,10 @@ class ADMIN_PANEL_CONTROLLER_V2:
         successMessage=RESPONSE_MESSAGES.charts_fetch_success
     )
     async def GetChartsStats(cls):
+        cache_key = "admin_charts_stats_v2"
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return cached_data
 
         model_map = {
             "clients": CustomUser.objects.filter(type="client"),
@@ -445,6 +490,9 @@ class ADMIN_PANEL_CONTROLLER_V2:
             model_map["users"] = model_map["users"].filter(selfCreated=False)
 
         chart_data = await ADMIN_ANALYTICS_TASKS_V2.GetGroupedChartData(model_map)
+        
+        # Cache for 10 minutes
+        cache.set(cache_key, chart_data, 600)
 
         return chart_data
 
@@ -457,12 +505,19 @@ class ADMIN_PANEL_CONTROLLER_V2:
         successMessage=RESPONSE_MESSAGES.total_users_fetch_success
     )
     async def GetTotalNoOfUsers(cls):
+        cache_key = "total_users_count_v2"
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return cached_data
 
         user_qs = CustomUser.objects.all()
         if settings.ENV == APPMODE.PROD:
             user_qs = user_qs.filter(selfCreated=False)
 
         status,result = await ADMIN_PANEL_BUSINESS_TASKS_V2.GetUserMetrics(user_qs)
+        
+        # Cache for 10 minutes
+        cache.set(cache_key, (status, result[NAMES.TOTAL]), 600)
 
         return status,result[NAMES.TOTAL]
 
@@ -494,6 +549,10 @@ class ADMIN_PANEL_CONTROLLER_V2:
         successMessage=RESPONSE_MESSAGES.dashboard_data_fetch_success
     )
     async def GetDashboardData(cls):
+        cache_key = "admin_dashboard_data_core_v2"
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return True, cached_data
 
         user_qs = CustomUser.objects.all()
         business_qs = Business.objects.all()
@@ -520,12 +579,17 @@ class ADMIN_PANEL_CONTROLLER_V2:
             today_task
         )
 
-        return True,{
+        response_data = {
             "totalUsers": users["total"],
             "totalBusinesses": business["total"],
             "totalQueries": leads["final_total"],
             "todaySignups": today["users"]
         }
+        
+        # Cache for 5 minutes
+        cache.set(cache_key, response_data, 300)
+
+        return True, response_data
 
     # ---------------- LEAD ANALYTICS ----------------
     @classmethod

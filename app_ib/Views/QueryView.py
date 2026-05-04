@@ -17,14 +17,38 @@ from app_ib.models import UserProfile,CustomUser,Location
 from app_ib.Controllers.Query.Validators.QueryValidators import LeadQueryFilterSchema,LeadQueryCreateSchema,LeadQueryUpdateSchema,LeadQueryStatusSchema
 from dateutil.parser import parse
 from datetime import date
+from django.core.cache import cache
+from asgiref.sync import sync_to_async
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 async def GetQueryView(request):
     try:
         user = request.user
-        # Call Auth Controller to Create User
+        
+        # Per-user cache strategy (TTL: 5 mins)
+        cache_key = f"query_view_user_{user.id}"
+        cached_data = await cache.aget(cache_key)
+        
+        if cached_data:
+            return ServerResponse(
+                response=cached_data['response'],
+                code=cached_data['code'],
+                message=cached_data['message'],
+                data=cached_data['data']
+            )
+
+        # Fetch from DB if not cached
         final_response = await LEAD_QUERY_CONTROLLER.GetQueries(user_ins=user)
+
+        cache_data = {
+            'response': final_response.response,
+            'code': final_response.code,
+            'message': final_response.message,
+            'data': final_response.data
+        }
+        await cache.aset(cache_key, cache_data, timeout=300)
 
         return ServerResponse(
             response=final_response.response,

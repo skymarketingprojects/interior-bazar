@@ -15,6 +15,12 @@ from .models import (
     AdEventType,
 )
 from app_ib.Utils.Names import NAMES
+from django.core.cache import cache
+from asgiref.sync import sync_to_async
+
+
+# 7 days in seconds
+ENUM_TTL = 604800
 # ---------------- AD CAMPAIGN ----------------
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -133,13 +139,9 @@ async def GetCampaignsByBusinessView(request):
 @api_view(['GET'])
 async def GetActiveCampaignsView(request,placementId):
     try:
-        pass
-        pass
         category = request.query_params.get(NAMES.CATEGORY, None)
         segment = request.query_params.get(NAMES.SUB_CATEGORY, None)
         categoryType = request.query_params.get(NAMES.TYPE,None)
-        pass
-        pass
         final_response = await ADS_CONTROLLER.GetActiveCampaigns(placementId=placementId, category=category, segment=segment,categoryType=categoryType)
         return ServerResponse(
             response=final_response.response,
@@ -318,129 +320,75 @@ async def AdEventCreateView(request, campaign_id):
 # ---------------- ENUM JSON ----------------
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
 async def getAdStatusEnum(request):
     try:
+        cached = await cache.aget("cache:enum:ad_status")
+        if cached: return ServerResponse(**cached)
         final_response = await ADS_CONTROLLER.GetEnumJson(AdStatus)
-        return ServerResponse(
-            response=final_response.response,
-            code=final_response.code,
-            message=final_response.message,
-            data=final_response.data
-        )
+        await cache.aset("cache:enum:ad_status", {'response': final_response.response, 'code': final_response.code, 'message': final_response.message, 'data': final_response.data}, timeout=ENUM_TTL)
+        return ServerResponse(response=final_response.response, code=final_response.code, message=final_response.message, data=final_response.data)
     except Exception as e:
-        pass
-        return ServerResponse(
-            response=RESPONSE_MESSAGES.error,
-            message='Error fetching AdStatus enum',
-            code=RESPONSE_CODES.error,
-            data={NAMES.ERROR: str(e)}
-        )
+        return ServerResponse(response=RESPONSE_MESSAGES.error, message='Error fetching AdStatus enum', code=RESPONSE_CODES.error, data={NAMES.ERROR: str(e)})
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
 async def getAdApprovalModeEnum(request):
     try:
+        cached = await cache.aget("cache:enum:ad_approval_mode")
+        if cached: return ServerResponse(**cached)
         final_response = await ADS_CONTROLLER.GetEnumJson(AdApprovalMode)
-        return ServerResponse(
-            response=final_response.response,
-            code=final_response.code,
-            message=final_response.message,
-            data=final_response.data
-        )
+        await cache.aset("cache:enum:ad_approval_mode", {'response': final_response.response, 'code': final_response.code, 'message': final_response.message, 'data': final_response.data}, timeout=ENUM_TTL)
+        return ServerResponse(response=final_response.response, code=final_response.code, message=final_response.message, data=final_response.data)
     except Exception as e:
-        pass
-        return ServerResponse(
-            response=RESPONSE_MESSAGES.error,
-            message='Error fetching AdApprovalMode enum',
-            code=RESPONSE_CODES.error,
-            data={NAMES.ERROR: str(e)}
-        )
+        return ServerResponse(response=RESPONSE_MESSAGES.error, message='Error fetching AdApprovalMode enum', code=RESPONSE_CODES.error, data={NAMES.ERROR: str(e)})
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
 async def getAdAssetTypeEnum(request):
     try:
+        cached = await cache.aget("cache:enum:ad_asset_type")
+        if cached: return ServerResponse(**cached)
         final_response = await ADS_CONTROLLER.GetEnumJson(AdAssetType)
-        return ServerResponse(
-            response=final_response.response,
-            code=final_response.code,
-            message=final_response.message,
-            data=final_response.data
-        )
+        await cache.aset("cache:enum:ad_asset_type", {'response': final_response.response, 'code': final_response.code, 'message': final_response.message, 'data': final_response.data}, timeout=ENUM_TTL)
+        return ServerResponse(response=final_response.response, code=final_response.code, message=final_response.message, data=final_response.data)
     except Exception as e:
-        pass
-        return ServerResponse(
-            response=RESPONSE_MESSAGES.error,
-            message='Error fetching AdAssetType enum',
-            code=RESPONSE_CODES.error,
-            data={NAMES.ERROR: str(e)}
-        )
+        return ServerResponse(response=RESPONSE_MESSAGES.error, message='Error fetching AdAssetType enum', code=RESPONSE_CODES.error, data={NAMES.ERROR: str(e)})
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
 async def getAdPaymentStatusEnum(request):
     try:
+        cached = await cache.aget("cache:enum:ad_payment_status")
+        if cached: return ServerResponse(**cached)
         final_response = await ADS_CONTROLLER.GetEnumJson(AdPaymentStatus)
-        return ServerResponse(
-            response=final_response.response,
-            code=final_response.code,
-            message=final_response.message,
-            data=final_response.data
-        )
+        await cache.aset("cache:enum:ad_payment_status", {'response': final_response.response, 'code': final_response.code, 'message': final_response.message, 'data': final_response.data}, timeout=ENUM_TTL)
+        return ServerResponse(response=final_response.response, code=final_response.code, message=final_response.message, data=final_response.data)
     except Exception as e:
-        pass
-        return ServerResponse(
-            response=RESPONSE_MESSAGES.error,
-            message='Error fetching AdPaymentStatus enum',
-            code=RESPONSE_CODES.error,
-            data={NAMES.ERROR: str(e)}
-        )
+        return ServerResponse(response=RESPONSE_MESSAGES.error, message='Error fetching AdPaymentStatus enum', code=RESPONSE_CODES.error, data={NAMES.ERROR: str(e)})
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
 async def getAdEventTypeEnum(request):
     try:
+        cached = await cache.aget("cache:enum:ad_event_type")
+        if cached: return ServerResponse(**cached)
         final_response = await ADS_CONTROLLER.GetEnumJson(AdEventType)
-        return ServerResponse(
-            response=final_response.response,
-            code=final_response.code,
-            message=final_response.message,
-            data=final_response.data
-        )
+        await cache.aset("cache:enum:ad_event_type", {'response': final_response.response, 'code': final_response.code, 'message': final_response.message, 'data': final_response.data}, timeout=ENUM_TTL)
+        return ServerResponse(response=final_response.response, code=final_response.code, message=final_response.message, data=final_response.data)
     except Exception as e:
-        pass
-        return ServerResponse(
-            response=RESPONSE_MESSAGES.error,
-            message='Error fetching AdEventType enum',
-            code=RESPONSE_CODES.error,
-            data={NAMES.ERROR: str(e)}
-        )
+        return ServerResponse(response=RESPONSE_MESSAGES.error, message='Error fetching AdEventType enum', code=RESPONSE_CODES.error, data={NAMES.ERROR: str(e)})
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
 async def getAdPlacementEnum(request):
     try:
+        cached = await cache.aget("cache:enum:ad_placement")
+        if cached: return ServerResponse(**cached)
         final_response = await ADS_CONTROLLER.GetPlacementList()
-        return ServerResponse(
-            response=final_response.response,
-            code=final_response.code,
-            message=final_response.message,
-            data=final_response.data
-        )
+        await cache.aset("cache:enum:ad_placement", {'response': final_response.response, 'code': final_response.code, 'message': final_response.message, 'data': final_response.data}, timeout=ENUM_TTL)
+        return ServerResponse(response=final_response.response, code=final_response.code, message=final_response.message, data=final_response.data)
     except Exception as e:
-        pass
-        return ServerResponse(
-            response=RESPONSE_MESSAGES.error,
-            message='Error fetching AdPlacement enum',
-            code=RESPONSE_CODES.error,
-            data={NAMES.ERROR: str(e)}
-        )
+        return ServerResponse(response=RESPONSE_MESSAGES.error, message='Error fetching AdPlacement enum', code=RESPONSE_CODES.error, data={NAMES.ERROR: str(e)})
 
 # ---------------- AD Persona ----------------
 

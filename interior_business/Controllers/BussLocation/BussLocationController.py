@@ -7,6 +7,8 @@ from app_ib.Utils.Names import NAMES
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.models import Location, Business,Country,State
 from interior_business.Controllers.BussLocation.Tasks.BusinessLocationTasks import BUSS_LOC_TASK
+from django.core.cache import cache
+
 
 
 class BUSS_LOCATION_CONTROLLER:
@@ -73,6 +75,15 @@ class BUSS_LOCATION_CONTROLLER:
     @classmethod
     async def GetBuisnessLocByBusinessID(self,business):
         try:
+            cache_key = f"business_location_{business.id}"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.business_loc_fetch_success,
+                    code=RESPONSE_CODES.success,
+                    data=cached_data)
+
             business_loc_ins= None
 
             # Check if business already exist
@@ -84,6 +95,7 @@ class BUSS_LOCATION_CONTROLLER:
                 update_resp = await BUSS_LOC_TASK.GetBusinessLocTask(
                     business_loc_ins=business_loc_ins)
                 if update_resp:
+                    cache.set(cache_key, update_resp, 3600)  # Cache for 1 hour
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.success,
                         message=RESPONSE_MESSAGES.business_loc_fetch_success,
@@ -106,14 +118,25 @@ class BUSS_LOCATION_CONTROLLER:
                     NAMES.ERROR: str(e)
                 })
 
+
     @classmethod
     async def GetCountryList(self):
         try:
+            cache_key = "all_countries_list"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.country_list_fetch_success,
+                    code=RESPONSE_CODES.success,
+                    data=cached_data)
+
             countrys = await sync_to_async(Country.objects.all)()
             countryListData = []
             for country in countrys:
                 countryListData.append(await BUSS_LOC_TASK.GetCountryDataTask(country=country))
             if countryListData:
+                cache.set(cache_key, countryListData, 86400)  # Cache for 24 hours
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
                     message=RESPONSE_MESSAGES.country_list_fetch_success,
@@ -135,14 +158,25 @@ class BUSS_LOCATION_CONTROLLER:
                 data={
                     NAMES.ERROR: str(e)
                 })
+
     @classmethod
     async def GetStateListByCountry(self,countryId):
         try:
+            cache_key = f"states_list_{countryId}"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.country_list_fetch_success,
+                    code=RESPONSE_CODES.success,
+                    data=cached_data)
+
             states = await sync_to_async(State.objects.filter(country__id=countryId).all)()
             stateListData = []
             for state in states:
                 stateListData.append(await BUSS_LOC_TASK.GetStateDataTask(state=state))
             if stateListData:
+                cache.set(cache_key, stateListData, 86400)  # Cache for 24 hours
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
                     message=RESPONSE_MESSAGES.country_list_fetch_success,

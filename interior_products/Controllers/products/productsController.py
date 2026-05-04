@@ -1,4 +1,7 @@
 from asgiref.sync import sync_to_async
+from django.core.cache import cache
+import hashlib
+
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.LocalResponse import LocalResponse
@@ -16,6 +19,16 @@ class PRODUCTS_CONTROLLER:
     @classmethod
     async def getProduct(self,productId:int)->LocalResponse:
         try:
+            cache_key = f"product_detail_{productId}"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.product_fetch_success,
+                    code=RESPONSE_CODES.success,
+                    data=cached_data
+                )
+
             product = await sync_to_async(Product.objects.get)(id=productId)
             if not product:
                 return LocalResponse(
@@ -33,12 +46,14 @@ class PRODUCTS_CONTROLLER:
                     data={'error':RESPONSE_MESSAGES.product_fetch_error}
                 )
             
+            cache.set(cache_key, productData, 3600)  # Cache for 1 hour
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.product_fetch_success,
                 code=RESPONSE_CODES.success,
                 data=productData
             )
+
         except Exception as e:
             pass
             return LocalResponse(
@@ -51,6 +66,17 @@ class PRODUCTS_CONTROLLER:
     @classmethod
     async def getAllProduct(self,page,size,filterType=None,id=None,state=None,query=None):
         try:
+            params = f"{page}_{size}_{filterType}_{id}_{state}_{query}"
+            cache_key = f"all_products_pagi_{hashlib.md5(params.encode()).hexdigest()}"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.product_fetch_success,
+                    code=RESPONSE_CODES.success,
+                    data=cached_data
+                )
+
             productData = []
             related_qs = []
             filterQuery=Q()
@@ -98,12 +124,14 @@ class PRODUCTS_CONTROLLER:
                     data={'error':RESPONSE_MESSAGES.product_fetch_error}
                 )
             
+            cache.set(cache_key, paginated['pagination'], 3600)  # Cache for 1 hour
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.product_fetch_success,
                 code=RESPONSE_CODES.success,
                 data=paginated['pagination']
             )
+
         except Exception as e:
             pass
             return LocalResponse(
@@ -116,6 +144,16 @@ class PRODUCTS_CONTROLLER:
     @classmethod
     async def getProductsForBusiness(self,business:Business)->LocalResponse:
         try:
+            cache_key = f"products_business_{business.id}"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.products_fetch_success,
+                    code=RESPONSE_CODES.success,
+                    data=cached_data
+                )
+
             products = await sync_to_async(
             lambda: business.products.all().order_by('index')
         )()
@@ -125,12 +163,15 @@ class PRODUCTS_CONTROLLER:
                 productData = await PRODUCTS_TASKS.getProduct(product)
                 if productData:
                     productsData.append(productData)
+            
+            cache.set(cache_key, productsData, 3600)  # Cache for 1 hour
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.products_fetch_success,
                 code=RESPONSE_CODES.success,
                 data=productsData
             )
+
         except Exception as e:
             pass
             return LocalResponse(
@@ -238,6 +279,16 @@ class PRODUCTS_CONTROLLER:
     @classmethod
     async def GetRelatedProducts(cls, productId: int, page: int = 1, size: int = 10):
         try:
+            cache_key = f"related_products_{productId}_{page}_{size}"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message="Related products fetched successfully",
+                    code=RESPONSE_CODES.success,
+                    data=cached_data
+                )
+
             product = Product.objects.get(id=productId)
             tags = [tag.strip().lower() for tag in product.productTags.split(",")]
             related_qs = Product.objects.filter(
@@ -255,12 +306,14 @@ class PRODUCTS_CONTROLLER:
 
             paginated['pagination']['data'] = productData
 
+            cache.set(cache_key, paginated["pagination"], 3600)  # Cache for 1 hour
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
-                message="Related catelogues fetched successfully",
+                message="Related products fetched successfully",
                 code=RESPONSE_CODES.success,
                 data=paginated["pagination"]
             )
+
         except Exception as e:
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
@@ -272,13 +325,25 @@ class PRODUCTS_CONTROLLER:
     @classmethod
     async def GetProductCategories(cls):
         try:
+            cache_key = "product_categories_all"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message="Categories fetched successfully",
+                    code=RESPONSE_CODES.success,
+                    data=cached_data
+                )
+
             categories = await PRODUCTS_TASKS.getProductCategoriesTask()
+            cache.set(cache_key, categories, 86400)  # Cache for 24 hours
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message="Categories fetched successfully",
                 code=RESPONSE_CODES.success,
                 data=categories
             )
+
         except Exception as e:
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
@@ -290,14 +355,25 @@ class PRODUCTS_CONTROLLER:
     @classmethod
     async def GetProductSubCategories(cls):
         try:
+            cache_key = "product_sub_categories_all"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message="Sub Categories fetched successfully",
+                    code=RESPONSE_CODES.success,
+                    data=cached_data
+                )
 
             categories = await PRODUCTS_TASKS.getProductSubCategoriesTask()
+            cache.set(cache_key, categories, 86400)  # Cache for 24 hours
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message="Sub Categories fetched successfully",
                 code=RESPONSE_CODES.success,
                 data=categories
             )
+
         except Exception as e:
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
@@ -310,6 +386,16 @@ class PRODUCTS_CONTROLLER:
     @classmethod
     async def GetProductTab(cls):
         try:
+            cache_key = "product_tab_data"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.product_tab_success,
+                    code=RESPONSE_CODES.success,
+                    data=cached_data
+                )
+
             categorys = ProductCategory.objects.all()
             tabData = []
             for category in categorys:
@@ -325,12 +411,15 @@ class PRODUCTS_CONTROLLER:
                     if subCategoryData:
                         subCategoryData['type']='subCategory'
                         tabData.append(subCategoryData)
+            
+            cache.set(cache_key, tabData, 86400)  # Cache for 24 hours
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.product_tab_success,
                 code=RESPONSE_CODES.success,
                 data=tabData
                 )
+
         except Exception as e:
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,

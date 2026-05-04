@@ -13,15 +13,27 @@ import asyncio
 from django.db.models import Count
 from django.db.models import Q
 from interior_notification.signals import businessSignupSignal
+from django.core.cache import cache
+
 
 class BUSS_CONTROLLER:
 
     @classmethod
     async def GetBusinessHeader(self,businessId):
         try:
+            cache_key = f"business_header_{businessId}"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.business_header_fetch_success,
+                    code=RESPONSE_CODES.success,
+                    data=cached_data)
+
             business = await sync_to_async(Business.objects.get)(id=businessId)
             headerData,status = await BUSS_TASK.GetBusinessHeaderTask(business)
             if status:
+                cache.set(cache_key, headerData, 3600)  # Cache for 1 hour
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
                     message=RESPONSE_MESSAGES.business_header_fetch_success,
@@ -43,6 +55,7 @@ class BUSS_CONTROLLER:
                 data={
                     NAMES.ERROR: str(e)
                 })
+
 
     @classmethod
     async def GetBusinessContactInfo(self, business:Business):
@@ -188,12 +201,23 @@ class BUSS_CONTROLLER:
     @classmethod
     async def GetAllBusinessTypes(self):
         try:
+            cache_key = "all_business_types"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.business_type_fetch_success,
+                    code=RESPONSE_CODES.success,
+                    data=cached_data)
+
             type_instances = await sync_to_async(list)(BusinessType.objects.all())
             type_list = []
             for type_instance in type_instances:
                 type_data = await BUSS_TASK.GetBusinessTypeData(type_instance)
                 if type_data:
                     type_list.append(type_data)
+            
+            cache.set(cache_key, type_list, 86400)  # Cache for 24 hours
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.business_type_fetch_success,
@@ -207,10 +231,20 @@ class BUSS_CONTROLLER:
                 data={
                     NAMES.ERROR: str(e)
                 })
+
     
     @classmethod
     async def GetAllBusinessTab(self):
         try:
+            cache_key = "all_business_tabs"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.business_category_fetch_success,
+                    code=RESPONSE_CODES.success,
+                    data=cached_data)
+
             categoryInstances = await sync_to_async(list)(
                 BusinessCategory.objects.annotate(num_related=Count(NAMES.BUSINESS_CATEGORY_RELATION)).filter(num_related__gt=0)
             )
@@ -233,6 +267,7 @@ class BUSS_CONTROLLER:
                 key=lambda x: (x.get(NAMES.LABEL) or "").lower()
             )
 
+            cache.set(cache_key, category_list, 86400)  # Cache for 24 hours
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.business_category_fetch_success,
@@ -246,9 +281,19 @@ class BUSS_CONTROLLER:
                 data={
                     NAMES.ERROR: str(e)
                 })
+
     @classmethod
     async def GetAllBusinessCategories(self,trending=False,query=None):
         try:
+            cache_key = f"all_categories_{trending}_{query}"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.business_category_fetch_success,
+                    code=RESPONSE_CODES.success,
+                    data=cached_data)
+
             categoryInstances = []
 
             if trending:
@@ -263,6 +308,8 @@ class BUSS_CONTROLLER:
                 categoryData = await BUSS_TASK.GetBusinessTypeData(categoryInstance)
                 if categoryData:
                     category_list.append(categoryData)
+            
+            cache.set(cache_key, category_list, 86400)  # Cache for 24 hours
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.business_category_fetch_success,
@@ -277,9 +324,19 @@ class BUSS_CONTROLLER:
                 data={
                     NAMES.ERROR: str(e)
                 })
+
     @classmethod
     async def GetBusinessSegmentsByType(self,typeId,query=None):
         try:
+            cache_key = f"segments_by_type_{typeId}_{query}"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.business_category_fetch_success,
+                    code=RESPONSE_CODES.success,
+                    data=cached_data)
+
             isTypeExist = await sync_to_async(BusinessType.objects.filter(pk=typeId).exists)()
             if not isTypeExist:
                 return LocalResponse(
@@ -299,6 +356,8 @@ class BUSS_CONTROLLER:
                 segmentData = await BUSS_TASK.GetBusinessSegmentData(segmentInstance)
                 if segmentData:
                     segment_list.append(segmentData)
+            
+            cache.set(cache_key, segment_list, 86400)  # Cache for 24 hours
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.business_category_fetch_success,
@@ -312,10 +371,21 @@ class BUSS_CONTROLLER:
                 data={
                     NAMES.ERROR: str(e)
                 })
+
         
     @classmethod
     async def GetExploreSections(self):
         try:
+            cache_key = "explore_sections_all"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.explore_section_fetch_success,
+                    code=RESPONSE_CODES.success,
+                    data=cached_data
+                )
+
             categoryInstances = await sync_to_async(list)(BusinessCategory.objects.exclude(trending=False).order_by('index'))
             data = []
             for categoryInstance in categoryInstances:
@@ -333,6 +403,7 @@ class BUSS_CONTROLLER:
                     code=RESPONSE_CODES.error,
                     data={})
 
+            cache.set(cache_key, data, 86400)  # Cache for 24 hours
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.explore_section_fetch_success,
@@ -348,6 +419,7 @@ class BUSS_CONTROLLER:
                 data={
                     NAMES.ERROR: str(e)
                 })
+
     @classmethod
     async def UpdateBusinessBanner(self, business_ins, data):
         try:
@@ -375,8 +447,18 @@ class BUSS_CONTROLLER:
     @classmethod
     async def GetBusinessBanner(self, business_ins):
         try:
+            cache_key = f"business_banner_{business_ins.id}"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.business_banner_fetch_success,
+                    code=RESPONSE_CODES.success,
+                    data=cached_data)
+
             taskResult = await BUSS_TASK.GetBusinessBannerTask(business=business_ins)
             if taskResult is not None:
+                cache.set(cache_key, taskResult, 3600)  # Cache for 1 hour
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
                     message=RESPONSE_MESSAGES.business_banner_fetch_success,

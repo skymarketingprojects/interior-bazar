@@ -1,4 +1,6 @@
 from asgiref.sync import sync_to_async
+from django.core.cache import cache
+
 
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
@@ -20,23 +22,19 @@ class ROLE_CONTROLLER:
         responseFunc=LocalResponse
     )
     async def getRolesByUserController(user: CustomUser):
+        # Fetch all roles (uses global cache)
+        status, all_roles = await ROLE_CONTROLLER.getAllRoleController()
+        if not status:
+            return False, all_roles
 
-        roles = await sync_to_async(
-            lambda: list(
-                Role.objects.filter(users=user)
-                .prefetch_related(NAMES.ACCESS, NAMES.USERS)
-            )
-        )()
+        # Filter in-memory for roles assigned to this user
+        user_roles = [
+            role for role in all_roles 
+            if any(u[NAMES.ID] == user.id for u in role.get(NAMES.USERS, []))
+        ]
 
-        data = []
+        return True, user_roles
 
-        for role in roles:
-            status, role_data = await ROLE_TASKS.getRoleDetailTask(role)
-
-            if status:
-                data.append(role_data)
-
-        return True,data
 
     # ---------- GET ALL ----------
     @staticmethod
@@ -46,6 +44,10 @@ class ROLE_CONTROLLER:
         responseFunc=LocalResponse
     )
     async def getAllRoleController():
+        cache_key = "all_rbac_roles"
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return True, cached_data
 
         roles = await sync_to_async(
             lambda: list(
@@ -63,6 +65,7 @@ class ROLE_CONTROLLER:
                 data.append(role_data)
         
         print(f"DEBUG: Final data length: {len(data)}")
+        cache.set(cache_key, data, 86400)  # Cache for 24 hours
         return True,data
 
 
@@ -74,6 +77,10 @@ class ROLE_CONTROLLER:
         responseFunc=LocalResponse
     )
     async def getRoleDetailController(roleId: int):
+        cache_key = f"role_detail_{roleId}"
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return True, cached_data
 
         role = await sync_to_async(Role.objects.get)(id=roleId)
 
@@ -82,6 +89,7 @@ class ROLE_CONTROLLER:
         if not status:
             raise ValueError(role_data)
 
+        cache.set(cache_key, role_data, 86400)  # Cache for 24 hours
         return status,role_data
 
 
@@ -93,23 +101,19 @@ class ROLE_CONTROLLER:
         responseFunc=LocalResponse
     )
     async def getRolesByOwnerController(user: CustomUser):
+        # Fetch all roles (uses global cache)
+        status, all_roles = await ROLE_CONTROLLER.getAllRoleController()
+        if not status:
+            return False, all_roles
 
-        roles = await sync_to_async(
-            lambda: list(
-                Role.objects.filter(owner=user)
-                .prefetch_related(NAMES.ACCESS, NAMES.USERS)
-            )
-        )()
+        # Filter in-memory for roles owned by this user
+        owner_roles = [
+            role for role in all_roles 
+            if role.get(NAMES.OWNER) and role[NAMES.OWNER][NAMES.ID] == user.id
+        ]
 
-        data = []
+        return True, owner_roles
 
-        for role in roles:
-            status, role_data = await ROLE_TASKS.getRoleDetailTask(role)
-
-            if status:
-                data.append(role_data)
-
-        return True,data
 
 
     # ---------- CREATE ----------
@@ -125,6 +129,9 @@ class ROLE_CONTROLLER:
 
         if not status:
             raise ValueError(role_data)
+
+        cache.delete("all_rbac_roles")
+
 
         return status,role_data
 
@@ -146,6 +153,10 @@ class ROLE_CONTROLLER:
 
         if not status:
             raise ValueError(role_data)
+
+        cache.delete(f"role_detail_{roleId}")
+        cache.delete("all_rbac_roles")
+
 
         return status,role_data
 
@@ -169,6 +180,9 @@ class ROLE_CONTROLLER:
         if not status:
             raise ValueError(data)
 
+        cache.delete(f"role_detail_{roleId}")
+        cache.delete("all_rbac_roles")
+
         return status,data
 
 
@@ -191,6 +205,9 @@ class ROLE_CONTROLLER:
         if not status:
             raise ValueError(data)
 
+        cache.delete(f"role_detail_{roleId}")
+        cache.delete("all_rbac_roles")
+
         return status,data
 
 
@@ -212,5 +229,9 @@ class ROLE_CONTROLLER:
 
         if not status:
             raise ValueError(data)
+
+        cache.delete(f"role_detail_{roleId}")
+        cache.delete("all_rbac_roles")
+
 
         return status,data

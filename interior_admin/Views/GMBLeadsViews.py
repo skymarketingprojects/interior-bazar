@@ -9,6 +9,12 @@ from app_ib.decorators.ViewDecorator import exceptionHandler
 from interior_admin.Controllers.GMBLeads.GMBLeadsController import GMB_LEADS_CONTROLLER
 from interior_admin.Controllers.GMBLeads.Validators.GMBLeadsValidators import GMBLeadQueryFilters, GMBLeadUpdateSchema, GMBLeadCreateSchema
 from interior_admin.Validators.adminValidators import hasAccess
+from django.core.cache import cache
+from app_ib.Utils.LocalResponse import LocalResponse
+from asgiref.sync import sync_to_async
+
+cache_get = sync_to_async(cache.get)
+cache_set = sync_to_async(cache.set)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -219,6 +225,28 @@ async def GetGMBLeadsKPIsView(request: Request):
     Returns unique values and counts for state, city, status, platform, and rating.
     """
     await hasAccess(request=request)
+
+    # Global cache for KPIs (TTL: 48 hours)
+    cache_key = "cache:leads:kpis"
+    cached_data = await cache_get(cache_key)
+
+    if cached_data:
+        return LocalResponse(
+            response=cached_data['response'],
+            code=cached_data['code'],
+            message=cached_data['message'],
+            data=cached_data['data']
+        )
+
     final_response = await GMB_LEADS_CONTROLLER.GetLeadsKPIs()
+
+    cache_data = {
+        'response': final_response.response,
+        'code': final_response.code,
+        'message': final_response.message,
+        'data': final_response.data
+    }
+    await cache_set(cache_key, cache_data, timeout=172800) # 48 hours TTL
+
     return final_response
 
