@@ -22,7 +22,7 @@ class CATELOG_CONTROLLER:
     async def GetCatelogForBusiness(self, business):
         try:
             cache_key = f"catalogues_business_{business.id}"
-            cached_data = cache.get(cache_key)
+            cached_data = await cache.aget(cache_key)
             if cached_data:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
@@ -38,7 +38,7 @@ class CATELOG_CONTROLLER:
                 if data:
                     catelogData.append(data)
             
-            cache.set(cache_key, catelogData, 3600)  # Cache for 1 hour
+            await cache.aset(cache_key, catelogData, 3600)  # Cache for 1 hour (CACHE_MEDIUM)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.catelog_fetch_success,
@@ -59,7 +59,7 @@ class CATELOG_CONTROLLER:
     async def GetCatelog(self, catelogId):
         try:
             cache_key = f"catalogue_detail_{catelogId}"
-            cached_data = cache.get(cache_key)
+            cached_data = await cache.aget(cache_key)
             if cached_data:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
@@ -70,7 +70,7 @@ class CATELOG_CONTROLLER:
 
             catelog = Catelogue.objects.get(pk=catelogId)
             catelogData = await CATELOG_TASKS.getCatelog(catelog)
-            cache.set(cache_key, catelogData, 3600)  # Cache for 1 hour
+            await cache.aset(cache_key, catelogData, 3600)  # Cache for 1 hour (CACHE_MEDIUM)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.catelog_fetch_success,
@@ -94,7 +94,7 @@ class CATELOG_CONTROLLER:
         try:
             params = f"{page}_{size}_{filterType}_{id}_{query}_{state}"
             cache_key = f"all_catalogues_pagi_{hashlib.md5(params.encode()).hexdigest()}"
-            cached_data = cache.get(cache_key)
+            cached_data = await cache.aget(cache_key)
             if cached_data:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
@@ -139,7 +139,7 @@ class CATELOG_CONTROLLER:
 
             paginated['pagination']['data'] = catelogData
             
-            cache.set(cache_key, paginated['pagination'], 3600)  # Cache for 1 hour
+            await cache.aset(cache_key, paginated['pagination'], 900)  # Cache for 15 min (CACHE_SHORT)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.catelog_fetch_success,
@@ -167,6 +167,11 @@ class CATELOG_CONTROLLER:
                     code=RESPONSE_CODES.error,
                     data={}
                     )
+            
+            # Invalidation
+            await cache.adelete(f"catalogues_business_{business.id}")
+            await cache.adelete("catalogue_tab_data")
+
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.catelog_create_success,
@@ -203,6 +208,12 @@ class CATELOG_CONTROLLER:
                     code=RESPONSE_CODES.error,
                     data={}
                     )
+            
+            # Invalidation
+            await cache.adelete(f"catalogues_business_{business.id}")
+            await cache.adelete(f"catalogue_detail_{catelogId}")
+            await cache.adelete("catalogue_tab_data")
+
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.catelog_update_success,
@@ -238,6 +249,12 @@ class CATELOG_CONTROLLER:
                     code=RESPONSE_CODES.error,
                     data={}
                     )
+            
+            # Invalidation
+            await cache.adelete(f"catalogues_business_{business.id}")
+            await cache.adelete(f"catalogue_detail_{catelogId}")
+            await cache.adelete("catalogue_tab_data")
+
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.catelog_delete_success,
@@ -258,7 +275,7 @@ class CATELOG_CONTROLLER:
     async def GetRelatedCatelogs(cls, catelogId: int, page: int = 1, size: int = 10):
         try:
             cache_key = f"related_catalogues_{catelogId}_{page}_{size}"
-            cached_data = cache.get(cache_key)
+            cached_data = await cache.aget(cache_key)
             if cached_data:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
@@ -283,7 +300,7 @@ class CATELOG_CONTROLLER:
 
             paginated['pagination']['data'] = catelogData
             
-            cache.set(cache_key, paginated["pagination"], 3600)  # Cache for 1 hour
+            await cache.aset(cache_key, paginated["pagination"], 3600)  # Cache for 1 hour (CACHE_MEDIUM)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message="Related catelogues fetched successfully",
@@ -303,7 +320,7 @@ class CATELOG_CONTROLLER:
     async def GetCatelougeTab(cls):
         try:
             cache_key = "catalogue_tab_data"
-            cached_data = cache.get(cache_key)
+            cached_data = await cache.aget(cache_key)
             if cached_data:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
@@ -332,7 +349,7 @@ class CATELOG_CONTROLLER:
                         subCategoryData['type']='subCategory'
                         tabData.append(subCategoryData)
 
-            cache.set(cache_key, tabData, 86400)  # Cache for 24 hours
+            await cache.aset(cache_key, tabData, 86400)  # Cache for 24 hours (CACHE_LONG)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.catelog_table_success,

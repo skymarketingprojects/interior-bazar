@@ -255,32 +255,19 @@ class CatelogView(AsyncAPIView):
         try:
             catelogResponse = None
             business = None
-            cache_key = None
 
             if catelogueId == None:
                 business = request.user.user_business
-                cache_key = f"cache:catalogue:business:owner:{business.id}"
-            else:
-                cache_key = f"cache:catalogue:{catelogueId}"
-
-            cached_data = await cache_get(cache_key)
-            if cached_data:
-                return ServerResponse(**cached_data)
-
-            if catelogueId == None:
                 catelogResponse = await CATELOG_CONTROLLER.GetCatelogForBusiness(business)
             else:
                 catelogResponse = await CATELOG_CONTROLLER.GetCatelog(catelogueId)
             
-            resp_dict = {
-                'response': catelogResponse.response,
-                'message': catelogResponse.message,
-                'code': catelogResponse.code,
-                'data': catelogResponse.data
-            }
-            await cache_set(cache_key, resp_dict, timeout=PRODUCT_TTL)
-
-            return ServerResponse(**resp_dict)
+            return ServerResponse(
+                response=catelogResponse.response,
+                message=catelogResponse.message,
+                code=catelogResponse.code,
+                data=catelogResponse.data
+            )
         except Exception as e:
             pass
             return ServerResponse(
@@ -365,22 +352,15 @@ class CatelogView(AsyncAPIView):
 async def GetBusinessCatelogs(request, businessId: int)->ServerResponse:
     """Get all catalogs for a given business."""
     try:
-        cache_key = f"cache:catalogue:business:{businessId}"
-        cached_data = await cache_get(cache_key)
-        if cached_data:
-            return ServerResponse(**cached_data)
-
         business = Business.objects.get(id=businessId)
         catelogResponse = await CATELOG_CONTROLLER.GetCatelogForBusiness(business)
         
-        resp_dict = {
-            'response': catelogResponse.response,
-            'message': catelogResponse.message,
-            'code': catelogResponse.code,
-            'data': catelogResponse.data
-        }
-        await cache_set(cache_key, resp_dict, timeout=PRODUCT_TTL)
-        return ServerResponse(**resp_dict)
+        return ServerResponse(
+            response=catelogResponse.response,
+            message=catelogResponse.message,
+            code=catelogResponse.code,
+            data=catelogResponse.data
+        )
     except Exception as e:
         pass
         return ServerResponse(
@@ -454,21 +434,15 @@ async def GetRelatedCatelogs(request, catelogId: int)->ServerResponse:
     try:
         page = int(request.query_params.get('pageNo', 1))
         size = int(request.query_params.get('pageSize', 10))
-        cache_key = f"cache:catalogue:related:{catelogId}:p{page}:s{size}"
-        cached_data = await cache_get(cache_key)
-        if cached_data:
-            return ServerResponse(**cached_data)
 
         resp = await CATELOG_CONTROLLER.GetRelatedCatelogs(catelogId, page, size)
         
-        resp_dict = {
-            'response': resp.response,
-            'message': resp.message,
-            'code': resp.code,
-            'data': resp.data
-        }
-        await cache_set(cache_key, resp_dict, timeout=PRODUCT_TTL)
-        return ServerResponse(**resp_dict)
+        return ServerResponse(
+            response=resp.response,
+            message=resp.message,
+            code=resp.code,
+            data=resp.data
+        )
     except Exception as e:
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
@@ -544,21 +518,14 @@ async def GetAllCatelogsView(request):
         state = request.query_params.get('state',None)
         query = request.query_params.get('query',None)
         
-        cache_key = f"cache:catalogue:all:p{pageNo}:s{pageSize}:t{filterType}:id{filterId}:st{state}:q{query}"
-        cached_data = await cache_get(cache_key)
-        if cached_data:
-            return ServerResponse(**cached_data)
-
         catelogResponse = await CATELOG_CONTROLLER.GetAllCatelog(page=pageNo,size=pageSize,filterType=filterType,id=filterId,state=state,query=query)
         
-        resp_dict = {
-            'response': catelogResponse.response,
-            'message': catelogResponse.message,
-            'code': catelogResponse.code,
-            'data': catelogResponse.data
-        }
-        await cache_set(cache_key, resp_dict, timeout=PRODUCT_TTL)
-        return ServerResponse(**resp_dict)
+        return ServerResponse(
+            response=catelogResponse.response,
+            message=catelogResponse.message,
+            code=catelogResponse.code,
+            data=catelogResponse.data
+        )
     except Exception as e:
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
@@ -740,14 +707,12 @@ async def GetTabsView(request):
                 key=lambda x: (x.get(NAMES.LABEL) or "").lower()
             )
 
-        resp_dict = {
-            'response': resp.response,
-            'message': resp.message,
-            'code': resp.code,
-            'data': resp.data
-        }
-        await cache_set(cache_key, resp_dict, timeout=STATIC_TTL)
-        return ServerResponse(**resp_dict)
+        return ServerResponse(
+            response=resp.response,
+            message=resp.message,
+            code=resp.code,
+            data=resp.data
+        )
     except Exception as e:
         pass
         return ServerResponse(
