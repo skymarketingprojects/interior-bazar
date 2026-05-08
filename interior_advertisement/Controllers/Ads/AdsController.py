@@ -9,6 +9,8 @@ from app_ib.models import Business
 import asyncio
 from app_ib.Utils.Names import NAMES
 from django.db.models import Q
+from django.core.cache import cache
+import hashlib
 class ADS_CONTROLLER:
 
     # ---------------- GET CAMPAIGN DETAILS ----------------
@@ -77,6 +79,16 @@ class ADS_CONTROLLER:
     @classmethod
     async def GetAdCampaign(cls, AdCampaignId):
         try:
+            cache_key = f"ad_campaign_detail_{AdCampaignId}"
+            cached_data = await cache.aget(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message='Ad campaign details fetched successfully',
+                    code=RESPONSE_CODES.success,
+                    data=cached_data
+                )
+
             IsExist = await sync_to_async(AdCampaign.objects.filter(id=AdCampaignId).exists)()
             if not IsExist:
                 return LocalResponse(
@@ -112,6 +124,7 @@ class ADS_CONTROLLER:
             CampaignData[NAMES.AGGREGATES] = AggregatesData
             CampaignData[NAMES.PERSONAS] = PersonasData
 
+            await cache.aset(cache_key, CampaignData, 3600)  # Tier 2: 1 hour
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message='Ad campaign details fetched successfully',
@@ -131,12 +144,22 @@ class ADS_CONTROLLER:
     @classmethod
     async def GetActiveCampaigns(cls,placementId, category=None, segment=None,categoryType=None):
         try:
+            params = f"{placementId}_{category}_{segment}_{categoryType}"
+            cache_key = f"active_ads_{hashlib.md5(params.encode()).hexdigest()}"
+            cached_data = await cache.aget(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message='Active campaigns fetched successfully',
+                    code=RESPONSE_CODES.success,
+                    data=cached_data
+                )
+
             query = (Q(placement=placementId) & Q(status__code=NAMES.ACTIVE))
-            pass
             status,activeCampaigns = await ADS_TASKS.GetActiveAdsCampaignTask(query,category,segment,categoryType)
-            pass
 
             if status:
+                await cache.aset(cache_key, activeCampaigns, 300)  # Hot Cache: 5 minutes
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
                     message='Active campaigns fetched successfully',
@@ -161,21 +184,32 @@ class ADS_CONTROLLER:
     @classmethod
     async def GetAdCampaignsByBusiness(cls, business:Business):
         try:
+            cache_key = f"ad_campaigns_business_{business.id}"
+            cached_data = await cache.aget(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message='Ad campaigns fetched successfully',
+                    code=RESPONSE_CODES.success,
+                    data=cached_data
+                )
+
             campaigns = await sync_to_async(list)(AdCampaign.objects.filter(advertiser=business).order_by(f'-{NAMES.CREATED_AT}'))
 
             tasks = [ADS_TASKS.GetAdCampaignTask(campaign) for campaign in campaigns]
             results = await asyncio.gather(*tasks)
-            campaigns = []
+            campaigns_data = []
             for result in results:
                 IsSuccess, campaignData = result
                 if IsSuccess:
-                    campaigns.append(campaignData)
-                pass
+                    campaigns_data.append(campaignData)
+            
+            await cache.aset(cache_key, campaigns_data, 3600)  # Tier 2: 1 hour
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message='Ad campaigns fetched successfully',
                 code=RESPONSE_CODES.success,
-                data=campaigns
+                data=campaigns_data
             )
 
         except Exception as e:
@@ -193,6 +227,9 @@ class ADS_CONTROLLER:
             IsSuccess, AdCampaignIns = await ADS_TASKS.CreateAdCampaignTask(AdvertiserIns=AdvertiserIns, Data=Data)
 
             if IsSuccess:
+                # Invalidation: Purge business campaign list
+                await cache.adelete(f"ad_campaigns_business_{AdvertiserIns.id}")
+                
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
                     message=RESPONSE_MESSAGES.success,
@@ -233,6 +270,10 @@ class ADS_CONTROLLER:
             UpdateSuccess = await ADS_TASKS.UpdateAdCampaignTask(AdCampaignIns=AdCampaignIns, Data=Data)
 
             if UpdateSuccess:
+                # Invalidation: Purge detail and business list caches
+                await cache.adelete(f"ad_campaign_detail_{AdCampaignId}")
+                await cache.adelete(f"ad_campaigns_business_{AdCampaignIns.advertiser.id}")
+                
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
                     message='Ad campaign updated successfully',
@@ -497,8 +538,19 @@ class ADS_CONTROLLER:
     @classmethod
     async def GetEnumJson(cls, ModelClass):
         try:
+            cache_key = f"ad_enums_{ModelClass.__name__}"
+            cached_data = await cache.aget(cache_key)
+            if cached_data:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message='Enums fetched successfully',
+                    code=RESPONSE_CODES.success,
+                    data=cached_data
+                )
+
             IsSuccess, EnumJson = await ADS_TASKS.GetEnumList(ModelClass)
             if IsSuccess:
+                await cache.aset(cache_key, EnumJson, 604800)  # Tier 3: 7 days
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
                     message='Enums fetched successfully',

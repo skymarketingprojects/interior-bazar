@@ -246,7 +246,15 @@ class ADMIN_PANEL_CONTROLLER:
         successMessage=RESPONSE_MESSAGES.daily_user_fetch_success
     )
     async def GetDailyUserData(cls):
+        cache_key = "admin_daily_user_data_v1"
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return cached_data
+
         result = await ANALYTICS_TASKS.GetDailyUsersTask()
+        
+        # Cache for 10 minutes
+        cache.set(cache_key, result, 600)
         return result
 
     # controller for total users , business, total query and today signups
@@ -530,6 +538,10 @@ class ADMIN_PANEL_CONTROLLER_V2:
         successMessage=RESPONSE_MESSAGES.daily_user_fetch_success
     )
     async def GetDailyUserData(cls):
+        cache_key = "admin_daily_user_data_v2"
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return cached_data
 
         user_qs = CustomUser.objects.all()
         if settings.ENV == APPMODE.PROD:
@@ -537,6 +549,9 @@ class ADMIN_PANEL_CONTROLLER_V2:
 
         model_map = {"users": user_qs}
         result = await ADMIN_ANALYTICS_TASKS_V2.GetGroupedChartData(model_map)
+        
+        # Cache for 10 minutes
+        cache.set(cache_key, result, 600)
 
         return result
 
@@ -599,8 +614,16 @@ class ADMIN_PANEL_CONTROLLER_V2:
         successMessage=RESPONSE_MESSAGES.lead_tile_fetch_success
     )
     async def GetLeadAnalyticsStats(cls):
+        cache_key = "admin_lead_analytics_stats_v2"
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return cached_data
+
         lead_qs = LeadQuery.objects.all()
         result = await ADMIN_ANALYTICS_TASKS_V2.GetLeadAnalyticsData(lead_qs)
+        
+        # Cache for 10 minutes
+        cache.set(cache_key, result, 600)
         return result
 
     @classmethod

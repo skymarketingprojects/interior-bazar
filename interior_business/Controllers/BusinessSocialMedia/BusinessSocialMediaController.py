@@ -5,6 +5,7 @@ from app_ib.models import BusinessSocialMedia, SocialMedia
 from interior_business.Controllers.BusinessSocialMedia.Tasks.BusinessSocialMediaTasks import BSM_TASK
 from asgiref.sync import sync_to_async
 from app_ib.models import Business
+from django.core.cache import cache
 class BSM_CONTROLLER:
     
     @classmethod
@@ -20,6 +21,11 @@ class BSM_CONTROLLER:
                 bsm = await BSM_TASK.UpdateBusinessSocialMedia(bsm_list, data)
             else:
                 bsm = await BSM_TASK.CreateBusinessSocialMedia(data,business)
+            
+            # Invalidation: Purge header and profile display caches
+            await cache.adelete(f"business_header_{business.id}")
+            await cache.adelete(f"business_profile_display_{business.id}")
+
             return LocalResponse(
                 code=RESPONSE_CODES.success,
                 response=RESPONSE_MESSAGES.success,
@@ -43,6 +49,10 @@ class BSM_CONTROLLER:
 
             updated_bsms = await BSM_TASK.UpdateBusinessSocialMedia(bsm_list, data)
 
+            # Invalidation: Purge header and profile display caches
+            await cache.adelete(f"business_header_{business.id}")
+            await cache.adelete(f"business_profile_display_{business.id}")
+
             return LocalResponse(
                 code=RESPONSE_CODES.success,
                 response=RESPONSE_MESSAGES.success,
@@ -63,6 +73,11 @@ class BSM_CONTROLLER:
     async def DeleteBusinessSocialMedia(cls, business):
         try:
             result = await BSM_TASK.DeleteBusinessSocialMedia(business)
+            
+            # Invalidation: Purge header and profile display caches
+            await cache.adelete(f"business_header_{business.id}")
+            await cache.adelete(f"business_profile_display_{business.id}")
+
             return LocalResponse(
                 code=RESPONSE_CODES.success,
                 response=RESPONSE_MESSAGES.success,

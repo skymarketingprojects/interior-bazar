@@ -20,7 +20,7 @@ class PRODUCTS_CONTROLLER:
     async def getProduct(self,productId:int)->LocalResponse:
         try:
             cache_key = f"product_detail_{productId}"
-            cached_data = cache.get(cache_key)
+            cached_data = await cache.aget(cache_key)
             if cached_data:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
@@ -46,7 +46,7 @@ class PRODUCTS_CONTROLLER:
                     data={'error':RESPONSE_MESSAGES.product_fetch_error}
                 )
             
-            cache.set(cache_key, productData, 3600)  # Cache for 1 hour
+            await cache.aset(cache_key, productData, 3600)  # Cache for 1 hour (CACHE_MEDIUM)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.product_fetch_success,
@@ -66,16 +66,21 @@ class PRODUCTS_CONTROLLER:
     @classmethod
     async def getAllProduct(self,page,size,filterType=None,id=None,state=None,query=None):
         try:
-            params = f"{page}_{size}_{filterType}_{id}_{state}_{query}"
-            cache_key = f"all_products_pagi_{hashlib.md5(params.encode()).hexdigest()}"
-            cached_data = cache.get(cache_key)
-            if cached_data:
-                return LocalResponse(
-                    response=RESPONSE_MESSAGES.success,
-                    message=RESPONSE_MESSAGES.product_fetch_success,
-                    code=RESPONSE_CODES.success,
-                    data=cached_data
-                )
+            # Entropy Control [B026]: Disable caching for search queries or deep pages (>3)
+            is_cacheable = not query and int(page) <= 3
+            cache_key = None
+
+            if is_cacheable:
+                params = f"{page}_{size}_{filterType}_{id}_{state}"
+                cache_key = f"all_products_pagi_{hashlib.md5(params.encode()).hexdigest()}"
+                cached_data = await cache.aget(cache_key)
+                if cached_data:
+                    return LocalResponse(
+                        response=RESPONSE_MESSAGES.success,
+                        message=RESPONSE_MESSAGES.product_fetch_success,
+                        code=RESPONSE_CODES.success,
+                        data=cached_data
+                    )
 
             productData = []
             related_qs = []
@@ -97,7 +102,6 @@ class PRODUCTS_CONTROLLER:
                 related_qs = Product.objects.filter(filterQuery).order_by('index')
             else:
                 related_qs = Product.objects.all().order_by('index')
-            pass
 
             if not related_qs.count():
                 return LocalResponse(
@@ -124,7 +128,9 @@ class PRODUCTS_CONTROLLER:
                     data={'error':RESPONSE_MESSAGES.product_fetch_error}
                 )
             
-            cache.set(cache_key, paginated['pagination'], 3600)  # Cache for 1 hour
+            if is_cacheable:
+                await cache.aset(cache_key, paginated['pagination'], 900)  # Cache for 15 min (CACHE_SHORT)
+
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.product_fetch_success,
@@ -145,7 +151,7 @@ class PRODUCTS_CONTROLLER:
     async def getProductsForBusiness(self,business:Business)->LocalResponse:
         try:
             cache_key = f"products_business_{business.id}"
-            cached_data = cache.get(cache_key)
+            cached_data = await cache.aget(cache_key)
             if cached_data:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
@@ -157,14 +163,13 @@ class PRODUCTS_CONTROLLER:
             products = await sync_to_async(
             lambda: business.products.all().order_by('index')
         )()
-            pass
             productsData = []
             for product in products:
                 productData = await PRODUCTS_TASKS.getProduct(product)
                 if productData:
                     productsData.append(productData)
             
-            cache.set(cache_key, productsData, 3600)  # Cache for 1 hour
+            await cache.aset(cache_key, productsData, 3600)  # Cache for 1 hour (CACHE_MEDIUM)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.products_fetch_success,
@@ -192,6 +197,11 @@ class PRODUCTS_CONTROLLER:
                     code=RESPONSE_CODES.error,
                     data={'error':RESPONSE_MESSAGES.product_create_error}
                 )
+            
+            # Invalidation [B028]
+            await cache.adelete(f"products_business_{business.id}")
+            await cache.adelete("product_tab_data")
+
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.product_create_success,
@@ -226,6 +236,12 @@ class PRODUCTS_CONTROLLER:
                     code=RESPONSE_CODES.error,
                     data={'error':RESPONSE_MESSAGES.product_update_error}
                 )
+            
+            # Invalidation [B028]
+            await cache.adelete(f"products_business_{business.id}")
+            await cache.adelete(f"product_detail_{productId}")
+            await cache.adelete("product_tab_data")
+
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.product_update_success,
@@ -261,6 +277,12 @@ class PRODUCTS_CONTROLLER:
                     code=RESPONSE_CODES.error,
                     data={'error':RESPONSE_MESSAGES.product_delete_error}
                 )
+            
+            # Invalidation [B028]
+            await cache.adelete(f"products_business_{business.id}")
+            await cache.adelete(f"product_detail_{productId}")
+            await cache.adelete("product_tab_data")
+
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.product_delete_success,
@@ -280,7 +302,7 @@ class PRODUCTS_CONTROLLER:
     async def GetRelatedProducts(cls, productId: int, page: int = 1, size: int = 10):
         try:
             cache_key = f"related_products_{productId}_{page}_{size}"
-            cached_data = cache.get(cache_key)
+            cached_data = await cache.aget(cache_key)
             if cached_data:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
@@ -306,7 +328,7 @@ class PRODUCTS_CONTROLLER:
 
             paginated['pagination']['data'] = productData
 
-            cache.set(cache_key, paginated["pagination"], 3600)  # Cache for 1 hour
+            await cache.aset(cache_key, paginated["pagination"], 3600)  # Cache for 1 hour (CACHE_MEDIUM)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message="Related products fetched successfully",
@@ -326,7 +348,7 @@ class PRODUCTS_CONTROLLER:
     async def GetProductCategories(cls):
         try:
             cache_key = "product_categories_all"
-            cached_data = cache.get(cache_key)
+            cached_data = await cache.aget(cache_key)
             if cached_data:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
@@ -336,7 +358,7 @@ class PRODUCTS_CONTROLLER:
                 )
 
             categories = await PRODUCTS_TASKS.getProductCategoriesTask()
-            cache.set(cache_key, categories, 86400)  # Cache for 24 hours
+            await cache.aset(cache_key, categories, 86400)  # Cache for 24 hours (CACHE_LONG)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message="Categories fetched successfully",
@@ -356,7 +378,7 @@ class PRODUCTS_CONTROLLER:
     async def GetProductSubCategories(cls):
         try:
             cache_key = "product_sub_categories_all"
-            cached_data = cache.get(cache_key)
+            cached_data = await cache.aget(cache_key)
             if cached_data:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
@@ -366,7 +388,7 @@ class PRODUCTS_CONTROLLER:
                 )
 
             categories = await PRODUCTS_TASKS.getProductSubCategoriesTask()
-            cache.set(cache_key, categories, 86400)  # Cache for 24 hours
+            await cache.aset(cache_key, categories, 86400)  # Cache for 24 hours (CACHE_LONG)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message="Sub Categories fetched successfully",
@@ -387,7 +409,7 @@ class PRODUCTS_CONTROLLER:
     async def GetProductTab(cls):
         try:
             cache_key = "product_tab_data"
-            cached_data = cache.get(cache_key)
+            cached_data = await cache.aget(cache_key)
             if cached_data:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
@@ -412,7 +434,7 @@ class PRODUCTS_CONTROLLER:
                         subCategoryData['type']='subCategory'
                         tabData.append(subCategoryData)
             
-            cache.set(cache_key, tabData, 86400)  # Cache for 24 hours
+            await cache.aset(cache_key, tabData, 86400)  # Cache for 24 hours (CACHE_LONG)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.product_tab_success,

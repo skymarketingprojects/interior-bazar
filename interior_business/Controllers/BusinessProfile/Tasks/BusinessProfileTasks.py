@@ -15,10 +15,11 @@ class BUSS_PROF_TASK:
     @classmethod
     async def GetBusinessProfileTask(cls, business_id: int):
         try:
-            # 1️⃣ Fetch Business + User + UserProfile in one optimized query
+            # 1️⃣ Fetch Business + User + UserProfile + BusinessProfile in one optimized query
             business = await sync_to_async(
                 lambda: Business.objects.select_related(
-                    'user__user_profile'
+                    'user__user_profile',
+                    'business_profile'
                 ).only(
                     NAMES.ID,
                     NAMES.BUSINESS_NAME,
@@ -27,6 +28,8 @@ class BUSS_PROF_TASK:
                     'user__user_profile__phone',
                     'user__user_profile__countryCode',
                     'user__user_profile__profileImageUrl',
+                    'business_profile__primaryImageUrl',
+                    'business_profile__secondaryImagesUrl',
                 ).get(id=business_id)
             )()
             # 2️⃣ Fetch Social Media (with related social media names)
@@ -40,6 +43,13 @@ class BUSS_PROF_TASK:
 
             # 3️⃣ Build Response
             profile: UserProfile = business.user.user_profile
+            business_profile: BusinessProfile = getattr(business, 'business_profile', None)
+            
+            # Media Gallery: Split secondary images if they exist
+            secondary_images = []
+            if business_profile and business_profile.secondaryImagesUrl:
+                secondary_images = [img.strip() for img in business_profile.secondaryImagesUrl.split(',') if img.strip()]
+
             response_data = {
                 NAMES.BANNER_IMAGE_URL: business.bannerImageUrl or NAMES.EMPTY,
                 NAMES.PROFILE_IMAGE_URL: (
@@ -59,6 +69,8 @@ class BUSS_PROF_TASK:
                 ),
                 NAMES.BUSINESS_NAME: business.businessName,
                 NAMES.SOCIAL_MEDIA:{f"{sm['socialMedia__name']}Link": sm[NAMES.LINK] for sm in social_media_data},
+                NAMES.PRIMARY_IMAGE_URL: business_profile.primaryImageUrl if business_profile else NAMES.EMPTY,
+                NAMES.SECONDARY_IMAGES_URL: secondary_images,
             }
 
             return response_data
@@ -103,9 +115,16 @@ class BUSS_PROF_TASK:
     @classmethod
     async def GetBusinessProfTask(self,business_prof_ins:BusinessProfile):
         try:
+            # Media Gallery: Split secondary images if they exist
+            secondary_images = []
+            if business_prof_ins.secondaryImagesUrl:
+                secondary_images = [img.strip() for img in business_prof_ins.secondaryImagesUrl.split(',') if img.strip()]
+
             business_prof_data={
                 NAMES.ABOUT:business_prof_ins.about,
                 NAMES.YOUTUBE_LINK:business_prof_ins.youtubeLink,
+                NAMES.PRIMARY_IMAGE_URL: business_prof_ins.primaryImageUrl or NAMES.EMPTY,
+                NAMES.SECONDARY_IMAGES_URL: secondary_images,
                 NAMES.ID:business_prof_ins.pk,
             }
             return business_prof_data

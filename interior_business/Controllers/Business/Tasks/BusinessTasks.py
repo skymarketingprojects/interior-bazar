@@ -369,6 +369,14 @@ class BUSS_TASK:
             # Profile
             if business_prof_ins:
                 data[NAMES.YOUTUBE_LINK] = business_prof_ins.youtubeLink
+                
+                # Media Gallery: Split secondary images if they exist
+                secondary_images = []
+                if business_prof_ins.secondaryImagesUrl:
+                    secondary_images = [img.strip() for img in business_prof_ins.secondaryImagesUrl.split(',') if img.strip()]
+                
+                data[NAMES.PRIMARY_IMAGE_URL] = business_prof_ins.primaryImageUrl or NAMES.EMPTY
+                data[NAMES.SECONDARY_IMAGES_URL] = secondary_images
 
             return data
 

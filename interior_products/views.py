@@ -39,35 +39,23 @@ class ProductView(AsyncAPIView):
 
 
     async def get(self, request: HttpRequest,productId: int = None)->ServerResponse:
+        """Get all products for a given business."""
         try:
+            productResponse = None
             business = None
-            productsResponse = None
-            cache_key = None
-            
+
             if productId == None:
                 business = request.user.user_business
-                cache_key = f"cache:product:business:owner:{business.id}"
+                productResponse = await PRODUCTS_CONTROLLER.getProductsForBusiness(business)
             else:
-                cache_key = f"cache:product:{productId}"
+                productResponse = await PRODUCTS_CONTROLLER.getProduct(productId)
             
-            cached_data = await cache_get(cache_key)
-            if cached_data:
-                return ServerResponse(**cached_data)
-
-            if productId == None:
-                productsResponse = await PRODUCTS_CONTROLLER.getProductsForBusiness(business)
-            else:
-                productsResponse = await PRODUCTS_CONTROLLER.getProduct(productId)
-            
-            resp_dict = {
-                'response': productsResponse.response,
-                'message': productsResponse.message,
-                'code': productsResponse.code,
-                'data': productsResponse.data
-            }
-            await cache_set(cache_key, resp_dict, timeout=PRODUCT_TTL)
-
-            return ServerResponse(**resp_dict)
+            return ServerResponse(
+                response=productResponse.response,
+                message=productResponse.message,
+                code=productResponse.code,
+                data=productResponse.data
+            )
         except Exception as e:
             pass
             return ServerResponse(
@@ -144,36 +132,24 @@ class ServiceView(AsyncAPIView):
         return super().get_permissions()
 
 
-    async def get(self, request: HttpRequest,serviceId: int = None)->ServerResponse:
+    async def get(self, request, serviceId: int = None)->ServerResponse:
+        """Get all services for a given business."""
         try:
+            serviceResponse = None
             business = None
-            servicesResponse = None
-            cache_key = None
 
             if serviceId == None:
                 business = request.user.user_business
-                cache_key = f"cache:service:business:owner:{business.id}"
+                serviceResponse = await SERVICES_CONTROLLER.getServicesForBusiness(business)
             else:
-                cache_key = f"cache:service:{serviceId}"
+                serviceResponse = await SERVICES_CONTROLLER.getService(serviceId)
             
-            cached_data = await cache_get(cache_key)
-            if cached_data:
-                return ServerResponse(**cached_data)
-
-            if serviceId == None:
-                servicesResponse = await SERVICES_CONTROLLER.getServicesForBusiness(business)
-            else:
-                servicesResponse = await SERVICES_CONTROLLER.getService(serviceId)
-
-            resp_dict = {
-                'response': servicesResponse.response,
-                'message': servicesResponse.message,
-                'code': servicesResponse.code,
-                'data': servicesResponse.data
-            }
-            await cache_set(cache_key, resp_dict, timeout=PRODUCT_TTL)
-
-            return ServerResponse(**resp_dict)
+            return ServerResponse(
+                response=serviceResponse.response,
+                message=serviceResponse.message,
+                code=serviceResponse.code,
+                data=serviceResponse.data
+            )
         except Exception as e:
             pass
             return ServerResponse(
@@ -374,22 +350,15 @@ async def GetBusinessCatelogs(request, businessId: int)->ServerResponse:
 async def GetBusinessProducts(request, businessId: int)->ServerResponse:
     """Get all products for a given business."""
     try:
-        cache_key = f"cache:product:business:{businessId}"
-        cached_data = await cache_get(cache_key)
-        if cached_data:
-            return ServerResponse(**cached_data)
-
         business = Business.objects.get(id=businessId)
-        productsResponse = await PRODUCTS_CONTROLLER.getProductsForBusiness(business)
+        productResponse = await PRODUCTS_CONTROLLER.getProductsForBusiness(business)
         
-        resp_dict = {
-            'response': productsResponse.response,
-            'message': productsResponse.message,
-            'code': productsResponse.code,
-            'data': productsResponse.data
-        }
-        await cache_set(cache_key, resp_dict, timeout=PRODUCT_TTL)
-        return ServerResponse(**resp_dict)
+        return ServerResponse(
+            response=productResponse.response,
+            message=productResponse.message,
+            code=productResponse.code,
+            data=productResponse.data
+        )
     except Exception as e:
         pass
         return ServerResponse(
@@ -403,22 +372,15 @@ async def GetBusinessProducts(request, businessId: int)->ServerResponse:
 async def GetBusinessServices(request, businessId: int)->ServerResponse:
     """Get all products for a given business."""
     try:
-        cache_key = f"cache:service:business:{businessId}"
-        cached_data = await cache_get(cache_key)
-        if cached_data:
-            return ServerResponse(**cached_data)
-
         business = Business.objects.get(id=businessId)
-        servicesResponse = await SERVICES_CONTROLLER.getServicesForBusiness(business)
+        serviceResponse = await SERVICES_CONTROLLER.getServicesForBusiness(business)
         
-        resp_dict = {
-            'response': servicesResponse.response,
-            'message': servicesResponse.message,
-            'code': servicesResponse.code,
-            'data': servicesResponse.data
-        }
-        await cache_set(cache_key, resp_dict, timeout=PRODUCT_TTL)
-        return ServerResponse(**resp_dict)
+        return ServerResponse(
+            response=serviceResponse.response,
+            message=serviceResponse.message,
+            code=serviceResponse.code,
+            data=serviceResponse.data
+        )
     except Exception as e:
         pass
         return ServerResponse(
@@ -456,21 +418,15 @@ async def GetRelatedProducts(request, productId: int)->ServerResponse:
     try:
         page = int(request.query_params.get('pageNo', 1))
         size = int(request.query_params.get('pageSize', 10))
-        cache_key = f"cache:product:related:{productId}:p{page}:s{size}"
-        cached_data = await cache_get(cache_key)
-        if cached_data:
-            return ServerResponse(**cached_data)
 
         resp = await PRODUCTS_CONTROLLER.GetRelatedProducts(productId, page, size)
         
-        resp_dict = {
-            'response': resp.response,
-            'message': resp.message,
-            'code': resp.code,
-            'data': resp.data
-        }
-        await cache_set(cache_key, resp_dict, timeout=PRODUCT_TTL)
-        return ServerResponse(**resp_dict)
+        return ServerResponse(
+            response=resp.response,
+            message=resp.message,
+            code=resp.code,
+            data=resp.data
+        )
     except Exception as e:
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
@@ -484,21 +440,15 @@ async def GetRelatedServices(request, serviceId: int)->ServerResponse:
     try:
         page = int(request.query_params.get('pageNo', 1))
         size = int(request.query_params.get('pageSize', 10))
-        cache_key = f"cache:service:related:{serviceId}:p{page}:s{size}"
-        cached_data = await cache_get(cache_key)
-        if cached_data:
-            return ServerResponse(**cached_data)
 
         resp = await SERVICES_CONTROLLER.GetRelatedServices(serviceId, page, size)
         
-        resp_dict = {
-            'response': resp.response,
-            'message': resp.message,
-            'code': resp.code,
-            'data': resp.data
-        }
-        await cache_set(cache_key, resp_dict, timeout=PRODUCT_TTL)
-        return ServerResponse(**resp_dict)
+        return ServerResponse(
+            response=resp.response,
+            message=resp.message,
+            code=resp.code,
+            data=resp.data
+        )
     except Exception as e:
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
@@ -535,96 +485,75 @@ async def GetAllCatelogsView(request):
         )
 
 @api_view(['GET'])
-async def GetAllProductView(request:HttpRequest):
+async def GetAllProductView(request):
     try:
-        pageNo= int(request.GET.get("pageNo",1))
-        pageSize = int(request.GET.get('pageSize',10))
-        filterType = request.GET.get('type',None)
-        filterId = request.GET.get('tabId',None)
-        state = request.GET.get('state',None)
-        query = request.GET.get('query',None)
-
-        cache_key = f"cache:product:all:p{pageNo}:s{pageSize}:t{filterType}:id{filterId}:st{state}:q{query}"
-        cached_data = await cache_get(cache_key)
-        if cached_data:
-            return ServerResponse(**cached_data)
-
-        catelogResponse = await PRODUCTS_CONTROLLER.getAllProduct(page=pageNo,size=pageSize,filterType=filterType,id=filterId,state=state,query=query)
+        pageNo= int(request.query_params.get("pageNo",1))
+        pageSize = int(request.query_params.get('pageSize',10))
+        filterType = request.query_params.get('type',None)
+        filterId = request.query_params.get('tabId',None)
+        state = request.query_params.get('state',None)
+        query = request.query_params.get('query',None)
         
-        resp_dict = {
-            'response': catelogResponse.response,
-            'message': catelogResponse.message,
-            'code': catelogResponse.code,
-            'data': catelogResponse.data
-        }
-        await cache_set(cache_key, resp_dict, timeout=PRODUCT_TTL)
-        return ServerResponse(**resp_dict)
+        productResponse = await PRODUCTS_CONTROLLER.getAllProduct(page=pageNo,size=pageSize,filterType=filterType,id=filterId,state=state,query=query)
+        
+        return ServerResponse(
+            response=productResponse.response,
+            message=productResponse.message,
+            code=productResponse.code,
+            data=productResponse.data
+        )
     except Exception as e:
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
-            message="Error fetching product",
+            message="Error fetching products",
             code=RESPONSE_CODES.error,
             data={'error': str(e)}
         )
 
 @api_view(['GET'])
-async def GetAllServiceView(request:HttpRequest):
+async def GetAllServiceView(request):
     try:
-        pageNo= int(request.GET.get("pageNo",1))
-        pageSize = int(request.GET.get('pageSize',10))
-        filterType = request.GET.get('type',None)
-        filterId = request.GET.get('tabId',None)
-        state = request.GET.get('state',None)
-        query = request.GET.get('query',None)
-
-        cache_key = f"cache:service:all:p{pageNo}:s{pageSize}:t{filterType}:id{filterId}:st{state}:q{query}"
-        cached_data = await cache_get(cache_key)
-        if cached_data:
-            return ServerResponse(**cached_data)
-
-        catelogResponse = await SERVICES_CONTROLLER.getAllService(page=pageNo,size=pageSize,filterType=filterType,id=filterId,state=state,query=query)
+        pageNo= int(request.query_params.get("pageNo",1))
+        pageSize = int(request.query_params.get('pageSize',10))
+        filterType = request.query_params.get('type',None)
+        filterId = request.query_params.get('tabId',None)
+        state = request.query_params.get('state',None)
+        query = request.query_params.get('query',None)
         
-        resp_dict = {
-            'response': catelogResponse.response,
-            'message': catelogResponse.message,
-            'code': catelogResponse.code,
-            'data': catelogResponse.data
-        }
-        await cache_set(cache_key, resp_dict, timeout=PRODUCT_TTL)
-        return ServerResponse(**resp_dict)
+        productResponse = await SERVICES_CONTROLLER.getAllService(page=pageNo,size=pageSize,filterType=filterType,id=filterId,state=state,query=query)
+        
+        return ServerResponse(
+            response=productResponse.response,
+            message=productResponse.message,
+            code=productResponse.code,
+            data=productResponse.data
+        )
     except Exception as e:
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
-            message="Error fetching Services",
+            message="Error fetching services",
             code=RESPONSE_CODES.error,
             data={'error': str(e)}
         )
 
 @api_view(['GET'])
-async def GetOwnServicesView(request:HttpRequest):
+async def GetOwnServicesView(request):
     try:
-        pageNo= int(request.GET.get("pageNo",1))
-        pageSize = int(request.GET.get('pageSize',10))
+        pageNo = int(request.query_params.get('pageNo', 1))
+        pageSize = int(request.query_params.get('pageSize', 10))
         
-        cache_key = f"cache:service:own:p{pageNo}:s{pageSize}"
-        cached_data = await cache_get(cache_key)
-        if cached_data:
-            return ServerResponse(**cached_data)
-
-        catelogResponse = await INTERIOR_SERVICE_CONTROLLER.getInteriorService(pageNo=pageNo,pageSize=pageSize)
+        resp = await INTERIOR_SERVICE_CONTROLLER.getInteriorService(pageNo=pageNo, pageSize=pageSize)
         
-        resp_dict = {
-            'response': catelogResponse.response,
-            'message': catelogResponse.message,
-            'code': catelogResponse.code,
-            'data': catelogResponse.data
-        }
-        await cache_set(cache_key, resp_dict, timeout=PRODUCT_TTL)
-        return ServerResponse(**resp_dict)
+        return ServerResponse(
+            response=resp.response,
+            message=resp.message,
+            code=resp.code,
+            data=resp.data
+        )
     except Exception as e:
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
-            message="Error fetching Services",
+            message="Error fetching services",
             code=RESPONSE_CODES.error,
             data={'error': str(e)}
         )
@@ -632,21 +561,14 @@ async def GetOwnServicesView(request:HttpRequest):
 @api_view(['GET'])
 async def GetProductCategoriesView(request):
     try:
-        cache_key = "cache:product:categories"
-        cached_data = await cache_get(cache_key)
-        if cached_data:
-            return ServerResponse(**cached_data)
-
         resp = await PRODUCTS_CONTROLLER.GetProductCategories()
         
-        resp_dict = {
-            'response': resp.response,
-            'message': resp.message,
-            'code': resp.code,
-            'data': resp.data
-        }
-        await cache_set(cache_key, resp_dict, timeout=STATIC_TTL)
-        return ServerResponse(**resp_dict)
+        return ServerResponse(
+            response=resp.response,
+            message=resp.message,
+            code=resp.code,
+            data=resp.data
+        )
     except Exception as e:
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
@@ -658,21 +580,14 @@ async def GetProductCategoriesView(request):
 @api_view(['GET'])
 async def GetProductSubCategoriesView(request):
     try:
-        cache_key = "cache:product:sub_categories"
-        cached_data = await cache_get(cache_key)
-        if cached_data:
-            return ServerResponse(**cached_data)
-
         resp = await PRODUCTS_CONTROLLER.GetProductSubCategories()
         
-        resp_dict = {
-            'response': resp.response,
-            'message': resp.message,
-            'code': resp.code,
-            'data': resp.data
-        }
-        await cache_set(cache_key, resp_dict, timeout=STATIC_TTL)
-        return ServerResponse(**resp_dict)
+        return ServerResponse(
+            response=resp.response,
+            message=resp.message,
+            code=resp.code,
+            data=resp.data
+        )
     except Exception as e:
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
@@ -686,11 +601,6 @@ async def GetTabsView(request):
     try:
         filterFor= request.GET.get('type')
         
-        cache_key = f"cache:product:tabs:{filterFor}"
-        cached_data = await cache_get(cache_key)
-        if cached_data:
-            return ServerResponse(**cached_data)
-
         resp=None
         functionList={
             'product':PRODUCTS_CONTROLLER.GetProductTab,

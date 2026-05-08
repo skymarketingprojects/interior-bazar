@@ -50,6 +50,11 @@ def clear_blog_cache(sender, instance, **kwargs):
 @receiver([post_save, post_delete], sender=BusinessSegment)
 def clear_business_structural_cache(sender, **kwargs):
     clear_cache_pattern("cache:business:*")
+    # Invalidate controller-level structural caches
+    cache.delete("all_business_types")
+    cache.delete("explore_sections_all")
+    # Patterns for type-based segments
+    clear_cache_pattern("segments_by_type_*")
 
 @receiver([post_save, post_delete], sender=Country)
 @receiver([post_save, post_delete], sender=State)

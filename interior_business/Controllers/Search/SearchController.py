@@ -25,38 +25,43 @@ import json
 
 class SEARCH_CONTROLLER:
     @classmethod
-    async def GetBusinessUsingPagination(self,pageNo,pageSize=10,tabId=None,tabType=None,state=None,query=None):
+    async def GetBusinessUsingPagination(self, pageNo, pageSize=10, tabId=None, tabType=None, state=None, query=None):
         try:
+            # Standardize parameters
+            pageNo = int(pageNo)
+            pageSize = int(pageSize)
+            
             # Create a unique cache key based on parameters
             params = f"{pageNo}_{pageSize}_{tabId}_{tabType}_{state}_{query}"
             cache_key = f"search_pagination_{hashlib.md5(params.encode()).hexdigest()}"
             
-            cached_data = cache.get(cache_key)
-            if cached_data:
-                return LocalResponse(
-                    code=RESPONSE_CODES.success,
-                    response=RESPONSE_MESSAGES.success,
-                    message=RESPONSE_MESSAGES.business_fetch_success,
-                    data=cached_data)
+            # Entropy Control: Bypass cache for search queries or deep pagination to save VPS memory
+            use_cache = not query and pageNo <= 3
+            
+            if use_cache:
+                cached_data = await cache.aget(cache_key)
+                if cached_data:
+                    return LocalResponse(
+                        code=RESPONSE_CODES.success,
+                        response=RESPONSE_MESSAGES.success,
+                        message=RESPONSE_MESSAGES.business_fetch_success,
+                        data=cached_data)
 
-            # businesses_query=[]
-            filterQuery=Q()
+            # filterQuery construction...
+            filterQuery = Q()
             offset = (pageNo - 1) * pageSize
             limit = offset + pageSize
 
             if state:
                 filterQuery |= Q(business_location__locationState__value__iexact=state)
-                # filterQuery &= Q(business_location__state__iexact=state)
             
             if tabId and tabType:
-                if tabType==NAMES.CATEGORY:
-                    pass
+                if tabType == NAMES.CATEGORY:
                     filterQuery &= Q(businessCategory__id=tabId)
-                elif tabType==NAMES.SEGMENT:
-                    pass
+                elif tabType == NAMES.SEGMENT:
                     filterQuery &= Q(businessSegment__id=tabId)
+            
             if query:
-                pass
                 filterQuery |= Q(businessName__icontains=query)
                 filterQuery |= Q(businessSegment__lable__icontains=query)
                 filterQuery |= Q(businessCategory__lable__icontains=query)
@@ -78,10 +83,8 @@ class SEARCH_CONTROLLER:
                 .order_by("-timestamp")[offset:limit]
             )
 
-
             businesses = await sync_to_async(list)(queryset)
 
-            pass
             # fetch business data:
             business_data = await SEARCH_TASKS.GetQueryData(
                                 businesses_query=businesses,
@@ -89,7 +92,8 @@ class SEARCH_CONTROLLER:
                                 pageSize=pageSize
                             )
             
-            cache.set(cache_key, business_data, 3600)  # Cache for 1 hour
+            if use_cache:
+                await cache.aset(cache_key, business_data, 900)  # Tier 1: 15m for search results
 
             return LocalResponse(
                 code=RESPONSE_CODES.success,
@@ -133,15 +137,21 @@ class SEARCH_CONTROLLER:
     @classmethod
     async def GetRelatedBusiness(self, businessId, pageNo=1):
         try:
+            pageNo = int(pageNo)
             cache_key = f"related_business_{businessId}_{pageNo}"
-            cached_data = cache.get(cache_key)
-            if cached_data:
-                return LocalResponse(
-                    code=RESPONSE_CODES.success,
-                    response=RESPONSE_MESSAGES.success,
-                    message=RESPONSE_MESSAGES.business_fetch_success,
-                    data=cached_data
-                )
+            
+            # Only cache the first few pages of discovery
+            use_cache = pageNo <= 3
+            
+            if use_cache:
+                cached_data = await cache.aget(cache_key)
+                if cached_data:
+                    return LocalResponse(
+                        code=RESPONSE_CODES.success,
+                        response=RESPONSE_MESSAGES.success,
+                        message=RESPONSE_MESSAGES.business_fetch_success,
+                        data=cached_data
+                    )
 
             related_businesses = await SEARCH_TASKS.GetRelatedBusinesses(business_id=businessId, pageNo=pageNo)
             if related_businesses is None:
@@ -152,7 +162,9 @@ class SEARCH_CONTROLLER:
                     data=[]
                 )
 
-            cache.set(cache_key, related_businesses, 3600)  # Cache for 1 hour
+            if use_cache:
+                await cache.aset(cache_key, related_businesses, 3600)  # Tier 2: 1h for discovery
+            
             return LocalResponse(
                 code=RESPONSE_CODES.success,
                 response=RESPONSE_MESSAGES.success,
@@ -169,31 +181,37 @@ class SEARCH_CONTROLLER:
 
 
     @classmethod
-    async def GetNearbyBusiness(self, businessId=None,city=None,state=None, pageNo=1):
+    async def GetNearbyBusiness(self, businessId=None, city=None, state=None, pageNo=1):
         try:
-            params = f"{businessId}_{city}_{state}_{pageNo}"
+            pageNo = int(pageNo)
+            # Standardize strings for better cache hits
+            city_std = city.lower() if city else ""
+            state_std = state.lower() if state else ""
+            
+            params = f"{businessId}_{city_std}_{state_std}_{pageNo}"
             cache_key = f"nearby_business_{hashlib.md5(params.encode()).hexdigest()}"
             
-            cached_data = cache.get(cache_key)
-            if cached_data:
-                return LocalResponse(
-                    code=RESPONSE_CODES.success,
-                    response=RESPONSE_MESSAGES.success,
-                    message=RESPONSE_MESSAGES.business_fetch_success,
-                    data=cached_data
-                )
+            use_cache = pageNo <= 3
+            
+            if use_cache:
+                cached_data = await cache.aget(cache_key)
+                if cached_data:
+                    return LocalResponse(
+                        code=RESPONSE_CODES.success,
+                        response=RESPONSE_MESSAGES.success,
+                        message=RESPONSE_MESSAGES.business_fetch_success,
+                        data=cached_data
+                    )
 
-            business=None
-            locationState=None
-            city = city
-            state = state
+            business = None
+            locationState = None
             if businessId:
                 business = await sync_to_async(Business.objects.get)(id=businessId)
-                location:Location = business.business_location
+                location: Location = business.business_location
                 city = location.city
                 locationState = location.locationState
                 
-            nearby_businesses = await SEARCH_TASKS.GetNearbyBusinesses(businessId=businessId,city=city,state=state,locationState=locationState, pageNo=pageNo)
+            nearby_businesses = await SEARCH_TASKS.GetNearbyBusinesses(businessId=businessId, city=city, state=state, locationState=locationState, pageNo=pageNo)
             if nearby_businesses is None:
                 return LocalResponse(
                     code=RESPONSE_CODES.error,
@@ -202,7 +220,9 @@ class SEARCH_CONTROLLER:
                     data=[]
                 )
 
-            cache.set(cache_key, nearby_businesses, 3600)  # Cache for 1 hour
+            if use_cache:
+                await cache.aset(cache_key, nearby_businesses, 3600)  # Tier 2: 1h for discovery
+            
             return LocalResponse(
                 code=RESPONSE_CODES.success,
                 response=RESPONSE_MESSAGES.success,

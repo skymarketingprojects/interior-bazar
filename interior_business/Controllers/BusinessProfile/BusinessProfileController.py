@@ -22,7 +22,7 @@ class BUSS_PROFILE_CONTROLLER:
     async def GetBusinessProfileForDisplay(self, business_id):
         try:
             cache_key = f"business_profile_display_{business_id}"
-            cached_data = cache.get(cache_key)
+            cached_data = await cache.aget(cache_key)
             if cached_data:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
@@ -32,7 +32,7 @@ class BUSS_PROFILE_CONTROLLER:
 
             get_resp = await BUSS_PROF_TASK.GetBusinessProfileTask(business_id=business_id)
             if NAMES.ERROR not in get_resp:
-                cache.set(cache_key, get_resp, 3600)  # Cache for 1 hour
+                await cache.aset(cache_key, get_resp, 3600)  # Tier 2: 1 hour
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
                     message=RESPONSE_MESSAGES.business_prof_fetch_success,
@@ -76,6 +76,11 @@ class BUSS_PROFILE_CONTROLLER:
                 update_resp = await BUSS_PROF_TASK.UpdateBusinessProfileTask(business_prof_ins=business_prof_ins,data=data)
 
                 if update_resp:
+                    # Invalidation: Purge profile and detail caches
+                    await cache.adelete(f"business_profile_display_{business_ins.id}")
+                    await cache.adelete(f"business_profile_full_{business_ins.id}")
+                    await cache.adelete(f"business_info_{business_ins.id}")
+                    
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.success,
                         message=RESPONSE_MESSAGES.business_prof_update_success,
@@ -93,6 +98,9 @@ class BUSS_PROFILE_CONTROLLER:
                 create_resp = await BUSS_PROF_TASK.CreateBusinessProfileTask(
                     business_ins=business_ins, data=data)
                 if create_resp:
+                    # Invalidation: Purge detail caches for new profile association
+                    await cache.adelete(f"business_info_{business_ins.id}")
+                    
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.success,
                         message=RESPONSE_MESSAGES.business_prof_create_success,
@@ -118,7 +126,7 @@ class BUSS_PROFILE_CONTROLLER:
     async def GetBuisnessProfByBusinessID(self,id):
         try:
             cache_key = f"business_profile_full_{id}"
-            cached_data = cache.get(cache_key)
+            cached_data = await cache.aget(cache_key)
             if cached_data:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
@@ -144,7 +152,7 @@ class BUSS_PROFILE_CONTROLLER:
                 update_resp = await BUSS_PROF_TASK.GetBusinessProfTask(
                     business_prof_ins=business_prof_ins)
                 if update_resp:
-                    cache.set(cache_key, update_resp, 3600)  # Cache for 1 hour
+                    await cache.aset(cache_key, update_resp, 3600)  # Tier 2: 1 hour
                     return LocalResponse(
                         response=RESPONSE_MESSAGES.success,
                         message=RESPONSE_MESSAGES.business_prof_fetch_success,
@@ -194,6 +202,12 @@ class BUSS_PROFILE_CONTROLLER:
                 profile_ins.primaryImageUrl = primary_image
                 await sync_to_async(profile_ins.save)()
             
+            # Invalidation: Purge profile, header, and detail caches
+            await cache.adelete(f"business_profile_display_{business_ins.id}")
+            await cache.adelete(f"business_profile_full_{business_ins.id}")
+            await cache.adelete(f"business_header_{business_ins.id}")
+            await cache.adelete(f"business_info_{business_ins.id}")
+
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.update_success,
@@ -235,6 +249,11 @@ class BUSS_PROFILE_CONTROLLER:
                 profile_ins.secondaryImagesUrl = secondary_image
                 await sync_to_async(profile_ins.save)()
             
+            # Invalidation: Purge profile and detail caches
+            await cache.adelete(f"business_profile_display_{business_ins.id}")
+            await cache.adelete(f"business_profile_full_{business_ins.id}")
+            await cache.adelete(f"business_info_{business_ins.id}")
+
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.update_success,

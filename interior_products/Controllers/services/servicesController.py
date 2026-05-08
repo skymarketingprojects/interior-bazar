@@ -22,7 +22,7 @@ class SERVICES_CONTROLLER:
     async def getService(self,serviceId:int)->LocalResponse:
         try:
             cache_key = f"service_detail_{serviceId}"
-            cached_data = cache.get(cache_key)
+            cached_data = await cache.aget(cache_key)
             if cached_data:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
@@ -48,7 +48,7 @@ class SERVICES_CONTROLLER:
                     data={'error':RESPONSE_MESSAGES.service_fetch_error}
                 )
             
-            cache.set(cache_key, serviceData, 3600)  # Cache for 1 hour
+            await cache.aset(cache_key, serviceData, 3600)  # Cache for 1 hour (CACHE_MEDIUM)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.service_fetch_success,
@@ -68,16 +68,21 @@ class SERVICES_CONTROLLER:
     @classmethod
     async def getAllService(self,page,size,filterType=None,id=None,state=None,query=None)->LocalResponse:
         try:
-            params = f"{page}_{size}_{filterType}_{id}_{state}_{query}"
-            cache_key = f"all_services_pagi_{hashlib.md5(params.encode()).hexdigest()}"
-            cached_data = cache.get(cache_key)
-            if cached_data:
-                return LocalResponse(
-                    response=RESPONSE_MESSAGES.success,
-                    message=RESPONSE_MESSAGES.service_fetch_success,
-                    code=RESPONSE_CODES.success,
-                    data=cached_data
-                )
+            # Entropy Control [B030]: Disable caching for search queries or deep pages (>3)
+            is_cacheable = not query and int(page) <= 3
+            cache_key = None
+
+            if is_cacheable:
+                params = f"{page}_{size}_{filterType}_{id}_{state}"
+                cache_key = f"all_services_pagi_{hashlib.md5(params.encode()).hexdigest()}"
+                cached_data = await cache.aget(cache_key)
+                if cached_data:
+                    return LocalResponse(
+                        response=RESPONSE_MESSAGES.success,
+                        message=RESPONSE_MESSAGES.service_fetch_success,
+                        code=RESPONSE_CODES.success,
+                        data=cached_data
+                    )
 
             serviceData=[]
             related_qs = []
@@ -115,7 +120,9 @@ class SERVICES_CONTROLLER:
                     serviceData.append(data)
             paginated['pagination']['data'] = serviceData
             
-            cache.set(cache_key, paginated['pagination'], 3600)  # Cache for 1 hour
+            if is_cacheable:
+                await cache.aset(cache_key, paginated['pagination'], 900)  # Cache for 15 min (CACHE_SHORT)
+
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.service_fetch_success,
@@ -135,7 +142,7 @@ class SERVICES_CONTROLLER:
     async def getServicesForBusiness(self,business:Business)->LocalResponse:
         try:
             cache_key = f"services_business_{business.id}"
-            cached_data = cache.get(cache_key)
+            cached_data = await cache.aget(cache_key)
             if cached_data:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
@@ -153,7 +160,7 @@ class SERVICES_CONTROLLER:
                 if serviceData:
                     servicesData.append(serviceData)
             
-            cache.set(cache_key, servicesData, 3600)  # Cache for 1 hour
+            await cache.aset(cache_key, servicesData, 3600)  # Cache for 1 hour (CACHE_MEDIUM)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.services_fetch_success,
@@ -181,6 +188,11 @@ class SERVICES_CONTROLLER:
                     code=RESPONSE_CODES.error,
                     data={'error':RESPONSE_MESSAGES.service_create_error}
                 )
+            
+            # Invalidation [B029]
+            await cache.adelete(f"services_business_{business.id}")
+            await cache.adelete("service_tab_data")
+
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.service_create_success,
@@ -215,6 +227,12 @@ class SERVICES_CONTROLLER:
                     code=RESPONSE_CODES.error,
                     data={'error':RESPONSE_MESSAGES.service_update_error}
                 )
+            
+            # Invalidation [B029]
+            await cache.adelete(f"services_business_{business.id}")
+            await cache.adelete(f"service_detail_{serviceId}")
+            await cache.adelete("service_tab_data")
+
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.service_update_success,
@@ -250,6 +268,12 @@ class SERVICES_CONTROLLER:
                     code=RESPONSE_CODES.error,
                     data={'error':RESPONSE_MESSAGES.service_delete_error}
                 )
+            
+            # Invalidation [B029]
+            await cache.adelete(f"services_business_{business.id}")
+            await cache.adelete(f"service_detail_{serviceId}")
+            await cache.adelete("service_tab_data")
+
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.service_delete_success,
@@ -270,7 +294,7 @@ class SERVICES_CONTROLLER:
     async def GetRelatedServices(cls, serviceId: int, page: int = 1, size: int = 10):
         try:
             cache_key = f"related_services_{serviceId}_{page}_{size}"
-            cached_data = cache.get(cache_key)
+            cached_data = await cache.aget(cache_key)
             if cached_data:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
@@ -295,7 +319,7 @@ class SERVICES_CONTROLLER:
                     serviceData.append(data)
             paginated['pagination']['data'] = serviceData
 
-            cache.set(cache_key, paginated["pagination"], 3600)  # Cache for 1 hour
+            await cache.aset(cache_key, paginated["pagination"], 3600)  # Cache for 1 hour (CACHE_MEDIUM)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message="Related services fetched successfully",
@@ -315,7 +339,7 @@ class SERVICES_CONTROLLER:
     async def GetServiceTab(cls):
         try:
             cache_key = "service_tab_data"
-            cached_data = cache.get(cache_key)
+            cached_data = await cache.aget(cache_key)
             if cached_data:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
@@ -340,7 +364,7 @@ class SERVICES_CONTROLLER:
                         subCategoryData['type']='subCategory'
                         tabData.append(subCategoryData)
             
-            cache.set(cache_key, tabData, 86400)  # Cache for 24 hours
+            await cache.aset(cache_key, tabData, 86400)  # Cache for 24 hours (CACHE_LONG)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.service_tab_success,

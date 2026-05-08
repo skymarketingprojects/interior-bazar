@@ -17,7 +17,7 @@ class INTERIOR_SERVICE_CONTROLLER:
     async def getInteriorService(request,pageNo=1,pageSize=10):
         try:
             cache_key = f"interior_services_{pageNo}_{pageSize}"
-            cached_data = cache.get(cache_key)
+            cached_data = await cache.aget(cache_key)
             if cached_data:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
@@ -37,7 +37,7 @@ class INTERIOR_SERVICE_CONTROLLER:
                     serviceData.append(data)
             paginated['pagination']['data'] = serviceData
             
-            cache.set(cache_key, paginated['pagination'], 3600)  # Cache for 1 hour
+            await cache.aset(cache_key, paginated['pagination'], 900)  # Cache for 15 min (CACHE_SHORT)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.service_fetch_success,
