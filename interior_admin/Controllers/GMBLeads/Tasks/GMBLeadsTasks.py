@@ -46,34 +46,39 @@ class GMBLeadsTasks:
     async def IngestSingleLeadTask(item: Dict[str, Any], trigger_user: Any = None) -> bool:
         """
         Processes a single lead. Wrapped for safety during bulk ingestion.
+        Skips saving if it already exists to avoid unnecessary updates and performance overhead.
         """
         try:
             business_name = item.get(NAMES.BUSINESS_NAME) or item.get(NAMES.BUSINESS_NAME_SNAKE) or item.get('title') or item.get('name')
+            phone = item.get(NAMES.PHONE) or item.get(NAMES.PHONE_SNAKE, '')
             if not business_name:
                 return False
+            
+            # Fast check for existence before doing expensive ranking calculations
+            exists = await sync_to_async(GMBBusiness.objects.filter(businessName=business_name, phone=phone).exists)()
+            if exists:
+                return True # Treat as success (already saved), but skip update
             
             ranking_info = RankingAlgo.calculate_score(item)
             wa_message = RankingAlgo.generate_wa_message(item.get(NAMES.PHONE) or item.get(NAMES.PHONE_SNAKE, ''), business_name)
             
-            lead, _ = await sync_to_async(GMBBusiness.objects.update_or_create)(
+            await sync_to_async(GMBBusiness.objects.create)(
                 businessName=business_name,
-                phone=item.get(NAMES.PHONE) or item.get(NAMES.PHONE_SNAKE, ''),
-                defaults={
-                    NAMES.RATING.lower(): item.get(NAMES.RATING) or NAMES.DEFAULT_RATING,
-                    NAMES.RATING_VALUE: ranking_info[NAMES.RATING_VALUE],
-                    NAMES.REVIEW_COUNT: ranking_info[NAMES.REVIEW_COUNT],
-                    NAMES.ADDRESS.lower(): item.get(NAMES.ADDRESS) or item.get(NAMES.ADDRESS_SNAKE, ''),
-                    "web": item.get(NAMES.WEBSITE) or item.get(NAMES.WEBSITE_URL) or item.get(NAMES.WEBSITE_LINK),
-                    "mapLink": item.get(NAMES.MAP_LINK_SNAKE) or item.get(NAMES.MAPS_LINK_SNAKE) or item.get(NAMES.GMB_LINK),
-                    "socialLinks": item.get(NAMES.SOCIAL_LINKS) or item.get(NAMES.SOCIAL_LINKS_SNAKE) or [],
-                    "waMessage": wa_message,
-                    "rankingRate": ranking_info[NAMES.RANKING_RATE],
-                    "tier": ranking_info[NAMES.TIER],
-                    "platform": item.get(NAMES.PLATFORM, NAMES.DEFAULT_PLATFORM),
-                    "category": item.get(NAMES.CATEGORY),
-                    "state": item.get(NAMES.STATE) or item.get("state_name") or item.get("region"),
-                    "remark": item.get(NAMES.REMARK)
-                }
+                phone=phone,
+                rating=item.get(NAMES.RATING) or NAMES.DEFAULT_RATING,
+                ratingValue=ranking_info[NAMES.RATING_VALUE],
+                reviewCount=ranking_info[NAMES.REVIEW_COUNT],
+                address=item.get(NAMES.ADDRESS) or item.get(NAMES.ADDRESS_SNAKE, ''),
+                web=item.get(NAMES.WEBSITE) or item.get(NAMES.WEBSITE_URL) or item.get(NAMES.WEBSITE_LINK),
+                mapLink=item.get(NAMES.MAP_LINK_SNAKE) or item.get(NAMES.MAPS_LINK_SNAKE) or item.get(NAMES.GMB_LINK),
+                socialLinks=item.get(NAMES.SOCIAL_LINKS) or item.get(NAMES.SOCIAL_LINKS_SNAKE) or [],
+                waMessage=wa_message,
+                rankingRate=ranking_info[NAMES.RANKING_RATE],
+                tier=ranking_info[NAMES.TIER],
+                platform=item.get(NAMES.PLATFORM, NAMES.DEFAULT_PLATFORM),
+                category=item.get(NAMES.CATEGORY),
+                state=item.get(NAMES.STATE) or item.get("state_name") or item.get("region"),
+                remark=item.get(NAMES.REMARK)
             )
             
             return True
@@ -92,23 +97,64 @@ class GMBLeadsTasks:
     @staticmethod
     async def IngestGMBDataTask(data_list: List[Dict[str, Any]], trigger_user: Any = None, assignable_users: List[Any] = None) -> Dict[str, Any]:
         """
-        Bulk ingests GMB data. Continues processing even if individual records fail.
+        Bulk ingests GMB data. Optimized to skip duplicates and avoid redundant calculations.
+        Continues processing even if individual records fail.
         If assignable_users are provided, it performs a balanced distribution.
         """
         if not isinstance(data_list, list):
             data_list = [data_list]
             
-        results = []
+        # 1. Internal Deduplication & Identifier Extraction
+        unique_payload = []
+        seen_in_batch = set()
         for item in data_list:
+            name = item.get(NAMES.BUSINESS_NAME) or item.get(NAMES.BUSINESS_NAME_SNAKE) or item.get('title') or item.get('name')
+            phone = item.get(NAMES.PHONE) or item.get(NAMES.PHONE_SNAKE, '')
+            if not name:
+                continue
+            
+            # Use tuple as unique identifier
+            identifier = (name.strip(), str(phone).strip())
+            if identifier not in seen_in_batch:
+                seen_in_batch.add(identifier)
+                item['_batch_id'] = identifier
+                unique_payload.append(item)
+
+        # 2. Bulk Existence Check in Database
+        existing_identifiers = set()
+        if unique_payload:
+            query = Q()
+            for item in unique_payload:
+                name, phone = item['_batch_id']
+                query |= Q(businessName=name, phone=phone)
+            
+            # Fetch existing records matching this batch
+            existing_leads = await sync_to_async(lambda: list(
+                GMBBusiness.objects.filter(query).values_list('businessName', 'phone')
+            ))()
+            existing_identifiers = set((name, str(phone)) for name, phone in existing_leads)
+
+        # 3. Processing
+        results = []
+        for item in unique_payload:
+            # If lead already exists in DB, skip processing but count as successful 'handled'
+            if item['_batch_id'] in existing_identifiers:
+                results.append(True)
+                continue
+            
             res = await GMBLeadsTasks.IngestSingleLeadTask(item, trigger_user=trigger_user)
             results.append(res)
         
-        # If sales team exists, trigger auto-assignment for unassigned leads
+        # 4. Post-processing: Auto-assignment
         if assignable_users:
             await GMBLeadsTasks.AutoAssignUnassignedLeadsTask(assignable_users, trigger_user)
         
         processed_count = sum(1 for r in results if r)
-        return {NAMES.PROCESSED_COUNT: processed_count, NAMES.TOTAL_RECEIVED: len(data_list)}
+        return {
+            NAMES.PROCESSED_COUNT: processed_count, 
+            NAMES.TOTAL_RECEIVED: len(data_list),
+            "duplicates_skipped": len(data_list) - (sum(1 for r in results if r) if any(r is False for r in results) else len(unique_payload))
+        }
 
     @staticmethod
     async def AutoAssignUnassignedLeadsTask(assignable_users: List[Any], trigger_user: Any = None) -> Dict[str, Any]:
