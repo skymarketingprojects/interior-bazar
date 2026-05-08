@@ -92,16 +92,21 @@ class CATELOG_CONTROLLER:
     @classmethod
     async def GetAllCatelog(self,page,size,filterType=None,id=None,query=None,state=None):
         try:
-            params = f"{page}_{size}_{filterType}_{id}_{query}_{state}"
-            cache_key = f"all_catalogues_pagi_{hashlib.md5(params.encode()).hexdigest()}"
-            cached_data = await cache.aget(cache_key)
-            if cached_data:
-                return LocalResponse(
-                    response=RESPONSE_MESSAGES.success,
-                    message=RESPONSE_MESSAGES.catelog_fetch_success,
-                    code=RESPONSE_CODES.success,
-                    data=cached_data
-                    )
+            # Entropy Control [B027]: Disable caching for search queries or deep pages (>3)
+            is_cacheable = not query and int(page) <= 3
+            cache_key = None
+            
+            if is_cacheable:
+                params = f"{page}_{size}_{filterType}_{id}_{state}"
+                cache_key = f"all_catalogues_pagi_{hashlib.md5(params.encode()).hexdigest()}"
+                cached_data = await cache.aget(cache_key)
+                if cached_data:
+                    return LocalResponse(
+                        response=RESPONSE_MESSAGES.success,
+                        message=RESPONSE_MESSAGES.catelog_fetch_success,
+                        code=RESPONSE_CODES.success,
+                        data=cached_data
+                        )
 
             catelogData = []
             related_qs = []
@@ -122,6 +127,7 @@ class CATELOG_CONTROLLER:
                 related_qs = Catelogue.objects.filter(filterQuery).order_by('index')
             else:
                 related_qs = Catelogue.objects.all().order_by('index')
+            
             if related_qs.count() == 0:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.error,
@@ -129,6 +135,7 @@ class CATELOG_CONTROLLER:
                     code=RESPONSE_CODES.error,
                     data={'error':'No catelog found'}
                 )
+            
             paginated = await MY_METHODS.paginate_queryset(related_qs, page, size)
             catelogData = []
 
@@ -139,7 +146,9 @@ class CATELOG_CONTROLLER:
 
             paginated['pagination']['data'] = catelogData
             
-            await cache.aset(cache_key, paginated['pagination'], 900)  # Cache for 15 min (CACHE_SHORT)
+            if is_cacheable:
+                await cache.aset(cache_key, paginated['pagination'], 900)  # Cache for 15 min (CACHE_SHORT)
+            
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.catelog_fetch_success,
