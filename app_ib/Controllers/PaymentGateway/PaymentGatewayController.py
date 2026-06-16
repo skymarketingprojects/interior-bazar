@@ -56,8 +56,9 @@ class PaymentGatewayController:
                 #create tansection data
                 transection= await PLAN_CONTROLLER.CreateTransectionData(data=response_data)
 
-                # Create Business Plan
-                businessPlan = await PLAN_CONTROLLER.CreateBusinessPlan(
+                # Create the entity plan (routed by Subscription.entityType to
+                # business/shop/architect; attaches to the user, entity FK null).
+                businessPlan = await PLAN_CONTROLLER.CreateEntityPlan(
                     planId=plan.id,
                     userId=user.id,
                     transectionId=transactionData[NAMES.TRANSACTION]
@@ -118,6 +119,66 @@ class PaymentGatewayController:
                 code=RESPONSE_CODES.error,
                 data={NAMES.ERROR: str(e)}
             )
+
+    @classmethod
+    async def InitiateUpgradePayment(cls, data, user, redirectUrl):
+        """Charge ONLY the prorated difference to upgrade an active plan to a higher tier.
+        Validates via PreviewUpgrade; on PAID, CheckPaymentStatus → PLAN_CONTROLLER.ApplyUpgrade
+        UPDATES the same plan row (no new purchase). Reuses the frozen /payment/initiate/ entry."""
+        try:
+            entityType = data.get(NAMES.ENTITY_TYPE)
+            targetPlanId = data.get(NAMES.TARGET_PLAN_ID)
+            preview = await PLAN_CONTROLLER.PreviewUpgrade(user, entityType, targetPlanId)
+            if not preview.data.get(NAMES.ALLOWED):
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.error,
+                    message=preview.message or "Upgrade not allowed",
+                    code=RESPONSE_CODES.error,
+                    data=preview.data,
+                )
+            amount = float(preview.data.get(NAMES.SETTLE_AMOUNT) or 0)
+
+            # Full credit covers the upgrade → apply immediately, no gateway charge.
+            if amount <= 0:
+                txn = f"UPG-FREE-{uuid4().hex[:12]}"
+                await PLAN_CONTROLLER.StashUpgradeIntent(user, entityType, targetPlanId, txn)
+                applied = await PLAN_CONTROLLER.ApplyUpgrade(txn)
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success if applied else RESPONSE_MESSAGES.error,
+                    message="Upgrade applied (no charge)" if applied else "Failed to apply upgrade",
+                    code=RESPONSE_CODES.success if applied else RESPONSE_CODES.error,
+                    data={NAMES.SETTLE_AMOUNT: 0, NAMES.TRANSACTION: txn},
+                )
+
+            response_data, transactionData = await PaymentGatewayTasks.CreateTransection(
+                user=user, redirectUrl=redirectUrl, amount=amount
+            )
+            if not (response_data and response_data.get(NAMES.PAYMENT_SESSION_ID)):
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.error,
+                    message=f"Failed to create Cashfree order: {response_data}",
+                    code=RESPONSE_CODES.error, data={})
+            await PLAN_TASKS.CreateTransectionData(data=response_data, paymentFor=NAMES.PLAN_UPGRADE)
+            await PLAN_CONTROLLER.StashUpgradeIntent(
+                user, entityType, targetPlanId, transactionData[NAMES.TRANSACTION])
+            payment_url = f"https://payments.cashfree.com/pgui/v2/checkout?payment_session_id={response_data['payment_session_id']}"
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message="Upgrade payment initiated",
+                code=RESPONSE_CODES.success,
+                data={
+                    NAMES.PAYMENT_URL: payment_url,
+                    NAMES.TRANSACTION: transactionData[NAMES.TRANSACTION],
+                    NAMES.SESSION_ID: response_data.get(NAMES.PAYMENT_SESSION_ID),
+                    NAMES.SETTLE_AMOUNT: amount,
+                },
+            )
+        except Exception as e:
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message="Exception during upgrade payment initiation",
+                code=RESPONSE_CODES.error,
+                data={NAMES.ERROR: str(e)})
 
     @classmethod
     async def InitiateADSPayment(cls, data, user, redirectUrl):
@@ -211,7 +272,9 @@ class PaymentGatewayController:
             status = response_data.get(NAMES.ORDER_STATUS, NAMES.CF_UNKNOWN)
             serviceActivated = None
             if serviceType.paymentFor == NAMES.PLAN and status == NAMES.CF_PAID:
-                serviceActivated=await PLAN_CONTROLLER.ActivateBusinessPlan(transactionId)
+                serviceActivated=await PLAN_CONTROLLER.ActivateEntityPlan(transactionId)
+            elif serviceType.paymentFor == NAMES.PLAN_UPGRADE and status == NAMES.CF_PAID:
+                serviceActivated=await PLAN_CONTROLLER.ApplyUpgrade(transactionId)
             elif serviceType.paymentFor == NAMES.ADVERTISEMENT and status == NAMES.CF_PAID:
                 adPayment = await sync_to_async(AdPayment.objects.get)(transactionId=transactionId)
                 data[NAMES.STATUS] = status.lower()

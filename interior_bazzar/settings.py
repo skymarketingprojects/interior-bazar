@@ -350,3 +350,14 @@ WHATSAPP_PHONE_NUMBER_ID = env('WHATSAPP_PHONE_NUMBER_ID')
 # PHONEPE_CLIENT_ID = env('PHONEPE_CLIENT_ID')
 # PHONEPE_CLIENT_SECRET = env('PHONEPE_CLIENT_SECRET')
 # PHONEPE_CLIENT_VERSION = env('PHONEPE_CLIENT_VERSION')
+
+# --- v2.1.0.0 engine: Gemini (AI tags + Behind-the-Trend copy) ---
+GEMINI_API_KEY = env('GEMINI_API_KEY', default='')
+GEMINI_MODEL = env('GEMINI_MODEL', default='gemini-2.5-flash-lite')
+
+# --- Google OAuth (login with Google) ---
+GOOGLE_OAUTH2_CLIENT_ID = env('GOOGLE_OAUTH2_CLIENT_ID', default='')
+GOOGLE_OAUTH2_CLIENT_SECRET = env('GOOGLE_OAUTH2_CLIENT_SECRET', default='')
+GOOGLE_OAUTH2_ALLOWED_AUDIENCES = [
+    a.strip() for a in env('GOOGLE_OAUTH2_ALLOWED_AUDIENCES', default=GOOGLE_OAUTH2_CLIENT_ID).split(',') if a.strip()
+]

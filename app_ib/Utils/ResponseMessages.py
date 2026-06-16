@@ -494,6 +494,15 @@ class RESPONSE_MESSAGES:
     gmb_create_error= 'Error creating lead'
     gmb_create_success= 'Lead created successfully'
 
+    # Phase 3 — RelatedItem / Newsletter / Blog featured / Catalogue trending / Engine profile
+    related_items_success= 'Related items fetched successfully'
+    newsletter_subscribe_success= 'Subscribed successfully'
+    newsletter_subscribe_error= 'Unable to subscribe'
+    blog_featured_success= 'Featured blogs fetched successfully'
+    trending_catalogues_success= 'Trending catalogues fetched successfully'
+    engine_profile_success= 'Profile fetched successfully'
+    invalid_email= 'Invalid email address'
+
 class VALIDATION_MESSAGES:
     password_length= 'Password must be at least 8 characters long'
     password_must_contain_digit= 'Password must contain at least one digit'

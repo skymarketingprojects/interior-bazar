@@ -23,9 +23,9 @@ class AUTH_CONTROLLER:
 
     #####################################
     # Signup User
-    #####################################    
-    @classmethod 
-    async def SignupUser(self, data:SignupValidator):
+    #####################################
+    @classmethod
+    async def SignupUser(self, data:SignupValidator, request=None):
         try:
             response_data = {}
 
@@ -63,7 +63,7 @@ class AUTH_CONTROLLER:
 
                 if user_ins:
                     # Generate Token and build final response data
-                    response_data = await AUTH_TASK.GenerateUserToken(user_ins)
+                    response_data = await AUTH_TASK.GenerateUserToken(user_ins, request=request)
                     pass
 
                 else:
@@ -91,8 +91,8 @@ class AUTH_CONTROLLER:
     #####################################
     # Login User
     #####################################
-    @classmethod 
-    async def LoginUser(self, data:LoginValidator):
+    @classmethod
+    async def LoginUser(self, data:LoginValidator, request=None):
         try:
             # Validate Password
             # validate_password = await AUTH_VALIDATOR._validate_password(password=data.password)
@@ -110,7 +110,7 @@ class AUTH_CONTROLLER:
 
             if login_user:
                 # Generate Token and build final response data
-                response_data = await AUTH_TASK.GenerateUserToken(login_user)
+                response_data = await AUTH_TASK.GenerateUserToken(login_user, request=request)
                 pass
                 userdata = await PROFILE_CONTROLLER.GetProfile(login_user)
                 response_data['user'] = userdata.data
@@ -235,6 +235,14 @@ class AUTH_CONTROLLER:
                                 data={
                                     NAMES.LINK:link,
                                 })
+                    else:
+                        # No UserProfile (no email on file) — previously fell
+                        # through and returned None, crashing the view with a 500
+                        return LocalResponse(
+                            response=RESPONSE_MESSAGES.error,
+                            message=RESPONSE_MESSAGES.send_link_error,
+                            code=RESPONSE_CODES.error,
+                            data={})
 
                 else:
                     return LocalResponse(

@@ -10,7 +10,8 @@ from app_ib.Utils.MyMethods import MY_METHODS
 
 paymentFor = {
     NAMES.PLAN: PaymentGatewayController.InitiatePlanPayment,
-    NAMES.ADVERTISEMENT: PaymentGatewayController.InitiateADSPayment
+    NAMES.ADVERTISEMENT: PaymentGatewayController.InitiateADSPayment,
+    NAMES.PLAN_UPGRADE: PaymentGatewayController.InitiateUpgradePayment,  # additive: prorated tier upgrade (Prompt 9)
 }
 
 @api_view(['POST'])

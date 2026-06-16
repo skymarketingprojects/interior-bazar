@@ -1,6 +1,7 @@
 from asgiref.sync import sync_to_async
-from app_ib.models import PlanQuery,BusinessPlan,Business,Subscription,TransectionData
+from app_ib.models import PlanQuery,BusinessPlan,ShopPlan,ArchitectPlan,Business,CustomUser,Subscription,TransectionData
 from app_ib.Utils.MyMethods import MY_METHODS
+from app_ib.Utils.EngineConfig import ENTITY_TYPE
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
 import time
@@ -75,16 +76,21 @@ class PLAN_TASKS:
         
 
     @classmethod
-    async def CreateBusinessPlan(self,plan:Subscription,businessId,transectionId):
+    async def _computeExpiry(self, plan:Subscription):
+        today = await MY_METHODS.getCurrentDateTime()
+        planDuration = await MY_METHODS.parseDurationToDays(plan.duration)
+        today_date = datetime(today.tm_year, today.tm_mon, today.tm_mday)
+        return today_date + relativedelta(months=planDuration)
+
+    @classmethod
+    async def CreateBusinessPlan(self,plan:Subscription,user:CustomUser,transectionId):
+        # Buy-before-entity: attach to the USER with business FK NULL (filled when
+        # the Business is created in-dashboard later — Prompt 7).
         try:
-            pass
-            business = await sync_to_async(Business.objects.get)(id=businessId)
-            today = await MY_METHODS.getCurrentDateTime()
-            planDuration =  await MY_METHODS.parseDurationToDays(plan.duration)
-            today_date = datetime(today.tm_year, today.tm_mon, today.tm_mday)
-            expiry_date = today_date + relativedelta(months=planDuration)
+            expiry_date = await self._computeExpiry(plan)
             businessPlanIns = BusinessPlan()
-            businessPlanIns.business= business
+            businessPlanIns.user= user
+            businessPlanIns.business= None
             businessPlanIns.plan= plan
             businessPlanIns.services= plan.services
             businessPlanIns.amount= plan.amount
@@ -93,25 +99,93 @@ class PLAN_TASKS:
             businessPlanIns.expireDate= expiry_date
             businessPlanIns.buyIntent = NAMES.WEBSITE
             await sync_to_async(businessPlanIns.save)()
-
-            data = await self.GetBusinessPlanData(businessPlanIns)
-            return data
+            return await self.GetPlanData(businessPlanIns, ENTITY_TYPE.BUSINESS)
         except Exception as e:
-            pass
             return None
-        
+
+    @classmethod
+    async def CreateShopPlan(self,plan:Subscription,user:CustomUser,transectionId):
+        try:
+            expiry_date = await self._computeExpiry(plan)
+            shopPlanIns = ShopPlan()
+            shopPlanIns.user= user
+            shopPlanIns.shop= None
+            shopPlanIns.plan= plan
+            shopPlanIns.services= plan.services
+            shopPlanIns.amount= plan.amount
+            shopPlanIns.isActive= False
+            shopPlanIns.transactionId= transectionId
+            shopPlanIns.expireDate= expiry_date
+            shopPlanIns.buyIntent = NAMES.WEBSITE
+            await sync_to_async(shopPlanIns.save)()
+            return await self.GetPlanData(shopPlanIns, ENTITY_TYPE.SHOP)
+        except Exception as e:
+            return None
+
+    @classmethod
+    async def CreateArchitectPlan(self,plan:Subscription,user:CustomUser,transectionId):
+        try:
+            expiry_date = await self._computeExpiry(plan)
+            archPlanIns = ArchitectPlan()
+            archPlanIns.user= user
+            archPlanIns.architect= None
+            archPlanIns.plan= plan
+            archPlanIns.services= plan.services
+            archPlanIns.amount= plan.amount
+            archPlanIns.isActive= False
+            archPlanIns.transactionId= transectionId
+            archPlanIns.expireDate= expiry_date
+            archPlanIns.buyIntent = NAMES.WEBSITE
+            await sync_to_async(archPlanIns.save)()
+            return await self.GetPlanData(archPlanIns, ENTITY_TYPE.ARCHITECT)
+        except Exception as e:
+            return None
+
+    @classmethod
+    def _flipUserToSeller(self, planIns):
+        # Activating ANY entity plan makes the buyer a seller (buy-first model):
+        # this replaces the old entity-creation-time type flip.
+        user = getattr(planIns, 'user', None)
+        if user is None:
+            business = getattr(planIns, 'business', None)
+            user = getattr(business, 'user', None) if business else None
+        if user is not None and user.type != NAMES.BUSINESS:
+            user.type = NAMES.BUSINESS
+            user.save(update_fields=['type'])
+
     @classmethod
     async def ActivateBusinessPlan(self,businessPlanIns:BusinessPlan):
         try:
-
             businessPlanIns.isActive= True
             businessPlanIns.lastActivate= datetime.now()
             await sync_to_async(businessPlanIns.save)()
+            await sync_to_async(self._flipUserToSeller)(businessPlanIns)
             return True
         except Exception as e:
-            pass
             return None
-    
+
+    @classmethod
+    async def ActivateShopPlan(self,shopPlanIns:ShopPlan):
+        try:
+            shopPlanIns.isActive= True
+            shopPlanIns.lastActivate= datetime.now()
+            await sync_to_async(shopPlanIns.save)()
+            await sync_to_async(self._flipUserToSeller)(shopPlanIns)
+            return True
+        except Exception as e:
+            return None
+
+    @classmethod
+    async def ActivateArchitectPlan(self,archPlanIns:ArchitectPlan):
+        try:
+            archPlanIns.isActive= True
+            archPlanIns.lastActivate= datetime.now()
+            await sync_to_async(archPlanIns.save)()
+            await sync_to_async(self._flipUserToSeller)(archPlanIns)
+            return True
+        except Exception as e:
+            return None
+
     @classmethod
     async def DeactivateBusinessPlan(self,businessPlanIns:BusinessPlan):
         try:
@@ -142,4 +216,34 @@ class PLAN_TASKS:
             return data
         except Exception as e:
             pass
+            return None
+
+    @classmethod
+    async def GetPlanData(self, planIns, entityType):
+        # Generic history/card payload for any of the 3 entity plan models.
+        # Caller must pass an instance whose .plan / entity FK are already loaded
+        # (freshly created or select_related) to stay async-safe.
+        try:
+            if entityType == ENTITY_TYPE.SHOP:
+                entity = getattr(planIns, 'shop', None); entityKey = NAMES.SHOP_ID
+            elif entityType == ENTITY_TYPE.ARCHITECT:
+                entity = getattr(planIns, 'architect', None); entityKey = NAMES.ARCHITECT_ID
+            else:
+                entity = getattr(planIns, 'business', None); entityKey = NAMES.BUSINESS_ID
+            return {
+                NAMES.ID: planIns.id,
+                NAMES.ENTITY_TYPE: entityType,
+                entityKey: entity.id if entity else None,
+                NAMES.SERVICES: planIns.services,
+                NAMES.AMOUNT: planIns.amount,
+                NAMES.PLAN_ID: planIns.plan.id if planIns.plan else None,
+                NAMES.PLAN_NAME: planIns.plan.title if planIns.plan else None,
+                NAMES.ISACTIVE: planIns.isActive,
+                NAMES.TRANSACTION: planIns.transactionId,
+                NAMES.LAST_ACTIVATE: planIns.lastActivate.strftime(NAMES.YMD_FORMAT) if planIns.lastActivate else None,
+                NAMES.EXPIRE_DATE: planIns.expireDate.strftime(NAMES.YMD_FORMAT) if planIns.expireDate else None,
+                NAMES.TIMESTAMP: planIns.timestamp.strftime(NAMES.YMD_FORMAT) if planIns.timestamp else None,
+                NAMES.UPDATED_AT: planIns.updatedAt.strftime(NAMES.YMD_FORMAT) if planIns.updatedAt else None,
+            }
+        except Exception as e:
             return None

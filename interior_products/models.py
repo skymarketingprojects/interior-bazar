@@ -1,6 +1,17 @@
 from django.db import models
 from app_ib.Utils.ModelHelper import indexShifting, applyDiscount
-from django_quill.fields import QuillField 
+from django_quill.fields import QuillField
+from django.utils.text import slugify
+
+
+def _unique_slug(model_class, text, pk):
+    """Generate a collision-free slug for an engine entity."""
+    base = slugify(text or '') or model_class.__name__.lower()
+    candidate, n = base, 1
+    while model_class.objects.filter(slug=candidate).exclude(pk=pk).exists():
+        n += 1
+        candidate = f'{base}-{n}'
+    return candidate
 # Create your models here.
 # Category
 class ProductCategory(models.Model):
@@ -58,7 +69,17 @@ class Catelogue(models.Model):
     subCategory = models.ManyToManyField(ProductSubCategory,related_name='catSubCatelogues')
     updatedAt = models.DateTimeField(auto_now=True)
 
+    # --- v2.1.0.0 engine fields (additive; totalDownload already exists above) ---
+    slug = models.SlugField(max_length=255, null=True, blank=True, unique=True)
+    viewCount = models.PositiveIntegerField(default=0)
+    trendingScore = models.FloatField(default=0.0, db_index=True)
+    hotScore = models.FloatField(default=0.0, db_index=True)
+    isActive = models.BooleanField(default=True)
+    label = models.CharField(max_length=50, blank=True, default='')
+
     def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = _unique_slug(Catelogue, self.title, self.pk)
         indexShifting(instance=self,filter_attr='business')
         super(Catelogue, self).save(*args, **kwargs)
 
@@ -101,11 +122,26 @@ class Product(models.Model):
 
     updatedAt = models.DateTimeField(auto_now=True)
 
+    # --- v2.1.0.0 engine fields (additive; legacy productTags TextField kept) ---
+    slug = models.SlugField(max_length=255, null=True, blank=True, unique=True)
+    viewCount = models.PositiveIntegerField(default=0)
+    trendingScore = models.FloatField(default=0.0, db_index=True)
+    hotScore = models.FloatField(default=0.0, db_index=True)
+    isActive = models.BooleanField(default=True)
+    stockQuantity = models.IntegerField(null=True, blank=True)
+    ratingValue = models.FloatField(default=0.0)
+    totalReviews = models.PositiveIntegerField(default=0)
+    ratingBreakdown = models.JSONField(default=dict, blank=True)
+    label = models.CharField(max_length=50, blank=True, default='')
+    tags = models.ManyToManyField('app_ib.Tag', blank=True, related_name='products')
+
     def __str__(self):
         return self.title
-    
+
     def save(self, *args, **kwargs):
         self.displayPrice = applyDiscount(self)
+        if not self.slug:
+            self.slug = _unique_slug(Product, self.title, self.pk)
         indexShifting(instance=self,filter_attr='business')
         super(Product, self).save(*args, **kwargs)
     
@@ -146,15 +182,38 @@ class Service(models.Model):
 
     category = models.ManyToManyField(ProductCategory,related_name='catServices')
     subCategory = models.ManyToManyField(ProductSubCategory,related_name='subcatServices')
-    
+
     index = models.IntegerField(default=1)
     updatedAt = models.DateTimeField(auto_now=True)
 
+    # --- v2.1.0.0 engine fields (additive) ---
+    slug = models.SlugField(max_length=255, null=True, blank=True, unique=True)
+    viewCount = models.PositiveIntegerField(default=0)
+    trendingScore = models.FloatField(default=0.0, db_index=True)
+    hotScore = models.FloatField(default=0.0, db_index=True)
+    isActive = models.BooleanField(default=True)
+    stockQuantity = models.IntegerField(null=True, blank=True)
+    # Services have no stock — only a bookable/not-bookable switch the owner flips.
+    # Distinct from isActive (listed/unlisted on the marketplace): an unavailable
+    # service stays visible on its detail page but is marked "Not available".
+    isAvailable = models.BooleanField(
+        default=True,
+        help_text="Owner-controlled availability (accepting work right now). "
+                  "NOT the same as isActive, which means listed/unlisted.")
+    ratingValue = models.FloatField(default=0.0)
+    totalReviews = models.PositiveIntegerField(default=0)
+    ratingBreakdown = models.JSONField(default=dict, blank=True)
+    label = models.CharField(max_length=50, blank=True, default='')
+    serviceAreas = models.JSONField(default=list, blank=True)
+    tags = models.ManyToManyField('app_ib.Tag', blank=True, related_name='services')
+
     def __str__(self):
         return self.title
-    
+
     def save(self, *args, **kwargs):
         self.displayPrice = applyDiscount(self)
+        if not self.slug:
+            self.slug = _unique_slug(Service, self.title, self.pk)
         indexShifting(instance=self,filter_attr='business')
         super(Service, self).save(*args, **kwargs)
     

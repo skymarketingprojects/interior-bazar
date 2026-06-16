@@ -36,10 +36,15 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)  # Needed for Django admin
     is_delete = models.BooleanField(default=False)
+    isVerified = models.BooleanField(default=False)
     timestamp = models.DateTimeField(auto_now_add=True)
     selfCreated = models.BooleanField(default=False)
     last_login = models.DateTimeField(null=True, blank=True)  # From AbstractBaseUser but can override
     text_password = models.CharField(max_length=500, default='Test@123', null=True, blank=True)
+    # Columns already exist in deployed DBs as NOT NULL without a DB default —
+    # the model must supply values on INSERT or user creation fails
+    preferred_language = models.CharField(max_length=10, default='en')
+    preferred_currency = models.CharField(max_length=3, default='INR')
 
     objects = CustomUserManager()
 
@@ -137,11 +142,44 @@ class Business(models.Model):
 
     # badge = models.TextField(null=True, blank=True)
     businessBadge= models.ForeignKey(BusinessBadge, on_delete=models.SET_NULL, null=True, blank=True)
+    expertiseTags = models.ManyToManyField("app_ib.Tag", blank=True, related_name="expert_businesses")
     bio = models.TextField( null=True, blank=True)
     timestamp= models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
 
     selfCreated = models.BooleanField(default=False)
+
+    # --- v2.1.0.0 engine fields (additive; legacy `rating` CharField kept as-is) ---
+    slug = models.SlugField(max_length=255, null=True, blank=True, unique=True)
+    ratingValue = models.FloatField(default=0.0)
+    totalReviews = models.PositiveIntegerField(default=0)
+    ratingBreakdown = models.JSONField(default=dict, blank=True)
+    trendingScore = models.FloatField(default=0.0, db_index=True)
+    hotScore = models.FloatField(default=0.0, db_index=True)
+    viewCount = models.PositiveIntegerField(default=0)
+    leadCount = models.PositiveIntegerField(default=0)
+    isVerified = models.BooleanField(default=False)
+    completionPercent = models.PositiveIntegerField(default=0)
+    canGoLive = models.BooleanField(default=False)
+    avgResponseSeconds = models.IntegerField(null=True, blank=True)
+    label = models.CharField(max_length=50, blank=True, default='')
+    # Geo coordinates for radius (haversine) search on the home filter bar.
+    # Additive + nullable: legacy businesses have no coordinates and fall back to
+    # city matching (see HomeController._apply_home_filter). Mirrors Shop.lat/lng
+    # field style (max_digits=9, decimal_places=6) so the engine treats both alike.
+    lat = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    lng = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base = slugify(self.businessName) or 'business'
+            candidate = base
+            n = 1
+            while Business.objects.filter(slug=candidate).exclude(pk=self.pk).exists():
+                n += 1
+                candidate = f'{base}-{n}'
+            self.slug = candidate
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f'business name - {self.businessName} : pk: {self.pk}'
@@ -219,6 +257,13 @@ class LeadQuery(models.Model):
     logs = models.JSONField(default=list, null=True, blank=True)
     clientLogs = models.JSONField(default=list, null=True, blank=True,help_text="{'by':'client/business','message':'Text message','date':'date in dmy format(02-12-2026)'}")
 
+    # --- v2.1.0.0 engine fields (additive) ---
+    respondedAt = models.DateTimeField(null=True, blank=True)  # first business action on the lead
+    sourceChannel = models.CharField(max_length=200, blank=True, default='')
+    originType = models.CharField(max_length=50, blank=True, default='')
+    originId = models.IntegerField(null=True, blank=True)
+    formType = models.CharField(max_length=50, blank=True, default='')
+    messageCount = models.PositiveIntegerField(default=0)
 
     timestamp= models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
@@ -276,14 +321,19 @@ class LeadQuery(models.Model):
 
 class Subscription(models.Model):
     type= models.CharField(max_length=800,null=True, blank=True) #listing or #Filter
-    title= models.CharField(max_length=800,null=True, blank=True) 
+    # Which entity this plan unlocks (business/shop/architect). Default 'business'
+    # so legacy rows + the frozen v1/plan/template/ response stay valid.
+    entityType= models.CharField(max_length=50, null=True, blank=True, default='business')
+    # Upgrade-ordering rank (higher = better tier); used by the upgrade flow (Prompt 9).
+    tier= models.IntegerField(null=True, blank=True, default=0)
+    title= models.CharField(max_length=800,null=True, blank=True)
     subtitle= models.CharField(max_length=800,null=True, blank=True) 
     services= models.TextField()
     duration= models.CharField(max_length=800,null=True, blank=True)
     tag= models.CharField(max_length=800,null=True, blank=True) 
     amount= models.CharField(max_length=800,null=True, blank=True)
     leadcount= models.IntegerField(null=True, blank=True,default=0)
-    discountPercentage= models.CharField(max_length=800,null=True, blank=True) 
+    discountPercentage= models.CharField(max_length=800,null=True, blank=True)
     discountAmount= models.CharField(max_length=800,null=True, blank=True) 
     payableAmount= models.CharField(max_length=800,null=True, blank=True)
     availableDuration = models.JSONField(
@@ -308,6 +358,9 @@ class Subscription(models.Model):
         return f'ID:{self.id} rating:{self.title}'
 
 class BusinessPlan(models.Model):
+    # Buy-before-entity: a plan is bought by a USER and may exist before the
+    # Business is created (business FK stays nullable, filled later in-dashboard).
+    user= models.ForeignKey('CustomUser',on_delete=models.CASCADE, null=True, blank=True,related_name='business_plans')
     business= models.ForeignKey(Business,on_delete=models.CASCADE, null=True, blank=True,related_name='business_plan')
     services= models.TextField()
     amount= models.CharField(max_length=500,default='')
@@ -338,6 +391,48 @@ class BusinessPlan(models.Model):
                 plan.save()
 
         super().save(*args, **kwargs)
+
+class ShopPlan(models.Model):
+    """Per-shop subscription (shops are 1:M per user). Buy-before-entity: bought by
+    a USER, links to a Shop later (nullable shop FK). Mirrors BusinessPlan."""
+    user= models.ForeignKey('CustomUser',on_delete=models.CASCADE, null=True, blank=True,related_name='shop_plans')
+    shop= models.ForeignKey('app_ib.Shop',on_delete=models.CASCADE, null=True, blank=True,related_name='shop_plan')
+    services= models.TextField(blank=True, default='')
+    amount= models.CharField(max_length=500,default='')
+    plan = models.ForeignKey(Subscription, on_delete=models.SET_NULL, null=True, blank=True)
+    isActive= models.BooleanField(default=False)
+    transactionId= models.CharField(max_length=500,default='',null=True, blank=True)
+    planSummary= models.TextField(blank=True, default='')
+    lastActivate= models.DateTimeField(auto_now_add=True)
+    expireDate= models.DateTimeField(null=True, blank=True)
+    buyIntent = models.CharField(max_length=1000,null=True, blank=True,default='website')
+    timestamp= models.DateTimeField(auto_now_add=True)
+    updatedAt = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'shop_plan is_active:{self.isActive} expire_date:{self.expireDate}'
+
+
+class ArchitectPlan(models.Model):
+    """Architect subscription (1 per user). Buy-before-entity: bought by a USER, links
+    to an Architect later (nullable architect FK). Mirrors BusinessPlan."""
+    user= models.ForeignKey('CustomUser',on_delete=models.CASCADE, null=True, blank=True,related_name='architect_plans')
+    architect= models.ForeignKey('app_ib.Architect',on_delete=models.CASCADE, null=True, blank=True,related_name='architect_plan')
+    services= models.TextField(blank=True, default='')
+    amount= models.CharField(max_length=500,default='')
+    plan = models.ForeignKey(Subscription, on_delete=models.SET_NULL, null=True, blank=True)
+    isActive= models.BooleanField(default=False)
+    transactionId= models.CharField(max_length=500,default='',null=True, blank=True)
+    planSummary= models.TextField(blank=True, default='')
+    lastActivate= models.DateTimeField(auto_now_add=True)
+    expireDate= models.DateTimeField(null=True, blank=True)
+    buyIntent = models.CharField(max_length=1000,null=True, blank=True,default='website')
+    timestamp= models.DateTimeField(auto_now_add=True)
+    updatedAt = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'architect_plan is_active:{self.isActive} expire_date:{self.expireDate}'
+
 
 # payment gateway related models
 class TransectionData(models.Model):
@@ -415,13 +510,15 @@ class Feedback(models.Model):
 
 class Blog(models.Model):
     user= models.ForeignKey(CustomUser,on_delete=models.CASCADE, null=True, blank=True)
-    title= models.TextField() 
+    title= models.TextField()
     slug = models.CharField(max_length=800, unique=True, null=True, blank=True)
     cover= models.FileField(null=True, blank=True,upload_to='blog/cover')
     coverImageUrl = models.TextField(default='',null=True, blank=True)
     description=QuillField(null=True, blank=True)
     author= models.TextField()
     authorImageUrl = models.URLField(default='',null=True, blank=True)
+    isFeatured = models.BooleanField(default=False)
+    featuredOrder = models.PositiveIntegerField(default=0)
     timestamp= models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
 
@@ -447,6 +544,19 @@ class Contact(models.Model):
 
     def __str__(self):
         return f'ID {self.pk} tag {self.tag}'
+
+class NewsletterSubscriber(models.Model):
+    """Email newsletter subscribers — sourced from blog / landing pages."""
+    email = models.EmailField(unique=True)
+    user = models.ForeignKey(CustomUser, null=True, blank=True, on_delete=models.SET_NULL, related_name="newsletter_subs")
+    source = models.CharField(max_length=30, default="blog")
+    isConfirmed = models.BooleanField(default=False)
+    isActive = models.BooleanField(default=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"NewsletterSubscriber {self.email} (confirmed={self.isConfirmed})"
+
 
 class Constants(models.Model):
     segments= models.TextField() # {'manu':Manugraturer, 'retailer':Retailer}
@@ -611,3 +721,6 @@ class ReelSection(models.Model):
             self.index = self.__class__.objects.all().count()+1
         indexShifting(instance=self,filter_attr='index')
         super().save(*args, **kwargs)
+
+# --- v2.1.0.0 engine models (Shop, Architect, Review, ViewEvent, TrendingScore, ...) ---
+from app_ib.engine_models import *  # noqa: E402,F401,F403

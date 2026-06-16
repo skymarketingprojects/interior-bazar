@@ -198,6 +198,19 @@ class NAMES:
     PLAN_ID='planId'
     PLAN_NAME='planName'
 
+    # entity-typed plans (buy-before-entity model)
+    PLAN_UPGRADE='plan_upgrade'
+    TARGET_PLAN_ID='targetPlanId'
+    SETTLE_AMOUNT='settleAmount'
+    ALLOWED='allowed'
+    REASON='reason'
+    ENTITY_TYPE='entityType'
+    SHOP='shop'
+    ARCHITECT='architect'
+    USER_ID='userId'
+    SHOP_ID='shopId'
+    ARCHITECT_ID='architectId'
+
     LAST_ACTIVATE='lastActivate'
     EXPIRE_DATE='expireDate'
 
@@ -443,8 +456,70 @@ class NAMES:
     USER_IDS='userIds'
     ACCESS_IDS='accessIds'
 
+    # engine gap endpoints (tasks 1-5)
+    CONTACTS='contacts'
+    BUSINESS_BADGE='businessBadge'
+    PROJECTS='projects'
+    IMAGE_URL='imageUrl'
+    IS_PRIMARY='isPrimary'
+    ITEMS='items'
+    KIND='kind'
+    ACTION='action'
+    ENTITY_NAME='entityName'
+    CLICK_TYPE='clickType'
+    FORM_TYPE='formType'
+    MESSAGE_COUNT='messageCount'
+    LEAD_STAGE='stage'
+    DWELL_SECONDS='dwellSeconds'
 
+    # Phase 1 — Award / ProcessStep / Expertise / Blog / CustomUser
+    AWARDS='awards'
+    PROCESS_STEPS='processSteps'
+    EXPERTISE='expertise'
+    CREDENTIALS='credentials'
+    ISSUER='issuer'
+    YEAR='year'
+    STEP_NUMBER='stepNumber'
+    IS_FEATURED='isFeatured'
+    FEATURED_ORDER='featuredOrder'
+    IS_VERIFIED='isVerified'
 
+    # Phase 1 — credential CRUD / recently-viewed summary
+    ENTITY_ID='entityId'
+    OBJECT_ID='objectId'
+    TAGS='tags'
+    FACETS='facets'
+    KPIS='kpis'
+    COUNT='count'
+    THIS_WEEK='thisWeek'
+    UNIQUE_TYPES='uniqueTypes'
+    CONTINUE_ITEM='continue'
+    VIEWED_AT='viewedAt'
+    AWARD_ID='awardId'
+    STEP_ID='stepId'
+
+    # Phase 2/3 — UserSession / RelatedItem / NewsletterSubscriber / Catelogue trending
+    SESSIONS='sessions'
+    JTI='jti'
+    DEVICE_LABEL='deviceLabel'
+    USER_AGENT='userAgent'
+    IP_ADDRESS='ipAddress'
+    LAST_ACTIVE_AT='lastActiveAt'
+    IS_CURRENT='isCurrent'
+    REVOKED='revoked'
+    SCORE='score'
+    SUBSCRIBED='subscribed'
+    TRENDING_SCORE='trendingScore'
+    VIEW_COUNT='viewCount'
+
+    # Phase 3 — RelatedItem / Newsletter / Blog featured / Catalogue trending / Engine profile
+    RELATED='related'
+    SUBSCRIBE='subscribe'
+    FEATURED='featured'
+    SOURCE='source'
+    EXCERPT='excerpt'
+    AUTHOR_IMAGE_URL='authorImageUrl'
+    DISPLAY_PRICE='displayPrice'
 
 
 class ACCESSLIST:

@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import json
+import logging
 from interior_bazzar  import settings
 from app_ib.serializers import MyTokenObtainPairSerializer
 from django.contrib.auth.hashers import make_password, check_password
@@ -9,6 +10,8 @@ from app_ib.Utils.AppMode import APPMODE, APPMODE_URL
 from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.Utils.Names import NAMES
 from asgiref.sync import sync_to_async
+
+logger = logging.getLogger(__name__)
 
 class AUTH_TASK:
 
@@ -45,11 +48,11 @@ class AUTH_TASK:
             await sync_to_async(user_ins.save)()
             return user_ins
         except Exception as e:
-            pass
+            logger.exception('CreateUser failed for username=%s', username)
             return None
 
     @classmethod
-    async def GenerateUserToken(self, user_ins):
+    async def GenerateUserToken(self, user_ins, request=None):
         try:
             """Generate user token"""
             token = await MyTokenObtainPairSerializer.get_token(user=user_ins)
@@ -65,9 +68,22 @@ class AUTH_TASK:
                 NAMES.IS_DELETE:user_ins.is_delete,
                 NAMES.UNIQUE_ID:user_ins.unique_id
             }
+
+            # Task 1 — record session (best-effort; never breaks login)
+            try:
+                from rest_framework_simplejwt.tokens import RefreshToken as _RefreshToken
+                from asgiref.sync import sync_to_async as _s2a
+                from app_ib.serializers import _record_session_sync
+                _rt_obj = _RefreshToken(refresh_token)
+                _refresh_jti = str(_rt_obj.get("jti", ""))
+                if _refresh_jti:
+                    await _s2a(_record_session_sync)(user_ins, _refresh_jti, request)
+            except Exception as _se:
+                logger.warning("Session recording skipped in GenerateUserToken: %s", _se)
+
             return data
         except Exception as e:
-            pass
+            logger.exception('GenerateUserToken failed for user id=%s', getattr(user_ins, 'id', None))
             return None
 
     @classmethod

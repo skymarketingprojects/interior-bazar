@@ -1,5 +1,6 @@
 from django.urls import path, include
 from . import views
+from . import v3Views
 
 app_name = 'interior_products'
 
@@ -37,5 +38,12 @@ urlpatterns = [
     #tab
     path('tab/', views.GetTabsView, name="get_tabs"),
     path('own-services/', views.GetOwnServicesView, name="own_services"),
+
+    # ── v3 product detail flow (NEW, additive — legacy endpoints above are frozen) ──
+    # Redis-free reads consumed only by the v3 frontend; see v3Views.py.
+    # NOTE: the two fixed-suffix routes must stay above the <str:slugOrId> catch-all.
+    path('v3/product/<int:productId>/related/', v3Views.RelatedProductsV3View.as_view(), name='ProductRelatedV3'),
+    path('v3/product/<int:productId>/from-business/', v3Views.BusinessProductsV3View.as_view(), name='ProductFromBusinessV3'),
+    path('v3/product/<str:slugOrId>/', v3Views.ProductDetailV3View.as_view(), name='ProductDetailV3'),
 
 ]

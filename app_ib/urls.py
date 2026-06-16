@@ -4,7 +4,8 @@ from django.conf import settings
 from app_ib import views
 from django.views.decorators.cache import cache_page
 from rest_framework_simplejwt.views import (TokenRefreshView)
-from app_ib.Views import AuthView, QueryView, FeedbackView
+from app_ib.serializers import SessionAwareTokenRefreshView
+from app_ib.Views import AuthView, QueryView, FeedbackView, GoogleAuthView
 from app_ib.Views import ProfileView
 # from app_ib.Views.Business import BusinessView
 # from app_ib.Views.Business import BusinessLocationView
@@ -27,9 +28,20 @@ from .views import generateUploadUrlView
 
 app_name = 'interior_bazzar'
 urlpatterns = [
-    
+
     #########################################################
-    # Test: 
+    # v2.1.0.0 discovery/trending engine
+    #########################################################
+    path('v1/engine/', include('app_ib.engine_urls')),
+
+    #########################################################
+    # Google login (auth-code exchange + id-token)
+    #########################################################
+    path('v1/auth/google/', GoogleAuthView.GoogleLoginView, name='GoogleLoginView'),
+    path('v1/auth/google/id-token/', GoogleAuthView.GoogleIdTokenLoginView, name='GoogleIdTokenLoginView'),
+
+    #########################################################
+    # Test:
     #########################################################
     path('test/', views.TestView, name='TestView'),
     path('test-mail/', views.TestMailView, name='TestMailView'),
@@ -50,9 +62,12 @@ urlpatterns = [
     path('v1/auth/reset-password/', AuthView.ResetPasswordView, name='ResetPasswordView'),
     
     #########################################################
-    # Token: 
+    # Token:
     #########################################################
-    path('v1/auth/refresh-token/', TokenRefreshView.as_view(), name='token-refresh'),
+    path('v1/auth/refresh-token/', SessionAwareTokenRefreshView.as_view(), name='token-refresh'),
+    # Aliases for the paths the SPA frontend actually calls (legacy routes above untouched)
+    path('v1/auth/get-refresh-token/', SessionAwareTokenRefreshView.as_view(), name='token-refresh-alias'),
+    path('v1/auth/forget_password_request/', AuthView.ForgotPasswordRequestView, name='ForgetPasswordRequestAlias'),
 
     #########################################################
     # User Profile: 
