@@ -22,7 +22,11 @@ class SERVICES_CONTROLLER:
     async def getService(self,serviceId:int)->LocalResponse:
         try:
             cache_key = f"service_detail_{serviceId}"
-            cached_data = cache.get(cache_key)
+            # Cache is best-effort — a Redis outage must not fail the request. See ISSUE-001.
+            try:
+                cached_data = cache.get(cache_key)
+            except Exception:
+                cached_data = None
             if cached_data:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
@@ -48,7 +52,10 @@ class SERVICES_CONTROLLER:
                     data={'error':RESPONSE_MESSAGES.service_fetch_error}
                 )
             
-            cache.set(cache_key, serviceData, 3600)  # Cache for 1 hour
+            try:
+                cache.set(cache_key, serviceData, 3600)  # Cache for 1 hour
+            except Exception:
+                pass  # Redis down — skip caching, still return the ORM result
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.service_fetch_success,
