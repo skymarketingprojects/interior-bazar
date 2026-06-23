@@ -141,6 +141,14 @@ class PROFILE_CONTROLLER:
                 'isSuperAdmin': False
             }
 
+            # Expose the owned business id so the seller dashboard can load the
+            # business profile (it resolves the entity from user.businessId).
+            business_id = await sync_to_async(
+                lambda: getattr(getattr(userIns, NAMES.USER_BUSINESS_RELATION, None), NAMES.ID, None)
+            )()
+            if business_id is not None:
+                user_data[NAMES.BUSINESS_ID] = business_id
+
             if userIns.type == NAMES.ADMIN:
                 user_data['isSuperAdmin'] = await sync_to_async(userIns.roles.filter(is_full_access=True).exists)()
 
