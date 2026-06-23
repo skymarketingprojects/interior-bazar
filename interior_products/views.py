@@ -50,7 +50,12 @@ class ProductView(AsyncAPIView):
             else:
                 cache_key = f"cache:product:{productId}"
             
-            cached_data = await cache_get(cache_key)
+            # Cache is best-effort: a Redis outage must NOT fail the request — fall
+            # through to the ORM instead of erroring out. See ISSUE-001.
+            try:
+                cached_data = await cache_get(cache_key)
+            except Exception:
+                cached_data = None
             if cached_data:
                 return ServerResponse(**cached_data)
 
@@ -58,14 +63,17 @@ class ProductView(AsyncAPIView):
                 productsResponse = await PRODUCTS_CONTROLLER.getProductsForBusiness(business)
             else:
                 productsResponse = await PRODUCTS_CONTROLLER.getProduct(productId)
-            
+
             resp_dict = {
                 'response': productsResponse.response,
                 'message': productsResponse.message,
                 'code': productsResponse.code,
                 'data': productsResponse.data
             }
-            await cache_set(cache_key, resp_dict, timeout=PRODUCT_TTL)
+            try:
+                await cache_set(cache_key, resp_dict, timeout=PRODUCT_TTL)
+            except Exception:
+                pass  # Redis down — skip caching, still return the ORM result
 
             return ServerResponse(**resp_dict)
         except Exception as e:
@@ -156,7 +164,12 @@ class ServiceView(AsyncAPIView):
             else:
                 cache_key = f"cache:service:{serviceId}"
             
-            cached_data = await cache_get(cache_key)
+            # Cache is best-effort: a Redis outage must NOT fail the request — fall
+            # through to the ORM instead of erroring out. See ISSUE-001.
+            try:
+                cached_data = await cache_get(cache_key)
+            except Exception:
+                cached_data = None
             if cached_data:
                 return ServerResponse(**cached_data)
 
@@ -171,7 +184,10 @@ class ServiceView(AsyncAPIView):
                 'code': servicesResponse.code,
                 'data': servicesResponse.data
             }
-            await cache_set(cache_key, resp_dict, timeout=PRODUCT_TTL)
+            try:
+                await cache_set(cache_key, resp_dict, timeout=PRODUCT_TTL)
+            except Exception:
+                pass  # Redis down — skip caching, still return the ORM result
 
             return ServerResponse(**resp_dict)
         except Exception as e:
