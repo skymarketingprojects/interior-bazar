@@ -151,6 +151,10 @@ class SERVICES_TASKS:
                 'index':service.index,
                 "categories":prodCategory,
                 "subCategories":prodSubCategory,
+                # Owning business so the service-detail page can show the provider
+                # ("By <business>") and link back to it. See ISSUE-004.
+                "businessId":service.business.id,
+                "businessName":service.business.businessName,
                 "phone":service.business.user.user_profile.phone,
                 "countryCode":service.business.user.user_profile.countryCode
             }
