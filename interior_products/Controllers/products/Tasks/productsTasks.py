@@ -146,8 +146,19 @@ class PRODUCTS_TASKS:
             except Exception as e:
                 pass
                 pass
-            specifications = {"sizeAvailabe":data.sizeAvailabe,"userManual":data.userManual,"detail":data.detail}
+            # These spec fields are optional — the v3 dashboard create form does not
+            # send them. Use getattr defaults so a missing key can't raise an
+            # AttributeError AFTER the product is already saved (which made create
+            # report "Unable to create product" on success — F3). Only persist a
+            # spec row when the value is actually provided.
+            specifications = {
+                "sizeAvailabe": getattr(data, "sizeAvailabe", None),
+                "userManual": getattr(data, "userManual", None),
+                "detail": getattr(data, "detail", None),
+            }
             for key,value in specifications.items():
+                if not value:
+                    continue
                 await sync_to_async(ProductSpecification.objects.create)(
                     product=product,
                     title=key,

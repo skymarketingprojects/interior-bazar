@@ -81,7 +81,31 @@ class BUSS_CONTROLLER:
                 data={
                     NAMES.ERROR: str(e)
                 })
-    
+
+    async def UpdateBusinessContactInfo(self, user, data):
+        try:
+            contact_info = await BUSS_TASK.UpdateBusinessContactInfoTask(user, data)
+            if contact_info is not None:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.success,
+                    message=RESPONSE_MESSAGES.business_contact_update_success,
+                    code=RESPONSE_CODES.success,
+                    data=contact_info)
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.business_contact_update_error,
+                code=RESPONSE_CODES.error,
+                data={})
+
+        except Exception as e:
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.business_contact_update_error,
+                code=RESPONSE_CODES.error,
+                data={
+                    NAMES.ERROR: str(e)
+                })
+
     @classmethod
     async def CreateBusiness(self, user_ins, data):
         try:

@@ -230,6 +230,13 @@ class _EngineController:
         if user and user.is_authenticated:
             from app_ib.algorithms.state import record_recently_viewed
             record_recently_viewed(user, entity_type, object_id)
+        # Inbound engagement: "someone viewed your <entity>" (fire-and-forget).
+        try:
+            from app_ib.algorithms.state import record_engagement
+            from app_ib.Utils.EngineConfig import ENGAGEMENT_VERB
+            record_engagement(ENGAGEMENT_VERB.VIEW, entity_type, object_id, actor=user)
+        except Exception:
+            pass
         return True
 
     def track_click(self, entity_type, object_id, click_type, user=None, session_id=""):
@@ -238,6 +245,15 @@ class _EngineController:
         ClickEvent.objects.create(contentType=ct, objectId=object_id, clickType=click_type,
                                   user=user if (user and user.is_authenticated) else None,
                                   sessionId=session_id or "")
+        # Inbound engagement: high-intent clicks (whatsapp/call/website) → feed row.
+        try:
+            from app_ib.algorithms.state import record_engagement
+            from app_ib.Utils.EngineConfig import ENGAGEMENT_VERB
+            verb = ENGAGEMENT_VERB.FROM_CLICK.get(click_type)
+            if verb:
+                record_engagement(verb, entity_type, object_id, actor=user)
+        except Exception:
+            pass
         return True
 
     def track_search(self, query, result_count=0, city="", state="", user=None, session_id=""):

@@ -1,9 +1,10 @@
 from asgiref.sync import sync_to_async
-from app_ib.models import PlanQuery,BusinessPlan,ShopPlan,ArchitectPlan,Business,CustomUser,Subscription,TransectionData
+from app_ib.models import PlanQuery,BusinessPlan,ShopPlan,ArchitectPlan,AutomationPlan,Business,CustomUser,Subscription,TransectionData
 from app_ib.Utils.MyMethods import MY_METHODS
-from app_ib.Utils.EngineConfig import ENTITY_TYPE
+from app_ib.Utils.EngineConfig import ENTITY_TYPE, PLAN_STATUS
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
+from django.utils import timezone
 import time
 from app_ib.Utils.Names import NAMES
 
@@ -79,7 +80,7 @@ class PLAN_TASKS:
     async def _computeExpiry(self, plan:Subscription):
         today = await MY_METHODS.getCurrentDateTime()
         planDuration = await MY_METHODS.parseDurationToDays(plan.duration)
-        today_date = datetime(today.tm_year, today.tm_mon, today.tm_mday)
+        today_date = timezone.make_aware(datetime(today.tm_year, today.tm_mon, today.tm_mday))
         return today_date + relativedelta(months=planDuration)
 
     @classmethod
@@ -154,42 +155,66 @@ class PLAN_TASKS:
             user.save(update_fields=['type'])
 
     @classmethod
+    async def _activatePlan(self, planIns):
+        # status is the lifecycle source of truth; isActive is derived in model save().
+        planIns.status = PLAN_STATUS.ACTIVE
+        planIns.lastActivate = timezone.now()
+        await sync_to_async(planIns.save)()
+        await sync_to_async(self._flipUserToSeller)(planIns)
+        return True
+
+    @classmethod
     async def ActivateBusinessPlan(self,businessPlanIns:BusinessPlan):
         try:
-            businessPlanIns.isActive= True
-            businessPlanIns.lastActivate= datetime.now()
-            await sync_to_async(businessPlanIns.save)()
-            await sync_to_async(self._flipUserToSeller)(businessPlanIns)
-            return True
+            return await self._activatePlan(businessPlanIns)
         except Exception as e:
             return None
 
     @classmethod
     async def ActivateShopPlan(self,shopPlanIns:ShopPlan):
         try:
-            shopPlanIns.isActive= True
-            shopPlanIns.lastActivate= datetime.now()
-            await sync_to_async(shopPlanIns.save)()
-            await sync_to_async(self._flipUserToSeller)(shopPlanIns)
-            return True
+            return await self._activatePlan(shopPlanIns)
         except Exception as e:
             return None
 
     @classmethod
     async def ActivateArchitectPlan(self,archPlanIns:ArchitectPlan):
         try:
-            archPlanIns.isActive= True
-            archPlanIns.lastActivate= datetime.now()
-            await sync_to_async(archPlanIns.save)()
-            await sync_to_async(self._flipUserToSeller)(archPlanIns)
-            return True
+            return await self._activatePlan(archPlanIns)
+        except Exception as e:
+            return None
+
+    @classmethod
+    async def ActivateAutomationPlan(self,autoPlanIns:AutomationPlan):
+        try:
+            return await self._activatePlan(autoPlanIns)
+        except Exception as e:
+            return None
+
+    @classmethod
+    async def CreateAutomationPlan(self,plan:Subscription,user:CustomUser,transectionId):
+        # Bundle plan: entity-less at purchase (all three entity FKs stay NULL until
+        # the user creates each entity). Unlocks all three tabs via grantsEntityTypes.
+        try:
+            expiry_date = await self._computeExpiry(plan)
+            autoPlanIns = AutomationPlan()
+            autoPlanIns.user= user
+            autoPlanIns.plan= plan
+            autoPlanIns.services= plan.services
+            autoPlanIns.amount= plan.amount
+            autoPlanIns.status= PLAN_STATUS.PENDING
+            autoPlanIns.transactionId= transectionId
+            autoPlanIns.expireDate= expiry_date
+            autoPlanIns.buyIntent = NAMES.WEBSITE
+            await sync_to_async(autoPlanIns.save)()
+            return await self.GetPlanData(autoPlanIns, ENTITY_TYPE.AUTOMATION)
         except Exception as e:
             return None
 
     @classmethod
     async def DeactivateBusinessPlan(self,businessPlanIns:BusinessPlan):
         try:
-            businessPlanIns.isActive= False
+            businessPlanIns.status= PLAN_STATUS.EXPIRED
             await sync_to_async(businessPlanIns.save)()
             return True
         except Exception as e:
@@ -228,6 +253,9 @@ class PLAN_TASKS:
                 entity = getattr(planIns, 'shop', None); entityKey = NAMES.SHOP_ID
             elif entityType == ENTITY_TYPE.ARCHITECT:
                 entity = getattr(planIns, 'architect', None); entityKey = NAMES.ARCHITECT_ID
+            elif entityType == ENTITY_TYPE.AUTOMATION:
+                # Bundle plan — entity-less; no single entityId to report.
+                entity = None; entityKey = NAMES.BUSINESS_ID
             else:
                 entity = getattr(planIns, 'business', None); entityKey = NAMES.BUSINESS_ID
             return {
@@ -239,6 +267,7 @@ class PLAN_TASKS:
                 NAMES.PLAN_ID: planIns.plan.id if planIns.plan else None,
                 NAMES.PLAN_NAME: planIns.plan.title if planIns.plan else None,
                 NAMES.ISACTIVE: planIns.isActive,
+                NAMES.STATUS: planIns.status,
                 NAMES.TRANSACTION: planIns.transactionId,
                 NAMES.LAST_ACTIVATE: planIns.lastActivate.strftime(NAMES.YMD_FORMAT) if planIns.lastActivate else None,
                 NAMES.EXPIRE_DATE: planIns.expireDate.strftime(NAMES.YMD_FORMAT) if planIns.expireDate else None,

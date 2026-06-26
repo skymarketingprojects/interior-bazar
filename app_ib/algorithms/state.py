@@ -7,8 +7,8 @@ from datetime import timedelta
 from django.utils import timezone
 from django.db import transaction
 
-from app_ib.Utils.EngineConfig import ALGO
-from app_ib.algorithms.helpers import content_type_for
+from app_ib.Utils.EngineConfig import ALGO, ENGAGEMENT_VERB
+from app_ib.algorithms.helpers import content_type_for, get_model, owner_user_id
 
 
 # ---------------------------------------------------------------------------
@@ -81,4 +81,61 @@ def toggle_saved(user, entity_type, object_id):
         existing.delete()
         return False  # now unsaved
     SavedItem.objects.create(user=user, contentType=ct, objectId=object_id)
+    # Inbound engagement: tell the entity owner "someone saved your <entity>".
+    try:
+        record_engagement(ENGAGEMENT_VERB.SAVE, entity_type, object_id, actor=user)
+    except Exception:
+        pass  # fire-and-forget — never let the feed write break the save
     return True       # now saved
+
+
+# ---------------------------------------------------------------------------
+# Inbound-engagement feed writer (EngagementActivity)
+#   Records ONE row per action ANOTHER user took on an entity the seller owns
+#   ("someone viewed/saved/enquired about your <entity>"). Keyed by `owner` so
+#   the dashboard feed is a single indexed filter(owner=...). Self-actions
+#   (actor == owner) are skipped; repeats within DEDUPE_MINUTES bump count.
+#   Callers MUST treat this as fire-and-forget (wrap in try/except).
+# ---------------------------------------------------------------------------
+def record_engagement(verb, entity_type, object_id, actor=None, actor_name=""):
+    from app_ib.engine_models import EngagementActivity
+
+    model = get_model(entity_type)
+    obj = model.objects.filter(id=object_id).first()
+    if obj is None:
+        return None
+    owner_id = owner_user_id(obj)
+    if not owner_id:
+        return None  # ownerless entity — nobody to notify
+
+    actor_id = getattr(actor, "id", None) if getattr(actor, "is_authenticated", False) else None
+    if actor_id and actor_id == owner_id:
+        return None  # don't surface a seller's own actions on their own entity
+
+    ct = content_type_for(entity_type)
+    name = (getattr(obj, "businessName", None) or getattr(obj, "name", None)
+            or getattr(obj, "title", None) or "")
+    display_actor = actor_name or ENGAGEMENT_VERB.ANON_ACTOR
+
+    now = timezone.now()
+    window_start = now - timedelta(minutes=ENGAGEMENT_VERB.DEDUPE_MINUTES)
+    existing = (EngagementActivity.objects
+                .filter(owner_id=owner_id, contentType=ct, objectId=object_id,
+                        verb=verb, actor_id=actor_id, timestamp__gte=window_start)
+                .order_by("-timestamp").first())
+    if existing is not None:
+        existing.count = (existing.count or 1) + 1
+        existing.timestamp = now
+        existing.isRead = False
+        if name:
+            existing.entityName = name
+        if actor_name:
+            existing.actorName = actor_name
+        existing.save(update_fields=["count", "timestamp", "isRead", "entityName", "actorName"])
+        return existing.id
+
+    row = EngagementActivity.objects.create(
+        owner_id=owner_id, actor_id=actor_id, actorName=display_actor, verb=verb,
+        contentType=ct, objectId=object_id, entityType=entity_type,
+        entityName=name, timestamp=now)
+    return row.id

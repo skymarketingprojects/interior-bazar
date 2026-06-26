@@ -13,6 +13,9 @@ class NAMES:
     #common
     TITLE='title'
     SUBTITLE='subtitle'
+    SPECIALIZATION='specialization'
+    ICON='icon'
+    DESC='desc'
     ID='id'
     PK='pk'
     NAME='name'
@@ -135,6 +138,7 @@ class NAMES:
     BUSINESS_CATEGORY_RELATION='business_category'
     BUSINESS_SEGMENT_RELATION='business_segment'
     BUSINESS_LOCATION_RELATION='business_location'
+    USER_BUSINESS_RELATION='user_business'
 
     WEBSITE='website'
 

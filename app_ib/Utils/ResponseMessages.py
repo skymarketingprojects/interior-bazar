@@ -124,6 +124,8 @@ class RESPONSE_MESSAGES:
 
     business_contact_fetch_error = "Business contact fetch error"
     business_contact_fetch_success = "Business contact fetch success"
+    business_contact_update_error = "Business contact update error"
+    business_contact_update_success = "Business contact updated successfully"
 
     ############################################
     #location
@@ -299,20 +301,20 @@ class RESPONSE_MESSAGES:
     # Catelog
     ############################################
     catelog_fetch_success= 'Catelog fetched successfully'
-    catelog_fetch_error= 'Unable to fetch catelog'
+    catelog_fetch_error= 'Unable to fetch catalogue'
 
-    catelog_create_success= 'Catelog created successfully'
-    catelog_create_error= 'Unable to create catelog'
+    catelog_create_success= 'Catalogue created successfully'
+    catelog_create_error= 'Unable to create catalogue'
 
-    catelog_update_success= 'Catelog updated successfully'
-    catelog_update_error= 'Unable to update catelog'
+    catelog_update_success= 'Catalogue updated successfully'
+    catelog_update_error= 'Unable to update catalogue'
 
-    catelog_delete_success= 'Catelog deleted successfully'
-    catelog_delete_error= 'Unable to delete catelog'
-    user_catelog_create_error= 'Unable to create user catelog'
-    catelog_deleted_error= 'Unable to delete catelog'
+    catelog_delete_success= 'Catalogue deleted successfully'
+    catelog_delete_error= 'Unable to delete catalogue'
+    user_catelog_create_error= 'Unable to create catalogue'
+    catelog_deleted_error= 'Unable to delete catalogue'
 
-    user_catelog_update_error= 'Unable to update user catelog'
+    user_catelog_update_error= 'Unable to update catalogue'
     
 
     ####################################

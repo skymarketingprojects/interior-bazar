@@ -279,7 +279,12 @@ class CatelogView(AsyncAPIView):
             else:
                 cache_key = f"cache:catalogue:{catelogueId}"
 
-            cached_data = await cache_get(cache_key)
+            # Cache is best-effort: a Redis outage must NOT fail the request —
+            # fall through to the ORM instead of erroring out. See ISSUE-001.
+            try:
+                cached_data = await cache_get(cache_key)
+            except Exception:
+                cached_data = None
             if cached_data:
                 return ServerResponse(**cached_data)
 
@@ -287,14 +292,17 @@ class CatelogView(AsyncAPIView):
                 catelogResponse = await CATELOG_CONTROLLER.GetCatelogForBusiness(business)
             else:
                 catelogResponse = await CATELOG_CONTROLLER.GetCatelog(catelogueId)
-            
+
             resp_dict = {
                 'response': catelogResponse.response,
                 'message': catelogResponse.message,
                 'code': catelogResponse.code,
                 'data': catelogResponse.data
             }
-            await cache_set(cache_key, resp_dict, timeout=PRODUCT_TTL)
+            try:
+                await cache_set(cache_key, resp_dict, timeout=PRODUCT_TTL)
+            except Exception:
+                pass  # Redis down — skip caching, still return the ORM result
 
             return ServerResponse(**resp_dict)
         except Exception as e:

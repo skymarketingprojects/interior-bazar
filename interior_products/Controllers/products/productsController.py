@@ -152,7 +152,12 @@ class PRODUCTS_CONTROLLER:
     async def getProductsForBusiness(self,business:Business)->LocalResponse:
         try:
             cache_key = f"products_business_{business.id}"
-            cached_data = cache.get(cache_key)
+            # Cache is best-effort — a Redis outage must NOT fail the owner's
+            # listing (see ISSUE-001 / F3). Fall through to the ORM on any error.
+            try:
+                cached_data = cache.get(cache_key)
+            except Exception:
+                cached_data = None
             if cached_data:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
@@ -170,8 +175,11 @@ class PRODUCTS_CONTROLLER:
                 productData = await PRODUCTS_TASKS.getProduct(product)
                 if productData:
                     productsData.append(productData)
-            
-            cache.set(cache_key, productsData, 3600)  # Cache for 1 hour
+
+            try:
+                cache.set(cache_key, productsData, 3600)  # Cache for 1 hour
+            except Exception:
+                pass  # Redis down — skip caching, still return the ORM result
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.products_fetch_success,

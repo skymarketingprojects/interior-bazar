@@ -118,6 +118,63 @@ def generate_trend_story(business_name, rank, window_label, growth_pct):
     }
 
 
+def generate_specialization_cards(business_name, category="", bio="", about="",
+                                  product_titles=None, service_titles=None,
+                                  location="", since=""):
+    """Return up to ALGO.SPEC_CARD_CAP specialization cards [{icon,title,desc}] for the
+    business detail "what they specialize in" block. Gemini first; a deterministic
+    template fallback (mirrors the frontend's old mapSpecs) when Gemini is
+    unconfigured/empty so the cards always render."""
+    products = ", ".join([t for t in (product_titles or []) if t][:20])
+    services = ", ".join([t for t in (service_titles or []) if t][:20])
+    icon_list = ", ".join(ALGO.SPEC_ICONS)
+    prompt = (
+        "You write concise 'specialization' cards for an interior-design business "
+        "profile. From the details below, infer what this business actually specializes "
+        f"in and return ONLY a JSON array of at most {ALGO.SPEC_CARD_CAP} objects, each "
+        '{"icon": <one of the allowed icons>, "title": <2-4 word capability>, '
+        '"desc": <one short sentence>}. No explanations.\n'
+        f"Allowed icons: {icon_list}\n"
+        f"Business: {business_name}\nCategory: {category}\n"
+        f"Bio: {bio}\nAbout: {about}\n"
+        f"Products: {products}\nServices: {services}\n"
+        f"Location: {location}\nEstablished: {since}\n"
+    )
+    cards = GeminiClient.generate_json(
+        prompt, temperature=ALGO.SPEC_GEMINI_TEMPERATURE,
+        max_output_tokens=ALGO.SPEC_GEMINI_MAX_TOKENS,
+    )
+    out = []
+    if isinstance(cards, list):
+        for c in cards:
+            if not isinstance(c, dict):
+                continue
+            title = str(c.get("title", "")).strip()
+            desc = str(c.get("desc", "")).strip()
+            icon = str(c.get("icon", "")).strip()
+            if not title:
+                continue
+            if icon not in ALGO.SPEC_ICONS:
+                icon = ALGO.SPEC_ICONS[len(out) % len(ALGO.SPEC_ICONS)]
+            out.append({"icon": icon, "title": title, "desc": desc})
+    if out:
+        return out[:ALGO.SPEC_CARD_CAP], True
+    return _fallback_specialization_cards(category, location, since), False
+
+
+def _fallback_specialization_cards(category="", location="", since=""):
+    """Deterministic cards from structured fields (no AI). Mirrors the old frontend
+    mapSpecs so the block is never empty when Gemini is unavailable."""
+    cards = []
+    if category:
+        cards.append({"icon": "palette", "title": "Specialization", "desc": category})
+    if location:
+        cards.append({"icon": "map-pin", "title": "Location", "desc": location})
+    if since:
+        cards.append({"icon": "calendar-stats", "title": "Established", "desc": str(since)})
+    return cards[:ALGO.SPEC_CARD_CAP]
+
+
 def generate_architect_editorial(name, city="", state="", rating=0.0):
     """Editors-pick copy for a trending architect. Gemini first, template fallback.
     Returns {eyebrow, headline, body, trendTags, source}."""

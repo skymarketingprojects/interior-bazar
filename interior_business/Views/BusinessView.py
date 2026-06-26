@@ -271,3 +271,40 @@ class BusinessBannerView(APIView):
                 data={
                     NAMES.ERROR: str(e)
                 })
+
+class BusinessContactView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    async def get(self, request):
+        try:
+            final_response = await BUSS_CONTROLLER.GetBusinessContactInfo(business=request.user.user_business)
+            return ServerResponse(
+                response=final_response.response,
+                code=final_response.code,
+                message=final_response.message,
+                data=final_response.data)
+        except Exception as e:
+            return ServerResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.business_contact_fetch_error,
+                code=RESPONSE_CODES.error,
+                data={
+                    NAMES.ERROR: str(e)
+                })
+
+    async def post(self, request):
+        try:
+            final_response = await BUSS_CONTROLLER.UpdateBusinessContactInfo(user=request.user, data=request.data)
+            return ServerResponse(
+                response=final_response.response,
+                code=final_response.code,
+                message=final_response.message,
+                data=final_response.data)
+        except Exception as e:
+            return ServerResponse(
+                response=RESPONSE_MESSAGES.error,
+                message=RESPONSE_MESSAGES.business_contact_update_error,
+                code=RESPONSE_CODES.error,
+                data={
+                    NAMES.ERROR: str(e)
+                })

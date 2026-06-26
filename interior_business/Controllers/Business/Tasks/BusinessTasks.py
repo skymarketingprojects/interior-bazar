@@ -205,6 +205,42 @@ class BUSS_TASK:
             return None
 
     @classmethod
+    async def UpdateBusinessContactInfoTask(cls, user: CustomUser, data: dict):
+        try:
+            # Contact = the owner's UserProfile (phone / countryCode / email).
+            profile = await sync_to_async(
+                lambda: UserProfile.objects.filter(user=user).first()
+            )()
+            if profile is None:
+                profile = await sync_to_async(UserProfile.objects.create)(user=user)
+
+            # Partial update — only overwrite keys actually supplied.
+            phone = data.get(NAMES.PHONE)
+            country_code = data.get(NAMES.COUNTRY_CODE)
+            email = data.get(NAMES.EMAIL)
+            if phone is not None:
+                profile.phone = phone
+            if country_code is not None:
+                profile.countryCode = country_code
+            if email is not None:
+                profile.email = email
+            await sync_to_async(profile.save)()
+
+            # Return the same shape GetBusinessContactInfoTask produces.
+            business = getattr(user, NAMES.USER_BUSINESS_RELATION, None)
+            if business is None:
+                return {
+                    NAMES.PHONE: profile.phone or NAMES.EMPTY,
+                    NAMES.COUNTRY_CODE: profile.countryCode or NAMES.EMPTY,
+                    NAMES.EMAIL: profile.email or NAMES.EMPTY,
+                }
+            return await cls.GetBusinessContactInfoTask(business)
+
+        except Exception as e:
+            pass
+            return None
+
+    @classmethod
     async def CreateBusinessTask(cls, user_ins:CustomUser, data):
         try:
             badge = await sync_to_async(lambda: BusinessBadge.objects.filter(isDefault=True).first())()

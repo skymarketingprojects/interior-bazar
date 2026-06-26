@@ -205,7 +205,7 @@ def ShopsListView(request):
     return _ok(GC.list_shops(city, shop_type, search, sort, page, page_size, category=category))
 
 
-@api_view(["GET", "PUT", "PATCH"])
+@api_view(["GET", "PUT", "PATCH", "DELETE"])
 @permission_classes([AllowAny])
 def ArchitectDetailView(request, architectId):
     if request.method == "GET":
@@ -218,6 +218,9 @@ def ArchitectDetailView(request, architectId):
                               message="authentication required", data={})
     from app_ib.Controllers.Engine.CrudController import CRUD_CONTROLLER
     try:
+        if request.method == "DELETE":
+            CRUD_CONTROLLER.delete_architect(request.user, architectId)
+            return _ok({}, "Architect deleted")
         return _ok(CRUD_CONTROLLER.update_architect(request.user, architectId, request.data),
                    "Architect updated")
     except Exception as e:
@@ -251,11 +254,26 @@ def ArchitectsListView(request):
 # ==========================================================================
 # 8e. Business public detail (core + related offerings + review summary)
 # ==========================================================================
-@api_view(["GET"])
+@api_view(["GET", "PUT", "PATCH", "DELETE"])
 @permission_classes([AllowAny])
 def BusinessDetailView(request, businessId):
+    """GET is public; PUT/PATCH/DELETE require auth and delegate to CrudController
+    (ownership-gated). DELETE is a soft delete (isActive=False)."""
+    if request.method == "GET":
+        try:
+            return _ok(GC.get_business(businessId, user=request.user))
+        except Exception as e:
+            return _err(e)
+    if not request.user or not request.user.is_authenticated:
+        return ServerResponse(response=False, code=RESPONSE_CODES.auth_error,
+                              message="authentication required", data={})
+    from app_ib.Controllers.Engine.CrudController import CRUD_CONTROLLER
     try:
-        return _ok(GC.get_business(businessId, user=request.user))
+        if request.method == "DELETE":
+            CRUD_CONTROLLER.delete_business(request.user, businessId)
+            return _ok({}, "Business deleted")
+        return _ok(CRUD_CONTROLLER.update_business(request.user, businessId, request.data),
+                   "Business updated")
     except Exception as e:
         return _err(e)
 
@@ -265,6 +283,37 @@ def BusinessDetailView(request, businessId):
 def BusinessBySlugView(request, slug):
     try:
         return _ok(GC.get_business_by_slug(slug, user=request.user))
+    except Exception as e:
+        return _err(e)
+
+
+# --- Per-business offering lists (paginated) — lazy-loaded by the v3 detail tabs ---
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def BusinessProductsView(request, businessId):
+    page, page_size = _list_paging(request)
+    try:
+        return _ok(GC.get_business_products(businessId, page, page_size))
+    except Exception as e:
+        return _err(e)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def BusinessServicesView(request, businessId):
+    page, page_size = _list_paging(request)
+    try:
+        return _ok(GC.get_business_services(businessId, page, page_size))
+    except Exception as e:
+        return _err(e)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def BusinessCataloguesView(request, businessId):
+    page, page_size = _list_paging(request)
+    try:
+        return _ok(GC.get_business_catalogues(businessId, page, page_size))
     except Exception as e:
         return _err(e)
 
@@ -438,6 +487,33 @@ def MyActivityView(request):
             limit = 30
         limit = max(1, min(limit, 100))
         return _ok(GC.my_activity(request.user, limit=limit))
+    except Exception as e:
+        return _err(e)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def MyEngagementView(request):
+    # Inbound recent-activity feed: actions OTHER users took on the logged-in
+    # seller's own entities (viewed/saved/enquired about your product/shop/etc.).
+    try:
+        try:
+            limit = int(request.GET.get("limit", 30))
+        except (ValueError, TypeError):
+            limit = 30
+        limit = max(1, min(limit, 100))
+        return _ok(GC.engagement_feed(request.user, limit=limit))
+    except Exception as e:
+        return _err(e)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def MyEngagementReadView(request):
+    # Mark all of the seller's inbound-engagement rows as read.
+    try:
+        updated = GC.engagement_mark_read(request.user)
+        return _ok({"updated": updated})
     except Exception as e:
         return _err(e)
 
@@ -932,5 +1008,23 @@ def TrendingCataloguesView(request):
 def MyProfileView(request):
     try:
         return _ok(GC.my_profile(request.user))
+    except Exception as e:
+        return _err(e)
+
+
+# ==========================================================================
+# my/change-password/ — authenticated password change (v3 dashboard security)
+# ==========================================================================
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def ChangePasswordView(request):
+    """POST /engine/my/change-password/
+    Body: { currentPassword, newPassword, confirmPassword }
+    Verifies the current password then updates it. v3-only.
+    """
+    try:
+        return _ok(GC.change_password(request.user, request.data), "Password updated")
+    except ValueError as e:
+        return _bad(str(e))
     except Exception as e:
         return _err(e)

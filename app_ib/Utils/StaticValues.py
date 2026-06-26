@@ -57,3 +57,14 @@ class LEAD_QUERY_STATUS:
     contacted= "contacted"
     followed_up= "followed_up"
     closed= "closed"
+
+class SPEC_JOB_STATUS:
+    pending= "pending"
+    processing= "processing"
+    done= "done"
+    skipped= "skipped"
+    failed= "failed"
+
+class SPEC_SOURCE:
+    gemini= "gemini"
+    template= "template"

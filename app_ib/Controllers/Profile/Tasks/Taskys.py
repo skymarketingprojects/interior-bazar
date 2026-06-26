@@ -73,6 +73,7 @@ class PROFILE_TASKS:
                 NAMES.EMAIL: user_profile_ins.email if user_profile_ins.email else NAMES.EMPTY,
                 NAMES.PHONE: user_profile_ins.phone if user_profile_ins.phone else NAMES.EMPTY,
                 NAMES.COUNTRY_CODE: user_profile_ins.countryCode if user_profile_ins.countryCode else NAMES.EMPTY,
+                NAMES.SINCE: user_profile_ins.timestamp.isoformat() if user_profile_ins.timestamp else NAMES.EMPTY,
             }
             return user_profile_data
             

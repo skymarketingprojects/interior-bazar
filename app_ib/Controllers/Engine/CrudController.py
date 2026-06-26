@@ -23,28 +23,14 @@ class _CrudController:
 
     # ------------------- Buy-first: link entity to an active, unlinked plan -------------------
     def _link_active_plan(self, user, entity_type, entity):
-        """Link the newest ACTIVE, still-unlinked plan of this entityType to the entity
-        (fills the nullable FK from Prompt 5). Buy-first gate: raise Conflict_ if the user
-        holds no such plan — the entity tab only opens after a plan is bought."""
-        from app_ib.models import BusinessPlan, ShopPlan, ArchitectPlan
-        if entity_type == ENTITY_TYPE.SHOP:
-            plan = (ShopPlan.objects.filter(user=user, isActive=True, shop__isnull=True)
-                    .order_by("-timestamp").first())
-            fk = "shop"
-        elif entity_type == ENTITY_TYPE.ARCHITECT:
-            plan = (ArchitectPlan.objects.filter(user=user, isActive=True, architect__isnull=True)
-                    .order_by("-timestamp").first())
-            fk = "architect"
-        else:
-            plan = (BusinessPlan.objects.filter(user=user, isActive=True, business__isnull=True)
-                    .order_by("-timestamp").first())
-            fk = "business"
-        if not plan:
-            raise Conflict_(f"No active {entity_type} subscription to link — buy a plan first")
-        setattr(plan, fk, entity)
-        plan.save()
-        return plan
-        # NOTE: frontend entitlement gating reads my/plans/.activeEntityTypes
+        """Link the entity to the plan that authorizes it (fills the nullable FK from
+        Prompt 5). Delegates to the EntitlementService so a dedicated per-type plan OR an
+        automation BUNDLE (which grants all three) both satisfy the buy-first gate. Raises
+        Conflict_ if the user holds no active plan granting this entity type."""
+        from app_ib.Controllers.Plans.EntitlementService import ENTITLEMENT_SERVICE
+        return ENTITLEMENT_SERVICE.link_entity(user, entity_type, entity)
+        # NOTE: frontend entitlement gating reads my/plans/.entitledEntityTypes (tabs)
+        #       and .activeEntityTypes (publishing).
 
     # ------------------- Shop -------------------
     def create_shop(self, user, payload):
@@ -58,6 +44,7 @@ class _CrudController:
             shopType=payload.get("shopType", SHOP_TYPE.OFFLINE),
             bio=payload.get("bio", ""), coverImage=payload.get("coverImage", ""),
             bannerImage=payload.get("bannerImage", ""), bannerLink=payload.get("bannerLink", ""),
+            city=payload.get("city", ""), state=payload.get("state", ""),
         )
         shop.save()
         # Buy-first: every shop must be backed by a paid ShopPlan (Prompt 7/8).
@@ -71,7 +58,8 @@ class _CrudController:
             raise NotFound_("shop not found")
         if shop.user_id != user.id:
             raise PermissionError_("not the shop owner")
-        for field in ("name", "shopType", "bio", "coverImage", "bannerImage", "bannerLink"):
+        for field in ("name", "shopType", "bio", "coverImage", "bannerImage", "bannerLink",
+                      "city", "state"):
             if field in payload:
                 setattr(shop, field, payload[field])
         shop.save()
@@ -84,12 +72,16 @@ class _CrudController:
             raise NotFound_("shop not found")
         if shop.user_id != user.id:
             raise PermissionError_("not the shop owner")
-        shop.delete()
+        # Soft delete — keep the row (reviews/leads/plan link stay intact) but hide it
+        # from public reads + owner lists (get_shop / my_shops already filter isActive).
+        shop.isActive = False
+        shop.save(update_fields=["isActive"])
         return True
 
     def _shop_dict(self, s):
         return {"shopId": s.id, "name": s.name, "slug": s.slug, "shopType": s.shopType,
                 "bio": s.bio, "coverImage": s.coverImage, "isActive": s.isActive,
+                "city": s.city, "state": s.state,
                 "rating": s.rating, "totalReviews": s.totalReviews,
                 "completionPercent": s.completionPercent}
 
@@ -134,7 +126,44 @@ class _CrudController:
 
     def _business_dict(self, b):
         return {"businessId": b.id, "name": b.businessName,
-                "brandName": getattr(b, "brandName", ""), "gst": getattr(b, "gst", "")}
+                "brandName": getattr(b, "brandName", ""), "gst": getattr(b, "gst", ""),
+                "isActive": b.isActive}
+
+    # Field map: incoming v3 payload key -> Business model attribute. Only keys
+    # present in the payload are written (PATCH-friendly partial updates).
+    _BUSINESS_FIELD_MAP = {
+        "name": "businessName", "businessName": "businessName",
+        "brandName": "brandName", "whatsapp": "whatsapp", "gst": "gst",
+        "since": "since", "bio": "bio", "label": "label",
+        "coverImage": "coverImageUrl", "coverImageUrl": "coverImageUrl",
+        "bannerImage": "bannerImageUrl", "bannerImageUrl": "bannerImageUrl",
+        "bannerLink": "bannerLink", "bannerText": "bannerText",
+    }
+
+    def update_business(self, user, business_id, payload):
+        from app_ib.models import Business
+        biz = Business.objects.filter(id=business_id).first()
+        if not biz:
+            raise NotFound_("business not found")
+        if biz.user_id != user.id:
+            raise PermissionError_("not the business owner")
+        for key, attr in self._BUSINESS_FIELD_MAP.items():
+            if key in payload and payload[key] is not None:
+                setattr(biz, attr, payload[key])
+        biz.save()
+        return self._business_dict(biz)
+
+    def delete_business(self, user, business_id):
+        from app_ib.models import Business
+        biz = Business.objects.filter(id=business_id).first()
+        if not biz:
+            raise NotFound_("business not found")
+        if biz.user_id != user.id:
+            raise PermissionError_("not the business owner")
+        # Soft delete — reversible; reads filter isActive (see get_business / profile).
+        biz.isActive = False
+        biz.save(update_fields=["isActive"])
+        return True
 
     def update_architect(self, user, arch_id, payload):
         from app_ib.models import Architect
@@ -148,6 +177,18 @@ class _CrudController:
                 setattr(arch, field, payload[field])
         arch.save()
         return self._arch_dict(arch)
+
+    def delete_architect(self, user, arch_id):
+        from app_ib.models import Architect
+        arch = Architect.objects.filter(id=arch_id).first()
+        if not arch:
+            raise NotFound_("architect not found")
+        if arch.user_id != user.id:
+            raise PermissionError_("not the architect owner")
+        # Soft delete — reversible; get_architect / my_architects filter isActive.
+        arch.isActive = False
+        arch.save(update_fields=["isActive"])
+        return True
 
     def _arch_dict(self, a):
         return {"architectId": a.id, "name": a.name, "slug": a.slug, "city": a.city,

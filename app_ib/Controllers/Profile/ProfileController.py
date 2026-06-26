@@ -143,9 +143,14 @@ class PROFILE_CONTROLLER:
 
             # Expose the owned business id so the seller dashboard can load the
             # business profile (it resolves the entity from user.businessId).
-            business_id = await sync_to_async(
-                lambda: getattr(getattr(userIns, NAMES.USER_BUSINESS_RELATION, None), NAMES.ID, None)
-            )()
+            # A soft-deleted business (isActive=False) is treated as none so the
+            # dashboard falls back to the create flow instead of loading a hidden row.
+            def _resolve_business_id():
+                biz = getattr(userIns, NAMES.USER_BUSINESS_RELATION, None)
+                if biz is None or not getattr(biz, 'isActive', True):
+                    return None
+                return getattr(biz, NAMES.ID, None)
+            business_id = await sync_to_async(_resolve_business_id)()
             if business_id is not None:
                 user_data[NAMES.BUSINESS_ID] = business_id
 

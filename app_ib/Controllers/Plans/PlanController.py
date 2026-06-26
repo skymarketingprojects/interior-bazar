@@ -8,8 +8,8 @@ from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.Names import NAMES
 from app_ib.Utils.LocalResponse import LocalResponse
-from app_ib.models import PlanQuery,BusinessPlan,ShopPlan,ArchitectPlan,CustomUser,Subscription,TransectionData
-from app_ib.Utils.EngineConfig import ENTITY_TYPE
+from app_ib.models import PlanQuery,BusinessPlan,ShopPlan,ArchitectPlan,AutomationPlan,CustomUser,Subscription,TransectionData
+from app_ib.Utils.EngineConfig import ENTITY_TYPE, PLAN_FAMILY
 from app_ib.Controllers.Plans.Tasks.PlanTasks import PLAN_TASKS
 
 from interior_notification.signals import planSignal
@@ -120,10 +120,14 @@ class PLAN_CONTROLLER:
         try:
             user = await sync_to_async(CustomUser.objects.get)(id=userId)
             plan = await sync_to_async(Subscription.objects.get)(id=planId)
-            entityType = plan.entityType or NAMES.BUSINESS
-            if entityType == ENTITY_TYPE.SHOP:
+            # Route by planFamily (automation = bundle → AutomationPlan); fall back to
+            # the legacy entityType for rows that predate planFamily.
+            family = plan.planFamily or plan.entityType or NAMES.BUSINESS
+            if family == PLAN_FAMILY.AUTOMATION:
+                data = await PLAN_TASKS.CreateAutomationPlan(plan=plan,user=user,transectionId=transectionId)
+            elif family == ENTITY_TYPE.SHOP:
                 data = await PLAN_TASKS.CreateShopPlan(plan=plan,user=user,transectionId=transectionId)
-            elif entityType == ENTITY_TYPE.ARCHITECT:
+            elif family == ENTITY_TYPE.ARCHITECT:
                 data = await PLAN_TASKS.CreateArchitectPlan(plan=plan,user=user,transectionId=transectionId)
             else:
                 data = await PLAN_TASKS.CreateBusinessPlan(plan=plan,user=user,transectionId=transectionId)
@@ -158,6 +162,7 @@ class PLAN_CONTROLLER:
                 (BusinessPlan, PLAN_TASKS.ActivateBusinessPlan, True),
                 (ShopPlan, PLAN_TASKS.ActivateShopPlan, False),
                 (ArchitectPlan, PLAN_TASKS.ActivateArchitectPlan, False),
+                (AutomationPlan, PLAN_TASKS.ActivateAutomationPlan, False),
             ]
             for Model, activateFn, fireSignal in models_map:
                 exists = await sync_to_async(Model.objects.filter(transactionId=transectionId).exists)()
@@ -204,12 +209,8 @@ class PLAN_CONTROLLER:
 
     @classmethod
     def _plan_model(self, entityType):
-        from app_ib.models import BusinessPlan, ShopPlan, ArchitectPlan
-        return {
-            ENTITY_TYPE.BUSINESS: BusinessPlan,
-            ENTITY_TYPE.SHOP: ShopPlan,
-            ENTITY_TYPE.ARCHITECT: ArchitectPlan,
-        }.get(entityType, BusinessPlan)
+        from app_ib.Controllers.Plans.EntitlementService import ENTITLEMENT_SERVICE
+        return ENTITLEMENT_SERVICE.model_for(entityType)
 
     @classmethod
     def _aware(self, dt):
@@ -288,9 +289,9 @@ class PLAN_CONTROLLER:
         the target tier, recompute expireDate from the target duration, and clear the stash.
         It UPDATES the same row (not a new purchase)."""
         try:
-            from app_ib.models import BusinessPlan, ShopPlan, ArchitectPlan
+            from app_ib.models import BusinessPlan, ShopPlan, ArchitectPlan, AutomationPlan
             suffix = f":{transactionId}"
-            for Model in (BusinessPlan, ShopPlan, ArchitectPlan):
+            for Model in (BusinessPlan, ShopPlan, ArchitectPlan, AutomationPlan):
                 planIns = await sync_to_async(
                     lambda M=Model: M.objects.filter(buyIntent__startswith="upgrade:", buyIntent__endswith=suffix).first()
                 )()

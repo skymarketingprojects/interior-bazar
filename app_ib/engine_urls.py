@@ -53,11 +53,18 @@ urlpatterns = [
     path("architects/", EngineGapsView.ArchitectsListView, name="EngineArchitectsListView"),
     # --- Business public detail (core + related offerings + review summary) ---
     path("business/slug/<slug:slug>/", EngineGapsView.BusinessBySlugView, name="EngineBusinessBySlugView"),
+    # Per-business offering lists (paginated) — must precede the bare detail route so the
+    # /products|/services|/catalogues suffixes are matched before business/<id>/.
+    path("business/<int:businessId>/products/", EngineGapsView.BusinessProductsView, name="EngineBusinessProductsView"),
+    path("business/<int:businessId>/services/", EngineGapsView.BusinessServicesView, name="EngineBusinessServicesView"),
+    path("business/<int:businessId>/catalogues/", EngineGapsView.BusinessCataloguesView, name="EngineBusinessCataloguesView"),
     path("business/<int:businessId>/", EngineGapsView.BusinessDetailView, name="EngineBusinessDetailView"),
     # --- Entity-typed subscription plans (buy-first model, Prompt 6) ---
     path("my/plans/", EngineGapsView.MyPlansView, name="EngineMyPlansView"),          # auth: buying history union
     path("my/invoices/", EngineGapsView.MyInvoicesView, name="EngineMyInvoicesView"),  # auth: invoice/billing history
-    path("my/activity/", EngineGapsView.MyActivityView, name="EngineMyActivityView"),  # auth: view+click event feed
+    path("my/activity/", EngineGapsView.MyActivityView, name="EngineMyActivityView"),  # auth: view+click event feed (own browsing)
+    path("my/engagement/", EngineGapsView.MyEngagementView, name="EngineMyEngagementView"),  # auth: inbound activity on owned entities
+    path("my/engagement/read/", EngineGapsView.MyEngagementReadView, name="EngineMyEngagementReadView"),  # auth: mark feed read
     path("my/quotations/", EngineGapsView.MyQuotationsView, name="EngineMyQuotationsView"),  # auth: received leads
     # Phase 2 — active-sessions dashboard (JWT session management)
     path("my/sessions/", EngineGapsView.MySessionsView, name="EngineMySessionsView"),  # auth: list active sessions
@@ -146,4 +153,5 @@ urlpatterns = [
     path("blog/featured/", EngineGapsView.FeaturedBlogsView, name="EngineFeaturedBlogsView"),
     path("trending/catalogues/", EngineGapsView.TrendingCataloguesView, name="EngineTrendingCataloguesView"),
     path("my/profile/", EngineGapsView.MyProfileView, name="EngineMyProfileView"),
+    path("my/change-password/", EngineGapsView.ChangePasswordView, name="EngineChangePasswordView"),  # auth: change own password
 ]

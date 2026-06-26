@@ -18,6 +18,10 @@ class ENTITY_TYPE:
     PRODUCT = "product"
     SERVICE = "service"
     CATELOGUE = "catelogue"
+    # 'automation' is NOT a resolvable entity — it's a bundle plan family whose
+    # purchase unlocks all three seller tabs (business/shop/architect). Kept out of
+    # ALL/SCORED/RATED/COMPLETION so resolve/scoring never treat it as an entity.
+    AUTOMATION = "automation"
 
     ALL = [BUSINESS, SHOP, ARCHITECT, PRODUCT, SERVICE, CATELOGUE]
     # entities that carry a trendingScore/hotScore field
@@ -26,6 +30,46 @@ class ENTITY_TYPE:
     RATED = [BUSINESS, SHOP, ARCHITECT, PRODUCT, SERVICE]
     # entities with a profile-completion checklist
     COMPLETION = [BUSINESS, SHOP, ARCHITECT]
+    # seller-dashboard entity tabs a subscription can gate (buy-first model)
+    GATED = [BUSINESS, SHOP, ARCHITECT]
+
+
+class PLAN_STATUS:
+    """Lifecycle of a purchased entity plan (BusinessPlan/ShopPlan/ArchitectPlan/
+    AutomationPlan). Replaces the bare isActive bool — isActive is kept as a synced
+    shim (isActive == (status == ACTIVE)) so legacy reads keep working."""
+    PENDING = "pending"      # bought, awaiting verification/payment — tab visible, publish locked
+    ACTIVE = "active"        # verified/paid — full access
+    EXPIRED = "expired"      # lapsed past expireDate — must re-buy
+    CANCELLED = "cancelled"  # withdrawn before activation
+    REFUNDED = "refunded"    # money returned
+
+    ALL = [PENDING, ACTIVE, EXPIRED, CANCELLED, REFUNDED]
+    # statuses that still "hold" the plan → which entity TABS to show
+    ENTITLED = [PENDING, ACTIVE]
+
+
+class PLAN_FAMILY:
+    """The frontend plan category (plans-checkout sidebar). 'automation' is the bundle
+    that grants all three entity tabs; the other three are single-entity families."""
+    AUTOMATION = "automation"
+    BUSINESS = "business"
+    SHOP = "shop"
+    ARCHITECT = "architect"
+
+    ALL = [AUTOMATION, BUSINESS, SHOP, ARCHITECT]
+
+
+# Which entity tabs a plan unlocks, keyed by the plan's family/entityType. Automation
+# is the only bundle (unlocks all three); every other family unlocks just its own tab.
+# This is the single source of truth for "what does buying this plan grant" — the
+# entitlement service reads it instead of branching on type in code.
+PLAN_GRANTS = {
+    PLAN_FAMILY.AUTOMATION: list(ENTITY_TYPE.GATED),
+    PLAN_FAMILY.BUSINESS: [ENTITY_TYPE.BUSINESS],
+    PLAN_FAMILY.SHOP: [ENTITY_TYPE.SHOP],
+    PLAN_FAMILY.ARCHITECT: [ENTITY_TYPE.ARCHITECT],
+}
 
 
 class TRENDING_PERIOD:
@@ -71,6 +115,47 @@ class FEED_EVENT_TYPE:
     UPGRADE = "upgrade"      # business activated/upgraded a plan
     TRENDING = "trending"    # leaderboard / trending movement
     SYNTHETIC = "synthetic"
+
+
+class ENGAGEMENT_VERB:
+    """Inbound-engagement feed verbs (EngagementActivity) — what OTHER users did
+    to a seller's own entities (business/shop/architect/product/service).
+
+    WHY: powers the seller dashboard "Recent activity" feed ("someone viewed your
+    product", "someone saved your shop", "someone filled your form"). Stored on
+    EngagementActivity.verb (zero-hardcoded-strings) and mapped to a human action
+    label via LABELS below.
+    """
+    VIEW = "view"
+    SAVE = "save"
+    ENQUIRY = "enquiry"      # a lead/form submission landed on the entity
+    REVIEW = "review"
+    WHATSAPP = "whatsapp"
+    CALL = "call"
+    WEBSITE = "website"
+    ALL = [VIEW, SAVE, ENQUIRY, REVIEW, WHATSAPP, CALL, WEBSITE]
+
+    # verb -> human action phrase shown in the feed ("{actor} {phrase}")
+    LABELS = {
+        VIEW: "viewed",
+        SAVE: "saved",
+        ENQUIRY: "filled a form on",
+        REVIEW: "reviewed",
+        WHATSAPP: "messaged on WhatsApp about",
+        CALL: "called about",
+        WEBSITE: "opened the website of",
+    }
+
+    # CLICK_TYPE -> engagement verb (only these click types become feed rows)
+    FROM_CLICK = {"whatsapp": WHATSAPP, "call": CALL, "website": WEBSITE}
+
+    # Display name used when the actor is anonymous (unauthenticated).
+    ANON_ACTOR = "Someone"
+
+    # Dedupe window (minutes): a repeat (owner, actor, entity, verb) within this
+    # window bumps the existing row's count/timestamp instead of inserting a new
+    # one — keeps high-frequency views from flooding the feed.
+    DEDUPE_MINUTES = 360
 
 
 class CONVERSATION_STATUS:
@@ -276,6 +361,19 @@ class ALGO:
     VIEW_EVENT_RETENTION_DAYS = 90
     SEARCH_EVENT_RETENTION_DAYS = 90
     ACCOUNT_DELETION_GRACE_DAYS = 30
+
+    # --- AI Specialization ("what they specialize in" cards) ---
+    # Bootstrap = a one-time debounced job that creates the FIRST specialization.
+    # After bootstrap, regeneration is gated by SPEC_CHANGE_THRESHOLD via the drift cron.
+    SPEC_DEBOUNCE_SECONDS = 3600          # one-time bootstrap debounce window (1 hr)
+    SPEC_CHANGE_THRESHOLD = 0.25          # profile-text drift (0-1) needed to regenerate
+    SPEC_CARD_CAP = 6                     # max specialization cards
+    SPEC_GEMINI_TEMPERATURE = 0.5
+    SPEC_GEMINI_MAX_TOKENS = 600
+    SPEC_ICONS = [                        # allowed Tabler icon names for cards
+        "building", "palette", "tools", "home", "armchair",
+        "ruler", "map-pin", "calendar-stats", "bulb", "brush",
+    ]
 
 
 # ---------------------------------------------------------------------------

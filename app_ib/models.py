@@ -11,6 +11,7 @@ from django.utils.text import slugify
 from interior_notification.signals import business_changed
 from datetime import datetime
 from app_ib.Utils.Names import NAMES
+from app_ib.Utils.EngineConfig import PLAN_STATUS, PLAN_FAMILY, PLAN_GRANTS, ENTITY_TYPE
 # Custom User Manager
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, password=None, **extra_fields):
@@ -169,6 +170,10 @@ class Business(models.Model):
     # field style (max_digits=9, decimal_places=6) so the engine treats both alike.
     lat = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     lng = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    # Soft-delete flag (v3 engine CRUD). Default True so every legacy business stays
+    # visible; the engine delete_business endpoint flips this to False (reversible).
+    # Mirrors Shop.isActive / Architect.isActive so reads can filter the same way.
+    isActive = models.BooleanField(default=True)
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -324,6 +329,14 @@ class Subscription(models.Model):
     # Which entity this plan unlocks (business/shop/architect). Default 'business'
     # so legacy rows + the frozen v1/plan/template/ response stay valid.
     entityType= models.CharField(max_length=50, null=True, blank=True, default='business')
+    # Frontend plan category (plans-checkout sidebar): automation/business/shop/architect.
+    # 'automation' is the bundle that unlocks all three entity tabs. Defaults to
+    # entityType for legacy rows (filled at save() when blank).
+    planFamily= models.CharField(max_length=50, null=True, blank=True, default=PLAN_FAMILY.BUSINESS)
+    # The entity tabs this plan grants (e.g. automation → ["business","shop","architect"]).
+    # Single source of truth for "what does buying this plan unlock" — the entitlement
+    # service reads it instead of branching on type. Backfilled from planFamily at save().
+    grantsEntityTypes= models.JSONField(default=list, null=True, blank=True)
     # Upgrade-ordering rank (higher = better tier); used by the upgrade flow (Prompt 9).
     tier= models.IntegerField(null=True, blank=True, default=0)
     title= models.CharField(max_length=800,null=True, blank=True)
@@ -357,6 +370,28 @@ class Subscription(models.Model):
     def __str__(self):
         return f'ID:{self.id} rating:{self.title}'
 
+    def save(self, *args, **kwargs):
+        # Backfill the family from the legacy entityType when unset, then derive the
+        # granted tabs from the family (automation → all three). Keeps a hand-set
+        # grantsEntityTypes (e.g. a custom bundle) untouched.
+        if not self.planFamily:
+            self.planFamily = self.entityType or PLAN_FAMILY.BUSINESS
+        if not self.grantsEntityTypes:
+            self.grantsEntityTypes = list(
+                PLAN_GRANTS.get(self.planFamily, [self.entityType or ENTITY_TYPE.BUSINESS])
+            )
+        super().save(*args, **kwargs)
+
+
+# Shared status<->isActive reconciliation for all purchased plan models. `status` is
+# the source of truth; the legacy `isActive` bool is derived from it so old reads keep
+# working. Terminal states (cancelled/refunded) are preserved. Call from each save().
+def _sync_plan_status(instance):
+    if not instance.status:
+        instance.status = PLAN_STATUS.PENDING
+    instance.isActive = (instance.status == PLAN_STATUS.ACTIVE)
+
+
 class BusinessPlan(models.Model):
     # Buy-before-entity: a plan is bought by a USER and may exist before the
     # Business is created (business FK stays nullable, filled later in-dashboard).
@@ -365,6 +400,9 @@ class BusinessPlan(models.Model):
     services= models.TextField()
     amount= models.CharField(max_length=500,default='')
     plan = models.ForeignKey(Subscription, on_delete=models.SET_NULL, null=True, blank=True)
+    # Lifecycle source of truth (pending/active/expired/cancelled/refunded). isActive
+    # is the derived legacy shim (isActive == status==active), kept in sync in save().
+    status= models.CharField(max_length=20, default=PLAN_STATUS.PENDING, db_index=True)
     isActive= models.BooleanField(default=False)
     transactionId= models.CharField(max_length=500,default='',null=True, blank=True)
     planSummary= models.TextField()
@@ -376,18 +414,21 @@ class BusinessPlan(models.Model):
 
     def __str__(self):
         return f'is_active:{self.isActive} expire_date:{self.expireDate}'
-    
+
     def save(self, *args, **kwargs):
+        _sync_plan_status(self)
         if self.isActive and self.business:
             plans = BusinessPlan.objects.filter(
                 business=self.business,
                 isActive=True
             ).exclude(id=self.id)
             for plan in plans:
-                if int(plan.amount.replace(",", "")) >= int(self.amount.replace(",", "")):
+                if int((plan.amount or '0').replace(",", "") or 0) >= int((self.amount or '0').replace(",", "") or 0):
+                    self.status = PLAN_STATUS.EXPIRED
                     self.isActive = False
                     continue
-                plan.isActive = False
+                # this plan supersedes a lower active one → retire the lower one
+                plan.status = PLAN_STATUS.EXPIRED
                 plan.save()
 
         super().save(*args, **kwargs)
@@ -400,6 +441,7 @@ class ShopPlan(models.Model):
     services= models.TextField(blank=True, default='')
     amount= models.CharField(max_length=500,default='')
     plan = models.ForeignKey(Subscription, on_delete=models.SET_NULL, null=True, blank=True)
+    status= models.CharField(max_length=20, default=PLAN_STATUS.PENDING, db_index=True)
     isActive= models.BooleanField(default=False)
     transactionId= models.CharField(max_length=500,default='',null=True, blank=True)
     planSummary= models.TextField(blank=True, default='')
@@ -412,6 +454,10 @@ class ShopPlan(models.Model):
     def __str__(self):
         return f'shop_plan is_active:{self.isActive} expire_date:{self.expireDate}'
 
+    def save(self, *args, **kwargs):
+        _sync_plan_status(self)
+        super().save(*args, **kwargs)
+
 
 class ArchitectPlan(models.Model):
     """Architect subscription (1 per user). Buy-before-entity: bought by a USER, links
@@ -421,6 +467,7 @@ class ArchitectPlan(models.Model):
     services= models.TextField(blank=True, default='')
     amount= models.CharField(max_length=500,default='')
     plan = models.ForeignKey(Subscription, on_delete=models.SET_NULL, null=True, blank=True)
+    status= models.CharField(max_length=20, default=PLAN_STATUS.PENDING, db_index=True)
     isActive= models.BooleanField(default=False)
     transactionId= models.CharField(max_length=500,default='',null=True, blank=True)
     planSummary= models.TextField(blank=True, default='')
@@ -432,6 +479,41 @@ class ArchitectPlan(models.Model):
 
     def __str__(self):
         return f'architect_plan is_active:{self.isActive} expire_date:{self.expireDate}'
+
+    def save(self, *args, **kwargs):
+        _sync_plan_status(self)
+        super().save(*args, **kwargs)
+
+
+class AutomationPlan(models.Model):
+    """Automation BUNDLE subscription. Unlike the single-entity plans, buying it unlocks
+    ALL THREE seller tabs (business/shop/architect) — its Subscription.grantsEntityTypes
+    is the full set. It is entity-less itself, but carries one nullable FK per entity so a
+    single automation purchase can be linked to the user's business + shop + architect as
+    each is created. Mirrors the other plan models' lifecycle (status + isActive shim)."""
+    user= models.ForeignKey('CustomUser',on_delete=models.CASCADE, null=True, blank=True,related_name='automation_plans')
+    business= models.ForeignKey(Business,on_delete=models.SET_NULL, null=True, blank=True,related_name='automation_plan')
+    shop= models.ForeignKey('app_ib.Shop',on_delete=models.SET_NULL, null=True, blank=True,related_name='automation_plan')
+    architect= models.ForeignKey('app_ib.Architect',on_delete=models.SET_NULL, null=True, blank=True,related_name='automation_plan')
+    services= models.TextField(blank=True, default='')
+    amount= models.CharField(max_length=500,default='')
+    plan = models.ForeignKey(Subscription, on_delete=models.SET_NULL, null=True, blank=True)
+    status= models.CharField(max_length=20, default=PLAN_STATUS.PENDING, db_index=True)
+    isActive= models.BooleanField(default=False)
+    transactionId= models.CharField(max_length=500,default='',null=True, blank=True)
+    planSummary= models.TextField(blank=True, default='')
+    lastActivate= models.DateTimeField(auto_now_add=True)
+    expireDate= models.DateTimeField(null=True, blank=True)
+    buyIntent = models.CharField(max_length=1000,null=True, blank=True,default='website')
+    timestamp= models.DateTimeField(auto_now_add=True)
+    updatedAt = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'automation_plan is_active:{self.isActive} expire_date:{self.expireDate}'
+
+    def save(self, *args, **kwargs):
+        _sync_plan_status(self)
+        super().save(*args, **kwargs)
 
 
 # payment gateway related models

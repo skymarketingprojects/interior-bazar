@@ -22,7 +22,12 @@ class CATELOG_CONTROLLER:
     async def GetCatelogForBusiness(self, business):
         try:
             cache_key = f"catalogues_business_{business.id}"
-            cached_data = cache.get(cache_key)
+            # Cache is best-effort — a Redis outage must NOT fail the owner's
+            # listing (see ISSUE-001 / F3). Fall through to the ORM on any error.
+            try:
+                cached_data = cache.get(cache_key)
+            except Exception:
+                cached_data = None
             if cached_data:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
@@ -37,8 +42,11 @@ class CATELOG_CONTROLLER:
                 data = await CATELOG_TASKS.getCatelog(catelog)
                 if data:
                     catelogData.append(data)
-            
-            cache.set(cache_key, catelogData, 3600)  # Cache for 1 hour
+
+            try:
+                cache.set(cache_key, catelogData, 3600)  # Cache for 1 hour
+            except Exception:
+                pass  # Redis down — skip caching, still return the ORM result
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.catelog_fetch_success,

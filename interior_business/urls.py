@@ -66,6 +66,8 @@ urlpatterns = [
     path('detail/header/<int:businessId>/', BusinessProfileView.GetBusinessProfileForDisplayView, name='GetBusinessProfileForDisplayView'),
     path('detail/header/', BusinessProfileView.GetBusinessProfileForDisplayView, name='GetBusinessProfileForDisplayView'),
     path('detail/contact/<int:businessId>/', views.GetContactView, name='GetBusinesscontact'),
+    # Authenticated owner's own contact (UserProfile email/phone/countryCode): GET + POST update
+    path('contact/', BusinessView.BusinessContactView.as_view(), name='BusinessContactView'),
 
     ###########################################################
     # Business Schedule: 

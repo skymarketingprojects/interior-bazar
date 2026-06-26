@@ -28,7 +28,7 @@ def _unique_slug(model_class, text, pk, fallback):
 from app_ib.Utils.EngineConfig import (
     ENTITY_TYPE, TRENDING_PERIOD, LEADERBOARD_PERIOD, LEADERBOARD_BOARD,
     LEADERBOARD_SCOPE, CLICK_TYPE, FEED_EVENT_TYPE, NOTIFICATION_TYPE,
-    TEAM_ROLE, SHOP_TYPE, CONVERSATION_STATUS, ALGO,
+    TEAM_ROLE, SHOP_TYPE, CONVERSATION_STATUS, ENGAGEMENT_VERB, ALGO,
 )
 
 USER = settings.AUTH_USER_MODEL
@@ -425,6 +425,40 @@ class RecentlyViewed(GenericContentBase):
         ]
 
 
+class EngagementActivity(GenericContentBase):
+    """Inbound "recent activity" feed for a seller: one row per action that ANOTHER
+    user performed on an entity the seller OWNS (their business/shop/architect
+    profile, product, or service) — e.g. "someone viewed your product", "someone
+    saved your shop", "someone filled your form".
+
+    Distinct from ViewEvent/ClickEvent (raw analytics keyed by the ACTOR) and from
+    RecentlyViewed (the seller's OWN browsing). Here the row is keyed by `owner`
+    (the seller) so the dashboard feed is a single indexed `filter(owner=...)`.
+
+    Written fire-and-forget from the engine write points (track_view, track_click,
+    toggle_saved) and a LeadQuery post_save signal, via
+    algorithms.state.record_engagement(). entityType / entityName / actorName are
+    denormalized so the read path needs no extra joins. Self-actions (actor == owner)
+    are never recorded.
+    """
+    owner = models.ForeignKey(USER, on_delete=models.CASCADE, related_name="engagement_received", db_index=True)
+    actor = models.ForeignKey(USER, on_delete=models.SET_NULL, null=True, blank=True, related_name="engagement_made")
+    actorName = models.CharField(max_length=255, blank=True, default="")  # denormalized (or "Someone" if anon)
+    verb = models.CharField(max_length=20)                                # ENGAGEMENT_VERB.*
+    entityType = models.CharField(max_length=20, blank=True, default="")  # denormalized owner-entity kind
+    entityName = models.CharField(max_length=255, blank=True, default="") # denormalized owner-entity name
+    count = models.PositiveIntegerField(default=1)                        # bumped on dedupe within the window
+    isRead = models.BooleanField(default=False)
+    timestamp = models.DateTimeField(db_index=True)                       # latest activity time (bumped on dedupe)
+
+    class Meta:
+        app_label = "app_ib"
+        indexes = [
+            models.Index(fields=["owner", "timestamp"]),
+            models.Index(fields=["owner", "isRead"]),
+        ]
+
+
 class Notification(models.Model):
     """Unread-only store; row deleted on read."""
     user = models.ForeignKey(USER, on_delete=models.SET_NULL, null=True, related_name="notifications")
@@ -764,3 +798,56 @@ class RelatedItem(models.Model):
             f" → {self.targetContentType_id}:{self.targetObjectId}"
             f" score={self.score} [{self.reason}]"
         )
+
+
+# ---------------------------------------------------------------------------
+# AI Specialization — auto-generated "what they specialize in" cards.
+# Bootstrap (one-time, debounced) creates the first BusinessSpecialization;
+# afterwards the drift cron regenerates only when profile text changes >= 25%.
+# (See app_ib/algorithms/specialization.py.)
+# ---------------------------------------------------------------------------
+from app_ib.Utils.StaticValues import SPEC_JOB_STATUS, SPEC_SOURCE
+
+
+class BusinessSpecialization(models.Model):
+    business = models.OneToOneField(
+        "app_ib.Business", on_delete=models.CASCADE, related_name="specialization"
+    )
+    # [{icon, title, desc}] — served to the business detail page (AboutSection specs).
+    cards = models.JSONField(default=list, blank=True)
+    # Canonical business+profile text used at the last generation (drift baseline).
+    profileSnapshot = models.TextField(default="", blank=True)
+    snapshotHash = models.CharField(max_length=64, default="", blank=True)
+    source = models.CharField(max_length=20, default=SPEC_SOURCE.template)
+    generatedAt = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        app_label = "app_ib"
+
+    def __str__(self):
+        return f"Specialization(business={self.business_id}, cards={len(self.cards or [])})"
+
+
+class SpecializationJob(models.Model):
+    """One-time bootstrap queue. A pending job is (re)scheduled while the owner is
+    still populating their business; the processor drains it after the debounce."""
+    entityType = models.CharField(max_length=20, default=ENTITY_TYPE.BUSINESS)
+    business = models.ForeignKey(
+        "app_ib.Business", on_delete=models.CASCADE, related_name="specialization_jobs"
+    )
+    scheduledAt = models.DateTimeField(db_index=True)
+    status = models.CharField(max_length=20, default=SPEC_JOB_STATUS.pending, db_index=True)
+    reason = models.CharField(max_length=50, default="", blank=True)
+    attempts = models.PositiveIntegerField(default=0)
+    lastError = models.TextField(default="", blank=True)
+    createdAt = models.DateTimeField(auto_now_add=True)
+    updatedAt = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        app_label = "app_ib"
+        indexes = [
+            models.Index(fields=["status", "scheduledAt"]),
+        ]
+
+    def __str__(self):
+        return f"SpecializationJob(business={self.business_id}, status={self.status}, at={self.scheduledAt})"

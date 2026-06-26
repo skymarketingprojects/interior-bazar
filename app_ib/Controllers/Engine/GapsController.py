@@ -734,6 +734,12 @@ def _expertise_for(entity):
     return [tag.value for tag in entity.expertiseTags.all()]
 
 
+def _specialization_for(business):
+    """AI-generated "what they specialize in" cards [{icon,title,desc}] (or [])."""
+    spec = getattr(business, "specialization", None)
+    return spec.cards if spec is not None else []
+
+
 def _arch_full_dict(a, include_details=True, project_count=None):
     from app_ib.models import Project
     # use pre-annotated value when available (avoids N+1 in list view)
@@ -894,7 +900,25 @@ def list_businesses(city="", business_type="", search="", sort="trending", page=
     if verified:
         qs = qs.filter(isVerified=True)
     if search:
-        qs = qs.filter(businessName__icontains=search)
+        # Broad text match: a query like "Modular Kitchens" is usually a
+        # category/specialisation phrase, not a company name — matching only
+        # businessName returned nothing (and killed every result when stacked
+        # with ?category=). Match across name/brand/bio + the category/segment/
+        # type taxonomy (value + lable) + expertise tags so search and category
+        # stack instead of cancelling out.
+        from django.db.models import Q
+        qs = qs.filter(
+            Q(businessName__icontains=search)
+            | Q(brandName__icontains=search)
+            | Q(bio__icontains=search)
+            | Q(businessCategory__value__icontains=search)
+            | Q(businessCategory__lable__icontains=search)
+            | Q(businessSegment__value__icontains=search)
+            | Q(businessSegment__lable__icontains=search)
+            | Q(businessType__value__icontains=search)
+            | Q(businessType__lable__icontains=search)
+            | Q(expertiseTags__value__icontains=search)
+        ).distinct()
     if sort == "rating":
         qs = qs.order_by("-ratingValue", "-trendingScore")
     elif sort == "newest":
@@ -1245,36 +1269,19 @@ def _business_schedule(b):
 
 
 def _business_review_summary(b):
-    """Average/count + recent reviews + star breakdown for a business."""
-    from app_ib.models import Review
-    rows = list(
-        Review.objects
-        .filter(business_id=b.id, isDeleted=False, isApproved=True)
-        .select_related("reviewer")
-        .order_by("-timestamp")[:10]
-    )
-    recent = []
-    for r in rows:
-        reviewer = getattr(r, "reviewer", None)
-        name = ""
-        if reviewer is not None:
-            name = (getattr(reviewer, "username", "") or "").strip()
-        recent.append({
-            "id": r.id,
-            "rating": r.rating,
-            "title": r.title or "",
-            "body": r.body or "",
-            "reviewerName": name,
-            "isVerifiedPurchase": r.isVerifiedPurchase,
-            "helpfulCount": r.helpfulCount,
-            "timestamp": r.timestamp.isoformat(),
-        })
+    """Lean rating summary (average/count + star breakdown) for the detail payload.
+
+    The recent-reviews LIST is intentionally NOT fetched here — it was the slow
+    part of the business detail call (a select_related scan per request). The v3
+    detail page now lazy-loads the written reviews separately via
+    GET reviews/?entityType=business&objectId=, so the main payload stays light.
+    `recent` is kept as an empty list to preserve the response shape."""
     return {
         "average": b.ratingValue,
         "count": b.totalReviews,
         "ratingText": b.rating or "",
         "ratingBreakdown": _rating_breakdown(b),
-        "recent": recent,
+        "recent": [],
     }
 
 
@@ -1379,6 +1386,7 @@ def _business_full_dict(b):
         "credentials": _credentials_for(b, "business"),
         "processSteps": _process_steps_for(b, "business"),
         "expertise": _expertise_for(b),
+        "specialization": _specialization_for(b),
         # --- review summary ---
         "reviewSummary": _business_review_summary(b),
     }
@@ -1389,7 +1397,8 @@ def _get_business_qs():
     return (Business.objects
             .select_related("businessType", "businessBadge",
                             "business_location", "business_location__locationState",
-                            "business_location__locationCountry", "business_profile")
+                            "business_location__locationCountry", "business_profile",
+                            "specialization")
             .prefetch_related("businessSegment", "businessCategory",
                               "businessSocialMedia__socialMedia", "schedules"))
 
@@ -1403,6 +1412,9 @@ def get_business(id_or_slug, user=None):
         obj = _get_business_qs().filter(slug=id_or_slug).first()
     if not obj:
         raise NotFound_("business not found")
+    # Soft-deleted business is hidden from everyone except its owner (mirrors shop/architect).
+    if not obj.isActive and (user is None or not user.is_authenticated or obj.user_id != user.id):
+        raise NotFound_("business not found")
     return _business_full_dict(obj)
 
 
@@ -1410,7 +1422,51 @@ def get_business_by_slug(slug, user=None):
     obj = _get_business_qs().filter(slug=slug).first()
     if not obj:
         raise NotFound_("business not found")
+    if not obj.isActive and (user is None or not user.is_authenticated or obj.user_id != user.id):
+        raise NotFound_("business not found")
     return _business_full_dict(obj)
+
+
+# ---------------------------------------------------------------------------
+# 8e-bis. Per-business offering lists (paginated) — the dedicated Products /
+#         Services / Catalogue tabs on the v3 detail page fetch these lazily
+#         instead of relying on the small preview embedded in the detail payload.
+#         Item shape matches the catalog list endpoints (same *_full_dict), so
+#         the frontend reuses the same mappers.
+# ---------------------------------------------------------------------------
+def get_business_products(business_id, page=1, page_size=20):
+    from interior_products.models import Product
+    qs = (Product.objects
+          .select_related("business", "business__business_location")
+          .prefetch_related("productImages")
+          .filter(business_id=business_id, isActive=True)
+          .order_by("index", "-trendingScore"))
+    page_qs, total, page, page_size = _paginate(qs, page, page_size)
+    return {"items": [_product_full_dict(p) for p in page_qs],
+            "total": total, "page": page, "pageSize": page_size}
+
+
+def get_business_services(business_id, page=1, page_size=20):
+    from interior_products.models import Service
+    qs = (Service.objects
+          .select_related("business", "business__business_location")
+          .prefetch_related("serviceImages")
+          .filter(business_id=business_id, isActive=True)
+          .order_by("index", "-trendingScore"))
+    page_qs, total, page, page_size = _paginate(qs, page, page_size)
+    return {"items": [_service_full_dict(s) for s in page_qs],
+            "total": total, "page": page, "pageSize": page_size}
+
+
+def get_business_catalogues(business_id, page=1, page_size=20):
+    from interior_products.models import Catelogue
+    qs = (Catelogue.objects
+          .select_related("catelogueType", "business", "business__business_location")
+          .filter(business_id=business_id, isActive=True)
+          .order_by("index", "-trendingScore"))
+    page_qs, total, page, page_size = _paginate(qs, page, page_size)
+    return {"items": [_catalogue_full_dict(c) for c in page_qs],
+            "total": total, "page": page, "pageSize": page_size}
 
 
 # ---------------------------------------------------------------------------
@@ -1726,6 +1782,7 @@ def _plan_row(p, entity_type, entity):
         "tier": p.plan.tier if p.plan_id else None,
         "amount": p.amount,
         "isActive": p.isActive,
+        "status": p.status,
         "transactionId": p.transactionId,
         "expireDate": p.expireDate.strftime("%Y-%m-%d") if p.expireDate else None,
         "lastActivate": p.lastActivate.strftime("%Y-%m-%d") if p.lastActivate else None,
@@ -1734,25 +1791,12 @@ def _plan_row(p, entity_type, entity):
 
 
 def my_plans(user):
-    """Union of all entity plans owned by the user, newest first. Covers both the
-    buy-first rows (user FK set) and legacy business plans linked via business.user."""
-    from app_ib.models import BusinessPlan, ShopPlan, ArchitectPlan
-    from django.db.models import Q
-    items = []
-    biz = (BusinessPlan.objects.filter(Q(user=user) | Q(business__user=user))
-           .select_related("plan", "business").order_by("-timestamp"))
-    for p in biz:
-        items.append(_plan_row(p, ENTITY_TYPE.BUSINESS, p.business))
-    for p in ShopPlan.objects.filter(user=user).select_related("plan", "shop").order_by("-timestamp"):
-        items.append(_plan_row(p, ENTITY_TYPE.SHOP, p.shop))
-    for p in ArchitectPlan.objects.filter(user=user).select_related("plan", "architect").order_by("-timestamp"):
-        items.append(_plan_row(p, ENTITY_TYPE.ARCHITECT, p.architect))
-    active = [i for i in items if i["isActive"]]
-    return {
-        "items": items,
-        "total": len(items),
-        "activeEntityTypes": sorted({i["entityType"] for i in active}),
-    }
+    """Buying history + entitlement signals — delegated to the EntitlementService, the
+    single source of truth for the plan registry + grantsEntityTypes bundle expansion.
+    Returns items (incl. automation), activeEntityTypes (active → publishing gate) and
+    entitledEntityTypes (active-or-pending → tab visibility)."""
+    from app_ib.Controllers.Plans.EntitlementService import ENTITLEMENT_SERVICE
+    return ENTITLEMENT_SERVICE.my_plans(user)
 
 
 # ---------------------------------------------------------------------------
@@ -1895,6 +1939,51 @@ def my_activity(user, limit=30):
 
 
 # ---------------------------------------------------------------------------
+# my/engagement/ — inbound "recent activity" feed for the logged-in seller:
+#   what OTHER users did to the seller's OWN entities (business / shop / architect
+#   profile / product / service) — "someone viewed your product", "someone saved
+#   your shop", "someone filled your form". Reads the denormalized
+#   EngagementActivity store keyed by `owner`, so it's a single indexed query.
+#   (Distinct from my_activity, which is the seller's OWN browsing history.)
+# ---------------------------------------------------------------------------
+def engagement_feed(user, limit=30):
+    from app_ib.engine_models import EngagementActivity
+    from app_ib.Utils.EngineConfig import ENGAGEMENT_VERB
+
+    rows = list(
+        EngagementActivity.objects.filter(owner=user).order_by("-timestamp")[:limit]
+    )
+    items = []
+    for r in rows:
+        actor = r.actorName or ENGAGEMENT_VERB.ANON_ACTOR
+        phrase = ENGAGEMENT_VERB.LABELS.get(r.verb, r.verb)
+        kind = r.entityType or "listing"
+        # Human one-liner, e.g. "Someone viewed your product" /
+        # "Riya filled a form on your business".
+        action = f"{actor} {phrase} your {kind}".strip()
+        items.append({
+            "id": r.id,
+            "verb": r.verb,
+            "action": action,
+            "actorName": actor,
+            "entityType": r.entityType or "",
+            "entityName": r.entityName or "",
+            "count": r.count or 1,
+            "isRead": bool(r.isRead),
+            "timestamp": r.timestamp.isoformat() if r.timestamp else None,
+        })
+    unread = EngagementActivity.objects.filter(owner=user, isRead=False).count()
+    return {"items": items, "total": len(items), "unreadCount": unread}
+
+
+def engagement_mark_read(user):
+    """Mark all of the seller's inbound-engagement rows as read. Returns the count
+    of rows flipped."""
+    from app_ib.engine_models import EngagementActivity
+    return EngagementActivity.objects.filter(owner=user, isRead=False).update(isRead=True)
+
+
+# ---------------------------------------------------------------------------
 # my/quotations/ — leads received by the logged-in seller's business.
 # ---------------------------------------------------------------------------
 def my_quotations(user, limit=50):
@@ -1951,18 +2040,20 @@ def server_time(user=None):
 def payment_card(user, transaction_id):
     """Single buying-history card for one transaction (used by the manual re-check,
     Prompt 10). Returns the plan row + live payment `status`, scoped to the owner."""
-    from app_ib.models import BusinessPlan, ShopPlan, ArchitectPlan, TransectionData
+    from app_ib.models import BusinessPlan, ShopPlan, ArchitectPlan, AutomationPlan, TransectionData
     txn = TransectionData.objects.filter(transactionId=transaction_id).first()
     status = txn.orderStatus if txn else None
     for Model, etype, fk in (
         (BusinessPlan, ENTITY_TYPE.BUSINESS, "business"),
         (ShopPlan, ENTITY_TYPE.SHOP, "shop"),
         (ArchitectPlan, ENTITY_TYPE.ARCHITECT, "architect"),
+        (AutomationPlan, ENTITY_TYPE.AUTOMATION, None),
     ):
-        p = Model.objects.select_related("plan", fk).filter(transactionId=transaction_id).first()
+        related = ["plan"] + ([fk] if fk else [])
+        p = Model.objects.select_related(*related).filter(transactionId=transaction_id).first()
         if not p:
             continue
-        entity = getattr(p, fk, None)
+        entity = getattr(p, fk, None) if fk else None
         owner_id = p.user_id or (getattr(entity, "user_id", None) if entity else None)
         if owner_id and owner_id != user.id:
             raise PermissionError_("not your payment")
@@ -2765,3 +2856,36 @@ def my_profile(user):
         _N.IS_VERIFIED: user.isVerified,
         _N.PROFILE_IMAGE_URL: (profile.profileImageUrl if profile else "") or "",
     }
+
+
+# ==========================================================================
+# my/change-password/ — authenticated password change for the v3 dashboard
+# ==========================================================================
+def change_password(user, payload):
+    """Change the authenticated user's password.
+
+    Verifies the supplied current password against the stored hash (same check
+    the login flow uses) before setting the new one. v3-only — does not touch
+    the legacy auth change-password / reset-password endpoints.
+
+    payload: { currentPassword, newPassword, confirmPassword }
+    Returns: {} on success. Raises ValueError on bad input / wrong current pwd.
+    """
+    from django.contrib.auth.hashers import check_password, make_password
+
+    current = (payload.get("currentPassword") or "").strip()
+    new = payload.get("newPassword") or ""
+    confirm = payload.get("confirmPassword") or ""
+
+    if not current or not new or not confirm:
+        raise ValueError("currentPassword, newPassword and confirmPassword are required")
+    if new != confirm:
+        raise ValueError("New password and confirmation do not match")
+    if len(new) < 8:
+        raise ValueError("New password must be at least 8 characters")
+    if not check_password(current, user.password):
+        raise ValueError("Current password is incorrect")
+
+    user.password = make_password(new)
+    user.save()  # full save — mirrors AuthTasks.ChangePassword precedent
+    return {}

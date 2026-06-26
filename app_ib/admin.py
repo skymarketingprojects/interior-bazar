@@ -4,7 +4,10 @@ from django.contrib.admin.sites import AlreadyRegistered
 
 # Register your models here.
 from app_ib import models
-from app_ib.engine_models import Award, ProcessStep, UserSession, RelatedItem
+from app_ib.engine_models import (
+    Award, ProcessStep, UserSession, RelatedItem,
+    BusinessSpecialization, SpecializationJob,
+)
 from app_ib.models import NewsletterSubscriber
 
 
@@ -37,6 +40,21 @@ class RelatedItemAdmin(admin.ModelAdmin):
     list_display = ("sourceContentType", "sourceObjectId", "targetContentType", "targetObjectId", "score", "reason", "updatedAt")
     list_filter = ("reason", "sourceContentType")
     ordering = ("-score",)
+
+
+@admin.register(BusinessSpecialization)
+class BusinessSpecializationAdmin(admin.ModelAdmin):
+    list_display = ("business", "source", "snapshotHash", "generatedAt")
+    search_fields = ("business__businessName",)
+    ordering = ("-generatedAt",)
+
+
+@admin.register(SpecializationJob)
+class SpecializationJobAdmin(admin.ModelAdmin):
+    list_display = ("business", "status", "scheduledAt", "reason", "attempts", "updatedAt")
+    list_filter = ("status", "entityType")
+    search_fields = ("business__businessName",)
+    ordering = ("-scheduledAt",)
 
 
 @admin.register(NewsletterSubscriber)

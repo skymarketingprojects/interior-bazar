@@ -67,9 +67,20 @@ class CATELOG_TASKS:
     @classmethod
     async def createCatelog(self, business:Business, data:dict):
         try:
-            pass
-            pass
-            catelogType = await sync_to_async(BusinessType.objects.get)(id=data.type.id)
+            # catelogueType is a required (PROTECT) FK. The v3 dashboard create
+            # form does not collect a catalogue "type", so fall back to the
+            # seller's own business type, then to any available type. (F3: without
+            # this the create raised AttributeError on `data.type.id` and 0 rows
+            # were ever persisted.)
+            type_id = getattr(getattr(data, 'type', None), 'id', None)
+            if type_id:
+                catelogType = await sync_to_async(BusinessType.objects.get)(id=type_id)
+            else:
+                catelogType = await sync_to_async(lambda: business.businessType)()
+                if catelogType is None:
+                    catelogType = await sync_to_async(BusinessType.objects.first)()
+            if catelogType is None:
+                return False
             catelog = await sync_to_async(Catelogue.objects.create)(
                 business=business,
                 title=data.title,

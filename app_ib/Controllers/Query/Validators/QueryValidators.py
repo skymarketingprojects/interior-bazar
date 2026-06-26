@@ -94,6 +94,16 @@ class LeadQueryCreateSchema(BaseValidator):
     leadStatus: Optional[str] = None
     stage: Optional[str] = None
 
+    @validator("email", pre=True, allow_reuse=True)
+    def blank_email_to_none(cls, v):
+        # An empty / whitespace email must NOT reach EmailStr validation — a blank
+        # contact form (or an authenticated user whose profile email is empty, which
+        # the view injects) would otherwise fail with "value is not a valid email"
+        # and the whole enquiry would be rejected ("Unable to generate query").
+        if v is None or (isinstance(v, str) and not v.strip()):
+            return None
+        return v
+
     @validator("phone", allow_reuse=True)
     def validate_phone(cls, v):
         if not v.isdigit():
