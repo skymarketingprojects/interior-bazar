@@ -1,0 +1,14 @@
+# Interior Bazzar scheduled jobs — run by supercronic in the cron container.
+# Working dir is /interior_bazzar_api (Dockerfile WORKDIR), so `python manage.py`
+# resolves directly. All jobs are idempotent and safe to re-run.
+#
+# min  hour  dom  mon  dow   command
+#
+# Discovery/trending engine background jobs (every 15 min)
+*/15   *     *    *    *     python manage.py run_engine_jobs
+#
+# Re-verify recent payments missed mid-flow (nightly 02:00) — last 4 days
+0      2     *    *    *     python manage.py verify_pending_payments --days 4
+#
+# Recompute co-view related items (nightly 03:30)
+30     3     *    *    *     python manage.py compute_related_items

@@ -23,8 +23,19 @@ COPY requirements.txt /interior_bazzar_api/
 # Install Python dependencies
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
+# Install supercronic (container-friendly cron runner) for the scheduled
+# management commands. Runs the crontab below in the dedicated cron container;
+# the web container ignores it (its CMD is the entrypoint/uvicorn).
+RUN curl -fsSL -o /usr/local/bin/supercronic \
+    https://github.com/aptible/supercronic/releases/latest/download/supercronic-linux-amd64 \
+    && chmod +x /usr/local/bin/supercronic
+
 # Copy project
 COPY . /interior_bazzar_api
+
+# Crontab consumed by supercronic in the cron container (explicit COPY so it is
+# always present even if the build context is filtered).
+COPY crontab /interior_bazzar_api/crontab
 
 # Entrypoint
 COPY ./entrypoint.sh /interior_bazzar_api/entrypoint.sh
