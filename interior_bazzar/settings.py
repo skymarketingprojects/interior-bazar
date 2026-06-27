@@ -267,7 +267,11 @@ CSRF_TRUSTED_ORIGINS = [
     'http://prod.interiorbazzar.com',
     'https://prod.interiorbazzar.com',
     'http://testfrontend.interiorbazzar.com',
-    'https://testfrontend.interiorbazzar.com'
+    'https://testfrontend.interiorbazzar.com',
+    'http://stage.interiorbazzar.com',
+    'https://stage.interiorbazzar.com',
+    'http://stagefrontend.interiorbazzar.com',
+    'https://stagefrontend.interiorbazzar.com'
 ]
 
 # DB Configuration based on MODE
@@ -361,3 +365,12 @@ GOOGLE_OAUTH2_CLIENT_SECRET = env('GOOGLE_OAUTH2_CLIENT_SECRET', default='')
 GOOGLE_OAUTH2_ALLOWED_AUDIENCES = [
     a.strip() for a in env('GOOGLE_OAUTH2_ALLOWED_AUDIENCES', default=GOOGLE_OAUTH2_CLIENT_ID).split(',') if a.strip()
 ]
+
+# --- Facebook OAuth (login with Facebook) ---
+FACEBOOK_APP_ID = env('FACEBOOK_APP_ID', default='')
+FACEBOOK_APP_SECRET = env('FACEBOOK_APP_SECRET', default='')
+FACEBOOK_GRAPH_VERSION = env('FACEBOOK_GRAPH_VERSION', default='v19.0')
+
+# --- LinkedIn OAuth (Sign In with LinkedIn using OpenID Connect) ---
+LINKEDIN_CLIENT_ID = env('LINKEDIN_CLIENT_ID', default='')
+LINKEDIN_CLIENT_SECRET = env('LINKEDIN_CLIENT_SECRET', default='')
