@@ -5,7 +5,7 @@ from app_ib import views
 from django.views.decorators.cache import cache_page
 from rest_framework_simplejwt.views import (TokenRefreshView)
 from app_ib.serializers import SessionAwareTokenRefreshView
-from app_ib.Views import AuthView, QueryView, FeedbackView, GoogleAuthView
+from app_ib.Views import AuthView, QueryView, FeedbackView, GoogleAuthView, FacebookAuthView, LinkedInAuthView
 from app_ib.Views import ProfileView
 # from app_ib.Views.Business import BusinessView
 # from app_ib.Views.Business import BusinessLocationView
@@ -39,6 +39,12 @@ urlpatterns = [
     #########################################################
     path('v1/auth/google/', GoogleAuthView.GoogleLoginView, name='GoogleLoginView'),
     path('v1/auth/google/id-token/', GoogleAuthView.GoogleIdTokenLoginView, name='GoogleIdTokenLoginView'),
+
+    #########################################################
+    # Facebook / LinkedIn login (auth-code exchange)
+    #########################################################
+    path('v1/auth/facebook/', FacebookAuthView.FacebookLoginView, name='FacebookLoginView'),
+    path('v1/auth/linkedin/', LinkedInAuthView.LinkedInLoginView, name='LinkedInLoginView'),
 
     #########################################################
     # Test:
