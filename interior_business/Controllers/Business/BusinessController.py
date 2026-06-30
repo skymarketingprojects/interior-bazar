@@ -119,14 +119,18 @@ class BUSS_CONTROLLER:
                     data={})
             # Create business
             business_ins = await BUSS_TASK.CreateBusinessTask(user_ins=user_ins, data=data)
-            pass
-            asyncio.create_task(sync_to_async(businessSignupSignal.send)(sender=Business,instance=Business.objects.get(user=user_ins),created=True))
+            # Guard BEFORE touching the DB: on a failed create no Business row exists,
+            # so firing the signal (which does Business.objects.get) here would raise
+            # "Business matching query does not exist" and mask the real failure (E4).
             if not business_ins:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.error,
                     message=RESPONSE_MESSAGES.business_register_error,
                     code=RESPONSE_CODES.error,
                     data={})
+
+            business_obj = await sync_to_async(Business.objects.get)(user=user_ins)
+            asyncio.create_task(sync_to_async(businessSignupSignal.send)(sender=Business, instance=business_obj, created=True))
 
             return LocalResponse(
                 code=RESPONSE_CODES.success,

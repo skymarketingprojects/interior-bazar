@@ -250,7 +250,7 @@ class BUSS_TASK:
             business_type = await sync_to_async(lambda: BusinessType.objects.filter(id=business_type_id).first())()
 
             # Validate and fetch segments (max 5)
-            segment_ids = [seg.id if not seg.isNew else await cls.CreateSegmentTask(seg) for seg in getattr(data, NAMES.SEGMENTS, [])]
+            segment_ids = [seg.id if not getattr(seg, 'isNew', False) else await cls.CreateSegmentTask(seg) for seg in getattr(data, NAMES.SEGMENTS, [])]
             if len(segment_ids) > 5:
                 return None  # Too many segments
             segments = await sync_to_async(lambda: list(BusinessSegment.objects.filter(id__in=segment_ids)))()
@@ -258,7 +258,7 @@ class BUSS_TASK:
                 return None  # Invalid segment IDs
 
             # Validate and fetch categories (max 3)
-            category_ids = [cat.id if not cat.isNew else await cls.CreateCategoryTask(cat) for cat in getattr(data, NAMES.CATEGORIES, [])]
+            category_ids = [cat.id if not getattr(cat, 'isNew', False) else await cls.CreateCategoryTask(cat) for cat in getattr(data, NAMES.CATEGORIES, [])]
             if len(category_ids) > 3:
                 return None  # Too many categories
             categories = await sync_to_async(lambda: list(BusinessCategory.objects.filter(id__in=category_ids)))()

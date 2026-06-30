@@ -47,7 +47,7 @@ class AUTH_CONTROLLER:
 
             if is_user_exist:
                 return LocalResponse(
-                    response=RESPONSE_MESSAGES.success,
+                    response=RESPONSE_MESSAGES.error,
                     message=RESPONSE_MESSAGES.username_already_taken,
                     code=RESPONSE_CODES.already_exist,
                     data={})
