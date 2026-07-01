@@ -53,11 +53,14 @@ class PRODUCTS_V3_CONTROLLER:
 
     @staticmethod
     def _tags(product: Product) -> list:
+        if not product.productTags:
+            return []
         try:
-            raw = json.loads(str(product.productTags).replace("'", '"')) if product.productTags else []
+            raw = json.loads(str(product.productTags).replace("'", '"'))
             return [str(t) for t in raw] if isinstance(raw, list) else []
         except Exception:
-            return []
+            # plain comma-separated string (v3 create form) — recover the tags
+            return [t.strip() for t in str(product.productTags).split(",") if t.strip()]
 
     @staticmethod
     def _images(product: Product) -> list:

@@ -5,10 +5,9 @@ from . import v3Views
 app_name = 'interior_products'
 
 urlpatterns = [
-    # path('catalogue/create/',views.CreateCatelogView, name='create_catelog'),
-    # path('catalogue/<int:catelogueId>/update/',views.UpdateCatelogView, name='update_catelog'),
-    # path('catalogue/<businessId>/',views.GetCatelogView, name='get_catelog'),
-    # path('catalogue/<int:catelogueId>/delete/',views.DeleteCatelogView, name='delete_catelog'),
+    # CatelogView (class-based) handles GET/POST/PUT/DELETE for the authed user's OWN
+    # business (ownership-gated in DeleteCatelog/UpdateCatelog). The legacy per-verb
+    # function views (CreateCatelogView/DeleteCatelogView…) are superseded by it.
     # NOTE: No cache here — returns data for the authenticated user's OWN business
     path('catalogue/', views.CatelogView.as_view()),
     path('catalogue/<int:catelogueId>/', views.CatelogView.as_view()),

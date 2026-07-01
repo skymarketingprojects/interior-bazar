@@ -55,19 +55,17 @@ class PRODUCTS_TASKS:
             try:
                 if data.images:
                     for image in data.images:
-                        pass
-                        if image.id:
-                            await sync_to_async(ProductImage.objects.filter(id=image.id).update)(
-                                image=image.imageUrl,
-                                index=image.index,
-                                link=image.link
+                        _imgId = getattr(image, 'id', None)
+                        _imgUrl = getattr(image, 'imageUrl', '') or getattr(image, 'image', '')
+                        _imgIdx = getattr(image, 'index', 0) or 0
+                        _imgLink = getattr(image, 'link', '') or ''
+                        if _imgId:
+                            await sync_to_async(ProductImage.objects.filter(id=_imgId).update)(
+                                image=_imgUrl, index=_imgIdx, link=_imgLink
                             )
                         else:
                             await sync_to_async(ProductImage.objects.create)(
-                                product=product,
-                                image=image.imageUrl,
-                                index=image.index,
-                                link=image.link
+                                product=product, image=_imgUrl, index=_imgIdx, link=_imgLink
                             )
 
 
@@ -139,9 +137,9 @@ class PRODUCTS_TASKS:
                     for image in data.images:
                         await sync_to_async(ProductImage.objects.create)(
                             product=product,
-                            image=image.imageUrl,
-                            index=image.index,
-                            link=image.link
+                            image=getattr(image, 'imageUrl', '') or getattr(image, 'image', ''),
+                            index=getattr(image, 'index', 0) or 0,
+                            link=getattr(image, 'link', '') or ''
                         )
             except Exception as e:
                 pass
@@ -165,11 +163,19 @@ class PRODUCTS_TASKS:
                     description=value
             )
             data = await self.getProduct(product)
+            if not data:
+                # The product IS saved; serialization just failed. Don't report a
+                # false "Unable to create product" — return a minimal truthy payload
+                # so the create is reported as the success it actually is (F-create).
+                import traceback, sys
+                print("createProduct: getProduct serialization returned falsy for product", product.id, file=sys.stderr)
+                return {"id": product.id, "title": product.title}
             return data
         except Exception as e:
-            pass
+            import traceback, sys
+            traceback.print_exc(file=sys.stderr)
             return False
-        
+
     @classmethod
     async def getProduct(self,product:Product):
         try:
@@ -183,7 +189,18 @@ class PRODUCTS_TASKS:
                     'link':image.link
                 })
             pass
-            tags = json.loads(str(product.productTags).replace("'",'"')) if product.productTags else []
+            # productTags may be a JSON-list string (legacy) OR a plain
+            # comma-separated string (what the v3 create form sends). json.loads
+            # crashes on the latter and silently dropped the whole product from
+            # every listing (F-tags). Parse defensively, falling back to a split.
+            _raw = product.productTags
+            if not _raw:
+                tags = []
+            else:
+                try:
+                    tags = json.loads(str(_raw).replace("'", '"'))
+                except Exception:
+                    tags = [t.strip() for t in str(_raw).split(",") if t.strip()]
 
             prodCategory=[]
             for cat in product.category.all():
@@ -195,6 +212,13 @@ class PRODUCTS_TASKS:
             for subCat in product.subCategory.all():
                 data = await self.getCategoriesDataTask(subCat)
                 prodSubCategory.append(data)
+
+            # An owner may not have a UserProfile yet (signup does not create one).
+            # The reverse O2O raises RelatedObjectDoesNotExist (an AttributeError
+            # subclass) so getattr(...,None) safely yields None — without this guard
+            # the whole product was silently dropped from every listing (F-prof).
+            _owner = product.business.user if product.business else None
+            _profile = getattr(_owner, 'user_profile', None)
 
             productData = {
                 'id':product.id,
@@ -211,15 +235,17 @@ class PRODUCTS_TASKS:
                 'index':product.index,
                 "categories":prodCategory,
                 "subCategories":prodSubCategory,
-                "phone":product.business.user.user_profile.phone,
-                "countryCode":product.business.user.user_profile.countryCode
+                "phone": getattr(_profile, 'phone', '') if _profile else '',
+                "countryCode": getattr(_profile, 'countryCode', '') if _profile else ''
             }
             specifications:list[ProductSpecification] = await sync_to_async(product.productSpecifications.all)()
             for specification in specifications:
                 productData[specification.title] = specification.description
             return productData
         except Exception as e:
-            pass
+            import traceback, sys
+            print("getProduct FAILED:", repr(e), file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
             return False
 
     @classmethod

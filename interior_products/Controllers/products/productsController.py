@@ -197,6 +197,17 @@ class PRODUCTS_CONTROLLER:
             )
         
     @classmethod
+    def _bustBusinessCache(self, business_id):
+        """Invalidate the per-business product caches after a write so the seller's
+        listing reflects create/update/delete immediately (caches were never busted
+        before → stale lists for up to an hour)."""
+        try:
+            cache.delete(f"products_business_{business_id}")
+            cache.delete(f"cache:product:business:owner:{business_id}")
+        except Exception:
+            pass
+
+    @classmethod
     async def createProduct(self,business:Business,data:dict)->LocalResponse:
         try:
             product = await PRODUCTS_TASKS.createProduct(business,data)
@@ -207,6 +218,7 @@ class PRODUCTS_CONTROLLER:
                     code=RESPONSE_CODES.error,
                     data={'error':RESPONSE_MESSAGES.product_create_error}
                 )
+            self._bustBusinessCache(business.id)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.product_create_success,
@@ -241,6 +253,7 @@ class PRODUCTS_CONTROLLER:
                     code=RESPONSE_CODES.error,
                     data={'error':RESPONSE_MESSAGES.product_update_error}
                 )
+            self._bustBusinessCache(business.id)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.product_update_success,
@@ -276,6 +289,7 @@ class PRODUCTS_CONTROLLER:
                     code=RESPONSE_CODES.error,
                     data={'error':RESPONSE_MESSAGES.product_delete_error}
                 )
+            self._bustBusinessCache(business.id)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.product_delete_success,

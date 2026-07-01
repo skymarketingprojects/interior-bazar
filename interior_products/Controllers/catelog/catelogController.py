@@ -165,6 +165,17 @@ class CATELOG_CONTROLLER:
                 data={'error':str(e)})
 
     @classmethod
+    def _bustBusinessCache(self, business_id):
+        """Invalidate the per-business catalogue caches after a write so the seller's
+        listing reflects create/update/delete immediately (caches were never busted
+        before → stale lists for up to an hour)."""
+        try:
+            cache.delete(f"catalogues_business_{business_id}")
+            cache.delete(f"cache:catalogue:business:owner:{business_id}")
+        except Exception:
+            pass
+
+    @classmethod
     async def CreateCatelog(self, business, data):
         try:
             catelog = await CATELOG_TASKS.createCatelog(business, data)
@@ -175,6 +186,7 @@ class CATELOG_CONTROLLER:
                     code=RESPONSE_CODES.error,
                     data={}
                     )
+            self._bustBusinessCache(business.id)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.catelog_create_success,
@@ -211,6 +223,7 @@ class CATELOG_CONTROLLER:
                     code=RESPONSE_CODES.error,
                     data={}
                     )
+            self._bustBusinessCache(business.id)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.catelog_update_success,
@@ -246,6 +259,7 @@ class CATELOG_CONTROLLER:
                     code=RESPONSE_CODES.error,
                     data={}
                     )
+            self._bustBusinessCache(business.id)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.catelog_delete_success,

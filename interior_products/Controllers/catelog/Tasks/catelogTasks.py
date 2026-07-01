@@ -109,12 +109,11 @@ class CATELOG_TASKS:
             try:
                 if data.images:
                     for image in data.images:
-                        pass
                         await sync_to_async(CatelogueImage.objects.create)(
                             catelouge=catelog,
-                            catelougeImage=image.imageUrl,
-                            index=image.index,
-                            link=image.link
+                            catelougeImage=getattr(image, 'imageUrl', '') or getattr(image, 'catelougeImage', ''),
+                            index=getattr(image, 'index', 0) or 0,
+                            link=getattr(image, 'link', '') or ''
                         )
             except Exception as e:
                 pass
@@ -157,20 +156,20 @@ class CATELOG_TASKS:
             try:
                 if data.images:
                     for image in data.images:
+                        _imgId = getattr(image, 'id', None)
+                        _imgUrl = getattr(image, 'imageUrl', '') or getattr(image, 'catelougeImage', '')
+                        _imgIdx = getattr(image, 'index', 0) or 0
+                        _imgLink = getattr(image, 'link', '') or ''
                         #update already created images
-                        if image.id:
-                            await sync_to_async(CatelogueImage.objects.filter(id=image.id).update)(
-                                catelougeImage=image.imageUrl,
-                                index=image.index,
-                                link=image.link
+                        if _imgId:
+                            await sync_to_async(CatelogueImage.objects.filter(id=_imgId).update)(
+                                catelougeImage=_imgUrl, index=_imgIdx, link=_imgLink
                             )
                         #create new images
                         else:
                             await sync_to_async(CatelogueImage.objects.create)(
-                                catelogue=catelog,
-                                catelougeImage=image.imageUrl,
-                                index=image.index,
-                                link=image.link
+                                catelouge=catelog,
+                                catelougeImage=_imgUrl, index=_imgIdx, link=_imgLink
                             )
             except Exception as e:
                 pass

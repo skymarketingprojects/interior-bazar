@@ -44,18 +44,17 @@ class SERVICES_TASKS:
             try:
                 if data.images:
                     for image in data.images:
-                        if image.id:
-                            await sync_to_async(ServiceImage.objects.filter(id=image.id).update)(
-                                image=image.imageUrl,
-                                index=image.index,
-                                link=image.link
+                        _imgId = getattr(image, 'id', None)
+                        _imgUrl = getattr(image, 'imageUrl', '') or getattr(image, 'image', '')
+                        _imgIdx = getattr(image, 'index', 0) or 0
+                        _imgLink = getattr(image, 'link', '') or ''
+                        if _imgId:
+                            await sync_to_async(ServiceImage.objects.filter(id=_imgId).update)(
+                                image=_imgUrl, index=_imgIdx, link=_imgLink
                             )
                         else:
                             await sync_to_async(ServiceImage.objects.create)(
-                                service=service,
-                                image=image.imageUrl,
-                                index=image.index,
-                                link=image.link
+                                service=service, image=_imgUrl, index=_imgIdx, link=_imgLink
                             )
             except Exception as e:
                 pass
@@ -126,7 +125,14 @@ class SERVICES_TASKS:
                     'index':image.index,
                     'link':image.link
                 })
-            tags = json.loads(str(service.serviceTags).replace("'",'"')) if service.serviceTags else []
+            _raw = service.serviceTags
+            if not _raw:
+                tags = []
+            else:
+                try:
+                    tags = json.loads(str(_raw).replace("'", '"'))
+                except Exception:
+                    tags = [t.strip() for t in str(_raw).split(",") if t.strip()]
             prodCategory=[]
             for cat in service.category.all():
                 data = await PRODUCTS_TASKS.getCategoriesDataTask(cat)
