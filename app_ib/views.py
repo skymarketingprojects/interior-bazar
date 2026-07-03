@@ -1,6 +1,7 @@
 from django.core.mail import send_mail
 import httpx
 import asyncio
+from django.core.cache import cache
 from django.http import JsonResponse
 from asgiref.sync import sync_to_async
 from adrf.decorators import api_view
@@ -17,6 +18,19 @@ from app_ib.Utils.MyMethods import MY_METHODS
 from rest_framework.serializers import ModelSerializer
 
 userCtrl = imageUrlGenrator()
+
+# ponytail: hardcoded temp list, remove this whole view when the real routing feature lands
+_phone_numbers = ['9315663588', '8920898168']
+_PHONE_COUNTER_KEY = 'round_robin_phone_counter'
+
+def _get_next_phone():
+	# cache.incr is atomic in redis, safe across multiple uvicorn workers/processes
+	try:
+		count = cache.incr(_PHONE_COUNTER_KEY)
+	except ValueError:
+		cache.set(_PHONE_COUNTER_KEY, 1)
+		count = 1
+	return _phone_numbers[(count - 1) % len(_phone_numbers)]
 # Create your views here.
 @api_view(['GET'])
 async def TestView(request):
@@ -143,3 +157,22 @@ async def generateUploadUrlView(request):
             data={'error': str(e)},
             code=RESPONSE_CODES.error
         )
+
+@api_view(['GET'])
+@csrf_exempt
+async def RoundRobinPhoneView(request):
+	try:
+		phone = _get_next_phone()
+		return ServerResponse(
+			response=RESPONSE_MESSAGES.success,
+			message='Phone number retrieved successfully',
+			data={'phoneNumber': phone},
+			code=RESPONSE_CODES.success
+		)
+	except Exception as e:
+		return ServerResponse(
+			response=RESPONSE_MESSAGES.error,
+			message='Failed to retrieve phone number',
+			data={'error': str(e)},
+			code=RESPONSE_CODES.error
+		)
