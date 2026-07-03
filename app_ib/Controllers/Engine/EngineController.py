@@ -29,7 +29,12 @@ class _EngineController:
         # Uses prefetch_related so it is always a single extra query, not N.
         # Guard: only Product has these relations — other entity types remain untouched.
         if entity_type == ENTITY_TYPE.PRODUCT:
-            qs = qs.prefetch_related("category", "productImages")
+            qs = (qs.prefetch_related("category", "productImages")
+                    .select_related("business", "business__business_location"))
+        elif entity_type == ENTITY_TYPE.SERVICE:
+            qs = qs.select_related("business", "business__business_location")
+        elif entity_type == ENTITY_TYPE.BUSINESS:
+            qs = qs.select_related("business_location")
         objs = {o.id: o for o in qs}
         out = []
         for r in rows:
@@ -87,7 +92,19 @@ class _EngineController:
                     except Exception:
                         pass
 
+            # ── FEATURED-SHORT panel enrichment (drives the reel modal that the
+            # "Hot this week" tiles open). Additive; leaderboard consumers ignore
+            # keys they don't use. Joins are prefetched above to avoid N+1. ──
+            biz = o if entity_type == ENTITY_TYPE.BUSINESS else getattr(o, "business", None)
+            item["business"] = (getattr(biz, "businessName", "") or _name(biz)) if biz else ""
+            item["businessId"] = biz.id if biz else None
+            loc = getattr(biz, "business_location", None) if biz else None
+            item["city"] = getattr(loc, "city", "") if loc else ""
+            item["verified"] = bool(getattr(biz, "isVerified", False)) if biz else False
+            item["description"] = _clean_desc(getattr(o, "description", "") or getattr(o, "bio", "") or "")
+
             out.append(item)
+        _attach_trending_review_quotes(out)
         return out
 
     def trending_searches(self, category_fallback=False, min_items=8):
@@ -321,6 +338,30 @@ def _image(o):
 
 def _rating(o):
     return getattr(o, "ratingValue", None) if hasattr(o, "ratingValue") else getattr(o, "rating", 0.0)
+
+
+def _clean_desc(text, limit=220):
+    """Plain-text, length-capped description for the reel panel — product/service
+    descriptions are rich-text HTML (quill), so strip tags + collapse whitespace."""
+    from django.utils.html import strip_tags
+    t = " ".join(strip_tags(text or "").split()).strip()
+    return (t[:limit].rstrip() + "…") if len(t) > limit else t
+
+
+def _attach_trending_review_quotes(items):
+    """Attach each item's owning-business most-recent approved review as
+    `reviewQuote` (the reel modal 'Top review' block). One bounded query for all
+    businesses in the batch; items without a business get an empty quote."""
+    biz_ids = {i.get("businessId") for i in items if i.get("businessId")}
+    quotes = {}
+    if biz_ids:
+        from app_ib.models import Review
+        for rv in (Review.objects.filter(business_id__in=biz_ids, isApproved=True, isDeleted=False)
+                   .exclude(body="").order_by("business_id", "-timestamp")
+                   .values("business_id", "body")):
+            quotes.setdefault(rv["business_id"], rv["body"])
+    for i in items:
+        i["reviewQuote"] = quotes.get(i.get("businessId"), "")
 
 
 ENGINE_CONTROLLER = _EngineController()

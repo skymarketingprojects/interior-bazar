@@ -138,14 +138,26 @@ class _HomeController:
             obj = model.objects.filter(id=v.objectId).first() if model else None
             if not obj:
                 continue
+            et = v.contentType.model
+            biz = self._entity_business(obj, et)
             candidates[v.id] = {
                 "videoUrl": v.videoUrl,
                 "platform": v.platform.code if v.platform else "",
-                "entityType": v.contentType.model, "entityId": obj.id,
+                "entityType": et, "entityId": obj.id,
                 "slug": getattr(obj, "slug", "") or "",
                 "name": self._name(obj), "imageUrl": self._image(obj),
                 "hotScore": getattr(obj, "hotScore", 0.0) or 0.0,
                 "isNew": False,
+                # --- additive FEATURED-SHORT panel enrichment (consumed by the
+                # frontend ReelModal; all keys optional so old callers are safe) ---
+                "business": self._name(biz) if biz else "",
+                "businessId": biz.id if biz else None,
+                "city": self._entity_city(obj, et) or "",
+                "verified": bool(getattr(biz, "isVerified", False)) if biz else False,
+                "description": _clean_desc(getattr(obj, "description", "") or getattr(obj, "bio", "") or ""),
+                "rating": (getattr(obj, "ratingValue", None) if hasattr(obj, "ratingValue")
+                           else getattr(obj, "rating", None)),
+                "reviewCount": getattr(obj, "totalReviews", 0) or 0,
             }
             created_at[v.id] = v.createdAt
         # ~1 in 5 slots reserved for fresh uploads (at least 2 when reels exist)
@@ -167,7 +179,25 @@ class _HomeController:
                 out.append({"videoUrl": fv.videoUrl, "platform": fv.platform.code if fv.platform else "",
                             "entityType": "", "entityId": None, "slug": "", "name": "", "imageUrl": "",
                             "hotScore": 0.0, "isNew": False, "isFallback": True})
+        # "Top review" panel block — one owning-business review per reel (1 query).
+        self._attach_review_quotes(out)
         return out
+
+    def _attach_review_quotes(self, reels):
+        """Attach the most recent approved review of each reel's owning business
+        as `reviewQuote` (the ReelModal 'Top review' block). One bounded query for
+        all businesses in the batch; reels with no business (shops/architects/
+        fallbacks) get an empty quote."""
+        biz_ids = {r.get("businessId") for r in reels if r.get("businessId")}
+        quotes = {}
+        if biz_ids:
+            from app_ib.models import Review
+            for rv in (Review.objects.filter(business_id__in=biz_ids, isApproved=True, isDeleted=False)
+                       .exclude(body="").order_by("business_id", "-timestamp")
+                       .values("business_id", "body")):
+                quotes.setdefault(rv["business_id"], rv["body"])
+        for r in reels:
+            r["reviewQuote"] = quotes.get(r.get("businessId"), "")
 
     # ---------------- video stories = testimonials (section 9) ----------------
     def testimonials(self, limit=12):
@@ -426,6 +456,14 @@ class _HomeController:
             d["price"] = getattr(o, "displayPrice", None)
             d["originalPrice"] = getattr(o, "orignalPrice", None)
         return d
+
+
+def _clean_desc(text, limit=220):
+    """Plain-text, length-capped description for the reel panel — product/service
+    descriptions are rich-text HTML (quill), so strip tags + collapse whitespace."""
+    from django.utils.html import strip_tags
+    t = " ".join(strip_tags(text or "").split()).strip()
+    return (t[:limit].rstrip() + "…") if len(t) > limit else t
 
 
 HOME_CONTROLLER = _HomeController()
