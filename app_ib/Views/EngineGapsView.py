@@ -708,6 +708,18 @@ def LeadDeclineView(request, leadId):
         return _err(e)
 
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def LeadCreateView(request):
+    """Buyer-facing enquiry/lead create — universal connect wizard."""
+    if not request.data.get("intent"):
+        return _bad("intent required")
+    try:
+        return _ok(GC.create_lead(request.user, request.data), "Lead created")
+    except Exception as e:
+        return _err(e)
+
+
 # ==========================================================================
 # 11. Platform ads
 # ==========================================================================

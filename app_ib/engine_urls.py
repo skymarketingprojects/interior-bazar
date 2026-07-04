@@ -142,6 +142,7 @@ urlpatterns = [
     path("dashboard/kpis/", EngineGapsView.DashboardKpisView, name="EngineDashboardKpisView"),
     path("analytics/chart/", EngineGapsView.AnalyticsChartView, name="EngineAnalyticsChartView"),
     # leads (item 10)
+    path("leads/", EngineGapsView.LeadCreateView, name="EngineLeadCreateView"),  # buyer-facing connect wizard
     path("leads/prioritized/", EngineGapsView.LeadsPrioritizedView, name="EngineLeadsPrioritizedView"),
     path("leads/<int:leadId>/accept/", EngineGapsView.LeadAcceptView, name="EngineLeadAcceptView"),
     path("leads/<int:leadId>/decline/", EngineGapsView.LeadDeclineView, name="EngineLeadDeclineView"),

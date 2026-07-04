@@ -1877,6 +1877,92 @@ def decline_lead(user, lead_id, reason=""):
     return {"leadId": lead.id, "leadStatus": lead.leadStatus}
 
 
+def create_lead(user, data):
+    """Buyer-facing enquiry/lead create — backend half of the universal connect
+    wizard. Business-less leads are allowed (general project enquiries,
+    architect-direct enquiries where the architect has no linked business, etc).
+    Missing/invalid itemId never 500s — it just leaves business unresolved;
+    only an explicit businessId that doesn't exist raises NotFound_."""
+    from app_ib.models import Business, LeadQuery
+    from interior_products.models import Product, Service, Catelogue
+    from app_ib.engine_models import Shop, Architect
+    from app_ib.Controllers.Engine.ChatController import CHAT_CONTROLLER
+
+    item_type = (data.get("itemType") or "").strip().lower()
+    item_id = data.get("itemId")
+    intent = data.get("intent") or ""
+
+    business = None
+    product = service = catalouge = None
+    if item_type and item_id:
+        if item_type == "product":
+            product = Product.objects.filter(id=item_id).first()
+            business = product.business if product else None
+        elif item_type == "service":
+            service = Service.objects.filter(id=item_id).first()
+            business = service.business if service else None
+        elif item_type == "catalogue":
+            catalouge = Catelogue.objects.filter(id=item_id).first()
+            business = catalouge.business if catalouge else None
+        elif item_type == "shop":
+            shop = Shop.objects.filter(id=item_id).first()
+            business = shop.business if shop else None
+        elif item_type == "architect":
+            architect = Architect.objects.filter(id=item_id).first()
+            business = architect.businesses.first() if architect else None
+        # unresolved id / unknown itemType -> business stays None, no 500
+    elif data.get("businessId"):
+        business = Business.objects.filter(id=data["businessId"]).first()
+        if not business:
+            raise NotFound_("business not found")
+
+    profile = getattr(user, "user_profile", None)
+    name = data.get("name") or (profile.name if profile else "") or ""
+    phone = data.get("phone") or (profile.phone if profile else "") or ""
+    email = (profile.email if profile else "") or ""
+
+    enquiry_type = data.get("enquiryType") or ""
+    item_name = data.get("itemName") or ""
+    interested = f"{intent.capitalize() or 'General'} enquiry"
+    if enquiry_type:
+        interested += f" — {enquiry_type}"
+    if item_name:
+        interested += f" — {item_name}"
+
+    fields = data.get("fields") or {}
+    query_text = "\n".join(f"{k}: {v}" for k, v in fields.items() if v not in (None, "", []))
+
+    # backfill city/state/country from the buyer's saved location, same source
+    # QueryTasks.CreateLeadQueryTask reads for the classic (non-engine) query form
+    city = state = country = ""
+    loc = getattr(user, "user_location", None)
+    if loc:
+        city = loc.city or ""
+        state = loc.locationState.name if loc.locationState_id else ""
+        country = loc.locationCountry.name if loc.locationCountry_id else ""
+
+    lead = LeadQuery.objects.create(
+        user=user, name=name, phone=phone, email=email, business=business,
+        interested=interested, query=query_text, city=city, state=state, country=country,
+        category=item_type or intent,
+        sourceChannel="connect_wizard", formType=intent, originType=item_type or "",
+        originId=item_id or None,
+        product=product, service=service, catalouge=catalouge,
+    )
+
+    # bridge into chat only when there's a business with a real owner who isn't
+    # the buyer themself — never let a chat failure fail the lead
+    conv_id = None
+    if business and business.user_id and business.user_id != user.id:
+        try:
+            conv = CHAT_CONTROLLER.start_conversation(user, business.id, lead.id)
+            conv_id = conv.get("conversationId")
+        except Exception:
+            logger.exception("create_lead: chat bridge failed for lead %s", lead.id)
+
+    return {"leadId": lead.id, "conversationId": conv_id}
+
+
 # ---------------------------------------------------------------------------
 # 11. Platform ads
 # ---------------------------------------------------------------------------
