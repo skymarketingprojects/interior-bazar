@@ -35,6 +35,39 @@ OTP_RESEND_THROTTLE_SECONDS = 60
 OTP_MAX_ATTEMPTS = 5
 
 
+def _check_otp(otp_key, code):
+    """Shared OTP check for all verify endpoints. Returns an error
+    LocalResponse, or None on match (the key is burned on match)."""
+    cached = safe_cache.get(otp_key)
+    if not cached:
+        return LocalResponse(
+            response=RESPONSE_MESSAGES.error,
+            message="Code expired — request a new one",
+            code=RESPONSE_CODES.not_exist,
+            data={})
+
+    if code != cached.get("code"):
+        attempts = cached.get("attempts", 0) + 1
+        if attempts >= OTP_MAX_ATTEMPTS:
+            safe_cache.delete(otp_key)
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message="Too many attempts",
+                code=RESPONSE_CODES.auth_error,
+                data={})
+        cached["attempts"] = attempts
+        safe_cache.set(otp_key, cached, timeout=OTP_TTL_SECONDS)
+        return LocalResponse(
+            response=RESPONSE_MESSAGES.error,
+            message="Incorrect code",
+            code=RESPONSE_CODES.auth_error,
+            data={})
+
+    # Match — burn the code so it can't be replayed.
+    safe_cache.delete(otp_key)
+    return None
+
+
 class AUTH_CONTROLLER:
 
     #####################################
@@ -482,34 +515,9 @@ class AUTH_CONTROLLER:
                     code=RESPONSE_CODES.bad_request,
                     data={})
 
-            otp_key = f"otp:phone:{normalized}"
-            cached = safe_cache.get(otp_key)
-            if not cached:
-                return LocalResponse(
-                    response=RESPONSE_MESSAGES.error,
-                    message="Code expired — request a new one",
-                    code=RESPONSE_CODES.not_exist,
-                    data={})
-
-            if data.code != cached.get("code"):
-                attempts = cached.get("attempts", 0) + 1
-                if attempts >= OTP_MAX_ATTEMPTS:
-                    safe_cache.delete(otp_key)
-                    return LocalResponse(
-                        response=RESPONSE_MESSAGES.error,
-                        message="Too many attempts",
-                        code=RESPONSE_CODES.auth_error,
-                        data={})
-                cached["attempts"] = attempts
-                safe_cache.set(otp_key, cached, timeout=OTP_TTL_SECONDS)
-                return LocalResponse(
-                    response=RESPONSE_MESSAGES.error,
-                    message="Incorrect code",
-                    code=RESPONSE_CODES.auth_error,
-                    data={})
-
-            # Match — burn the code so it can't be replayed.
-            safe_cache.delete(otp_key)
+            otp_err = _check_otp(f"otp:phone:{normalized}", data.code)
+            if otp_err:
+                return otp_err
 
             user_ins, is_new_user = await AUTH_TASK.FindOrCreateOtpUser(
                 username=normalized,
@@ -603,34 +611,9 @@ class AUTH_CONTROLLER:
         try:
             normalized = data.email  # already lowercased by the validator
 
-            otp_key = f"otp:email:{normalized}"
-            cached = safe_cache.get(otp_key)
-            if not cached:
-                return LocalResponse(
-                    response=RESPONSE_MESSAGES.error,
-                    message="Code expired — request a new one",
-                    code=RESPONSE_CODES.not_exist,
-                    data={})
-
-            if data.code != cached.get("code"):
-                attempts = cached.get("attempts", 0) + 1
-                if attempts >= OTP_MAX_ATTEMPTS:
-                    safe_cache.delete(otp_key)
-                    return LocalResponse(
-                        response=RESPONSE_MESSAGES.error,
-                        message="Too many attempts",
-                        code=RESPONSE_CODES.auth_error,
-                        data={})
-                cached["attempts"] = attempts
-                safe_cache.set(otp_key, cached, timeout=OTP_TTL_SECONDS)
-                return LocalResponse(
-                    response=RESPONSE_MESSAGES.error,
-                    message="Incorrect code",
-                    code=RESPONSE_CODES.auth_error,
-                    data={})
-
-            # Match — burn the code so it can't be replayed.
-            safe_cache.delete(otp_key)
+            otp_err = _check_otp(f"otp:email:{normalized}", data.code)
+            if otp_err:
+                return otp_err
 
             user_ins, is_new_user = await AUTH_TASK.FindOrCreateOtpUser(
                 username=normalized, profile_defaults={"email": normalized})
@@ -656,6 +639,99 @@ class AUTH_CONTROLLER:
 
         except Exception as e:
             logger.exception('VerifyEmailOtp failed')
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message="Unable to verify code",
+                code=RESPONSE_CODES.error,
+                data={})
+
+    #####################################
+    # Send Password-Reset OTP (forgot-password step 1)
+    #####################################
+    @classmethod
+    async def SendResetOtp(self, data: SendEmailOtpValidator):
+        try:
+            normalized = data.email  # already lowercased by the validator
+
+            # Anti-enumeration: unknown accounts get the same 200 + generic
+            # message, but no code is generated/cached/emailed.
+            generic = LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message="If an account exists, a code has been sent",
+                code=RESPONSE_CODES.success,
+                data={NAMES.EXPIRE_IN: OTP_TTL_SECONDS})
+
+            is_user_exist = await AUTH_TASK.IsUserExist(username=normalized)
+            if not is_user_exist:
+                return generic
+
+            throttle_key = f"otp:reset:{normalized}:sent"
+            if safe_cache.get(throttle_key):
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.error,
+                    message="Please wait before requesting another code",
+                    code=RESPONSE_CODES.bad_request,
+                    data={})
+
+            code = f"{random.randint(100000, 999999)}"
+            safe_cache.set(f"otp:reset:{normalized}", {"code": code, "attempts": 0},
+                           timeout=OTP_TTL_SECONDS)
+            safe_cache.set(throttle_key, "1", timeout=OTP_RESEND_THROTTLE_SECONDS)
+
+            if settings.MODE != "prod":
+                # Dev: skip SMTP, hand the code back so the flow is testable.
+                generic.data["devCode"] = code
+            else:
+                is_sent = await MY_METHODS.send_email(
+                    email=normalized,
+                    subject="Your Interior Bazzar verification code",
+                    message=f"Your Interior Bazzar password reset code is {code}. Valid for 5 minutes.",
+                )
+                if not is_sent:
+                    return LocalResponse(
+                        response=RESPONSE_MESSAGES.error,
+                        message="Unable to send verification code",
+                        code=RESPONSE_CODES.error,
+                        data={})
+
+            return generic
+
+        except Exception as e:
+            logger.exception('SendResetOtp failed')
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message="Unable to send verification code",
+                code=RESPONSE_CODES.error,
+                data={})
+
+    #####################################
+    # Verify Password-Reset OTP (forgot-password step 2) — on match returns
+    # the legacy base64 {username, timestamp} hash that change-password/
+    # already accepts, so step 3 needs no new backend.
+    #####################################
+    @classmethod
+    async def VerifyResetOtp(self, data: VerifyEmailOtpValidator):
+        try:
+            normalized = data.email  # already lowercased by the validator
+
+            otp_err = _check_otp(f"otp:reset:{normalized}", data.code)
+            if otp_err:
+                return otp_err
+
+            timestamp = MY_METHODS.GetCurrentTimeinStr()
+            reset_hash = AUTH_TASK.BuildForgotPasswordHash(normalized, timestamp)
+
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message=RESPONSE_MESSAGES.default_success,
+                code=RESPONSE_CODES.success,
+                data={
+                    NAMES.KEY: reset_hash,
+                    NAMES.EXPIRE_IN: STATICVALUES.PASSWORD_RESET_TIME_LIMIT,
+                })
+
+        except Exception as e:
+            logger.exception('VerifyResetOtp failed')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Unable to verify code",

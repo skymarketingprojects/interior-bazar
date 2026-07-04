@@ -117,17 +117,24 @@ class AUTH_TASK:
 
 
     #####################################
+    # Build the forgot-password hash (also consumed standalone by the
+    # OTP-based reset flow — change-password/ accepts this hash directly)
+    #####################################
+    @classmethod
+    def BuildForgotPasswordHash(self, username, timestamp):
+        json_of_hash = json.dumps({
+            NAMES.USERNAME: username,
+            NAMES.TIMESTAMP: timestamp,
+        })
+        return base64.urlsafe_b64encode(json_of_hash.encode()).decode()
+
+    #####################################
     # Generate Forgot Password Link
     #####################################
     @classmethod
     async def GenerateForgotPasswordLink(self,username, timestamp):
         try:
-            json_of_hash = {
-                NAMES.USERNAME:username,
-                NAMES.TIMESTAMP:timestamp
-            }
-            json_of_hash = json.dumps(json_of_hash)
-            encoded_hash = base64.urlsafe_b64encode(json_of_hash.encode()).decode()
+            encoded_hash = self.BuildForgotPasswordHash(username, timestamp)
             
             if(settings.ENV==APPMODE.LOC):
                 link = f'{APPMODE_URL.LOC}v-1/forgot-password/{encoded_hash}'

@@ -323,3 +323,59 @@ def VerifyEmailOtpView(request):
             message="Invalid email OTP verify request",
             data=e.errors(),
         )
+
+
+######################################
+# Send Password-Reset OTP (same {email} body — reuses the email validator)
+######################################
+@api_view(['POST'])
+def SendResetOtpView(request):
+    try:
+        data = SendEmailOtpValidator(**request.data)
+
+        final_response = async_to_sync(
+            AUTH_CONTROLLER.SendResetOtp
+        )(data=data)
+
+        return ServerResponse(
+            response=final_response.response,
+            code=final_response.code,
+            message=final_response.message,
+            data=final_response.data,
+        )
+
+    except ValidationError as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            code=RESPONSE_CODES.error,
+            message="Invalid reset OTP request",
+            data=e.errors(),
+        )
+
+
+######################################
+# Verify Password-Reset OTP (returns the legacy change-password hash)
+######################################
+@api_view(['POST'])
+def VerifyResetOtpView(request):
+    try:
+        data = VerifyEmailOtpValidator(**request.data)
+
+        final_response = async_to_sync(
+            AUTH_CONTROLLER.VerifyResetOtp
+        )(data=data)
+
+        return ServerResponse(
+            response=final_response.response,
+            code=final_response.code,
+            message=final_response.message,
+            data=final_response.data,
+        )
+
+    except ValidationError as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            code=RESPONSE_CODES.error,
+            message="Invalid reset OTP verify request",
+            data=e.errors(),
+        )
