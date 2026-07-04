@@ -93,3 +93,24 @@ class VerifyPhoneOtpValidator(BaseValidator):
     phone: str = Field(..., min_length=6)
     countryCode: str = "+91"
     code: str = Field(..., min_length=4, max_length=8)
+
+
+class SendEmailOtpValidator(BaseValidator):
+    email: str
+
+    @validator("email")
+    def validate_email(cls, v):
+        from app_ib.Utils.MyMethods import MY_METHODS
+        v = v.strip().lower()
+        if not MY_METHODS._validate_email(v):
+            raise ValueError("Invalid email address")
+        return v
+
+
+class VerifyEmailOtpValidator(BaseValidator):
+    email: str
+    code: str = Field(..., min_length=4, max_length=8)
+
+    @validator("email")
+    def normalize_email(cls, v):
+        return v.strip().lower()

@@ -203,11 +203,12 @@ class AUTH_TASK:
 
 
     #####################################
-    # Find or create user by phone (OTP login) — mirrors
-    # GoogleAuthController.find_or_create_user for the phone-OTP flow.
+    # Find or create user for OTP login (phone or email) — mirrors
+    # GoogleAuthController.find_or_create_user. username is the normalized
+    # phone (+91...) or lowercased email; profile_defaults seeds UserProfile.
     #####################################
     @classmethod
-    async def FindOrCreatePhoneUser(self, username, phone, countryCode):
+    async def FindOrCreateOtpUser(self, username, profile_defaults):
         try:
             user = await sync_to_async(CustomUser.objects.filter(username=username).first)()
             created = False
@@ -216,13 +217,12 @@ class AUTH_TASK:
                                    selfCreated=False)
                 user.password = make_password(None)  # unusable password (OTP-only)
                 await sync_to_async(user.save)()
-                await sync_to_async(UserProfile.objects.get_or_create)(user=user, defaults={
-                    "phone": phone, "countryCode": countryCode,
-                })
+                await sync_to_async(UserProfile.objects.get_or_create)(
+                    user=user, defaults=profile_defaults)
                 created = True
             return user, created
         except Exception as e:
-            logger.exception('FindOrCreatePhoneUser failed for username=%s', username)
+            logger.exception('FindOrCreateOtpUser failed for username=%s', username)
             return None, False
 
     @classmethod

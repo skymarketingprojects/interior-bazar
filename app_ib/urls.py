@@ -68,6 +68,8 @@ urlpatterns = [
     path('v1/auth/reset-password/', AuthView.ResetPasswordView, name='ResetPasswordView'),
     path('v1/auth/send-phone-otp/', AuthView.SendPhoneOtpView, name='SendPhoneOtpView'),
     path('v1/auth/verify-phone-otp/', AuthView.VerifyPhoneOtpView, name='VerifyPhoneOtpView'),
+    path('v1/auth/send-email-otp/', AuthView.SendEmailOtpView, name='SendEmailOtpView'),
+    path('v1/auth/verify-email-otp/', AuthView.VerifyEmailOtpView, name='VerifyEmailOtpView'),
     
     #########################################################
     # Token:

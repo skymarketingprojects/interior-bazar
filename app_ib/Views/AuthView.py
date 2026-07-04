@@ -14,6 +14,8 @@ from app_ib.Controllers.Auth.Validators.AuthValidators import (
     ResetPasswordValidator,
     SendPhoneOtpValidator,
     VerifyPhoneOtpValidator,
+    SendEmailOtpValidator,
+    VerifyEmailOtpValidator,
 )
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
@@ -263,5 +265,61 @@ def VerifyPhoneOtpView(request):
             response=RESPONSE_MESSAGES.error,
             code=RESPONSE_CODES.error,
             message="Invalid phone OTP verify request",
+            data=e.errors(),
+        )
+
+
+######################################
+# Send Email OTP
+######################################
+@api_view(['POST'])
+def SendEmailOtpView(request):
+    try:
+        data = SendEmailOtpValidator(**request.data)
+
+        final_response = async_to_sync(
+            AUTH_CONTROLLER.SendEmailOtp
+        )(data=data)
+
+        return ServerResponse(
+            response=final_response.response,
+            code=final_response.code,
+            message=final_response.message,
+            data=final_response.data,
+        )
+
+    except ValidationError as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            code=RESPONSE_CODES.error,
+            message="Invalid email OTP request",
+            data=e.errors(),
+        )
+
+
+######################################
+# Verify Email OTP
+######################################
+@api_view(['POST'])
+def VerifyEmailOtpView(request):
+    try:
+        data = VerifyEmailOtpValidator(**request.data)
+
+        final_response = async_to_sync(
+            AUTH_CONTROLLER.VerifyEmailOtp
+        )(data=data, request=request)
+
+        return ServerResponse(
+            response=final_response.response,
+            code=final_response.code,
+            message=final_response.message,
+            data=final_response.data,
+        )
+
+    except ValidationError as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            code=RESPONSE_CODES.error,
+            message="Invalid email OTP verify request",
             data=e.errors(),
         )

@@ -24,6 +24,8 @@ from app_ib.Controllers.Auth.Validators.AuthValidators import (
     ResetPasswordValidator,
     SendPhoneOtpValidator,
     VerifyPhoneOtpValidator,
+    SendEmailOtpValidator,
+    VerifyEmailOtpValidator,
 )
 
 logger = logging.getLogger(__name__)
@@ -509,8 +511,9 @@ class AUTH_CONTROLLER:
             # Match — burn the code so it can't be replayed.
             safe_cache.delete(otp_key)
 
-            user_ins, is_new_user = await AUTH_TASK.FindOrCreatePhoneUser(
-                username=normalized, phone=data.phone, countryCode=f"+{digits_cc}")
+            user_ins, is_new_user = await AUTH_TASK.FindOrCreateOtpUser(
+                username=normalized,
+                profile_defaults={"phone": data.phone, "countryCode": f"+{digits_cc}"})
 
             if not user_ins:
                 return LocalResponse(
@@ -533,6 +536,126 @@ class AUTH_CONTROLLER:
 
         except Exception as e:
             logger.exception('VerifyPhoneOtp failed')
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message="Unable to verify code",
+                code=RESPONSE_CODES.error,
+                data={})
+
+    #####################################
+    # Send Email OTP
+    #####################################
+    @classmethod
+    async def SendEmailOtp(self, data: SendEmailOtpValidator):
+        try:
+            normalized = data.email  # already lowercased by the validator
+
+            throttle_key = f"otp:email:{normalized}:sent"
+            if safe_cache.get(throttle_key):
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.error,
+                    message="Please wait before requesting another code",
+                    code=RESPONSE_CODES.bad_request,
+                    data={})
+
+            code = f"{random.randint(100000, 999999)}"
+            otp_key = f"otp:email:{normalized}"
+            safe_cache.set(otp_key, {"code": code, "attempts": 0}, timeout=OTP_TTL_SECONDS)
+            safe_cache.set(throttle_key, "1", timeout=OTP_RESEND_THROTTLE_SECONDS)
+
+            response_data = {NAMES.EXPIRE_IN: OTP_TTL_SECONDS}
+
+            if settings.MODE != "prod":
+                # Dev: skip SMTP, hand the code back so the flow is testable.
+                response_data["devCode"] = code
+            else:
+                is_sent = await MY_METHODS.send_email(
+                    email=normalized,
+                    subject="Your Interior Bazzar verification code",
+                    message=f"Your Interior Bazzar verification code is {code}. Valid for 5 minutes.",
+                )
+                if not is_sent:
+                    return LocalResponse(
+                        response=RESPONSE_MESSAGES.error,
+                        message="Unable to send verification code",
+                        code=RESPONSE_CODES.error,
+                        data={})
+
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message="Verification code sent",
+                code=RESPONSE_CODES.success,
+                data=response_data)
+
+        except Exception as e:
+            logger.exception('SendEmailOtp failed')
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message="Unable to send verification code",
+                code=RESPONSE_CODES.error,
+                data={})
+
+    #####################################
+    # Verify Email OTP
+    #####################################
+    @classmethod
+    async def VerifyEmailOtp(self, data: VerifyEmailOtpValidator, request=None):
+        try:
+            normalized = data.email  # already lowercased by the validator
+
+            otp_key = f"otp:email:{normalized}"
+            cached = safe_cache.get(otp_key)
+            if not cached:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.error,
+                    message="Code expired — request a new one",
+                    code=RESPONSE_CODES.not_exist,
+                    data={})
+
+            if data.code != cached.get("code"):
+                attempts = cached.get("attempts", 0) + 1
+                if attempts >= OTP_MAX_ATTEMPTS:
+                    safe_cache.delete(otp_key)
+                    return LocalResponse(
+                        response=RESPONSE_MESSAGES.error,
+                        message="Too many attempts",
+                        code=RESPONSE_CODES.auth_error,
+                        data={})
+                cached["attempts"] = attempts
+                safe_cache.set(otp_key, cached, timeout=OTP_TTL_SECONDS)
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.error,
+                    message="Incorrect code",
+                    code=RESPONSE_CODES.auth_error,
+                    data={})
+
+            # Match — burn the code so it can't be replayed.
+            safe_cache.delete(otp_key)
+
+            user_ins, is_new_user = await AUTH_TASK.FindOrCreateOtpUser(
+                username=normalized, profile_defaults={"email": normalized})
+
+            if not user_ins:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.error,
+                    message=RESPONSE_MESSAGES.token_generate_error,
+                    code=RESPONSE_CODES.error,
+                    data={})
+
+            # Password-login path (not RefreshToken.for_user) so sessions get recorded.
+            response_data = await AUTH_TASK.GenerateUserToken(user_ins, request=request)
+            userdata = await PROFILE_CONTROLLER.GetProfile(user_ins)
+            response_data['user'] = userdata.data
+            response_data['isNewUser'] = is_new_user
+
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message=RESPONSE_MESSAGES.user_login_success,
+                code=RESPONSE_CODES.success,
+                data=response_data)
+
+        except Exception as e:
+            logger.exception('VerifyEmailOtp failed')
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message="Unable to verify code",
