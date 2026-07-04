@@ -673,8 +673,22 @@ class _HomeController:
                 or getattr(o, "title", None) or "")
 
     def _image(self, o):
-        return (getattr(o, "coverImageUrl", None) or getattr(o, "coverImage", None)
-                or getattr(o, "catelougeImage", None) or "")
+        url = (getattr(o, "coverImageUrl", None) or getattr(o, "coverImage", None)
+               or getattr(o, "catelougeImage", None) or "")
+        if url:
+            return url
+        # Product/Service carry images on related rows, not a cover field —
+        # fall back to the first related image (same as EngineController).
+        for rel in ("productImages", "serviceImages", "catelogueImages"):
+            mgr = getattr(o, rel, None)
+            if mgr is not None:
+                try:
+                    first = list(mgr.all()[:1])
+                    if first:
+                        return first[0].image
+                except Exception:
+                    pass
+        return ""
 
     def _shop_dict(self, s):
         return {"entityType": ENTITY_TYPE.SHOP, "id": s.id, "name": s.name, "slug": s.slug,
