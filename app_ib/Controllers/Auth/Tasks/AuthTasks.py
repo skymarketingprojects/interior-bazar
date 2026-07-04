@@ -202,6 +202,29 @@ class AUTH_TASK:
 
 
 
+    #####################################
+    # Find or create user by phone (OTP login) — mirrors
+    # GoogleAuthController.find_or_create_user for the phone-OTP flow.
+    #####################################
+    @classmethod
+    async def FindOrCreatePhoneUser(self, username, phone, countryCode):
+        try:
+            user = await sync_to_async(CustomUser.objects.filter(username=username).first)()
+            created = False
+            if not user:
+                user = CustomUser(username=username, type="user", is_active=True, is_delete=False,
+                                   selfCreated=False)
+                user.password = make_password(None)  # unusable password (OTP-only)
+                await sync_to_async(user.save)()
+                await sync_to_async(UserProfile.objects.get_or_create)(user=user, defaults={
+                    "phone": phone, "countryCode": countryCode,
+                })
+                created = True
+            return user, created
+        except Exception as e:
+            logger.exception('FindOrCreatePhoneUser failed for username=%s', username)
+            return None, False
+
     @classmethod
     async def DecodeHashAndGetTimeDifference(self,hash):
         try:

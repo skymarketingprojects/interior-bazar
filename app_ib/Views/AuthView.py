@@ -12,6 +12,8 @@ from app_ib.Controllers.Auth.Validators.AuthValidators import (
     ForgotPasswordValidator,
     ChangePasswordValidator,
     ResetPasswordValidator,
+    SendPhoneOtpValidator,
+    VerifyPhoneOtpValidator,
 )
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
@@ -205,5 +207,61 @@ def ResetPasswordView(request):
             response=RESPONSE_MESSAGES.error,
             code=RESPONSE_CODES.error,
             message="Invalid reset password data",
+            data=e.errors(),
+        )
+
+
+######################################
+# Send Phone OTP
+######################################
+@api_view(['POST'])
+def SendPhoneOtpView(request):
+    try:
+        data = SendPhoneOtpValidator(**request.data)
+
+        final_response = async_to_sync(
+            AUTH_CONTROLLER.SendPhoneOtp
+        )(data=data)
+
+        return ServerResponse(
+            response=final_response.response,
+            code=final_response.code,
+            message=final_response.message,
+            data=final_response.data,
+        )
+
+    except ValidationError as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            code=RESPONSE_CODES.error,
+            message="Invalid phone OTP request",
+            data=e.errors(),
+        )
+
+
+######################################
+# Verify Phone OTP
+######################################
+@api_view(['POST'])
+def VerifyPhoneOtpView(request):
+    try:
+        data = VerifyPhoneOtpValidator(**request.data)
+
+        final_response = async_to_sync(
+            AUTH_CONTROLLER.VerifyPhoneOtp
+        )(data=data, request=request)
+
+        return ServerResponse(
+            response=final_response.response,
+            code=final_response.code,
+            message=final_response.message,
+            data=final_response.data,
+        )
+
+    except ValidationError as e:
+        return ServerResponse(
+            response=RESPONSE_MESSAGES.error,
+            code=RESPONSE_CODES.error,
+            message="Invalid phone OTP verify request",
             data=e.errors(),
         )

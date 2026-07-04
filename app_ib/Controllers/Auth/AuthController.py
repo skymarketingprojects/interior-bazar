@@ -1,13 +1,19 @@
 # import base64
 # import json
+import random
+import re
+import logging
+from django.conf import settings
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.Names import NAMES
 from app_ib.Utils.LocalResponse import LocalResponse
+from app_ib.Utils.SafeCache import safe_cache
 from app_ib.Controllers.Auth.Tasks.AuthTasks import AUTH_TASK
 # from app_ib.Controllers.Auth.Validators.AuthValidators import AUTH_VALIDATOR
 from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.Utils.StaticValues import STATICVALUES
+from interior_notification.Controllers.Publish import publishToUser
 
 from app_ib.Controllers.Profile.ProfileController import PROFILE_CONTROLLER
 from app_ib.Controllers.Auth.Validators.AuthValidators import (
@@ -16,7 +22,15 @@ from app_ib.Controllers.Auth.Validators.AuthValidators import (
     ForgotPasswordValidator,
     ChangePasswordValidator,
     ResetPasswordValidator,
+    SendPhoneOtpValidator,
+    VerifyPhoneOtpValidator,
 )
+
+logger = logging.getLogger(__name__)
+
+OTP_TTL_SECONDS = 300
+OTP_RESEND_THROTTLE_SECONDS = 60
+OTP_MAX_ATTEMPTS = 5
 
 
 class AUTH_CONTROLLER:
@@ -384,5 +398,143 @@ class AUTH_CONTROLLER:
             return LocalResponse(
                 response=RESPONSE_MESSAGES.error,
                 message=RESPONSE_MESSAGES.password_reset_error,
+                code=RESPONSE_CODES.error,
+                data={})
+
+    #####################################
+    # Send Phone OTP
+    #####################################
+    @classmethod
+    async def SendPhoneOtp(self, data: SendPhoneOtpValidator):
+        try:
+            digits_cc = re.sub(r"[^\d]", "", data.countryCode or "91")
+            normalized = MY_METHODS.formatPhoneInternational(data.phone, digits_cc)
+            if not normalized:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.error,
+                    message="Invalid phone number",
+                    code=RESPONSE_CODES.bad_request,
+                    data={})
+
+            throttle_key = f"otp:phone:{normalized}:sent"
+            if safe_cache.get(throttle_key):
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.error,
+                    message="Please wait before requesting another code",
+                    code=RESPONSE_CODES.bad_request,
+                    data={})
+
+            code = f"{random.randint(100000, 999999)}"
+            otp_key = f"otp:phone:{normalized}"
+            safe_cache.set(otp_key, {"code": code, "attempts": 0}, timeout=OTP_TTL_SECONDS)
+            safe_cache.set(throttle_key, "1", timeout=OTP_RESEND_THROTTLE_SECONDS)
+
+            response_data = {NAMES.EXPIRE_IN: OTP_TTL_SECONDS}
+
+            if settings.MODE != "prod":
+                # Dev: never hit SNS, hand the code back so the flow is testable.
+                response_data["devCode"] = code
+            else:
+                message = f"Your Interior Bazzar verification code is {code}. Valid for 5 minutes."
+                # ponytail: WhatsApp OTP needs a Meta-approved OTP template (WhatsappMessage
+                # is locked to the "lead_query" template) — send SMS for both channels
+                # until that template is approved.
+                try:
+                    sns_result = publishToUser(normalized, message)
+                except Exception as e:
+                    logger.exception("SendPhoneOtp: SNS publish raised for %s", normalized)
+                    sns_result = None
+                if sns_result is None:
+                    return LocalResponse(
+                        response=RESPONSE_MESSAGES.error,
+                        message="Unable to send verification code",
+                        code=RESPONSE_CODES.error,
+                        data={})
+
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message="Verification code sent",
+                code=RESPONSE_CODES.success,
+                data=response_data)
+
+        except Exception as e:
+            logger.exception('SendPhoneOtp failed')
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message="Unable to send verification code",
+                code=RESPONSE_CODES.error,
+                data={})
+
+    #####################################
+    # Verify Phone OTP
+    #####################################
+    @classmethod
+    async def VerifyPhoneOtp(self, data: VerifyPhoneOtpValidator, request=None):
+        try:
+            digits_cc = re.sub(r"[^\d]", "", data.countryCode or "91")
+            normalized = MY_METHODS.formatPhoneInternational(data.phone, digits_cc)
+            if not normalized:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.error,
+                    message="Invalid phone number",
+                    code=RESPONSE_CODES.bad_request,
+                    data={})
+
+            otp_key = f"otp:phone:{normalized}"
+            cached = safe_cache.get(otp_key)
+            if not cached:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.error,
+                    message="Code expired — request a new one",
+                    code=RESPONSE_CODES.not_exist,
+                    data={})
+
+            if data.code != cached.get("code"):
+                attempts = cached.get("attempts", 0) + 1
+                if attempts >= OTP_MAX_ATTEMPTS:
+                    safe_cache.delete(otp_key)
+                    return LocalResponse(
+                        response=RESPONSE_MESSAGES.error,
+                        message="Too many attempts",
+                        code=RESPONSE_CODES.auth_error,
+                        data={})
+                cached["attempts"] = attempts
+                safe_cache.set(otp_key, cached, timeout=OTP_TTL_SECONDS)
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.error,
+                    message="Incorrect code",
+                    code=RESPONSE_CODES.auth_error,
+                    data={})
+
+            # Match — burn the code so it can't be replayed.
+            safe_cache.delete(otp_key)
+
+            user_ins, is_new_user = await AUTH_TASK.FindOrCreatePhoneUser(
+                username=normalized, phone=data.phone, countryCode=f"+{digits_cc}")
+
+            if not user_ins:
+                return LocalResponse(
+                    response=RESPONSE_MESSAGES.error,
+                    message=RESPONSE_MESSAGES.token_generate_error,
+                    code=RESPONSE_CODES.error,
+                    data={})
+
+            # Password-login path (not RefreshToken.for_user) so sessions get recorded.
+            response_data = await AUTH_TASK.GenerateUserToken(user_ins, request=request)
+            userdata = await PROFILE_CONTROLLER.GetProfile(user_ins)
+            response_data['user'] = userdata.data
+            response_data['isNewUser'] = is_new_user
+
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.success,
+                message=RESPONSE_MESSAGES.user_login_success,
+                code=RESPONSE_CODES.success,
+                data=response_data)
+
+        except Exception as e:
+            logger.exception('VerifyPhoneOtp failed')
+            return LocalResponse(
+                response=RESPONSE_MESSAGES.error,
+                message="Unable to verify code",
                 code=RESPONSE_CODES.error,
                 data={})

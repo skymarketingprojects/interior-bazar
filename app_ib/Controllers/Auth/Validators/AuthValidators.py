@@ -75,3 +75,21 @@ class ChangePasswordValidator(BaseValidator):
 class ResetPasswordValidator(BaseValidator):
     old_password: str
     password: str
+
+
+class SendPhoneOtpValidator(BaseValidator):
+    phone: str = Field(..., min_length=6)
+    countryCode: str = "+91"
+    channel: str = "sms"
+
+    @validator("channel")
+    def validate_channel(cls, v):
+        if v not in ("sms", "whatsapp"):
+            raise ValueError("channel must be 'sms' or 'whatsapp'")
+        return v
+
+
+class VerifyPhoneOtpValidator(BaseValidator):
+    phone: str = Field(..., min_length=6)
+    countryCode: str = "+91"
+    code: str = Field(..., min_length=4, max_length=8)
