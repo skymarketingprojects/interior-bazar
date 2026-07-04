@@ -285,15 +285,20 @@ def _fresh_catalogue_card(c):
         "totalDownload": c.totalDownload or 0,
         "createdAt": c.createdAt.isoformat() if c.createdAt else "",
         "label": "NEW",
+        # Page-image URLs (index order) for the home catalogue popup pager.
+        "pages": [img.catelougeImage for img in c.catelogueImages.all() if img.catelougeImage],
     }
 
 
 def fresh_catalogues_query(limit=12):
     """The newest active catalogues (raw query, no cache). Best-effort fallback
     used when the daily-cron cache is cold."""
-    from interior_products.models import Catelogue
+    from django.db.models import Prefetch
+    from interior_products.models import Catelogue, CatelogueImage
     rows = (Catelogue.objects.filter(isActive=True)
-            .select_related("business").order_by("-createdAt")[:limit])
+            .select_related("business")
+            .prefetch_related(Prefetch("catelogueImages", queryset=CatelogueImage.objects.order_by("index")))
+            .order_by("-createdAt")[:limit])
     return [_fresh_catalogue_card(c) for c in rows]
 
 
