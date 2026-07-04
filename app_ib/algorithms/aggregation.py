@@ -259,3 +259,48 @@ def ensure_discovery_cache_warm():
         cache.set("discovery:most_saved", items, ALGO.DISCOVERY_TTL_SECONDS)
         return items
     return None
+
+
+# ---------------------------------------------------------------------------
+# Fresh catalogues ("Fresh from manufacturers") — newest catalogues, once daily
+# ---------------------------------------------------------------------------
+FRESH_CATALOGUES_KEY = "home:fresh_catalogues"
+FRESH_CATALOGUES_TTL = 24 * 60 * 60  # 24h — a real daily cron owns this cache
+
+
+def _fresh_catalogue_card(c):
+    """Card payload for one fresh catalogue (kept small; the modal fetches the
+    full record). `label` is NEW because these are the latest additions."""
+    biz = getattr(c, "business", None)
+    return {
+        "entityType": ENTITY_TYPE.CATELOGUE,
+        "id": c.id,
+        "title": c.title,
+        "slug": c.slug or "",
+        "imageUrl": c.catelougeImage or "",
+        "pdfUrl": c.catelougePdf or "",
+        "category": c.category or "",
+        "business": (biz.businessName if biz else ""),
+        "businessId": (biz.id if biz else None),
+        "totalDownload": c.totalDownload or 0,
+        "createdAt": c.createdAt.isoformat() if c.createdAt else "",
+        "label": "NEW",
+    }
+
+
+def fresh_catalogues_query(limit=12):
+    """The newest active catalogues (raw query, no cache). Best-effort fallback
+    used when the daily-cron cache is cold."""
+    from interior_products.models import Catelogue
+    rows = (Catelogue.objects.filter(isActive=True)
+            .select_related("business").order_by("-createdAt")[:limit])
+    return [_fresh_catalogue_card(c) for c in rows]
+
+
+def compute_fresh_catalogues(limit=12):
+    """Daily cron: snapshot the newest active catalogues and cache them for 24h
+    (a real cron run — or the empty-triggered background run — owns this cache;
+    the triggering request never overwrites it). Returns the computed list."""
+    items = fresh_catalogues_query(limit)
+    cache.set(FRESH_CATALOGUES_KEY, items, FRESH_CATALOGUES_TTL)
+    return items

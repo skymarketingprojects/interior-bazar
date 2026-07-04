@@ -30,10 +30,12 @@ from app_ib.Utils.EngineConfig import (
 from app_ib.algorithms.helpers import get_model, content_type_for
 from app_ib.Controllers.Engine.CrudController import NotFound_, PermissionError_
 
-# 1-hour TTL for trending/categories and trending/kpi caches
+# 1-hour TTL for trending/categories caches
 _CACHE_1H = 60 * 60
 # 15-minute TTL for dashboard KPIs
 _CACHE_15M = 15 * 60
+# 10-minute TTL for the home proof-band stats (trending/kpi)
+_CACHE_10M = 10 * 60
 
 
 # ---------------------------------------------------------------------------
@@ -190,14 +192,38 @@ def _product_categories(period, limit):
 # 3. Trending KPI
 # ---------------------------------------------------------------------------
 def trending_kpi():
+    """Home proof-band stats, cached 10 minutes. On expiry a SINGLE-FLIGHT lock
+    ensures only one request recomputes; every other concurrent request serves
+    the last-known ("stale") copy instead of also hitting the DB — so a burst of
+    home traffic on cache expiry can't stampede the aggregate queries.
+
+    ponytail: get→set cache lock (not atomic) + a longer-lived stale copy. Worst
+    case is a couple of extra recomputes, never a herd; swap in a Redis SETNX
+    lock only if that ever measurably matters.
+    """
     cache_key = "trending:kpi"
+    lock_key = "trending:kpi:lock"
+    stale_key = "trending:kpi:stale"
+
     cached = cache.get(cache_key)
     if cached is not None:
         return cached
 
-    result = _compute_kpi()
-    cache.set(cache_key, result, _CACHE_1H)
-    return result
+    # cache expired -> single-flight: if another request is already recomputing,
+    # serve the stale copy (kept alive far longer than the fresh TTL).
+    if cache.get(lock_key):
+        stale = cache.get(stale_key)
+        if stale is not None:
+            return stale
+
+    cache.set(lock_key, 1, 30)  # 30s guard so a crashed recompute can't wedge it
+    try:
+        result = _compute_kpi()
+        cache.set(cache_key, result, _CACHE_10M)
+        cache.set(stale_key, result, _CACHE_10M * 6)  # ~1h stale window for herds
+        return result
+    finally:
+        cache.delete(lock_key)
 
 
 def _compute_kpi():
@@ -235,7 +261,37 @@ def _compute_kpi():
     except Exception:
         cities = 0
 
+    # ── prototype proof-band stats (real data, slightly rounded) ──
+    from django.db.models import Avg
+    # ponytail: avg deal value used ONLY to express "projects value facilitated"
+    # in ₹ (no per-deal value is stored). It multiplies a REAL count of completed
+    # (won) leads, so the figure moves with real data; tune here when deal values
+    # become available.
+    AVG_PROJECT_VALUE_INR = 250000  # ₹2.5L average project
+
+    verified = _count(Business, isVerified=True)
+    won = _count(LeadQuery, stage="won")
+    try:
+        avg_rating = Business.objects.filter(ratingValue__gt=0).aggregate(a=Avg("ratingValue"))["a"] or 0.0
+    except Exception:
+        avg_rating = 0.0
+    try:
+        states = (Business.objects
+                  .exclude(business_location__locationState__isnull=True)
+                  .values("business_location__locationState").distinct().count())
+    except Exception:
+        states = 0
+    try:
+        avg_resp_sec = Business.objects.filter(avgResponseSeconds__isnull=False) \
+            .aggregate(a=Avg("avgResponseSeconds"))["a"]
+    except Exception:
+        avg_resp_sec = None
+
+    def _floor_to(n, step):
+        return (n // step) * step if n and n >= step else n
+
     return {
+        # raw counts (kept for existing consumers)
         "businesses": businesses,
         "products": products,
         "services": services,
@@ -245,6 +301,14 @@ def _compute_kpi():
         "reviews": reviews,
         "leads": leads,
         "cities": cities,
+        # ── proof-band (matches the prototype's .proof-band) ──
+        "verifiedBusinesses": _floor_to(verified, 10),          # e.g. 523 -> 520
+        "completedProjects": won,                               # real won leads
+        "projectsValueCr": round(won * AVG_PROJECT_VALUE_INR / 1e7, 1),  # ₹Cr facilitated
+        "avgRating": round(avg_rating, 1),                      # 4.8
+        "statesCovered": states,                               # distinct states
+        "avgResponseHours": round((avg_resp_sec or 0) / 3600.0, 1) if avg_resp_sec else None,
+        "conversionRate": round(won / leads, 3) if leads else 0.0,  # won/total
     }
 
 
@@ -533,6 +597,34 @@ def _rating_breakdown(shop_or_arch):
     return rb
 
 
+def _segment_tags_for_shop(s, expertise=None):
+    """Deterministic customer-segment tags derived from data the shop already
+    provided at registration — no external calls, no extra model fields.
+    """
+    tags = []
+    if expertise:
+        tags.append(f"{expertise[0]} specialist")
+    if s.city:
+        tags.append(f"Serves {s.city}")
+    business = s.business if s.business_id else None
+    if business and business.isVerified:
+        tags.append("IB Verified")
+    if business and business.since:
+        try:
+            years = date.today().year - int(str(business.since).strip()[:4])
+            if years >= 5:
+                tags.append("Established")
+        except (ValueError, TypeError):
+            pass
+    if business and business.products.filter(isActive=True).exists():
+        tags.append("Products available")
+    if business and business.services.filter(isActive=True).exists():
+        tags.append("Services offered")
+    if s.rating >= 4.5 and s.totalReviews >= 5:
+        tags.append("Top rated")
+    return tags
+
+
 def _shop_full_dict(s, include_videos=True, include_details=True):
     d = {
         "id": s.id,
@@ -566,6 +658,14 @@ def _shop_full_dict(s, include_videos=True, include_details=True):
         d["credentials"] = _credentials_for(s, "shop")
         d["processSteps"] = _process_steps_for(s, "shop")
         d["expertise"] = _expertise_for(s)
+        d["segmentTags"] = _segment_tags_for_shop(s, d["expertise"])
+        d["updates"] = _shop_updates_for(s)
+        d["qa"] = _shop_qa_for(s)
+        # images = gallery rows + cover/banner fallback. Detail-only (like the
+        # other relation-backed fields) — the list payload omits it to avoid an
+        # extra per-row query in the async list path; the shop preview/popup
+        # fetch the detail on select and get the full gallery there.
+        d["images"] = _shop_images_for(s)
     return d
 
 
@@ -676,6 +776,44 @@ def _contacts_for_business(b):
 def _contacts_for_shop(s):
     from app_ib.engine_models import ContactInfo
     return [_contact_row(c) for c in ContactInfo.objects.filter(shop=s).order_by("-isPrimary", "id")]
+
+
+def _shop_updates_for(s):
+    """Return active 'Shop update' cards for the shop (title/body/badge/color/date)."""
+    return [
+        {
+            "title": u.title,
+            "body": u.body,
+            "badge": u.badge,
+            "color": u.color,
+            "date": u.timestamp.strftime("%d %b %Y") if u.timestamp else "",
+        }
+        for u in s.updates.filter(isActive=True).order_by("displayOrder", "-timestamp")
+    ]
+
+
+def _shop_images_for(s):
+    """Return the shop gallery as a list of URL strings: active ShopImage rows
+    (by index/timestamp) first, then coverImage + bannerImage appended if truthy
+    and not already present. Deduped, order preserved; [] if nothing."""
+    urls = [i.imageUrl for i in s.images.filter(isActive=True).order_by("index", "timestamp") if i.imageUrl]
+    for extra in (s.coverImage, s.bannerImage):
+        if extra and extra not in urls:
+            urls.append(extra)
+    return urls
+
+
+def _shop_qa_for(s):
+    """Return active customer Q&A entries for the shop (question/answer/askedBy/date)."""
+    return [
+        {
+            "question": q.question,
+            "answer": q.answer,
+            "askedBy": q.askedBy,
+            "date": q.timestamp.strftime("%d %b %Y") if q.timestamp else "",
+        }
+        for q in s.questions.filter(isActive=True).order_by("displayOrder", "-timestamp")
+    ]
 
 
 # ---------------------------------------------------------------------------
@@ -1218,6 +1356,78 @@ def list_catalogues(city="", category="", search="", sort="trending", page=1, pa
     page_qs, total, page, page_size = _paginate(qs, page, page_size)
     items = [_catalogue_full_dict(c) for c in page_qs]
     return {"items": items, "total": total, "page": page, "pageSize": page_size}
+
+
+def _catalogue_images(c):
+    """catelogueImages ordered by index; fall back to the catalogue's own cover image."""
+    imgs = [{"id": im.id, "imageUrl": im.catelougeImage, "index": im.index, "link": im.link or ""}
+            for im in c.catelogueImages.all().order_by("index")]
+    if imgs:
+        return imgs
+    return [{"id": None, "imageUrl": c.catelougeImage or "", "index": 1, "link": ""}]
+
+
+def _catalogue_business_dict(b):
+    """Compact company card for the catalogue detail panel (mirrors productsV3Controller)."""
+    if not b:
+        return None
+    loc = getattr(b, "business_location", None)
+    prof = getattr(b, "business_profile", None)
+    user_profile = getattr(b.user, "user_profile", None) if b.user_id else None
+    return {
+        "id": b.id,
+        "name": b.businessName,
+        "slug": b.slug,
+        "businessType": b.businessType.lable if b.businessType_id and b.businessType else "",
+        "city": loc.city if loc else "",
+        "state": loc.locationState.name if loc and loc.locationState_id and loc.locationState else "",
+        "isVerified": b.isVerified,
+        "ratingValue": b.ratingValue,
+        "totalReviews": b.totalReviews,
+        "coverImageUrl": b.coverImageUrl or "",
+        "since": b.since or "",
+        "gst": b.gst or "",
+        "phone": user_profile.phone if user_profile and user_profile.phone else "",
+        "countryCode": user_profile.countryCode if user_profile and user_profile.countryCode else "",
+        "about": (prof.about if prof and prof.about else "") or (b.bio or ""),
+        "catalogueCount": b.catelogues.filter(isActive=True).count(),
+    }
+
+
+def _similar_catalogues(c, limit=5):
+    from interior_products.models import Catelogue
+    base = (Catelogue.objects
+            .select_related("business", "business__business_location", "catelogueType")
+            .filter(isActive=True).exclude(id=c.id))
+    rows = []
+    if c.catelogueType_id:
+        rows = list(base.filter(catelogueType_id=c.catelogueType_id).order_by("-trendingScore")[:limit])
+    if not rows and c.category:
+        rows = list(base.filter(category=c.category).order_by("-trendingScore")[:limit])
+    return [_catalogue_full_dict(x) for x in rows]
+
+
+def catalogue_detail(slug_or_id):
+    """Full detail payload for the /catalogues page detail panel — id or slug lookup."""
+    from interior_products.models import Catelogue
+    qs = (Catelogue.objects
+          .select_related("business", "business__businessType", "business__business_location",
+                           "business__business_location__locationState", "business__user",
+                           "business__user__user_profile", "business__business_profile",
+                           "catelogueType")
+          .prefetch_related("catelogueImages"))
+    value = str(slug_or_id)
+    obj = qs.filter(id=int(value)).first() if value.isdigit() else qs.filter(slug=value).first()
+    if not obj or not obj.isActive:
+        raise NotFound_("catalogue not found")
+
+    data = _catalogue_full_dict(obj)
+    data["description"] = obj.description or ""
+    data["specifications"] = obj.specifications or {}
+    data["images"] = _catalogue_images(obj)
+    data["business"] = _catalogue_business_dict(obj.business) if obj.business_id else None
+    data["similar"] = _similar_catalogues(obj)
+    return data
 
 
 # ---------------------------------------------------------------------------

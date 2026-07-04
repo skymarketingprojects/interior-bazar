@@ -1,5 +1,5 @@
 from asgiref.sync import sync_to_async
-from interior_products.models import Service,ServiceImage,ProductSubCategory,ProductCategory
+from interior_products.models import Service,ServiceImage,ServiceFAQ,ProductSubCategory,ProductCategory
 from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.models import Business
 import json
@@ -143,6 +143,10 @@ class SERVICES_TASKS:
             for subCat in service.subCategory.all():
                 data = await PRODUCTS_TASKS.getCategoriesDataTask(subCat)
                 prodSubCategory.append(data)
+
+            faqs = await sync_to_async(
+                lambda: list(service.faqs.order_by('displayOrder').values('question', 'answer'))
+            )()
             serviceData = {
                 'id':service.id,
                 'title':service.title,
@@ -157,6 +161,7 @@ class SERVICES_TASKS:
                 'index':service.index,
                 "categories":prodCategory,
                 "subCategories":prodSubCategory,
+                "faqs":faqs,
                 # Owning business so the service-detail page can show the provider
                 # ("By <business>") and link back to it. See ISSUE-004.
                 "businessId":service.business.id,

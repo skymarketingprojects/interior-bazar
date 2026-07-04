@@ -91,6 +91,11 @@ class LeadQueryCreateSchema(BaseValidator):
 
     itemId: Optional[int] = Field(None, gt=0)
 
+    # Direct business link — used when the enquiry originates from something tied
+    # to a business but not a product/service/catalogue item (e.g. a reel on a
+    # business profile). When an item resolves, the item's business still wins.
+    businessId: Optional[int] = Field(None, gt=0)
+
     leadStatus: Optional[str] = None
     stage: Optional[str] = None
 

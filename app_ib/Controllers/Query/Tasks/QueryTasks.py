@@ -65,8 +65,16 @@ class LEAD_QUERY_TASK:
             
             if leadfor:
                 lead_query_ins.business= leadfor.business
-            elif user:
-                lead_query_ins.business= user.user_business
+            else:
+                # No product/service/catalogue item — link directly to the business
+                # the enquiry names (e.g. a reel on a business profile), falling back
+                # to the authenticated user's own business.
+                business_id = getattr(data, 'businessId', None)
+                if business_id:
+                    lead_query_ins.business = await sync_to_async(
+                        lambda: Business.objects.filter(id=business_id).first())()
+                elif user:
+                    lead_query_ins.business= user.user_business
 
             await sync_to_async(lead_query_ins.save)()
 

@@ -16,7 +16,7 @@ from app_ib.algorithms.text import normalize
 class _HomeController:
 
     # ---------------- recommendations (sections 2,3,4,7) ----------------
-    def recommend(self, entity_type, user=None, city="", limit=12,
+    def recommend(self, entity_type, user=None, city="", state="", limit=12,
                   filter_code="", category_id=None, lat=None, lng=None,
                   radius_km=None):
         """Personalized feed. `filter_code` / `category_id` come from the home
@@ -49,71 +49,291 @@ class _HomeController:
         if not filter_code and not category_id:
             boost_cats = {cid for cid, _ in self._recent_categories(user)}
         city_l = (city or "").strip().lower()
+        state_l = (state or "").strip().lower()
         # Geo is active only with an explicit filter/category selection + coords.
         geo_active = bool((filter_code or category_id) and lat is not None and lng is not None)
         radius = float(radius_km) if radius_km else HOME_FILTER.FORYOU_RADIUS_KM
+        top = list(qs.order_by("-trendingScore")[:200])
 
-        scored = []
-        for obj in qs.order_by("-trendingScore")[:200]:
-            ecity = self._entity_city(obj, entity_type)
-            dist = None
-            if geo_active:
-                dist = self._entity_distance(obj, entity_type, float(lat), float(lng))
-                if dist is not None:
-                    if dist > radius:
-                        continue  # outside the radius — drop it
-                # no coordinates -> keep only when the city matches (documented
-                # fallback so un-geocoded businesses still surface in their city)
-                elif not (city_l and ecity and ecity.lower() == city_l):
-                    continue
-            score = (getattr(obj, "trendingScore", 0.0) or 0.0) + 1.0  # +1 so cold items still rank
-            if city_l and ecity and ecity.lower() == city_l:
-                score *= 1.5
-            blob = self._text_blob(obj, entity_type)
-            for t in terms:
-                if t and t in blob:
-                    score += 5.0
-            if boost_cats and self._entity_category_ids(obj, entity_type) & boost_cats:
-                score += HOME_FILTER.RECENT_VIEW_CATEGORY_BOOST  # shares a category w/ recently-viewed
-            scored.append((score, obj, dist))
+        def _pass(apply_geo):
+            out = []
+            for obj in top:
+                ecity = self._entity_city(obj, entity_type)
+                dist = None
+                if apply_geo:
+                    dist = self._entity_distance(obj, entity_type, float(lat), float(lng))
+                    if dist is not None:
+                        if dist > radius:
+                            continue  # outside the radius — drop it
+                    # no coordinates -> keep only when the city matches (documented
+                    # fallback so un-geocoded businesses still surface in their city)
+                    elif not (city_l and ecity and ecity.lower() == city_l):
+                        continue
+                score = (getattr(obj, "trendingScore", 0.0) or 0.0) + 1.0  # +1 so cold items still rank
+                if city_l and ecity and ecity.lower() == city_l:
+                    score *= 1.5
+                elif state_l:  # same-state (not same-city) gets a smaller nudge
+                    est = self._entity_state(obj, entity_type)
+                    if est and est.lower() == state_l:
+                        score *= 1.2
+                blob = self._text_blob(obj, entity_type)
+                for t in terms:
+                    if t and t in blob:
+                        score += 5.0
+                if boost_cats and self._entity_category_ids(obj, entity_type) & boost_cats:
+                    score += HOME_FILTER.RECENT_VIEW_CATEGORY_BOOST  # shares a category w/ recently-viewed
+                out.append((score, obj, dist))
+            return out
+
+        scored = _pass(geo_active)
+        # Broaden so a section is never empty: if the radius/city geo gate removed
+        # everything, re-rank the same trending pool without the geo restriction
+        # (city/state stay as score boosts). The unfiltered path already returns
+        # all-trending, so it only empties when the entity table itself is empty.
+        if not scored and geo_active:
+            scored = _pass(False)
         scored.sort(key=lambda s: s[0], reverse=True)
         return [self._entity_dict(o, entity_type, round(sc, 3), distance_km=d)
                 for sc, o, d in scored[:limit]]
 
     # ---------------- verified business = architects (section 5) ----------------
-    def recommend_architects(self, user=None, city="", limit=12):
+    def recommend_architects(self, user=None, city="", state="", limit=12):
         from app_ib.models import Architect
         city_l = (city or "").strip().lower()
+        state_l = (state or "").strip().lower()
         scored = []
+        # Ranks the whole active pool (city/state are score boosts, not filters),
+        # so it is never empty unless there are no active architects at all.
         for a in Architect.objects.filter(isActive=True).order_by("-trendingScore")[:200]:
             score = (a.trendingScore or 0.0) + 1.0
             if city_l and a.city and a.city.lower() == city_l:
                 score *= 1.5
+            elif state_l and a.state and a.state.lower() == state_l:
+                score *= 1.2
             scored.append((score, a))
         scored.sort(key=lambda s: s[0], reverse=True)
         return [{"entityType": ENTITY_TYPE.ARCHITECT, "id": a.id, "name": a.name, "slug": a.slug,
                  "city": a.city, "state": a.state, "imageUrl": a.coverImage,
                  "rating": a.rating, "trendingScore": a.trendingScore} for _, a in scored[:limit]]
 
+    # ---------------- verified businesses (section 5, reworked) ----------------
+    def verified_businesses(self, user=None, city="", state="", limit=12):
+        """Rank the home 'Verified businesses' section by ONE verified-business
+        score combining six signals, each normalised to 0..1 ACROSS THE CANDIDATE
+        POOL so nothing needs a hardcoded threshold:
+
+          proximity   same city (1.0) > same state (0.6) > elsewhere (0.2)
+          age         older-than-peers, ranked by creation date within the pool
+          completed   count of 'won' (completed/green) project leads, log-damped
+          conversion  won / total leads — the lead-status green/completed ratio
+          response    faster avg first-response ranks higher (inverse, relative)
+          rating      ratingValue / 5
+
+        Verified businesses are strongly preferred; the pool broadens to all
+        active businesses only when too few verified ones exist, so the section
+        is never empty (returns [] only when there are no active businesses).
+        """
+        import math
+        from django.db.models import Count, Q as DQ
+        from django.utils import timezone
+        from app_ib.models import Business, LeadQuery
+
+        base = (Business.objects.filter(isActive=True)
+                .select_related("business_location", "business_location__locationState", "businessType"))
+        verified = list(base.filter(isVerified=True).order_by("-ratingValue", "-leadCount")[:200])
+        pool = verified if len(verified) >= limit else list(
+            base.order_by("-isVerified", "-ratingValue", "-leadCount")[:200])
+        if not pool:
+            return []
+
+        ids = [b.id for b in pool]
+        # lead stats in ONE query: total + 'won' (completed/green) leads per business
+        stats = {r["business_id"]: r for r in (
+            LeadQuery.objects.filter(business_id__in=ids)
+            .values("business_id")
+            .annotate(total=Count("id"), won=Count("id", filter=DQ(stage="won"))))}
+
+        now = timezone.now()
+        ages = {b.id: (now - b.timestamp).total_seconds() for b in pool}
+        min_age = min(ages.values())
+        age_span = (max(ages.values()) - min_age) or 1.0
+        max_won = max((stats.get(b.id, {}).get("won", 0) or 0) for b in pool) or 1
+        rts = [b.avgResponseSeconds for b in pool if b.avgResponseSeconds is not None]
+        min_rt = min(rts) if rts else 0
+        rt_span = ((max(rts) - min_rt) if rts else 0) or 1.0
+
+        city_l, state_l = (city or "").strip().lower(), (state or "").strip().lower()
+        # weights sum to 1.0; verified gets a small extra nudge below
+        W_PROX, W_AGE, W_DONE, W_CONV, W_RESP, W_RATE = 0.25, 0.10, 0.15, 0.20, 0.10, 0.20
+
+        scored = []
+        for b in pool:
+            loc = getattr(b, "business_location", None)
+            bcity = ((loc.city if loc else "") or "").lower()
+            bstate = ((loc.locationState.name if loc and loc.locationState else "") or "").lower()
+            if city_l and bcity == city_l:
+                prox = 1.0
+            elif state_l and bstate == state_l:
+                prox = 0.6
+            else:
+                prox = 0.2
+            age = (ages[b.id] - min_age) / age_span
+            st = stats.get(b.id, {})
+            won, total = st.get("won", 0) or 0, st.get("total", 0) or 0
+            completed = math.log1p(won) / math.log1p(max_won)
+            conversion = (won / total) if total else 0.0
+            if b.avgResponseSeconds is not None and rts:
+                response = 1.0 - (b.avgResponseSeconds - min_rt) / rt_span  # faster -> higher
+            else:
+                response = 0.4  # unknown response time -> slightly below neutral
+            rating = min(1.0, (b.ratingValue or 0.0) / 5.0)
+            score = (W_PROX * prox + W_AGE * age + W_DONE * completed
+                     + W_CONV * conversion + W_RESP * response + W_RATE * rating)
+            if b.isVerified:
+                score += 0.05  # a verified peer edges out an equal unverified one
+            scored.append((score, b, won))
+        scored.sort(key=lambda s: s[0], reverse=True)
+        out = []
+        for sc, b, won in scored[:limit]:
+            d = self._entity_dict(b, ENTITY_TYPE.BUSINESS, round(sc, 4))
+            d["verifiedScore"] = round(sc, 4)
+            d["completedLeads"] = won
+            out.append(d)
+        return out
+
     # ---------------- shops near you (section 6) ----------------
-    def nearby_shops(self, lat, lng, radius_km=None, city="", limit=20):
+    def nearby_shops(self, lat, lng, radius_km=None, city="", state="", limit=20):
+        """Shops-near-you, guaranteed non-empty via a broaden chain:
+        precise radius (coords) -> same city -> same state -> all shops (trending).
+        Each rung is tried only until one yields shops; the section is empty only
+        when there are no active shops at all."""
         from app_ib.models import Shop
+        base = Shop.objects.filter(isActive=True)
         if lat is not None and lng is not None:
             coords = [(s.id, float(s.lat), float(s.lng)) for s in
-                      Shop.objects.filter(isActive=True, lat__isnull=False, lng__isnull=False)]
+                      base.filter(lat__isnull=False, lng__isnull=False)]
             ranked = nearby_search(float(lat), float(lng), coords, radius_km)  # [(id, dist)]
-            shops = {s.id: s for s in Shop.objects.filter(id__in=[i for i, _ in ranked])}
-            out = []
-            for sid, dist in ranked[:limit]:
-                s = shops.get(sid)
-                if s:
-                    out.append({**self._shop_dict(s), "distanceKm": dist})
-            return out
-        # no coordinates -> fall back to city match, trending order
-        qs = Shop.objects.filter(isActive=True)
+            if ranked:
+                shops = {s.id: s for s in base.filter(id__in=[i for i, _ in ranked])}
+                out = []
+                for sid, dist in ranked[:limit]:
+                    s = shops.get(sid)
+                    if s:
+                        out.append({**self._shop_dict(s), "distanceKm": dist})
+                if out:
+                    return out
+        # no/insufficient coordinate matches -> broaden city -> state -> all
+        for scope in self._broaden_shops(base, city, state):
+            rows = list(scope.order_by("-trendingScore")[:limit])
+            if rows:
+                return [self._shop_dict(s) for s in rows]
+        return []
+
+    def _broaden_shops(self, base, city, state):
+        city = (city or "").strip()
+        state = (state or "").strip()
         if city:
-            qs = qs.filter(city__iexact=city)
-        return [self._shop_dict(s) for s in qs.order_by("-trendingScore")[:limit]]
+            yield base.filter(city__iexact=city)
+        if state:
+            yield base.filter(state__iexact=state)
+        yield base  # country / all — the last rung so the section is never empty
+
+    # ---------------- join us (final CTA band) ----------------
+    def join_us(self):
+        """The home 'Join us' final CTA band + its ordered process steps. Returns
+        {} when none is configured (frontend keeps its static fallback)."""
+        from app_ib.engine_models import JoinUsCta
+        cta = (JoinUsCta.objects.filter(isActive=True)
+               .prefetch_related("steps").order_by("index", "id").first())
+        if not cta:
+            return {}
+        return {
+            "eyebrow": cta.eyebrow, "titleLead": cta.titleLead, "titleAccent": cta.titleAccent,
+            "sub": cta.sub,
+            "primary": {"label": cta.primaryLabel, "action": cta.primaryAction or {}},
+            "secondary": {"label": cta.secondaryLabel, "action": cta.secondaryAction or {}},
+            "trustBadges": list(cta.trustBadges or []),
+            "cardHead": cta.cardHead, "responseNote": cta.responseNote,
+            "steps": [{"num": s.key, "text": s.value} for s in cta.steps.all()],
+        }
+
+    # ---------------- what makes IB different (differentiator cards) ----------------
+    def differentiators(self, limit=12):
+        """'What makes IB different' cards — admin-managed icon/heading/description
+        + a variable-length `eliminates` list (competing tools IB replaces)."""
+        from app_ib.engine_models import Differentiator
+        return [{"id": d.id, "icon": d.icon, "iconBg": d.iconBg, "iconColor": d.iconColor,
+                 "heading": d.heading, "description": d.description,
+                 "eliminates": list(d.eliminates or [])}
+                for d in Differentiator.objects.filter(isActive=True).order_by("index", "id")[:limit]]
+
+    # ---------------- get inspired (popular products/services gallery) ----------------
+    def get_inspired(self, limit=12):
+        """'Get inspired' photo gallery: the most-popular products & services —
+        ranked by save count (primary) then trendingScore — each with a real
+        image, its save count, rating and owning business. Only items WITH an
+        image are returned (it's a gallery); falls back to image-less popular
+        items only if nothing has an image, so the section is never empty."""
+        from django.contrib.contenttypes.models import ContentType
+        from django.db.models import Count
+        from app_ib.engine_models import SavedItem
+        from interior_products.models import Product, Service
+
+        def _imgs(o, rel):
+            # all image URLs of the product/service (ProductImage/ServiceImage.image),
+            # ordered by index; the lightbox scrolls through them.
+            return [im.image for im in sorted(getattr(o, rel).all(), key=lambda x: x.index) if im.image]
+
+        with_img, without_img = [], []
+        for model, et, rel in ((Product, ENTITY_TYPE.PRODUCT, "productImages"),
+                               (Service, ENTITY_TYPE.SERVICE, "serviceImages")):
+            ct = ContentType.objects.get_for_model(model)
+            saves = {r["objectId"]: r["n"] for r in (
+                SavedItem.objects.filter(contentType=ct)
+                .values("objectId").annotate(n=Count("id")))}
+            for o in (model.objects.filter(isActive=True)
+                      .select_related("business").prefetch_related(rel)
+                      .order_by("-trendingScore")[:100]):
+                biz = getattr(o, "business", None)
+                sc = saves.get(o.id, 0)
+                images = _imgs(o, rel)
+                card = {
+                    "entityType": et, "id": o.id, "title": o.title, "slug": o.slug or "",
+                    "imageUrl": images[0] if images else "",
+                    "images": images,  # full set for the fullscreen lightbox gallery
+                    "saveCount": sc,
+                    "rating": getattr(o, "ratingValue", 0.0) or 0.0,
+                    "business": biz.businessName if biz else "",
+                    "businessId": biz.id if biz else None,
+                    "businessSlug": (biz.slug if biz else "") or "",  # lightbox business nav
+                    "_pop": sc * 10 + (getattr(o, "trendingScore", 0.0) or 0.0),
+                }
+                (with_img if card["imageUrl"] else without_img).append(card)
+        pool = with_img or without_img  # gallery prefers images; never empty otherwise
+        pool.sort(key=lambda x: x["_pop"], reverse=True)
+        return [{k: v for k, v in c.items() if k != "_pop"} for c in pool[:limit]]
+
+    # ---------------- fresh catalogues (Fresh from manufacturers) ----------------
+    def fresh_catalogues(self, limit=12):
+        """'Fresh from manufacturers' — the newest catalogues, computed once daily
+        by cron and cached 24h. On a cold cache the recompute is offloaded to the
+        background runner (never blocks the request) and a best-effort live query
+        is served so the section is never empty. The request itself NEVER writes
+        the cache — only a real daily cron run or the empty-triggered background
+        run may (re)create it (see task 33 cache rule)."""
+        from app_ib.algorithms.aggregation import (
+            FRESH_CATALOGUES_KEY, compute_fresh_catalogues, fresh_catalogues_query)
+        cached = cache.get(FRESH_CATALOGUES_KEY)
+        if cached:  # warm, non-empty cache -> serve as-is (24h TTL untouched)
+            return cached
+        # Empty data (cold cache OR a cached empty list): trigger the cron as a
+        # BACKGROUND task and serve a best-effort non-empty fallback. The request
+        # NEVER writes the cache, so it can't override the daily cron's TTL — only
+        # compute_fresh_catalogues (a real cron run or this empty-triggered bg run)
+        # (re)creates the cache.
+        from app_ib.algorithms.background import enqueue
+        enqueue("compute_fresh_catalogues", compute_fresh_catalogues, limit)
+        return fresh_catalogues_query(limit)
 
     # ---------------- reels / hot short-videos (section 1) ----------------
     def reels(self, limit=20):
@@ -179,6 +399,13 @@ class _HomeController:
                 out.append({"videoUrl": fv.videoUrl, "platform": fv.platform.code if fv.platform else "",
                             "entityType": "", "entityId": None, "slug": "", "name": "", "imageUrl": "",
                             "hotScore": 0.0, "isNew": False, "isFallback": True})
+        # Serial number (1-based rank as shown in the "Trending now" corner) and a
+        # thumbnail derived from the YouTube/Facebook link (falls back to the
+        # entity image). Added after final ordering so the serial matches display.
+        for i, r in enumerate(out):
+            r["serial"] = i + 1
+            r["thumbnail"] = _video_thumbnail(r.get("videoUrl", ""), r.get("platform", ""),
+                                              r.get("imageUrl", ""))
         # "Top review" panel block — one owning-business review per reel (1 query).
         self._attach_review_quotes(out)
         return out
@@ -209,14 +436,28 @@ class _HomeController:
 
     # ---------------- in their words = random reviews (section 11) ----------------
     def random_reviews(self, limit=10):
+        """'In their words' — random text testimonials from listed businesses,
+        HIGH RATING + positive sentiment only (rating >= 4; there is no separate
+        sentiment field, so a high star rating is the positive-sentiment proxy).
+        Text only (non-empty body). Distinct from the video-stories section, which
+        is served by home/testimonials/ (admin video+text testimonials)."""
         from app_ib.models import Review
-        qs = (Review.objects.filter(business__isnull=False, isDeleted=False, isApproved=True)
-              .exclude(body="").select_related("business", "reviewer").order_by("?")[:limit])
+        qs = (Review.objects.filter(business__isnull=False, isDeleted=False,
+                                    isApproved=True, rating__gte=4)
+              .exclude(body="")
+              .select_related("business", "reviewer", "business__business_location",
+                              "business__businessType")
+              .order_by("?")[:limit])
         out = []
         for r in qs:
+            biz = r.business
+            loc = getattr(biz, "business_location", None) if biz else None
+            bt = getattr(biz, "businessType", None) if biz else None
             out.append({"reviewId": r.id, "rating": r.rating, "title": r.title, "body": r.body,
                         "businessId": r.business_id,
-                        "businessName": r.business.businessName if r.business else "",
+                        "businessName": biz.businessName if biz else "",
+                        "city": (loc.city if loc else "") or "",              # location line
+                        "category": (getattr(bt, "lable", "") or "") if bt else "",  # wt-type category
                         "timestamp": r.timestamp.isoformat()})
         return out
 
@@ -408,6 +649,20 @@ class _HomeController:
         except Exception:
             return ""
 
+    def _entity_state(self, obj, entity_type):
+        """State name for the same-state broaden nudge. Architect/Shop carry a
+        plain `state` string; business/product/service resolve it through the
+        owning business's Location.locationState FK. Empty on any miss."""
+        try:
+            if entity_type in (ENTITY_TYPE.ARCHITECT, ENTITY_TYPE.SHOP):
+                return getattr(obj, "state", "") or ""
+            biz = obj if entity_type == ENTITY_TYPE.BUSINESS else getattr(obj, "business", None)
+            loc = getattr(biz, "business_location", None) if biz else None
+            st = getattr(loc, "locationState", None) if loc else None
+            return st.name if st else ""
+        except Exception:
+            return ""
+
     def _text_blob(self, obj, entity_type):
         parts = [self._name(obj),
                  getattr(obj, "bio", "") or getattr(obj, "description", "") or ""]
@@ -456,6 +711,21 @@ class _HomeController:
             d["price"] = getattr(o, "displayPrice", None)
             d["originalPrice"] = getattr(o, "orignalPrice", None)
         return d
+
+
+def _video_thumbnail(video_url, platform, fallback=""):
+    """Best-effort still image for a reel derived from its video link:
+    YouTube -> i.ytimg.com/vi/<id>/hqdefault.jpg (works for watch/youtu.be/shorts/
+    embed URLs). Facebook exposes no public thumbnail URL scheme, so those (and
+    anything unrecognised) fall back to the entity's own image."""
+    import re
+    if not video_url:
+        return fallback
+    if platform == "youtube" or "youtu" in video_url:
+        m = re.search(r"(?:v=|youtu\.be/|shorts/|embed/|/vi/)([\w-]{11})", video_url)
+        if m:
+            return f"https://i.ytimg.com/vi/{m.group(1)}/hqdefault.jpg"
+    return fallback
 
 
 def _clean_desc(text, limit=220):

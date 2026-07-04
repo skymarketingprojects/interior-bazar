@@ -77,6 +77,10 @@ class Catelogue(models.Model):
     isActive = models.BooleanField(default=True)
     label = models.CharField(max_length=50, blank=True, default='')
 
+    # --- catalogue detail panel fields ---
+    description = models.TextField(blank=True, default="")
+    specifications = models.JSONField(default=dict, blank=True)
+
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = _unique_slug(Catelogue, self.title, self.pk)
@@ -229,7 +233,21 @@ class ServiceImage(models.Model):
 
     def __str__(self):
         return f"Image {self.index} for ({self.service.title or 'Untitled'})"
-    
+
+class ServiceFAQ(models.Model):
+    service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='faqs')
+    question = models.CharField(max_length=500)
+    answer = models.TextField()
+    displayOrder = models.PositiveIntegerField(default=0)
+    createdAt = models.DateTimeField(auto_now_add=True)
+    updatedAt = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['displayOrder']
+
+    def __str__(self):
+        return f"FAQ for ({self.service.title or 'Untitled'}): {self.question}"
+
 class InteriorServices(models.Model):
     value = models.CharField(max_length=250)
     lable = models.CharField(max_length=250)

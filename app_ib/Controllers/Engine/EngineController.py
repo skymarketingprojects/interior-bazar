@@ -4,10 +4,16 @@ EngineController — read/write logic for the v2.1.0.0 discovery engine API.
 Read endpoints serve pre-computed data: Redis first, DB fallback, re-warm on miss
 (never compute rankings at request time). Event endpoints are fire-and-forget writes.
 """
+from collections import namedtuple
+
 from django.db.models import F
 from django.utils import timezone
 
 from app_ib.Utils.SafeCache import safe_cache as cache
+
+# Lightweight stand-in for a TrendingScore row when the board is empty (see
+# _trending_fallback_rows); duck-types the .objectId/.rank/.score access.
+_FallbackRank = namedtuple("_FallbackRank", "objectId rank score")
 
 from app_ib.Utils.EngineConfig import (
     ENTITY_TYPE, TRENDING_PERIOD, LEADERBOARD_PERIOD, LEADERBOARD_BOARD, ALGO,
@@ -21,9 +27,18 @@ class _EngineController:
     def trending_entities(self, entity_type, period=TRENDING_PERIOD.DAILY, city=""):
         from app_ib.models import TrendingScore
         ct = content_type_for(entity_type)
-        rows = (TrendingScore.objects.filter(contentType=ct, period=period, city=city or "")
-                .order_by("rank")[:50])
+        rows = list(TrendingScore.objects.filter(contentType=ct, period=period, city=city or "")
+                    .order_by("rank")[:50])
         model = get_model(entity_type)
+        if not rows:
+            # Cron-populated board is empty. Enqueue the recompute as a background
+            # task (never synchronously — the request must not block) and serve a
+            # best-effort fallback from the entities' denormalized trendingScore so
+            # the section is never empty while the real board warms up.
+            from app_ib.algorithms.background import enqueue
+            from app_ib.algorithms.scoring import compute_trending_scores
+            enqueue("compute_trending_scores", compute_trending_scores)
+            rows = self._trending_fallback_rows(model, entity_type)
         qs = model.objects.filter(id__in=[r.objectId for r in rows])
         # Prefetch related data for products to avoid N+1 on category + images.
         # Uses prefetch_related so it is always a single extra query, not N.
@@ -107,15 +122,34 @@ class _EngineController:
         _attach_trending_review_quotes(out)
         return out
 
+    def _trending_fallback_rows(self, model, entity_type):
+        """Best-effort stand-in for an empty TrendingScore board: the top entities
+        by their denormalized trendingScore (newest as tie-breaker). Shaped like
+        TrendingScore rows (objectId/rank/score) so trending_entities consumes it
+        unchanged."""
+        qs = model.objects.all()
+        if entity_type in (ENTITY_TYPE.PRODUCT, ENTITY_TYPE.SERVICE):
+            qs = qs.filter(isActive=True)
+        top = list(qs.order_by("-trendingScore", "-id")[:50])
+        return [_FallbackRank(o.id, i + 1, getattr(o, "trendingScore", 0.0) or 0.0)
+                for i, o in enumerate(top)]
+
     def trending_searches(self, category_fallback=False, min_items=8):
         board = cache.get("trending:searches:24h")
         if board is None:
-            # cache miss (TTL expired or invalidated) -> recompute from DB + re-warm
+            # Cache miss: recomputing the 24h search aggregation is a cron-class
+            # job, so offload it to the background runner (never block the request)
+            # and serve a best-effort fallback below. The nightly cron / the
+            # enqueued run re-warm "trending:searches:24h" for the next request.
+            from app_ib.algorithms.background import enqueue
             from app_ib.algorithms.aggregation import calculate_trending_searches
-            board = calculate_trending_searches()
+            enqueue("calculate_trending_searches", calculate_trending_searches)
+            board = []
         board = list(board or [])
-        # trending-page fallback: top up sparse boards with business categories
-        if category_fallback and len(board) < min_items:
+        # Top up with business categories so the section is never empty — always
+        # on the trending page, and on any caller when the board came back empty
+        # (e.g. the cold-cache path above that offloaded the recompute).
+        if (category_fallback or not board) and len(board) < min_items:
             from app_ib.models import BusinessCategory
             existing = {b["query"].lower() for b in board}
             cats = BusinessCategory.objects.order_by("-trending", "index")
@@ -306,11 +340,30 @@ class _EngineController:
         for r in RecentlyViewed.objects.filter(user=user).order_by("-viewedAt")[:ALGO.RECENTLY_VIEWED_CAP]:
             obj = r.contentType.model_class().objects.filter(id=r.objectId).first()
             if obj:
+                count, count_label = _rv_count(obj)
                 out.append({"entityType": r.contentType.model, "id": obj.id,
                             "objectId": r.objectId, "name": _name(obj),
                             "imageUrl": _image(obj),
                             "slug": getattr(obj, "slug", "") or "",
+                            "category": _rv_category(obj),
+                            "rating": _rv_rating(obj),
+                            "count": count, "countLabel": count_label,
+                            "price": _rv_price(obj),
                             "viewedAt": r.viewedAt.isoformat()})
+        return out
+
+    def recently_viewed_export_rows(self, user):
+        """Same query/ordering as recently_viewed() (RecentlyViewed rows for
+        this user, newest first, capped at ALGO.RECENTLY_VIEWED_CAP) but
+        stripped to only the two fields safe for a CSV export: the display
+        name and the raw viewedAt datetime. No id/objectId/slug/entityType —
+        the view formats viewedAt for display."""
+        from app_ib.models import RecentlyViewed
+        out = []
+        for r in RecentlyViewed.objects.filter(user=user).order_by("-viewedAt")[:ALGO.RECENTLY_VIEWED_CAP]:
+            obj = r.contentType.model_class().objects.filter(id=r.objectId).first()
+            if obj:
+                out.append((_name(obj), r.viewedAt))
         return out
 
     def notifications(self, user):
@@ -338,6 +391,67 @@ def _image(o):
 
 def _rating(o):
     return getattr(o, "ratingValue", None) if hasattr(o, "ratingValue") else getattr(o, "rating", 0.0)
+
+
+# ---- recently-viewed row enrichment (all defensive: never raise) ----
+# obj may be a Business / Product / Service / Shop / Architect — fields differ,
+# so every helper is getattr-with-fallback + try/except → empty/zero default.
+def _cat_label(c):
+    # Category models use the misspelled `lable`; also cover label/name/value.
+    return (getattr(c, "lable", None) or getattr(c, "label", None)
+            or getattr(c, "name", None) or getattr(c, "value", None) or "") or ""
+
+
+def _rv_category(o):
+    try:
+        cat = getattr(o, "category", None)  # products/services: M2M ProductCategory
+        if cat is not None:
+            first = cat.all().first() if hasattr(cat, "all") else cat
+            if first is not None:
+                return _cat_label(first)
+        for attr in ("segments", "businessCategory"):  # businesses
+            mgr = getattr(o, attr, None)
+            if mgr is not None and hasattr(mgr, "all"):
+                first = mgr.all().first()
+                if first is not None:
+                    return _cat_label(first)
+        return getattr(o, "label", "") or ""  # architects/shops
+    except Exception:
+        return ""
+
+
+def _rv_rating(o):
+    try:
+        return float(getattr(o, "ratingValue", getattr(o, "rating", 0)) or 0)
+    except Exception:
+        return 0.0
+
+
+def _rv_count(o):
+    try:
+        projects = getattr(o, "projects", None)  # businesses/architects (reverse FK)
+        if projects is not None and hasattr(projects, "count"):
+            return projects.count(), "projects"
+        reviews = getattr(o, "totalReviews", None)  # products/services/shops
+        if reviews is not None:
+            return int(reviews or 0), "reviews"
+        lead = getattr(o, "leadCount", None)
+        if lead is not None:
+            return int(lead or 0), "projects"
+        return 0, ""
+    except Exception:
+        return 0, ""
+
+
+def _rv_price(o):
+    # Products/services carry a price; businesses/architects/shops don't.
+    try:
+        if not (hasattr(o, "displayPrice") or hasattr(o, "orignalPrice")):
+            return ""
+        val = float(getattr(o, "displayPrice", None) or getattr(o, "orignalPrice", 0) or 0)
+        return ("₹" + format(int(round(val)), ",")) if val > 0 else ""
+    except Exception:
+        return ""
 
 
 def _clean_desc(text, limit=220):

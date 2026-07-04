@@ -435,6 +435,15 @@ def CataloguesListView(request):
                                   verified=_flag_param(request, "verified")))
 
 
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def CatalogueDetailView(request, slugOrId):
+    try:
+        return _ok(GC.catalogue_detail(slugOrId))
+    except Exception as e:
+        return _err(e)
+
+
 # ==========================================================================
 # 8b. Authenticated owner lists (shops/mine/, architects/mine/)
 # ==========================================================================

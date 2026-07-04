@@ -851,3 +851,134 @@ class SpecializationJob(models.Model):
 
     def __str__(self):
         return f"SpecializationJob(business={self.business_id}, status={self.status}, at={self.scheduledAt})"
+
+
+class Differentiator(models.Model):
+    """A "What makes IB different" card: an icon chip, heading, description, and a
+    variable-length list of `eliminates` — the competing SaaS/tools IB replaces
+    (rendered with strikethrough on the frontend). Admin-managed; served to the
+    home page by home/differentiators/."""
+    icon = models.CharField(max_length=50, default="", blank=True)      # tabler icon name
+    iconBg = models.CharField(max_length=40, default="", blank=True)    # chip background colour
+    iconColor = models.CharField(max_length=40, default="", blank=True) # chip icon colour
+    heading = models.CharField(max_length=200)
+    description = models.TextField(blank=True, default="")
+    # variable-length list of competitor labels IB eliminates, e.g.
+    # ["JustDial — unfiltered volume", "Google Ads — only website traffic"]
+    eliminates = models.JSONField(default=list, blank=True)
+    index = models.PositiveIntegerField(default=0)
+    isActive = models.BooleanField(default=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    updatedAt = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        app_label = "app_ib"
+        ordering = ["index", "id"]
+
+    def __str__(self):
+        return f"Differentiator({self.heading})"
+
+
+class JoinUsCta(models.Model):
+    """The home 'Join us' final CTA band. Buttons reuse the label+action shape used
+    across the hero/header CTAs (action is a HomeCtaAction dict {kind,to,...}).
+    Served to the home page by home/join-us/; the ordered process steps live in
+    the related JoinUsStep model."""
+    eyebrow = models.CharField(max_length=200, blank=True, default="")     # tag / eyebrow
+    titleLead = models.CharField(max_length=200, blank=True, default="")   # heading (lead)
+    titleAccent = models.CharField(max_length=200, blank=True, default="") # heading (accent/emphasis)
+    sub = models.TextField(blank=True, default="")                         # description
+    primaryLabel = models.CharField(max_length=100, blank=True, default="")
+    primaryAction = models.JSONField(default=dict, blank=True)             # {kind,to,...}
+    secondaryLabel = models.CharField(max_length=100, blank=True, default="")
+    secondaryAction = models.JSONField(default=dict, blank=True)
+    trustBadges = models.JSONField(default=list, blank=True)               # [{icon,label}] sub-tags
+    cardHead = models.CharField(max_length=200, blank=True, default="")    # "How matching works"
+    responseNote = models.CharField(max_length=300, blank=True, default="")
+    isActive = models.BooleanField(default=True)
+    index = models.PositiveIntegerField(default=0)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    updatedAt = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        app_label = "app_ib"
+        ordering = ["index", "id"]
+
+    def __str__(self):
+        return f"JoinUsCta({self.titleLead}{self.titleAccent})"
+
+
+class JoinUsStep(models.Model):
+    """One 'how matching works' process step (key/value + display order). Variable
+    number of steps per JoinUsCta."""
+    joinUs = models.ForeignKey(JoinUsCta, on_delete=models.CASCADE, related_name="steps")
+    key = models.CharField(max_length=40, blank=True, default="")   # bold key / step number
+    value = models.TextField(blank=True, default="")                # step description
+    index = models.PositiveIntegerField(default=0)                  # display order (s.no)
+
+    class Meta:
+        app_label = "app_ib"
+        ordering = ["index", "id"]
+
+    def __str__(self):
+        return f"JoinUsStep({self.key})"
+
+
+class ShopUpdate(models.Model):
+    """A 'Shop update' card shown in the shops preview sidebar + full-details
+    'Updates' tab (served by shop/<id|slug>/ via _shop_full_dict). `badge` is a
+    short label like "New"/"Offer"; `color` is an optional CSS gradient/colour for
+    the card."""
+    shop = models.ForeignKey(Shop, on_delete=models.CASCADE, related_name="updates")
+    title = models.CharField(max_length=255)
+    body = models.TextField(blank=True, default="")
+    badge = models.CharField(max_length=60, blank=True, default="")   # short label e.g. "New" / "Offer"
+    color = models.CharField(max_length=40, blank=True, default="")   # optional CSS gradient/colour
+    displayOrder = models.PositiveIntegerField(default=0)
+    isActive = models.BooleanField(default=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        app_label = "app_ib"
+        ordering = ["displayOrder", "-timestamp"]
+
+    def __str__(self):
+        return f"ShopUpdate({self.title})"
+
+
+class ShopQuestion(models.Model):
+    """A customer Q&A entry shown in the shops full-details popup 'Q&A' tab
+    (served by shop/<id|slug>/ via _shop_full_dict). `answer` is optional (blank
+    until the shop responds); `askedBy` is a short display name."""
+    shop = models.ForeignKey(Shop, on_delete=models.CASCADE, related_name="questions")
+    question = models.CharField(max_length=500)
+    answer = models.TextField(blank=True, default="")
+    askedBy = models.CharField(max_length=120, blank=True, default="")
+    displayOrder = models.PositiveIntegerField(default=0)
+    isActive = models.BooleanField(default=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        app_label = "app_ib"
+        ordering = ["displayOrder", "-timestamp"]
+
+    def __str__(self):
+        return f"ShopQuestion({self.question[:40]})"
+
+
+class ShopImage(models.Model):
+    """A gallery image for a shop, shown in the shops preview sidebar hero carousel
+    + full-details popup 'Photos' tab (served by shop/<id|slug>/ via _shop_full_dict
+    as a plain list of URLs). Falls back to coverImage/bannerImage when empty."""
+    shop = models.ForeignKey(Shop, on_delete=models.CASCADE, related_name="images")
+    imageUrl = models.TextField()
+    index = models.PositiveIntegerField(default=0)
+    isActive = models.BooleanField(default=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        app_label = "app_ib"
+        ordering = ["index", "timestamp"]
+
+    def __str__(self):
+        return f"ShopImage(shop={self.shop_id}, index={self.index})"

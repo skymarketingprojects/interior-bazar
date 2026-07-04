@@ -171,6 +171,34 @@ def RecentlyViewedView(request):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+def RecentlyViewedExportView(request):
+    """GET /engine/recently-viewed/export/ — downloadable CSV of the caller's
+    own recently-viewed history. Same source query as RecentlyViewedView
+    (recently_viewed_export_rows mirrors recently_viewed's query/ordering),
+    trimmed to two safe columns: Name, Viewed at (no ids/objectId/slug/
+    entityType — nothing that could leak internal keys).
+
+    Deliberate exception to the ServerResponse JSON envelope: this returns a
+    raw Django HttpResponse (text/csv, Content-Disposition attachment), the
+    same "raw response instead of ServerResponse" precedent already used by
+    UserStreamTokenView (EngineGapsView.py) for its SSE StreamingHttpResponse.
+    """
+    import csv
+    from django.http import HttpResponse
+    from app_ib.Utils.Names import NAMES
+
+    rows = ENGINE_CONTROLLER.recently_viewed_export_rows(request.user)
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = 'attachment; filename="recently-viewed-history.csv"'
+    writer = csv.writer(response)
+    writer.writerow(["Name", "Viewed at"])
+    for name, viewed_at in rows:
+        writer.writerow([name, viewed_at.strftime(NAMES.DMY_12M) if viewed_at else ""])
+    return response
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def NotificationsView(request):
     return _ok(ENGINE_CONTROLLER.notifications(request.user))
 
