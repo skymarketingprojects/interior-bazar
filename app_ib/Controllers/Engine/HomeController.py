@@ -693,7 +693,10 @@ class _HomeController:
     def _shop_dict(self, s):
         return {"entityType": ENTITY_TYPE.SHOP, "id": s.id, "name": s.name, "slug": s.slug,
                 "city": s.city, "imageUrl": s.coverImage, "shopType": s.shopType,
-                "rating": s.rating, "trendingScore": s.trendingScore}
+                "rating": s.rating, "trendingScore": s.trendingScore,
+                # Owning business (soft link) — shop ids and business ids are
+                # different key spaces; Connect CTAs must use this, not the shop id.
+                "businessId": s.business_id}
 
     def _entity_dict(self, o, entity_type, score, distance_km=None):
         """Feed-card payload. The first block of keys is FROZEN (existing
