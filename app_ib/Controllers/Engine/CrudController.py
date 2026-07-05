@@ -281,8 +281,76 @@ class _CrudController:
                         "reviewer": r.reviewer_id, "helpfulCount": r.helpfulCount,
                         "timestamp": r.timestamp.isoformat(),
                         "reviewerName": name or "User",
-                        "reviewerAvatarUrl": (profile.profileImageUrl or "") if profile else ""})
+                        "reviewerAvatarUrl": (profile.profileImageUrl or "") if profile else "",
+                        # Seller reply + attribute tags (task 64).
+                        "reply": ({"text": r.replyText, "at": r.replyAt.isoformat() if r.replyAt else None}
+                                  if r.replyText else None),
+                        "attributeTags": r.attributeTags or []})
         return out
+
+    def _review_owner_id(self, review):
+        """The user id that owns the entity a review targets (the seller who may reply)."""
+        if review.business_id:
+            return getattr(review.business, "user_id", None)
+        if review.shop_id:
+            return getattr(review.shop, "user_id", None)
+        if review.architect_id:
+            return getattr(review.architect, "user_id", None)
+        if review.product_id:
+            return getattr(getattr(review.product, "business", None), "user_id", None)
+        if review.service_id:
+            return getattr(getattr(review.service, "business", None), "user_id", None)
+        return None
+
+    def _sanitize_tags(self, raw):
+        """Normalize attribute tags to [{id,label,kind}] — kind constrained to the chip set."""
+        tags = []
+        for t in (raw or [])[:20]:
+            if isinstance(t, str):
+                label = t.strip()
+                if label:
+                    tags.append({"id": label.lower().replace(" ", "-"), "label": label, "kind": "neutral"})
+                continue
+            if not isinstance(t, dict):
+                continue
+            label = (t.get("label") or "").strip()
+            if not label:
+                continue
+            kind = t.get("kind") if t.get("kind") in ("positive", "neutral", "negative") else "neutral"
+            tags.append({"id": (t.get("id") or label.lower().replace(" ", "-")), "label": label, "kind": kind})
+        return tags
+
+    def reply_to_review(self, user, review_id, text, tags=None):
+        """Post/replace the seller reply on one review, and optionally set attribute
+        tags. Only the owner of the reviewed entity may reply (task 64)."""
+        from app_ib.models import Review
+        from django.utils import timezone
+        review = (Review.objects
+                  .filter(id=review_id, isDeleted=False)
+                  .select_related("business", "shop", "architect", "product", "service")
+                  .first())
+        if not review:
+            raise NotFound_("review not found")
+        owner_id = self._review_owner_id(review)
+        if not owner_id or owner_id != user.id:
+            raise PermissionError_("only the reviewed business owner can reply")
+        text = (text or "").strip()
+        update_fields = []
+        if text:
+            review.replyText = text
+            review.replyAt = timezone.now()
+            update_fields += ["replyText", "replyAt"]
+        if tags is not None:
+            review.attributeTags = self._sanitize_tags(tags)
+            update_fields += ["attributeTags"]
+        if not update_fields:
+            raise Conflict_("nothing to update: provide reply text or tags")
+        review.save(update_fields=update_fields)
+        return {"reviewId": review.id,
+                "reply": ({"text": review.replyText,
+                           "at": review.replyAt.isoformat() if review.replyAt else None}
+                          if review.replyText else None),
+                "attributeTags": review.attributeTags or []}
 
     def _recompute_one(self, entity_type, target):
         """Immediately refresh one entity's rating after a write (batch job also covers it)."""

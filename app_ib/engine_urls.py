@@ -108,6 +108,7 @@ urlpatterns = [
     path("reviews/", EngineCrudView.ReviewListCreateView, name="EngineReviewListCreateView"),
     path("reviews/<int:reviewId>/", EngineCrudView.ReviewUpdateDeleteView, name="EngineReviewUpdateDeleteView"),
     path("reviews/<int:reviewId>/helpful/", EngineCrudView.ReviewHelpfulView, name="EngineReviewHelpfulView"),
+    path("reviews/<int:reviewId>/reply/", EngineCrudView.ReviewReplyView, name="EngineReviewReplyView"),  # seller reply + tags (task 64)
     # --- Video CRUD (item 9) ---
     path("videos/<str:entityType>/<int:objectId>/", EngineGapsView.VideoListCreateView, name="EngineVideoListCreateView"),
     path("videos/<int:videoId>/set-primary/", EngineGapsView.VideoSetPrimaryView, name="EngineVideoSetPrimaryView"),

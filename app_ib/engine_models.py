@@ -266,6 +266,11 @@ class Review(models.Model):
     helpfulCount = models.PositiveIntegerField(default=0)
     isApproved = models.BooleanField(default=True)
     isDeleted = models.BooleanField(default=False)
+    # Seller reply to this review (task 64). replyText empty = no reply yet.
+    replyText = models.TextField(blank=True, default="")
+    replyAt = models.DateTimeField(null=True, blank=True)
+    # Attribute tags the seller sets on the review, e.g. [{"id","label","kind"}].
+    attributeTags = models.JSONField(default=list, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
 

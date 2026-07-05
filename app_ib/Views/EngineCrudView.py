@@ -117,3 +117,16 @@ def ReviewHelpfulView(request, reviewId):
         return _ok(CRUD_CONTROLLER.mark_helpful(reviewId), "Marked helpful")
     except Exception as e:
         return _err(e)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def ReviewReplyView(request, reviewId):
+    # Seller posts a reply (+ optional attribute tags) to a review of their entity.
+    try:
+        return _ok(CRUD_CONTROLLER.reply_to_review(
+            request.user, reviewId,
+            (request.data or {}).get("text", ""),
+            (request.data or {}).get("tags")), "Reply posted")
+    except Exception as e:
+        return _err(e)
