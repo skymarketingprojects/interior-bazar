@@ -680,6 +680,8 @@ class Message(models.Model):
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name="messages")
     sender = models.ForeignKey(USER, null=True, on_delete=models.SET_NULL, related_name="sent_messages")
     body = models.TextField()
+    # Uploaded file attachments — list of {name, url, size} (task 56).
+    attachments = models.JSONField(default=list, blank=True)
     isRead = models.BooleanField(default=False)
     createdAt = models.DateTimeField(auto_now_add=True, db_index=True)
 

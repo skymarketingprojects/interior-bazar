@@ -122,7 +122,18 @@ class _ChatController:
         return {"deleted": True}
 
     # ---------------- messaging ----------------
-    def send_message(self, user, conv_id, body):
+    @staticmethod
+    def _clean_attachments(attachments):
+        # Keep only well-formed {name,url,size} entries (task 56). Cap at 10.
+        out = []
+        for a in (attachments or [])[:10]:
+            if isinstance(a, dict) and a.get("url"):
+                out.append({"name": str(a.get("name") or "file")[:255],
+                            "url": str(a["url"])[:2000],
+                            "size": str(a.get("size") or "")[:32]})
+        return out
+
+    def send_message(self, user, conv_id, body, attachments=None):
         from app_ib.models import Message
         from app_ib.Utils.sse_streamer import publish_chat
         conv = self._get(conv_id)
@@ -130,9 +141,11 @@ class _ChatController:
             raise PermissionError_("not a participant")
         if conv.status not in (CONVERSATION_STATUS.ACCEPTED, CONVERSATION_STATUS.REQUESTED):
             raise Conflict_(f"conversation is {conv.status}")
-        if not (body or "").strip():
+        attachments = self._clean_attachments(attachments)
+        if not (body or "").strip() and not attachments:
             raise Conflict_("empty message")
-        msg = Message.objects.create(conversation=conv, sender=user, body=body.strip())
+        msg = Message.objects.create(conversation=conv, sender=user,
+                                     body=(body or "").strip(), attachments=attachments)
         conv.lastMessageAt = msg.createdAt
         update_fields = ["lastMessageAt", "updatedAt"]
         # item 6: track first business-side response time
@@ -144,14 +157,15 @@ class _ChatController:
         conv.save(update_fields=update_fields)
         payload = {"conversationId": conv.id, "messageId": msg.id, "senderId": user.id,
                    "body": msg.body, "createdAt": msg.createdAt.isoformat(),
-                   "senderName": self._display_name(user)}
+                   "senderName": self._display_name(user), "attachments": msg.attachments}
         # deliver to the OTHER party over their single per-user SSE connection
         publish_chat(conv.other_party(user.id), payload)
         # also raise an unread notification (deduped per conversation)
+        preview = msg.body[:80] or "Sent an attachment"
         self._notify_user(conv.other_party(user.id), NOTIFICATION_TYPE.CHAT,
-                          "New message", body=msg.body[:80], dedupe_key=f"conv:{conv.id}")
+                          "New message", body=preview, dedupe_key=f"conv:{conv.id}")
         return {"messageId": msg.id, "createdAt": msg.createdAt.isoformat(),
-                "senderName": self._display_name(user)}
+                "senderName": self._display_name(user), "attachments": msg.attachments}
 
     def history(self, user, conv_id, before_id=None, limit=30):
         from app_ib.models import Message
@@ -166,7 +180,8 @@ class _ChatController:
         rows.reverse()
         return [{"messageId": m.id, "senderId": m.sender_id, "body": m.body,
                  "isRead": m.isRead, "createdAt": m.createdAt.isoformat(),
-                 "senderName": self._display_name(m.sender)} for m in rows]
+                 "senderName": self._display_name(m.sender),
+                 "attachments": m.attachments if isinstance(m.attachments, list) else []} for m in rows]
 
     def poll_messages(self, user, since_id=0, limit=100):
         """Polling replacement for the SSE `chat` event: new INCOMING messages
@@ -191,7 +206,8 @@ class _ChatController:
         return [{"conversationId": m.conversation_id, "messageId": m.id,
                  "senderId": m.sender_id, "body": m.body,
                  "createdAt": m.createdAt.isoformat(),
-                 "senderName": self._display_name(m.sender)} for m in rows]
+                 "senderName": self._display_name(m.sender),
+                 "attachments": m.attachments if isinstance(m.attachments, list) else []} for m in rows]
 
     def mark_read(self, user, conv_id):
         from app_ib.models import Message

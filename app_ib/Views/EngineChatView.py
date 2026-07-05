@@ -108,7 +108,8 @@ def MessagesView(request, convId):
     try:
         if request.method == "POST":
             body = request.data.get("body", "")
-            return _ok(CHAT_CONTROLLER.send_message(request.user, convId, body), "Message sent")
+            attachments = request.data.get("attachments", [])
+            return _ok(CHAT_CONTROLLER.send_message(request.user, convId, body, attachments), "Message sent")
         before = request.GET.get("before_id")
         return _ok(CHAT_CONTROLLER.history(request.user, convId, int(before) if before else None))
     except Exception as e:
