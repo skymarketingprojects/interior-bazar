@@ -115,6 +115,20 @@ def MyFeedbackListView(request):
     return _ok(GC.list_my_feedback(request.user))
 
 
+@api_view(["GET", "PATCH"])
+@permission_classes([IsAuthenticated])
+def UserSettingsView(request):
+    if request.method == "PATCH":
+        return _ok(GC.update_user_settings(request.user, request.data), "Settings updated")
+    return _ok(GC.get_user_settings(request.user))
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def DeactivateAccountView(request):
+    return _ok(GC.deactivate_account(request.user), "Account deactivated")
+
+
 # ==========================================================================
 # 6. Dashboard KPIs
 # ==========================================================================

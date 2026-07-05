@@ -339,6 +339,67 @@ def recently_viewed_remove(user, row_id):
     return {"removed": deleted}
 
 
+# Default notification/privacy toggles when the user hasn't saved settings yet.
+_DEFAULT_SETTINGS = {
+    "notifications": {
+        "connectionUpdates": True,
+        "newMessages": True,
+        "weeklyDigest": False,
+        "marketing": False,
+    },
+    "privacy": {
+        "publicProfile": True,
+        "showOnline": True,
+        "personalisedRecs": True,
+    },
+}
+
+
+def get_user_settings(user):
+    """Buyer dashboard Settings — notification/privacy toggles (JSON on the user)
+    merged over defaults, plus language/currency from the dedicated fields."""
+    saved = user.settings if isinstance(user.settings, dict) else {}
+    notifications = {**_DEFAULT_SETTINGS["notifications"], **(saved.get("notifications") or {})}
+    privacy = {**_DEFAULT_SETTINGS["privacy"], **(saved.get("privacy") or {})}
+    return {
+        "notifications": notifications,
+        "privacy": privacy,
+        "language": user.preferred_language or "en",
+        "currency": user.preferred_currency or "INR",
+    }
+
+
+def update_user_settings(user, data):
+    """Merge-update the user's settings. notifications/privacy dicts merge into the
+    JSON field; language/currency write to the dedicated CustomUser columns."""
+    data = data or {}
+    saved = user.settings if isinstance(user.settings, dict) else {}
+    notifications = {**_DEFAULT_SETTINGS["notifications"], **(saved.get("notifications") or {})}
+    privacy = {**_DEFAULT_SETTINGS["privacy"], **(saved.get("privacy") or {})}
+    if isinstance(data.get("notifications"), dict):
+        notifications.update({k: bool(v) for k, v in data["notifications"].items() if k in notifications})
+    if isinstance(data.get("privacy"), dict):
+        privacy.update({k: bool(v) for k, v in data["privacy"].items() if k in privacy})
+    user.settings = {"notifications": notifications, "privacy": privacy}
+    update_fields = ["settings"]
+    if data.get("language"):
+        user.preferred_language = str(data["language"])[:10]
+        update_fields.append("preferred_language")
+    if data.get("currency"):
+        user.preferred_currency = str(data["currency"])[:3]
+        update_fields.append("preferred_currency")
+    user.save(update_fields=update_fields)
+    return get_user_settings(user)
+
+
+def deactivate_account(user):
+    """Deactivate (not delete) the caller's account — flips is_active off so they
+    can no longer authenticate. The client signs the user out afterwards."""
+    user.is_active = False
+    user.save(update_fields=["is_active"])
+    return {"deactivated": True}
+
+
 def list_my_feedback(user):
     """The authenticated user's own submitted reports/feedback, newest first
     (buyer dashboard "Reports & feedback", task 48)."""

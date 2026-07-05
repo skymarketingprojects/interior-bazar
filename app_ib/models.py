@@ -46,6 +46,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     # the model must supply values on INSERT or user creation fails
     preferred_language = models.CharField(max_length=10, default='en')
     preferred_currency = models.CharField(max_length=3, default='INR')
+    # Buyer dashboard "Settings": notification + privacy preference toggles (task 49).
+    settings = models.JSONField(default=dict, blank=True)
 
     objects = CustomUserManager()
 
