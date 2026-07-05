@@ -121,6 +121,16 @@ def NotificationsMarkAllReadView(request):
     return _ok(GC.mark_all_notifications_read(request.user), "Marked all read")
 
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def ChangePlanView(request):
+    try:
+        return _ok(GC.change_plan(request.user, request.data.get("entityType", "business"),
+                                  request.data.get("targetPlanId")), "Plan change processed")
+    except Exception as e:
+        return _err(e)
+
+
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
 def AutogrowthView(request):

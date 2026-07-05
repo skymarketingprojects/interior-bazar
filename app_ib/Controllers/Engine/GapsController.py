@@ -454,6 +454,34 @@ def _first_business(user):
     return Business.objects.filter(user=user).first()
 
 
+def change_plan(user, entity_type, target_plan_id):
+    """In-dashboard plan change (task 61). Money-safe: an UPGRADE (higher tier, or
+    no active plan) requires payment → the client routes to checkout; a DOWNGRADE
+    to an equal/lower tier is switched immediately (no extra charge, since it's an
+    already-paid-for-or-cheaper tier). Business plans only (seller dashboard)."""
+    from app_ib.models import BusinessPlan, Subscription
+    from django.db.models import Q
+    target = Subscription.objects.filter(id=target_plan_id).first()
+    if not target:
+        raise NotFound_("plan not found")
+    target_tier = target.tier or 0
+    active_plans = list(BusinessPlan.objects.filter(Q(user=user) | Q(business__user=user), isActive=True)
+                        .select_related("plan"))
+    # Highest tier the user currently holds (unambiguous — no reliance on NULL ordering).
+    current_tier = max([(bp.plan.tier or 0) for bp in active_plans if bp.plan_id], default=-1)
+    if not active_plans or target_tier > current_tier:
+        # Upgrade / first purchase — must go through the paid checkout flow.
+        return {"requiresPayment": True, "targetPlanId": target.id,
+                "targetPlanName": target.title or "Plan"}
+    # Downgrade (or same tier): switch the highest-tier active plan immediately —
+    # no additional charge (moving to an equal/cheaper, already-paid tier).
+    holder = max(active_plans, key=lambda bp: (bp.plan.tier or 0) if bp.plan_id else -1)
+    holder.plan = target
+    holder.save(update_fields=["plan"])
+    return {"requiresPayment": False, "changed": True,
+            "planName": target.title or "Plan", "tier": target_tier}
+
+
 def mark_all_notifications_read(user):
     """Notifications are an unread-only store (deleted on read), so 'mark all read'
     clears the user's notification rows → unread count drops to 0 (task 57c)."""

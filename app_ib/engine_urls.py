@@ -82,6 +82,7 @@ urlpatterns = [
     path("my/sessions/<int:sessionId>/revoke/", EngineGapsView.RevokeSessionView, name="EngineRevokeSessionView"),  # auth: revoke one session
     path("plans/templates/", EngineGapsView.PlanTemplatesView, name="EnginePlanTemplatesView"),  # public catalogue (?entityType=)
     path("plans/upgrade/preview/", EngineGapsView.UpgradePreviewView, name="EngineUpgradePreviewView"),  # auth: upgrade settlement preview (Prompt 9)
+    path("plans/change/", EngineGapsView.ChangePlanView, name="EngineChangePlanView"),  # in-dashboard upgrade/downgrade (task 61)
     path("plans/manual/", EngineGapsView.ManualPlanView, name="EngineManualPlanView"),  # auth: manual (offline) plan purchase → inactive plan + become seller
     path("payment/recheck/", EngineGapsView.PaymentRecheckView, name="EnginePaymentRecheckView"),  # auth: manual single-txn re-verify (Prompt 10)
     path("server-time/", EngineGapsView.ServerTimeView, name="EngineServerTimeView"),  # backend-authoritative clock (Prompt 12)
