@@ -93,6 +93,15 @@ def ConversationDeleteView(request, convId):
         return _err(e)
 
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def ConversationLabelsView(request, convId):
+    try:
+        return _ok(CHAT_CONTROLLER.set_labels(request.user, convId, request.data.get("labels", [])), "Labels updated")
+    except Exception as e:
+        return _err(e)
+
+
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
 def MessagesView(request, convId):

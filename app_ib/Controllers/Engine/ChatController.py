@@ -91,6 +91,23 @@ class _ChatController:
         )
         return {"reported": True}
 
+    # Known label ids (mirror the frontend content labels — task 54).
+    _KNOWN_LABELS = {"l_vip", "l_hot", "l_site"}
+
+    def set_labels(self, user, conv_id, label_ids):
+        conv = self._get(conv_id)
+        if not conv.is_participant(user.id):
+            raise PermissionError_("not a participant")
+        ids = [x for x in (label_ids or []) if x in self._KNOWN_LABELS]
+        # dedupe, preserve order
+        seen, clean = set(), []
+        for x in ids:
+            if x not in seen:
+                seen.add(x); clean.append(x)
+        conv.labels = clean
+        conv.save(update_fields=["labels", "updatedAt"])
+        return self._conv_dict(conv)
+
     def delete(self, user, conv_id):
         # Per-participant soft delete — hides the thread from this user's list only.
         conv = self._get(conv_id)
@@ -226,7 +243,8 @@ class _ChatController:
                 "clientName": self._display_name(c.clientUser if c.clientUser_id else None),
                 "leadInterested": (lead.interested or "") if lead else "",
                 "leadCity": (lead.city or "") if lead else "",
-                "leadQuery": (lead.query or "") if lead else ""}
+                "leadQuery": (lead.query or "") if lead else "",
+                "labels": c.labels if isinstance(c.labels, list) else []}
 
     def _display_name(self, user):
         """Profile name, else the email local-part — never the raw email."""

@@ -656,6 +656,8 @@ class Conversation(models.Model):
     # other party keeps their copy.
     clientDeleted = models.BooleanField(default=False)
     businessDeleted = models.BooleanField(default=False)
+    # Attached label ids (buyer inbox organisation, task 54) — e.g. ["l_vip","l_hot"].
+    labels = models.JSONField(default=list, blank=True)
     createdAt = models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
 
