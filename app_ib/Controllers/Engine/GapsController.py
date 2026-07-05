@@ -760,6 +760,10 @@ def _contact_row(c):
         row["whatsapp"] = c.whatsapp
     if c.website:
         row["website"] = c.website
+    if c.gmb:
+        row["gmb"] = c.gmb
+    if c.workingPlaceLink:
+        row["mapsUrl"] = c.workingPlaceLink
     return row
 
 
