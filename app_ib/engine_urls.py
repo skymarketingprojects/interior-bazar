@@ -33,6 +33,7 @@ urlpatterns = [
     path("chat/conversations/", EngineChatView.ConversationListCreateView, name="EngineConversationListCreateView"),
     path("chat/conversations/<int:convId>/accept/", EngineChatView.ConversationAcceptView, name="EngineConversationAcceptView"),
     path("chat/conversations/<int:convId>/decline/", EngineChatView.ConversationDeclineView, name="EngineConversationDeclineView"),
+    path("chat/conversations/<int:convId>/close/", EngineChatView.ConversationCloseView, name="EngineConversationCloseView"),
     path("chat/conversations/<int:convId>/messages/", EngineChatView.MessagesView, name="EngineMessagesView"),
     path("chat/conversations/<int:convId>/read/", EngineChatView.MessagesReadView, name="EngineMessagesReadView"),
     # polling replacement for the SSE chat event (SSE /stream/ kept for future scale)

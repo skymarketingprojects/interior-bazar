@@ -52,6 +52,15 @@ class _ChatController:
         conv.save(update_fields=["status", "declineReason", "updatedAt"])
         return self._conv_dict(conv)
 
+    def close(self, user, conv_id):
+        # Either participant (buyer or seller) can close an enquiry.
+        conv = self._get(conv_id)
+        if user.id not in (conv.clientUser_id, conv.businessUser_id):
+            raise PermissionError_("only a participant can close this conversation")
+        conv.status = CONVERSATION_STATUS.CLOSED
+        conv.save(update_fields=["status", "updatedAt"])
+        return self._conv_dict(conv)
+
     # ---------------- messaging ----------------
     def send_message(self, user, conv_id, body):
         from app_ib.models import Message

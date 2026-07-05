@@ -57,6 +57,15 @@ def ConversationDeclineView(request, convId):
         return _err(e)
 
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def ConversationCloseView(request, convId):
+    try:
+        return _ok(CHAT_CONTROLLER.close(request.user, convId), "Closed")
+    except Exception as e:
+        return _err(e)
+
+
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
 def MessagesView(request, convId):
