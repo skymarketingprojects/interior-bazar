@@ -121,6 +121,26 @@ def NotificationsMarkAllReadView(request):
     return _ok(GC.mark_all_notifications_read(request.user), "Marked all read")
 
 
+@api_view(["GET", "POST"])
+@permission_classes([IsAuthenticated])
+def AutogrowthView(request):
+    try:
+        if request.method == "POST":
+            return _ok(GC.autogrowth_add(request.user, request.data.get("term", "")), "Keyword added")
+        return _ok(GC.autogrowth_list(request.user))
+    except Exception as e:
+        return _err(e)
+
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def AutogrowthRemoveView(request, keywordId):
+    try:
+        return _ok(GC.autogrowth_remove(request.user, keywordId), "Keyword removed")
+    except Exception as e:
+        return _err(e)
+
+
 @api_view(["GET", "PATCH"])
 @permission_classes([IsAuthenticated])
 def UserSettingsView(request):

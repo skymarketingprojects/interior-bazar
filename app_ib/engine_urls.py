@@ -149,6 +149,8 @@ urlpatterns = [
     path("notifications/", EngineView.NotificationsView, name="EngineNotificationsView"),
     path("notifications/unread-count/", EngineView.NotificationUnreadCountView, name="EngineNotificationUnreadCountView"),
     path("notifications/mark-all-read/", EngineGapsView.NotificationsMarkAllReadView, name="EngineNotificationsMarkAllReadView"),
+    path("autogrowth/", EngineGapsView.AutogrowthView, name="EngineAutogrowthView"),  # seller keyword targeting (task 58)
+    path("autogrowth/<int:keywordId>/", EngineGapsView.AutogrowthRemoveView, name="EngineAutogrowthRemoveView"),
     # dashboard + analytics (items 6, 7)
     path("dashboard/kpis/", EngineGapsView.DashboardKpisView, name="EngineDashboardKpisView"),
     path("analytics/chart/", EngineGapsView.AnalyticsChartView, name="EngineAnalyticsChartView"),

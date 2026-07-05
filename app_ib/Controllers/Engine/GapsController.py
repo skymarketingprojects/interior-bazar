@@ -28,7 +28,7 @@ from app_ib.Utils.EngineConfig import (
     ENTITY_TYPE, TRENDING_PERIOD, CONVERSATION_STATUS,
 )
 from app_ib.algorithms.helpers import get_model, content_type_for
-from app_ib.Controllers.Engine.CrudController import NotFound_, PermissionError_
+from app_ib.Controllers.Engine.CrudController import NotFound_, PermissionError_, Conflict_
 
 # 1-hour TTL for trending/categories caches
 _CACHE_1H = 60 * 60
@@ -398,6 +398,60 @@ def deactivate_account(user):
     user.is_active = False
     user.save(update_fields=["is_active"])
     return {"deactivated": True}
+
+
+# ── Autogrowth keywords (seller dashboard, task 58) ──
+# Keyword capacity per plan tier (Subscription.tier: higher = better plan).
+_AUTOGROWTH_TIER_LIMITS = {0: 5, 1: 15, 2: 30, 3: 60}
+_AUTOGROWTH_FREE_LIMIT = 3
+
+
+def _autogrowth_plan(user):
+    """The seller's active plan (name, tier, keyword limit). Falls back to a small
+    free-tier cap when there's no active plan."""
+    from app_ib.models import BusinessPlan
+    from django.db.models import Q
+    bp = (BusinessPlan.objects.filter(Q(user=user) | Q(business__user=user), isActive=True)
+          .select_related("plan").order_by("-plan__tier").first())
+    if bp and bp.plan:
+        tier = bp.plan.tier or 0
+        return {"planName": bp.plan.name or "Plan",
+                "limit": _AUTOGROWTH_TIER_LIMITS.get(tier, _AUTOGROWTH_FREE_LIMIT)}
+    return {"planName": "Free", "limit": _AUTOGROWTH_FREE_LIMIT}
+
+
+def autogrowth_list(user):
+    from app_ib.engine_models import AutogrowthKeyword
+    plan = _autogrowth_plan(user)
+    kws = list(AutogrowthKeyword.objects.filter(user=user).order_by("-id")
+               .values("id", "term"))
+    return {"keywords": kws, "quota": {"used": len(kws), "limit": plan["limit"],
+                                       "planName": plan["planName"]}}
+
+
+def autogrowth_add(user, term):
+    from app_ib.engine_models import AutogrowthKeyword
+    term = (term or "").strip()[:100]
+    if not term:
+        raise Conflict_("keyword is empty")
+    plan = _autogrowth_plan(user)
+    if AutogrowthKeyword.objects.filter(user=user).count() >= plan["limit"]:
+        raise Conflict_(f"Your {plan['planName']} plan allows {plan['limit']} keywords. Upgrade to add more.")
+    # unique per (user, term) — treat a duplicate as a no-op success
+    kw, _created = AutogrowthKeyword.objects.get_or_create(
+        user=user, term=term, defaults={"business": _first_business(user)})
+    return autogrowth_list(user)
+
+
+def autogrowth_remove(user, keyword_id):
+    from app_ib.engine_models import AutogrowthKeyword
+    AutogrowthKeyword.objects.filter(user=user, id=keyword_id).delete()
+    return autogrowth_list(user)
+
+
+def _first_business(user):
+    from app_ib.models import Business
+    return Business.objects.filter(user=user).first()
 
 
 def mark_all_notifications_read(user):

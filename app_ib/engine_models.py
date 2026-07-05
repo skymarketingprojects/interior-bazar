@@ -676,6 +676,25 @@ class Conversation(models.Model):
         return f"Conversation {self.pk} [{self.status}]"
 
 
+class AutogrowthKeyword(models.Model):
+    """A search/targeting term a seller adds to boost discovery (task 58 —
+    seller dashboard "Autogrowth"). Capacity is gated by the seller's plan tier."""
+    user = models.ForeignKey(USER, on_delete=models.CASCADE, related_name="autogrowth_keywords")
+    business = models.ForeignKey("app_ib.Business", null=True, blank=True,
+                                 on_delete=models.SET_NULL, related_name="autogrowth_keywords")
+    term = models.CharField(max_length=100)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        app_label = "app_ib"
+        constraints = [
+            models.UniqueConstraint(fields=["user", "term"], name="uniq_autogrowth_user_term"),
+        ]
+
+    def __str__(self):
+        return f"Autogrowth '{self.term}' (user {self.user_id})"
+
+
 class Message(models.Model):
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name="messages")
     sender = models.ForeignKey(USER, null=True, on_delete=models.SET_NULL, related_name="sent_messages")
