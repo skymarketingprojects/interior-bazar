@@ -103,6 +103,12 @@ def RecentlyViewedClearView(request):
     return _ok(GC.recently_viewed_clear(request.user))
 
 
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def RecentlyViewedRemoveView(request, row_id):
+    return _ok(GC.recently_viewed_remove(request.user, row_id))
+
+
 # ==========================================================================
 # 6. Dashboard KPIs
 # ==========================================================================

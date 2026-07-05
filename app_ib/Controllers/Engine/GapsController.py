@@ -331,6 +331,14 @@ def recently_viewed_clear(user):
     return {"cleared": deleted}
 
 
+def recently_viewed_remove(user, row_id):
+    """Delete a single RecentlyViewed row (per-item remove, task 45). Scoped to the
+    caller's own rows, so a bad/foreign id simply deletes nothing (removed=0)."""
+    from app_ib.models import RecentlyViewed
+    deleted, _ = RecentlyViewed.objects.filter(user=user, id=row_id).delete()
+    return {"removed": deleted}
+
+
 # ---------------------------------------------------------------------------
 # 6. Dashboard KPIs
 # ---------------------------------------------------------------------------

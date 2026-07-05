@@ -135,6 +135,7 @@ urlpatterns = [
     path("recently-viewed/clear/", EngineGapsView.RecentlyViewedClearView, name="EngineRecentlyViewedClearView"),  # item 5
     path("recently-viewed/summary/", EngineGapsView.RecentlyViewedSummaryView, name="EngineRecentlyViewedSummaryView"),  # Phase 1
     path("recently-viewed/export/", EngineView.RecentlyViewedExportView, name="EngineRecentlyViewedExportView"),  # CSV download: Name + Viewed at only
+    path("recently-viewed/<int:row_id>/", EngineGapsView.RecentlyViewedRemoveView, name="EngineRecentlyViewedRemoveView"),  # per-item delete (task 45)
     path("recently-viewed/", EngineView.RecentlyViewedView, name="EngineRecentlyViewedView"),
     path("notifications/", EngineView.NotificationsView, name="EngineNotificationsView"),
     path("notifications/unread-count/", EngineView.NotificationUnreadCountView, name="EngineNotificationUnreadCountView"),

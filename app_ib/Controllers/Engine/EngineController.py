@@ -342,6 +342,9 @@ class _EngineController:
             if obj:
                 count, count_label = _rv_count(obj)
                 out.append({"entityType": r.contentType.model, "id": obj.id,
+                            # rowId = the RecentlyViewed PK — lets the client delete
+                            # THIS visit row (per-item remove, task 45).
+                            "rowId": r.id,
                             "objectId": r.objectId, "name": _name(obj),
                             "imageUrl": _image(obj),
                             "slug": getattr(obj, "slug", "") or "",
