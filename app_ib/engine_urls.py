@@ -87,6 +87,7 @@ urlpatterns = [
     # Phase 2 — active-sessions dashboard (JWT session management)
     path("my/sessions/", EngineGapsView.MySessionsView, name="EngineMySessionsView"),  # auth: list active sessions
     path("my/sessions/<int:sessionId>/revoke/", EngineGapsView.RevokeSessionView, name="EngineRevokeSessionView"),  # auth: revoke one session
+    path("my/sessions/revoke-all/", EngineGapsView.RevokeAllSessionsView, name="EngineRevokeAllSessionsView"),  # auth: sign out everywhere (task 81)
     path("plans/templates/", EngineGapsView.PlanTemplatesView, name="EnginePlanTemplatesView"),  # public catalogue (?entityType=)
     path("plans/upgrade/preview/", EngineGapsView.UpgradePreviewView, name="EngineUpgradePreviewView"),  # auth: upgrade settlement preview (Prompt 9)
     path("plans/change/", EngineGapsView.ChangePlanView, name="EngineChangePlanView"),  # in-dashboard upgrade/downgrade (task 61)

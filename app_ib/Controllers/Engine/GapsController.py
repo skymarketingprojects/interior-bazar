@@ -3251,6 +3251,23 @@ def revoke_session(user, session_id):
     return {_N.REVOKED: True, _N.ID: session_id}
 
 
+def revoke_all_other_sessions(user, current_jti=None):
+    """Revoke every active session for the user EXCEPT the caller's current one
+    (task 81 — "Sign out everywhere"). Blacklists each revoked session's refresh
+    token best-effort. Shape: { revoked: <count> }."""
+    from app_ib.engine_models import UserSession
+    qs = UserSession.objects.filter(user=user, revokedAt__isnull=True)
+    if current_jti:
+        qs = qs.exclude(jti=current_jti)
+    sessions = list(qs)
+    now = timezone.now()
+    for s in sessions:
+        s.revokedAt = now
+        s.save(update_fields=["revokedAt"])
+        _blacklist_jti(s.jti)
+    return {"revoked": len(sessions)}
+
+
 def _blacklist_jti(jti: str) -> None:
     """Look up the OutstandingToken by jti and blacklist it. Non-fatal."""
     if not jti:

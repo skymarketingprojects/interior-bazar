@@ -1037,6 +1037,19 @@ def RevokeSessionView(request, sessionId):
         return _err(e)
 
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def RevokeAllSessionsView(request):
+    """POST /engine/my/sessions/revoke-all/ — revoke every session except the
+    caller's current one ("Sign out everywhere", task 81)."""
+    current_jti = _get_sjti_from_token(request)
+    try:
+        return _ok(GC.revoke_all_other_sessions(request.user, current_jti or None),
+                   "Signed out of other sessions")
+    except Exception as e:
+        return _err(e)
+
+
 # ==========================================================================
 # 12. SSE ?token= auth — patched UserStreamView
 # ==========================================================================
