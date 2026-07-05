@@ -765,6 +765,15 @@ def LeadAcceptView(request, leadId):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
+def LeadStageView(request, leadId):
+    try:
+        return _ok(GC.set_lead_stage(request.user, leadId, request.data.get("stage", "")), "Stage updated")
+    except Exception as e:
+        return _err(e)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def LeadDeclineView(request, leadId):
     reason = (request.data or {}).get("reason", "")
     try:

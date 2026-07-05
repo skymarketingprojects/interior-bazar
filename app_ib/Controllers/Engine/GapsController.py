@@ -1999,10 +1999,31 @@ def prioritized_leads(user, business_id=None):
             "interested": lead.interested or "",
             "status": lead.status or "",
             "leadStatus": lead.leadStatus or "",
+            "stage": lead.stage or "",
             "messageCount": lead.messageCount or 0,
             "createdAt": lead.timestamp.isoformat(),
         })
     return {"leads": out}
+
+
+# Valid kanban stages (mirror the frontend DealStage set — task 62).
+_PIPELINE_STAGES = {"new", "contacted", "quoted", "meeting", "won", "lost"}
+
+
+def set_lead_stage(user, lead_id, stage):
+    """Persist a lead's pipeline stage from a kanban drag (task 62). Owner-gated."""
+    from app_ib.models import LeadQuery
+    stage = (stage or "").strip().lower()
+    if stage not in _PIPELINE_STAGES:
+        raise Conflict_("invalid stage")
+    lead = LeadQuery.objects.filter(id=lead_id).first()
+    if not lead:
+        raise NotFound_("lead not found")
+    if not lead.business or lead.business.user_id != user.id:
+        raise PermissionError_("not the business owner")
+    lead.stage = stage
+    lead.save(update_fields=["stage"])
+    return {"leadId": lead.id, "stage": stage}
 
 
 def accept_lead(user, lead_id):
