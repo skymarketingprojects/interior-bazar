@@ -3461,7 +3461,9 @@ def _related_fallback(entity_type, object_id, needed, seen_pairs):
 def newsletter_subscribe(email, source="blog", user=None):
     """Idempotent newsletter subscription.
 
-    Shape: { subscribed: true, email: str }
+    Shape: { subscribed: true, alreadySubscribed: bool, email: str }
+    `alreadySubscribed` is True when the email was already an active subscriber, so
+    the UI can show "you're already subscribed" instead of a fresh "subscribed!".
     """
     import re
     from app_ib.models import NewsletterSubscriber
@@ -3482,12 +3484,13 @@ def newsletter_subscribe(email, source="blog", user=None):
             "isActive": True,
         },
     )
+    already = bool(not created and obj.isActive)
     if not created and not obj.isActive:
-        # Re-activate
+        # Re-activate a previously-unsubscribed email (treated as a fresh subscribe).
         obj.isActive = True
         obj.save(update_fields=["isActive"])
 
-    return {_N.SUBSCRIBED: True, _N.EMAIL: email}
+    return {_N.SUBSCRIBED: True, "alreadySubscribed": already, _N.EMAIL: email}
 
 
 # ---------------------------------------------------------------------------
