@@ -2588,6 +2588,56 @@ def _quotation_dict(q):
     }
 
 
+def help_content():
+    """Help-centre content from the backend (task 76): FAQs, topic tiles and video
+    tutorials. Section headings/labels stay static in the frontend."""
+    from app_ib.engine_models import HelpFaq, HelpTopic, HelpTutorial
+    faqs = [{"q": f.question, "a": f.answer}
+            for f in HelpFaq.objects.filter(isActive=True)]
+    topics = [{"title": t.title, "icon": t.icon, "iconBg": t.iconBg,
+               "iconColor": t.iconColor, "count": f"{t.articleCount} articles"}
+              for t in HelpTopic.objects.filter(isActive=True)]
+    tutorials = [{"title": t.title, "gradient": t.gradient, "duration": t.duration,
+                  "views": t.views, "videoUrl": t.videoUrl}
+                 for t in HelpTutorial.objects.filter(isActive=True)]
+    return {"faqs": faqs, "topics": topics, "tutorials": tutorials}
+
+
+def _ticket_dict(t):
+    return {
+        "id": t.id, "subject": t.subject, "message": t.message, "status": t.status,
+        "createdAt": t.createdAt.isoformat() if t.createdAt else "",
+        "lastReplyAt": t.lastReplyAt.isoformat() if t.lastReplyAt else "",
+    }
+
+
+def create_ticket(user, data):
+    """Raise a support ticket (task 76). Auth optional — anonymous needs an email."""
+    from app_ib.engine_models import SupportTicket
+    data = data or {}
+    subject = (data.get("subject") or "").strip()
+    message = (data.get("message") or "").strip()
+    if not subject or not message:
+        raise Conflict_("subject and message are required")
+    auth_user = user if getattr(user, "is_authenticated", False) else None
+    email = (data.get("email") or "").strip()
+    if not auth_user and not email:
+        raise Conflict_("an email is required to raise a ticket")
+    t = SupportTicket.objects.create(
+        user=auth_user, email=email, subject=subject[:200], message=message, status="open")
+    return _ticket_dict(t)
+
+
+def my_tickets(user):
+    """The logged-in user's support tickets, newest first (task 76)."""
+    from app_ib.engine_models import SupportTicket
+    if not getattr(user, "is_authenticated", False):
+        return {"items": [], "openCount": 0}
+    rows = list(SupportTicket.objects.filter(user=user)[:50])
+    return {"items": [_ticket_dict(t) for t in rows],
+            "openCount": sum(1 for t in rows if t.status in ("open", "in_progress"))}
+
+
 def support_config():
     """Single source of truth for support/contact channels (task 75). Serves the
     singleton SupportConfig row; falls back to the real email only when unseeded."""

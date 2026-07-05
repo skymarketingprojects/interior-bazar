@@ -1077,3 +1077,78 @@ class SupportConfig(models.Model):
 
     def __str__(self):
         return "Support Config"
+
+
+class HelpFaq(models.Model):
+    """A help-centre FAQ (task 76) — admin-editable, replaces the static list."""
+    question = models.TextField()
+    answer = models.TextField()   # may contain <strong> emphasis
+    displayOrder = models.PositiveIntegerField(default=0, db_index=True)
+    isActive = models.BooleanField(default=True)
+
+    class Meta:
+        app_label = "app_ib"
+        ordering = ["displayOrder", "id"]
+
+    def __str__(self):
+        return self.question[:60]
+
+
+class HelpTopic(models.Model):
+    """A help-centre topic tile (task 76)."""
+    title = models.CharField(max_length=120)
+    icon = models.CharField(max_length=60, default="ti-help")
+    iconBg = models.CharField(max_length=20, default="#e1f5ee")
+    iconColor = models.CharField(max_length=20, default="#085041")
+    articleCount = models.PositiveIntegerField(default=0)
+    displayOrder = models.PositiveIntegerField(default=0, db_index=True)
+    isActive = models.BooleanField(default=True)
+
+    class Meta:
+        app_label = "app_ib"
+        ordering = ["displayOrder", "id"]
+
+    def __str__(self):
+        return self.title
+
+
+class HelpTutorial(models.Model):
+    """A help-centre video tutorial card (task 76). Gradient is a placeholder thumb
+    when no real videoUrl/thumbnail is set."""
+    title = models.CharField(max_length=160)
+    gradient = models.CharField(max_length=200, blank=True, default="")
+    duration = models.CharField(max_length=20, blank=True, default="")
+    views = models.CharField(max_length=20, blank=True, default="")
+    videoUrl = models.TextField(blank=True, default="")
+    displayOrder = models.PositiveIntegerField(default=0, db_index=True)
+    isActive = models.BooleanField(default=True)
+
+    class Meta:
+        app_label = "app_ib"
+        ordering = ["displayOrder", "id"]
+
+    def __str__(self):
+        return self.title
+
+
+class SupportTicket(models.Model):
+    """A user-raised support ticket (task 76). Status drives the help "my tickets"
+    widget. Anonymous tickets are allowed (user null) as long as an email is given."""
+    STATUS_CHOICES = [("open", "Open"), ("in_progress", "In progress"),
+                      ("resolved", "Resolved"), ("closed", "Closed")]
+    user = models.ForeignKey(USER, null=True, blank=True, on_delete=models.SET_NULL,
+                             related_name="support_tickets")
+    email = models.EmailField(blank=True, default="")
+    subject = models.CharField(max_length=200)
+    message = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="open")
+    lastReplyAt = models.DateTimeField(null=True, blank=True)
+    createdAt = models.DateTimeField(auto_now_add=True)
+    updatedAt = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        app_label = "app_ib"
+        ordering = ["-createdAt"]
+
+    def __str__(self):
+        return f"Ticket #{self.pk} ({self.status}): {self.subject[:40]}"

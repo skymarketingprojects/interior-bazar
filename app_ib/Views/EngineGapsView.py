@@ -617,6 +617,28 @@ def SupportConfigView(request):
         return _err(e)
 
 
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def HelpContentView(request):
+    # Public help-centre content: FAQs, topics, tutorials (task 76).
+    try:
+        return _ok(GC.help_content())
+    except Exception as e:
+        return _err(e)
+
+
+@api_view(["GET", "POST"])
+@permission_classes([AllowAny])
+def SupportTicketsView(request):
+    # POST raise a ticket (auth optional; anon needs an email); GET the user's tickets.
+    try:
+        if request.method == "POST":
+            return _ok(GC.create_ticket(request.user, request.data), "Ticket raised")
+        return _ok(GC.my_tickets(request.user))
+    except Exception as e:
+        return _err(e)
+
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def QuotationCreateView(request):
