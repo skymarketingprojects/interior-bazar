@@ -699,7 +699,11 @@ def get_shop_by_slug(slug, user=None):
 def list_shops(city="", shop_type="", search="", sort="trending", page=1, page_size=20,
                category=""):
     from app_ib.models import Shop
-    qs = Shop.objects.select_related("business").filter(isActive=True)
+    # prefetch_related("expertiseTags") is REQUIRED here: the list payload adds a
+    # lightweight expertiseTags chip list per row below, and _expertise_for() reads
+    # entity.expertiseTags.all() — without the prefetch that becomes a per-row query
+    # inside this async list loop and 500s the endpoint (learned the hard way).
+    qs = Shop.objects.select_related("business").prefetch_related("expertiseTags").filter(isActive=True)
     if city:
         qs = qs.filter(city__icontains=city)
     if shop_type:
@@ -722,6 +726,8 @@ def list_shops(city="", shop_type="", search="", sort="trending", page=1, page_s
     items = []
     for s in qs[offset: offset + page_size]:
         d = _shop_full_dict(s, include_videos=False, include_details=False)
+        # Reads the prefetched M2M cache only (no extra query) — capped at 3 chips.
+        d["expertiseTags"] = _expertise_for(s)[:3]
         items.append(d)
     return {"items": items, "total": total, "page": int(page), "pageSize": page_size}
 
