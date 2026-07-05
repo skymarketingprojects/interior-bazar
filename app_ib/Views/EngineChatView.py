@@ -66,6 +66,33 @@ def ConversationCloseView(request, convId):
         return _err(e)
 
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def ConversationMarkUnreadView(request, convId):
+    try:
+        return _ok(CHAT_CONTROLLER.mark_unread(request.user, convId), "Marked unread")
+    except Exception as e:
+        return _err(e)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def ConversationReportView(request, convId):
+    try:
+        return _ok(CHAT_CONTROLLER.report(request.user, convId, request.data.get("reason", "")), "Reported")
+    except Exception as e:
+        return _err(e)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def ConversationDeleteView(request, convId):
+    try:
+        return _ok(CHAT_CONTROLLER.delete(request.user, convId), "Deleted")
+    except Exception as e:
+        return _err(e)
+
+
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
 def MessagesView(request, convId):

@@ -61,6 +61,49 @@ class _ChatController:
         conv.save(update_fields=["status", "updatedAt"])
         return self._conv_dict(conv)
 
+    def mark_unread(self, user, conv_id):
+        # Flip the latest incoming (other-party) message back to unread so the
+        # thread shows an unread marker again (task 53 "Mark as unread").
+        from app_ib.models import Message
+        conv = self._get(conv_id)
+        if not conv.is_participant(user.id):
+            raise PermissionError_("not a participant")
+        last_in = Message.objects.filter(conversation=conv).exclude(sender_id=user.id).order_by("-id").first()
+        if last_in and last_in.isRead:
+            last_in.isRead = False
+            last_in.save(update_fields=["isRead"])
+        return {"markedUnread": bool(last_in)}
+
+    def report(self, user, conv_id, reason=""):
+        # Persist a report against the enquiry as a Feedback row (no dedicated
+        # model needed). Any participant may report their own conversation.
+        from app_ib.models import Feedback
+        conv = self._get(conv_id)
+        if not conv.is_participant(user.id):
+            raise PermissionError_("not a participant")
+        profile = getattr(user, "user_profile", None)
+        contact = (profile.email or profile.phone) if profile else ""
+        biz = conv.business.businessName if conv.business_id and conv.business else "business"
+        Feedback.objects.create(
+            user=user, contact=contact or "",
+            feedback=f"[Report] Enquiry #{conv.id} with {biz}: {reason or 'No reason given'}",
+            status="report",
+        )
+        return {"reported": True}
+
+    def delete(self, user, conv_id):
+        # Per-participant soft delete — hides the thread from this user's list only.
+        conv = self._get(conv_id)
+        if user.id == conv.clientUser_id:
+            conv.clientDeleted = True
+            conv.save(update_fields=["clientDeleted", "updatedAt"])
+        elif user.id == conv.businessUser_id:
+            conv.businessDeleted = True
+            conv.save(update_fields=["businessDeleted", "updatedAt"])
+        else:
+            raise PermissionError_("only a participant can delete this conversation")
+        return {"deleted": True}
+
     # ---------------- messaging ----------------
     def send_message(self, user, conv_id, body):
         from app_ib.models import Message
@@ -145,7 +188,9 @@ class _ChatController:
 
     def list_conversations(self, user):
         from app_ib.models import Conversation, Message
+        # Exclude threads this user has soft-deleted (task 53).
         convs = Conversation.objects.filter(Q(clientUser=user) | Q(businessUser=user)) \
+            .exclude(Q(clientUser=user, clientDeleted=True) | Q(businessUser=user, businessDeleted=True)) \
             .select_related("business", "clientUser", "clientUser__user_profile", "lead") \
             .order_by("-lastMessageAt", "-createdAt")[:100]
         out = []

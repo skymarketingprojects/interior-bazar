@@ -651,6 +651,11 @@ class Conversation(models.Model):
     lastMessageAt = models.DateTimeField(null=True, blank=True, db_index=True)
     # item 6: first-response tracking — set on first business-side reply
     firstResponseSeconds = models.PositiveIntegerField(null=True, blank=True)
+    # Per-participant soft delete: hides the thread from that user's list only
+    # (task 53 — "Delete enquiry"). The conversation is never hard-deleted so the
+    # other party keeps their copy.
+    clientDeleted = models.BooleanField(default=False)
+    businessDeleted = models.BooleanField(default=False)
     createdAt = models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
 
