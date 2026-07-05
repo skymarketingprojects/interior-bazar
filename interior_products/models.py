@@ -139,6 +139,10 @@ class Product(models.Model):
     label = models.CharField(max_length=50, blank=True, default='')
     tags = models.ManyToManyField('app_ib.Tag', blank=True, related_name='products')
 
+    # --- product-detail "Installation & care" tab (additive; [] = tab hidden) ---
+    installationSteps = models.JSONField(default=list, blank=True)
+    careInstructions = models.JSONField(default=list, blank=True)
+
     def __str__(self):
         return self.title
 

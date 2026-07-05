@@ -146,6 +146,8 @@ class PRODUCTS_V3_CONTROLLER:
             'categories': [{'id': c.id, 'label': c.lable, 'value': c.value} for c in product.category.all()],
             'subCategories': [{'id': c.id, 'label': c.lable, 'value': c.value} for c in product.subCategory.all()],
             'specifications': specifications,
+            'installationSteps': product.installationSteps or [],
+            'careInstructions': product.careInstructions or [],
             # null stockQuantity = stock not tracked → sellable ("in stock")
             'stock': {
                 'inStock': product.stockQuantity is None or product.stockQuantity > 0,
