@@ -102,6 +102,15 @@ def ConversationLabelsView(request, convId):
         return _err(e)
 
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def ConversationEventsView(request, convId):
+    try:
+        return _ok(CHAT_CONTROLLER.conversation_events(request.user, convId))
+    except Exception as e:
+        return _err(e)
+
+
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
 def MessagesView(request, convId):

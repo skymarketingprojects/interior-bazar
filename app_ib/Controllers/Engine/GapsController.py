@@ -400,6 +400,14 @@ def deactivate_account(user):
     return {"deactivated": True}
 
 
+def mark_all_notifications_read(user):
+    """Notifications are an unread-only store (deleted on read), so 'mark all read'
+    clears the user's notification rows → unread count drops to 0 (task 57c)."""
+    from app_ib.models import Notification
+    deleted, _ = Notification.objects.filter(user=user).delete()
+    return {"cleared": deleted}
+
+
 def list_my_feedback(user):
     """The authenticated user's own submitted reports/feedback, newest first
     (buyer dashboard "Reports & feedback", task 48)."""

@@ -38,6 +38,7 @@ urlpatterns = [
     path("chat/conversations/<int:convId>/report/", EngineChatView.ConversationReportView, name="EngineConversationReportView"),
     path("chat/conversations/<int:convId>/delete/", EngineChatView.ConversationDeleteView, name="EngineConversationDeleteView"),
     path("chat/conversations/<int:convId>/labels/", EngineChatView.ConversationLabelsView, name="EngineConversationLabelsView"),
+    path("chat/conversations/<int:convId>/events/", EngineChatView.ConversationEventsView, name="EngineConversationEventsView"),
     path("chat/conversations/<int:convId>/messages/", EngineChatView.MessagesView, name="EngineMessagesView"),
     path("chat/conversations/<int:convId>/read/", EngineChatView.MessagesReadView, name="EngineMessagesReadView"),
     # polling replacement for the SSE chat event (SSE /stream/ kept for future scale)
@@ -147,6 +148,7 @@ urlpatterns = [
     path("account/deactivate/", EngineGapsView.DeactivateAccountView, name="EngineDeactivateAccountView"),  # task 49
     path("notifications/", EngineView.NotificationsView, name="EngineNotificationsView"),
     path("notifications/unread-count/", EngineView.NotificationUnreadCountView, name="EngineNotificationUnreadCountView"),
+    path("notifications/mark-all-read/", EngineGapsView.NotificationsMarkAllReadView, name="EngineNotificationsMarkAllReadView"),
     # dashboard + analytics (items 6, 7)
     path("dashboard/kpis/", EngineGapsView.DashboardKpisView, name="EngineDashboardKpisView"),
     path("analytics/chart/", EngineGapsView.AnalyticsChartView, name="EngineAnalyticsChartView"),

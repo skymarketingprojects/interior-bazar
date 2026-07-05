@@ -115,6 +115,12 @@ def MyFeedbackListView(request):
     return _ok(GC.list_my_feedback(request.user))
 
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def NotificationsMarkAllReadView(request):
+    return _ok(GC.mark_all_notifications_read(request.user), "Marked all read")
+
+
 @api_view(["GET", "PATCH"])
 @permission_classes([IsAuthenticated])
 def UserSettingsView(request):
