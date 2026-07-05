@@ -352,6 +352,13 @@ _DEFAULT_SETTINGS = {
         "showOnline": True,
         "personalisedRecs": True,
     },
+    # Which 2FA methods the user has enabled (task 65c). This persists the seller's
+    # choice; the actual challenge/enrollment flow is a separate, future feature.
+    "twoFactor": {
+        "sms": False,
+        "email": False,
+        "authenticator": False,
+    },
 }
 
 
@@ -361,9 +368,13 @@ def get_user_settings(user):
     saved = user.settings if isinstance(user.settings, dict) else {}
     notifications = {**_DEFAULT_SETTINGS["notifications"], **(saved.get("notifications") or {})}
     privacy = {**_DEFAULT_SETTINGS["privacy"], **(saved.get("privacy") or {})}
+    two_factor = {**_DEFAULT_SETTINGS["twoFactor"], **(saved.get("twoFactor") or {})}
     return {
         "notifications": notifications,
         "privacy": privacy,
+        "twoFactor": two_factor,
+        # Free-form seller preferences (e.g. country) with no dedicated column.
+        "prefs": saved.get("prefs") or {},
         "language": user.preferred_language or "en",
         "currency": user.preferred_currency or "INR",
     }
@@ -376,11 +387,19 @@ def update_user_settings(user, data):
     saved = user.settings if isinstance(user.settings, dict) else {}
     notifications = {**_DEFAULT_SETTINGS["notifications"], **(saved.get("notifications") or {})}
     privacy = {**_DEFAULT_SETTINGS["privacy"], **(saved.get("privacy") or {})}
+    two_factor = {**_DEFAULT_SETTINGS["twoFactor"], **(saved.get("twoFactor") or {})}
+    prefs = dict(saved.get("prefs") or {})
     if isinstance(data.get("notifications"), dict):
         notifications.update({k: bool(v) for k, v in data["notifications"].items() if k in notifications})
     if isinstance(data.get("privacy"), dict):
         privacy.update({k: bool(v) for k, v in data["privacy"].items() if k in privacy})
-    user.settings = {"notifications": notifications, "privacy": privacy}
+    if isinstance(data.get("twoFactor"), dict):
+        two_factor.update({k: bool(v) for k, v in data["twoFactor"].items() if k in two_factor})
+    if isinstance(data.get("prefs"), dict):
+        # Free-form string prefs; cap key/value length to keep the JSON bounded.
+        prefs.update({str(k)[:40]: str(v)[:80] for k, v in data["prefs"].items()})
+    user.settings = {"notifications": notifications, "privacy": privacy,
+                     "twoFactor": two_factor, "prefs": prefs}
     update_fields = ["settings"]
     if data.get("language"):
         user.preferred_language = str(data["language"])[:10]
