@@ -2492,33 +2492,183 @@ def engagement_mark_read(user):
 # ---------------------------------------------------------------------------
 # my/quotations/ — leads received by the logged-in seller's business.
 # ---------------------------------------------------------------------------
-def my_quotations(user, limit=50):
-    from app_ib.models import LeadQuery, Business
-    biz = Business.objects.filter(user=user).first()
-    if not biz:
-        return {"items": [], "total": 0}
-    qs = (LeadQuery.objects
-          .filter(business=biz)
-          .order_by("-timestamp"))[:limit]
+# ---------------------------------------------------------------------------
+# Quotations (task 63) — real seller-built quotation documents (create/update/
+# status) that replace the old lead-derived placeholder. Line items + buyer/seller
+# blocks are JSON snapshots; money totals are RECOMPUTED server-side on every write.
+# ---------------------------------------------------------------------------
+_QUOTATION_STATUSES = {"sent", "viewed", "accepted", "declined"}
+
+
+def _sanitize_line_items(raw):
     items = []
-    for lead in qs:
+    for li in (raw or []):
+        if not isinstance(li, dict):
+            continue
+        try:
+            qty = float(li.get("qty") or 0)
+        except (TypeError, ValueError):
+            qty = 0.0
+        try:
+            rate = float(li.get("rate") or 0)
+        except (TypeError, ValueError):
+            rate = 0.0
         items.append({
-            "id": lead.id,
-            "name": lead.name or "",
-            "phone": lead.phone or "",
-            "email": lead.email or "",
-            "city": lead.city or "",
-            "interested": lead.interested or "",
-            "query": lead.query or "",
-            "category": lead.category or "",
-            "status": lead.status or "",
-            "leadStatus": lead.leadStatus or "",
-            "stage": lead.stage or "",
-            "formType": lead.formType or "",
-            "messageCount": lead.messageCount or 0,
-            "createdAt": lead.timestamp.strftime("%Y-%m-%d") if lead.timestamp else None,
+            "id": str(li.get("id") or ""),
+            "type": "service" if (li.get("type") == "service") else "product",
+            "description": (li.get("description") or "").strip(),
+            "code": (li.get("code") or ""),
+            "qty": qty,
+            "unit": (li.get("unit") or ""),
+            "rate": rate,
+            "amount": round(qty * rate, 2),
         })
-    return {"items": items, "total": len(items)}
+    return items
+
+
+def _compute_totals(items, gst_percent):
+    from decimal import Decimal, ROUND_HALF_UP
+    cents = Decimal("0.01")
+    subtotal = sum((Decimal(str(li["amount"])) for li in items), Decimal("0"))
+    try:
+        gst = Decimal(str(gst_percent or 0))
+    except Exception:
+        gst = Decimal("0")
+    subtotal = subtotal.quantize(cents, rounding=ROUND_HALF_UP)
+    gst_amount = (subtotal * gst / Decimal("100")).quantize(cents, rounding=ROUND_HALF_UP)
+    grand = (subtotal + gst_amount).quantize(cents, rounding=ROUND_HALF_UP)
+    return subtotal, gst_amount, grand
+
+
+def _parse_quote_date(s):
+    if not s:
+        return None
+    from django.utils.dateparse import parse_date
+    return parse_date(str(s)[:10])
+
+
+def _quotation_dict(q):
+    return {
+        "id": str(q.id),
+        "number": q.number,
+        "enquiryId": (f"IB-{q.lead_id}" if q.lead_id else None),
+        "status": q.status,
+        "pricingMode": q.pricingMode,
+        "createdAt": q.createdAt.isoformat() if q.createdAt else "",
+        "sentAt": (q.sentAt or q.createdAt).isoformat() if (q.sentAt or q.createdAt) else "",
+        "validUntil": q.validUntil.isoformat() if q.validUntil else "",
+        "from": q.fromBlock or {},
+        "to": q.toBlock or {},
+        "lineItems": q.lineItems or [],
+        "subtotal": float(q.subtotal or 0),
+        "gstPercent": float(q.gstPercent or 0),
+        "gstAmount": float(q.gstAmount or 0),
+        "grandTotal": float(q.grandTotal or 0),
+        "terms": q.terms or "",
+        "noteToBuyer": q.noteToBuyer or "",
+    }
+
+
+def my_quotations(user, limit=50):
+    """List the seller's own saved quotation documents, newest first."""
+    from app_ib.engine_models import Quotation
+    rows = list(Quotation.objects.filter(user=user).order_by("-createdAt")[:limit])
+    return {"items": [_quotation_dict(q) for q in rows], "total": len(rows)}
+
+
+def _valid_lines_or_raise(raw):
+    items = _sanitize_line_items(raw)
+    valid = [li for li in items if li["description"] and li["qty"] > 0 and li["rate"] > 0]
+    if not valid:
+        raise Conflict_("at least one line item with a description, quantity and rate is required")
+    return valid
+
+
+def create_quotation(user, data):
+    from app_ib.engine_models import Quotation
+    from app_ib.models import Business, LeadQuery
+    data = data or {}
+    to_block = data.get("to") or {}
+    if not (to_block.get("name") or "").strip():
+        raise Conflict_("buyer name is required")
+    valid_items = _valid_lines_or_raise(data.get("lineItems"))
+    gst_percent = data.get("gstPercent") or 0
+    subtotal, gst_amount, grand = _compute_totals(valid_items, gst_percent)
+    status = (data.get("status") or "sent").strip().lower()
+    if status not in _QUOTATION_STATUSES:
+        status = "sent"
+    biz = Business.objects.filter(user=user).first()
+    lead = None
+    lead_id = data.get("leadId")
+    if lead_id:
+        lead = LeadQuery.objects.filter(id=lead_id, business=biz).first()
+    number = (data.get("number") or "").strip() or f"IB-Q-{int(timezone.now().timestamp())}"
+    q = Quotation.objects.create(
+        user=user, business=biz, lead=lead,
+        number=number, status=status,
+        pricingMode=(data.get("pricingMode") or "custom"),
+        validUntil=_parse_quote_date(data.get("validUntil")),
+        fromBlock=(data.get("from") or {}), toBlock=to_block,
+        lineItems=valid_items,
+        subtotal=subtotal, gstPercent=gst_percent, gstAmount=gst_amount, grandTotal=grand,
+        terms=(data.get("terms") or ""), noteToBuyer=(data.get("noteToBuyer") or ""),
+        sentAt=timezone.now(),
+    )
+    return _quotation_dict(q)
+
+
+def update_quotation(user, quotation_id, data):
+    from app_ib.engine_models import Quotation
+    q = Quotation.objects.filter(id=quotation_id).first()
+    if not q:
+        raise NotFound_("quotation not found")
+    if q.user_id != user.id:
+        raise PermissionError_("not the quotation owner")
+    data = data or {}
+    if "to" in data:
+        to_block = data.get("to") or {}
+        if not (to_block.get("name") or "").strip():
+            raise Conflict_("buyer name is required")
+        q.toBlock = to_block
+    if "from" in data:
+        q.fromBlock = data.get("from") or {}
+    if "lineItems" in data:
+        q.lineItems = _valid_lines_or_raise(data.get("lineItems"))
+    if "gstPercent" in data:
+        q.gstPercent = data.get("gstPercent") or 0
+    # Always recompute totals from the (possibly updated) items + gstPercent.
+    q.subtotal, q.gstAmount, q.grandTotal = _compute_totals(q.lineItems, q.gstPercent)
+    if "validUntil" in data:
+        q.validUntil = _parse_quote_date(data.get("validUntil"))
+    if "terms" in data:
+        q.terms = data.get("terms") or ""
+    if "noteToBuyer" in data:
+        q.noteToBuyer = data.get("noteToBuyer") or ""
+    if "pricingMode" in data:
+        q.pricingMode = data.get("pricingMode") or "custom"
+    if (data.get("number") or "").strip():
+        q.number = data["number"].strip()
+    if data.get("status"):
+        st = str(data["status"]).strip().lower()
+        if st in _QUOTATION_STATUSES:
+            q.status = st
+    q.save()
+    return _quotation_dict(q)
+
+
+def set_quotation_status(user, quotation_id, status):
+    from app_ib.engine_models import Quotation
+    st = (status or "").strip().lower()
+    if st not in _QUOTATION_STATUSES:
+        raise Conflict_("invalid status")
+    q = Quotation.objects.filter(id=quotation_id).first()
+    if not q:
+        raise NotFound_("quotation not found")
+    if q.user_id != user.id:
+        raise PermissionError_("not the quotation owner")
+    q.status = st
+    q.save(update_fields=["status", "updatedAt"])
+    return _quotation_dict(q)
 
 
 # ---------------------------------------------------------------------------

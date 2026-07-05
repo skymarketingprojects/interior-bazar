@@ -607,6 +607,37 @@ def MyQuotationsView(request):
         return _err(e)
 
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def QuotationCreateView(request):
+    # Create a seller-built quotation document (task 63).
+    try:
+        return _ok(GC.create_quotation(request.user, request.data), "Quotation saved")
+    except Exception as e:
+        return _err(e)
+
+
+@api_view(["PATCH", "PUT"])
+@permission_classes([IsAuthenticated])
+def QuotationUpdateView(request, quotationId):
+    # Update an owned quotation (owner-gated; totals recomputed server-side).
+    try:
+        return _ok(GC.update_quotation(request.user, quotationId, request.data), "Quotation updated")
+    except Exception as e:
+        return _err(e)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def QuotationStatusView(request, quotationId):
+    # Transition an owned quotation's status (sent/viewed/accepted/declined).
+    try:
+        return _ok(GC.set_quotation_status(request.user, quotationId, request.data.get("status", "")),
+                   "Status updated")
+    except Exception as e:
+        return _err(e)
+
+
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def PlanTemplatesView(request):

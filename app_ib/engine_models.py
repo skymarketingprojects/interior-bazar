@@ -1010,3 +1010,41 @@ class ShopImage(models.Model):
 
     def __str__(self):
         return f"ShopImage(shop={self.shop_id}, index={self.index})"
+
+
+class Quotation(models.Model):
+    """A seller-built quotation document (task 63). The buyer/seller blocks and line
+    items are document SNAPSHOTS stored as JSON — they are never queried individually,
+    always fetched whole with the quotation, so a join model would be pure overhead.
+    Money totals are RECOMPUTED server-side from lineItems+gstPercent on every write
+    (never trusted from the client). `status` is the last seller/buyer action; the
+    client derives "expired" from validUntil and never stores it."""
+    user = models.ForeignKey(USER, on_delete=models.CASCADE, related_name="quotations")
+    business = models.ForeignKey("app_ib.Business", null=True, blank=True,
+                                 on_delete=models.SET_NULL, related_name="quotations")
+    lead = models.ForeignKey("app_ib.LeadQuery", null=True, blank=True,
+                             on_delete=models.SET_NULL, related_name="quotations")
+    number = models.CharField(max_length=40)
+    status = models.CharField(max_length=20, default="sent")  # sent|viewed|accepted|declined
+    # ponytail: persisted for forward-compat; the current builder always sends "custom".
+    pricingMode = models.CharField(max_length=20, default="custom")  # package|custom|per_unit
+    validUntil = models.DateField(null=True, blank=True)
+    fromBlock = models.JSONField(default=dict)   # {businessName,gstin,address,phone,email}
+    toBlock = models.JSONField(default=dict)     # {name,phone,email,city,address}
+    lineItems = models.JSONField(default=list)   # [{id,type,description,code,qty,unit,rate,amount}]
+    subtotal = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    gstPercent = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    gstAmount = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    grandTotal = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    terms = models.TextField(blank=True, default="")
+    noteToBuyer = models.TextField(blank=True, default="")
+    createdAt = models.DateTimeField(auto_now_add=True)
+    updatedAt = models.DateTimeField(auto_now=True)
+    sentAt = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        app_label = "app_ib"
+        ordering = ["-createdAt"]
+
+    def __str__(self):
+        return f"Quotation {self.number} ({self.status})"
