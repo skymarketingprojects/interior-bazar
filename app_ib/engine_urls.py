@@ -76,6 +76,7 @@ urlpatterns = [
     path("my/activity/", EngineGapsView.MyActivityView, name="EngineMyActivityView"),  # auth: view+click event feed (own browsing)
     path("my/engagement/", EngineGapsView.MyEngagementView, name="EngineMyEngagementView"),  # auth: inbound activity on owned entities
     path("my/engagement/read/", EngineGapsView.MyEngagementReadView, name="EngineMyEngagementReadView"),  # auth: mark feed read
+    path("support-config/", EngineGapsView.SupportConfigView, name="EngineSupportConfigView"),  # public: support/contact channels (task 75)
     path("my/quotations/", EngineGapsView.MyQuotationsView, name="EngineMyQuotationsView"),  # auth: seller's own quotations
     path("quotations/", EngineGapsView.QuotationCreateView, name="EngineQuotationCreateView"),  # auth: create quotation (task 63)
     path("quotations/<int:quotationId>/", EngineGapsView.QuotationUpdateView, name="EngineQuotationUpdateView"),  # auth: update owned quotation

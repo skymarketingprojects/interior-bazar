@@ -1053,3 +1053,27 @@ class Quotation(models.Model):
 
     def __str__(self):
         return f"Quotation {self.number} ({self.status})"
+
+
+class SupportConfig(models.Model):
+    """Single source of truth for support/contact channels (task 75) — editable in
+    admin, consumed by Contact, Help ("Talk to a human"), About and the legal contact
+    boxes. A singleton: only the first row is served. Empty fields (e.g. tollFree)
+    render nothing rather than a fabricated placeholder number."""
+    supportEmail = models.EmailField(default="help@interiorbazzar.com")
+    phone = models.CharField(max_length=30, blank=True, default="")        # display, e.g. +91 88823 14255
+    whatsapp = models.CharField(max_length=30, blank=True, default="")     # digits for wa.me, e.g. 918920898168
+    tollFree = models.CharField(max_length=30, blank=True, default="")
+    officeAddress = models.TextField(blank=True, default="")
+    hours = models.CharField(max_length=160, blank=True, default="")
+    liveChatAvailable = models.BooleanField(default=False)
+    agentCount = models.PositiveIntegerField(default=0)                    # only meaningful if live chat is real
+    updatedAt = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        app_label = "app_ib"
+        verbose_name = "Support Config"
+        verbose_name_plural = "Support Config"
+
+    def __str__(self):
+        return "Support Config"

@@ -607,6 +607,16 @@ def MyQuotationsView(request):
         return _err(e)
 
 
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def SupportConfigView(request):
+    # Public support/contact channels (single source of truth — task 75).
+    try:
+        return _ok(GC.support_config())
+    except Exception as e:
+        return _err(e)
+
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def QuotationCreateView(request):

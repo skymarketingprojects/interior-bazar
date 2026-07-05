@@ -2588,6 +2588,22 @@ def _quotation_dict(q):
     }
 
 
+def support_config():
+    """Single source of truth for support/contact channels (task 75). Serves the
+    singleton SupportConfig row; falls back to the real email only when unseeded."""
+    from app_ib.engine_models import SupportConfig
+    cfg = SupportConfig.objects.first()
+    if not cfg:
+        return {"email": "help@interiorbazzar.com", "phone": "", "whatsapp": "",
+                "tollFree": "", "officeAddress": "", "hours": "",
+                "liveChatAvailable": False, "agentCount": 0}
+    return {
+        "email": cfg.supportEmail, "phone": cfg.phone, "whatsapp": cfg.whatsapp,
+        "tollFree": cfg.tollFree, "officeAddress": cfg.officeAddress, "hours": cfg.hours,
+        "liveChatAvailable": cfg.liveChatAvailable, "agentCount": cfg.agentCount,
+    }
+
+
 def my_quotations(user, limit=50):
     """List the seller's own saved quotation documents, newest first."""
     from app_ib.engine_models import Quotation
