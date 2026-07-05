@@ -431,8 +431,11 @@ def CataloguesListView(request):
     search = request.GET.get("search", "")
     sort = request.GET.get("sort", "trending")
     page, page_size = _list_paging(request)
+    year_raw = request.GET.get("year", "")
+    year = int(year_raw) if year_raw.isdigit() else None
     return _ok(GC.list_catalogues(city, category, search, sort, page, page_size,
-                                  verified=_flag_param(request, "verified")))
+                                  verified=_flag_param(request, "verified"),
+                                  year=year, free=_flag_param(request, "free")))
 
 
 @api_view(["GET"])

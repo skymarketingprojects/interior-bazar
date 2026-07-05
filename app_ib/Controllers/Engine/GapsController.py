@@ -1341,7 +1341,7 @@ def _catalogue_full_dict(c):
 
 
 def list_catalogues(city="", category="", search="", sort="trending", page=1, page_size=20,
-                    verified=False):
+                    verified=False, year=None, free=False):
     from interior_products.models import Catelogue
     qs = (Catelogue.objects
           .select_related("business", "business__business_location", "catelogueType")
@@ -1354,6 +1354,12 @@ def list_catalogues(city="", category="", search="", sort="trending", page=1, pa
         qs = qs.filter(title__icontains=search)
     if verified:
         qs = qs.filter(business__isVerified=True)
+    # "2026 releases" facet — filter by publish year (not a catelogueType).
+    if year:
+        qs = qs.filter(createdAt__year=year)
+    # "Free downloads" facet — catalogues with a downloadable PDF (all are free).
+    if free:
+        qs = qs.exclude(catelougePdf="").exclude(catelougePdf__isnull=True)
     if sort == "rating":
         qs = qs.order_by("-trendingScore", "-totalDownload")
     elif sort == "newest":
