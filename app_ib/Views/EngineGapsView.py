@@ -109,6 +109,12 @@ def RecentlyViewedRemoveView(request, row_id):
     return _ok(GC.recently_viewed_remove(request.user, row_id))
 
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def MyFeedbackListView(request):
+    return _ok(GC.list_my_feedback(request.user))
+
+
 # ==========================================================================
 # 6. Dashboard KPIs
 # ==========================================================================

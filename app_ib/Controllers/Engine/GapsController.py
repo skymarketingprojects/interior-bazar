@@ -339,6 +339,20 @@ def recently_viewed_remove(user, row_id):
     return {"removed": deleted}
 
 
+def list_my_feedback(user):
+    """The authenticated user's own submitted reports/feedback, newest first
+    (buyer dashboard "Reports & feedback", task 48)."""
+    from app_ib.models import Feedback
+    rows = Feedback.objects.filter(user=user).order_by("-timestamp")
+    return [{
+        "id": f.id,
+        "contact": f.contact or "",
+        "feedback": f.feedback or "",
+        "status": f.status or "",
+        "timestamp": f.timestamp.isoformat() if f.timestamp else "",
+    } for f in rows]
+
+
 # ---------------------------------------------------------------------------
 # 6. Dashboard KPIs
 # ---------------------------------------------------------------------------
