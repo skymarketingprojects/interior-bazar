@@ -33,7 +33,8 @@ sitemaps = {
     'contact':ContactSitemap,
     'catalogue':CatalogueSitemap,
     'product':ProductSitemap,
-    'service':ServiceSitemap
+    'service':ServiceSitemap,
+    'architect':ArchitectSitemap,
 }
 
 

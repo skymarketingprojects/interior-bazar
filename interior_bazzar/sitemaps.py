@@ -80,6 +80,21 @@ class BusinessCatalogueSitemap(Sitemap):
 
     def changefreq(self, obj):
         return 'weekly'
+
+
+class ArchitectSitemap(Sitemap):
+    # v3 architect detail pages (/architects/<slug>) — task 86.
+    changefreq = 'weekly'
+
+    def items(self):
+        from app_ib.engine_models import Architect
+        return Architect.objects.exclude(slug='').filter(slug__isnull=False)
+
+    def location(self, obj):
+        return f'/architects/{obj.slug}'
+
+    def lastmod(self, obj):
+        return getattr(obj, 'updatedAt', None) or getattr(obj, 'timestamp', None)
     
 
 class BusinessProductSitemap(Sitemap):
