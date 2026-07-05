@@ -2588,6 +2588,15 @@ def _quotation_dict(q):
     }
 
 
+def team_members():
+    """About-page team members from the backend (task 77)."""
+    from app_ib.engine_models import TeamMember
+    return [{"name": m.name, "role": m.role, "initials": m.initials,
+             "gradient": m.gradient, "photoUrl": m.photoUrl, "bio": m.bio,
+             "placeholder": m.isPlaceholder}
+            for m in TeamMember.objects.filter(isActive=True)]
+
+
 def help_content():
     """Help-centre content from the backend (task 76): FAQs, topic tiles and video
     tutorials. Section headings/labels stay static in the frontend."""

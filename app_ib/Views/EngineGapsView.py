@@ -619,6 +619,16 @@ def SupportConfigView(request):
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
+def TeamMembersView(request):
+    # Public About-page team grid (task 77).
+    try:
+        return _ok(GC.team_members())
+    except Exception as e:
+        return _err(e)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
 def HelpContentView(request):
     # Public help-centre content: FAQs, topics, tutorials (task 76).
     try:

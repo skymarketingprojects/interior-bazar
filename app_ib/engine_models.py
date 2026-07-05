@@ -1131,6 +1131,28 @@ class HelpTutorial(models.Model):
         return self.title
 
 
+class TeamMember(models.Model):
+    """An About-page team member (task 77) — admin-editable; the real people shown
+    on the About page will change over time. `isPlaceholder` marks the non-person
+    "We're hiring" tile."""
+    name = models.CharField(max_length=120)
+    role = models.CharField(max_length=120, blank=True, default="")
+    initials = models.CharField(max_length=6, blank=True, default="")
+    gradient = models.CharField(max_length=200, blank=True, default="")  # avatar chip fill when no photo
+    photoUrl = models.TextField(blank=True, default="")
+    bio = models.TextField(blank=True, default="")
+    isPlaceholder = models.BooleanField(default=False)  # the "join us / we're hiring" tile
+    displayOrder = models.PositiveIntegerField(default=0, db_index=True)
+    isActive = models.BooleanField(default=True)
+
+    class Meta:
+        app_label = "app_ib"
+        ordering = ["displayOrder", "id"]
+
+    def __str__(self):
+        return f"{self.name} ({self.role})"
+
+
 class SupportTicket(models.Model):
     """A user-raised support ticket (task 76). Status drives the help "my tickets"
     widget. Anonymous tickets are allowed (user null) as long as an email is given."""
