@@ -434,7 +434,8 @@ def _autogrowth_plan(user):
           .select_related("plan").order_by("-plan__tier").first())
     if bp and bp.plan:
         tier = bp.plan.tier or 0
-        return {"planName": bp.plan.name or "Plan",
+        # Subscription's display field is `title` (it has no `name`)
+        return {"planName": bp.plan.title or "Plan",
                 "limit": _AUTOGROWTH_TIER_LIMITS.get(tier, _AUTOGROWTH_FREE_LIMIT)}
     return {"planName": "Free", "limit": _AUTOGROWTH_FREE_LIMIT}
 
@@ -2025,6 +2026,30 @@ def prioritized_leads(user, business_id=None):
     return {"leads": out}
 
 
+def create_manual_lead(user, data):
+    """Seller-logged off-platform enquiry (dashboard '+ Enquiry': GMB call,
+    WhatsApp, walk-in, referral…). Attaches to the caller's business so it shows
+    up in their inbox/pipeline like any buyer-created lead."""
+    from app_ib.models import Business, LeadQuery
+    biz = Business.objects.filter(user=user).first()
+    if not biz:
+        raise NotFound_("no business found for user")
+    extra = [f"{label}: {data.get(key)}" for key, label in
+             (("quantity", "Quantity / scope"), ("estValue", "Estimated deal value"))
+             if (data.get(key) or "").strip()]
+    lead = LeadQuery.objects.create(
+        business=biz, user=user,
+        name=(data.get("buyerName") or "").strip(),
+        phone=(data.get("phone") or "").strip(),
+        city=(data.get("city") or "").strip(),
+        interested=(data.get("lookingFor") or "").strip(),
+        query="\n".join(extra),
+        sourceChannel=(data.get("source") or "manual").strip(),
+        formType="manual",
+    )
+    return {"leadId": lead.id}
+
+
 # Valid kanban stages (mirror the frontend DealStage set — task 62).
 _PIPELINE_STAGES = {"new", "contacted", "quoted", "meeting", "won", "lost"}
 
@@ -2144,6 +2169,10 @@ def create_lead(user, data):
         business = Business.objects.filter(id=data["businessId"]).first()
         if not business:
             raise NotFound_("business not found")
+
+    # Self-enquiry guard: a seller can't enquire on their own listing.
+    if business and business.user_id and business.user_id == user.id:
+        raise Conflict_("You can't send an enquiry to your own listing")
 
     profile = getattr(user, "user_profile", None)
     name = data.get("name") or (profile.name if profile else "") or ""
