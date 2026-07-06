@@ -138,7 +138,8 @@ class PROFILE_CONTROLLER:
                 NAMES.USERNAME: userIns.username,
                 NAMES.ROLE: userIns.type,
                 NAMES.ID: userIns.id,
-                'isSuperAdmin': False
+                'isSuperAdmin': False,
+                'isVerified': bool(userIns.isVerified),
             }
 
             # Expose the owned business id so the seller dashboard can load the

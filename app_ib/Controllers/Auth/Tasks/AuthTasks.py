@@ -227,6 +227,11 @@ class AUTH_TASK:
                 await sync_to_async(UserProfile.objects.get_or_create)(
                     user=user, defaults=profile_defaults)
                 created = True
+            # Reaching here means an OTP sent to this address/number was entered
+            # correctly — that IS the verification (task 7: no unearned badge).
+            if not user.isVerified:
+                user.isVerified = True
+                await sync_to_async(user.save)(update_fields=["isVerified"])
             return user, created
         except Exception as e:
             logger.exception('FindOrCreateOtpUser failed for username=%s', username)
