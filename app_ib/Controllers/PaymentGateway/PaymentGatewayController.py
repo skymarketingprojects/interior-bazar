@@ -10,7 +10,7 @@ from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.Names import NAMES
 from app_ib.Controllers.PaymentGateway.Tasks.PaymentGatewayTasks import PaymentGatewayTasks
 from app_ib.Controllers.Plans.Tasks.PlanTasks import PLAN_TASKS
-from app_ib.Utils.CashfreeClient import CashfreeClientWrapper
+from app_ib.Utils.PaymentGateway import ACTIVE_GATEWAY
 from app_ib.Controllers.Plans.PlanController import PLAN_CONTROLLER
 from interior_advertisement.Controllers.Ads.Tasks.AdsTasks import ADS_TASKS
 from app_ib.Utils.MyMethods import MY_METHODS
@@ -51,7 +51,7 @@ class PaymentGatewayController:
                 amount=amount
             )
             if response_data and response_data.get(NAMES.PAYMENT_SESSION_ID):
-                payment_url = f"https://payments.cashfree.com/pgui/v2/checkout?payment_session_id={response_data['payment_session_id']}"
+                payment_url = ACTIVE_GATEWAY.checkout_url(response_data['payment_session_id'])
 
                 #create tansection data
                 transection= await PLAN_CONTROLLER.CreateTransectionData(data=response_data)
@@ -161,7 +161,7 @@ class PaymentGatewayController:
             await PLAN_TASKS.CreateTransectionData(data=response_data, paymentFor=NAMES.PLAN_UPGRADE)
             await PLAN_CONTROLLER.StashUpgradeIntent(
                 user, entityType, targetPlanId, transactionData[NAMES.TRANSACTION])
-            payment_url = f"https://payments.cashfree.com/pgui/v2/checkout?payment_session_id={response_data['payment_session_id']}"
+            payment_url = ACTIVE_GATEWAY.checkout_url(response_data['payment_session_id'])
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message="Upgrade payment initiated",
@@ -220,7 +220,7 @@ class PaymentGatewayController:
             adsresult = await ADS_TASKS.CreateAdPaymentTask(AdCampaignIns=campain,Data=data)
             
             pass
-            payment_url = f"https://payments.cashfree.com/pgui/v2/checkout?payment_session_id={response_data['payment_session_id']}"
+            payment_url = ACTIVE_GATEWAY.checkout_url(response_data['payment_session_id'])
 
             data = {
                 NAMES.PAYMENT_URL: payment_url,
@@ -268,7 +268,7 @@ class PaymentGatewayController:
                     code=RESPONSE_CODES.success,
                     data=data
             )
-            response_data = await sync_to_async(CashfreeClientWrapper.fetch_order)(transactionId)
+            response_data = await sync_to_async(ACTIVE_GATEWAY.fetch_order)(transactionId)
             status = response_data.get(NAMES.ORDER_STATUS, NAMES.CF_UNKNOWN)
             serviceActivated = None
             if serviceType.paymentFor == NAMES.PLAN and status == NAMES.CF_PAID:
@@ -322,7 +322,7 @@ class PaymentGatewayController:
                 NAMES.REFUND_NOTE: "Customer requested refund",
             }
 
-            response_data = await sync_to_async(CashfreeClientWrapper.create_refund)(transaction_id, refund_payload)
+            response_data = await sync_to_async(ACTIVE_GATEWAY.create_refund)(transaction_id, refund_payload)
 
             return LocalResponse(
                 RESPONSE_MESSAGES.success,

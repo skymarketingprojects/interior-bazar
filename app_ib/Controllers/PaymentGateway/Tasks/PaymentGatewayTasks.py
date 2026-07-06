@@ -2,7 +2,7 @@
 import uuid
 from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.models import CustomUser
-from app_ib.Utils.CashfreeClient import CashfreeClientWrapper
+from app_ib.Utils.PaymentGateway import ACTIVE_GATEWAY
 from asgiref.sync import sync_to_async
 from app_ib.Utils.Names import NAMES
 class PaymentGatewayTasks:
@@ -64,7 +64,7 @@ class PaymentGatewayTasks:
                 },
             }
 
-            response_data = await sync_to_async(CashfreeClientWrapper.create_order)(payload)
+            response_data = await sync_to_async(ACTIVE_GATEWAY.create_order)(payload)
             pass
             return response_data, transactionData
         except Exception as e:

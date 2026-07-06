@@ -358,6 +358,17 @@ class Subscription(models.Model):
         help_text="List of objects with duration and price. Example: "
                 "[{'duration': 3, 'price': 100}, {'duration': 6, 'price': 180}]"
     )
+    # ── v3 plans-page display catalogue (promptr2 task 78) ──
+    # Display-only: money still flows from `amount`. Rows seeded VERBATIM from the
+    # commercial catalogue in migration 0055; per-cycle display strings
+    # (price/gstLine/total/oldPrice/savingNote/badgeLabel) live inside
+    # availableDuration entries — never computed.
+    features = models.JSONField(default=list, blank=True)  # [{"text": …, "subItem"?: …}]
+    badge = models.CharField(max_length=100, null=True, blank=True)  # "Most popular" …
+    badgeIcon = models.CharField(max_length=100, null=True, blank=True)  # tabler icon name
+    # This plan's compare-table column (automation family only):
+    # {"column": "Elite ⭐", "popular": true, "values": [{"feature", "value"}]}
+    compareRows = models.JSONField(default=dict, blank=True)
 
     # cover_image= models.FileField(null=True, blank=True, upload_to='subscription/attachment')
     fallbackImageUrl= models.URLField(max_length=2250, null=True, blank=True) 

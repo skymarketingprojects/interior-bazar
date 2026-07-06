@@ -2852,10 +2852,15 @@ def create_manual_plan(user, plan_id, transaction_id):
 
 def plan_templates(entity_type=""):
     from app_ib.models import Subscription
-    qs = Subscription.objects.filter(isActive=True)
+    qs = list(Subscription.objects.filter(isActive=True))
     if entity_type:
-        qs = qs.filter(entityType=entity_type)
-    qs = qs.order_by("tier", "id")
+        qs = [s for s in qs if s.entityType == entity_type]
+    qs.sort(key=lambda s: (s.tier or 0, s.id))
+    # Full v3 display catalogue (task 78): features/badge + per-cycle display
+    # strings straight from the DB (seeded verbatim in 0055 — no computation).
+    # Multi-cycle plans repeat `key` across rows, one row per billing cycle;
+    # billingCycles carries that row's cycle pricing. Add-ons: the shipped UI has
+    # no add-on section, so there is deliberately no addOns field (YAGNI).
     items = [{
         "id": s.id,
         "key": s.tag or "",
@@ -2864,8 +2869,38 @@ def plan_templates(entity_type=""):
         "entityType": s.entityType,
         "tier": s.tier,
         "duration": s.duration,
+        "family": s.planFamily,
+        "badge": s.badge,
+        "badgeIcon": s.badgeIcon,
+        "features": s.features or [],
+        "billingCycles": s.availableDuration or [],
     } for s in qs]
-    return {"items": items, "total": len(items)}
+    out = {"items": items, "total": len(items)}
+    # Assemble the family compare table from per-plan compareRows columns
+    # (dedup by tag — a multi-cycle plan stores the same column on every row).
+    cols, seen = [], set()
+    for s in qs:
+        if s.compareRows and s.tag and s.tag not in seen:
+            seen.add(s.tag)
+            cols.append(s.compareRows)
+    if cols:
+        labels = [v.get("feature", "") for v in cols[0].get("values", [])]
+        out["compare"] = {
+            "columns": [c.get("column", "") for c in cols],
+            # Index within the full table including the frontend's static
+            # "Feature" header column (CompareTableContent semantics).
+            "popularColIndex": next(
+                (i + 1 for i, c in enumerate(cols) if c.get("popular")), 0),
+            "rows": [{
+                "feature": label,
+                "values": [
+                    next((v.get("value", "") for v in c.get("values", [])
+                          if v.get("feature") == label), "")
+                    for c in cols
+                ],
+            } for label in labels],
+        }
+    return out
 
 
 # ---------------------------------------------------------------------------
