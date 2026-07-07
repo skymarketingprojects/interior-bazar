@@ -539,6 +539,13 @@ class TransectionData(models.Model):
     expiryAt= models.DateTimeField()
     orderStatus= models.CharField(max_length=500,default='')
     paymentSessionId= models.CharField(max_length=1000,default='')
+    # Refund tracking (admin ops console, promptsadmin task 46). Extends this
+    # model in place rather than forking the payments schema.
+    refundStatus= models.CharField(max_length=50, default='', blank=True)  # '' | REFUNDED | REJECTED
+    refundAmount= models.CharField(max_length=500, default='', blank=True)
+    refundReason= models.TextField(default='', blank=True)
+    refundedAt= models.DateTimeField(null=True, blank=True)
+    refundedBy= models.ForeignKey('CustomUser', on_delete=models.SET_NULL, null=True, blank=True, related_name='refunds_actioned')
 
     def __str__(self):
         return f" transection data for {self.paymentFor} with transaction id {self.transactionId}"

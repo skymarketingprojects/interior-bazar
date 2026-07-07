@@ -5,12 +5,14 @@ from .Views.AdminLeadsViews import AdminLeadsViewsV1,AdminLeadsViewsV2
 from .Views.AdminUserViews import AdminUserViews, SendUserCredentialsView
 
 from .Views import AdminLeadsViews, BusinessInfoViews, PannelSearchViews, MatchLeadsViews, FinanceViews, GMBLeadsViews
-from .Views import AuditViews
+from .Views import AuditViews, PaymentsViews
 urlpatterns = [
     ############################################################
     # v3 Admin Ops Console — audit trail (promptsadmin task 45)
     ############################################################
     path('audit/', AuditViews.GetAuditLogView, name='admin_audit_log'),
+    # Refund action (promptsadmin task 46) — level-3
+    path('payments/<int:txnId>/refund/', PaymentsViews.RefundView, name='admin_payment_refund'),
 
     path('paginate-business/', AdminPanelViewsV1.GetBusinessTilesStatsView, name='get_business_tiles_stats'),
     path('dashboard/', AdminPanelViewsV1.GetAdminDashboardStatsView, name='get_admin_dashboard_stats'),
