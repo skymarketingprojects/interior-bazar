@@ -5,7 +5,7 @@ from .Views.AdminLeadsViews import AdminLeadsViewsV1,AdminLeadsViewsV2
 from .Views.AdminUserViews import AdminUserViews, SendUserCredentialsView
 
 from .Views import AdminLeadsViews, BusinessInfoViews, PannelSearchViews, MatchLeadsViews, FinanceViews, GMBLeadsViews
-from .Views import AuditViews, PaymentsViews
+from .Views import AuditViews, PaymentsViews, SupportViews
 urlpatterns = [
     ############################################################
     # v3 Admin Ops Console — audit trail (promptsadmin task 45)
@@ -13,6 +13,11 @@ urlpatterns = [
     path('audit/', AuditViews.GetAuditLogView, name='admin_audit_log'),
     # Refund action (promptsadmin task 46) — level-3
     path('payments/<int:txnId>/refund/', PaymentsViews.RefundView, name='admin_payment_refund'),
+    # Support desk (promptsadmin task 47)
+    path('support/', SupportViews.ListTicketsView, name='admin_support_list'),
+    path('support/<int:ticketId>/', SupportViews.GetTicketView, name='admin_support_detail'),
+    path('support/<int:ticketId>/reply/', SupportViews.ReplyTicketView, name='admin_support_reply'),
+    path('support/<int:ticketId>/close/', SupportViews.CloseTicketView, name='admin_support_close'),
 
     path('paginate-business/', AdminPanelViewsV1.GetBusinessTilesStatsView, name='get_business_tiles_stats'),
     path('dashboard/', AdminPanelViewsV1.GetAdminDashboardStatsView, name='get_admin_dashboard_stats'),

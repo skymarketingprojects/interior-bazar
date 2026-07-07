@@ -1164,6 +1164,9 @@ class SupportTicket(models.Model):
     subject = models.CharField(max_length=200)
     message = models.TextField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="open")
+    # Admin support-desk replies (promptsadmin task 47): list of
+    # {by, role, body, ts} appended by admin replyTicket. User's original is `message`.
+    replies = models.JSONField(default=list, blank=True)
     lastReplyAt = models.DateTimeField(null=True, blank=True)
     createdAt = models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
