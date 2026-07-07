@@ -97,3 +97,23 @@ class GMBActivityLog(models.Model):
 
     class Meta:
         ordering = ['-timestamp']
+
+
+class AdminAuditLog(models.Model):
+    """Append-only audit trail for the v3 admin ops console. Every level-3
+    (sensitive) action appends one row via append_audit()
+    (interior_admin/Controllers/Audit/AuditController.py). Feeds the `audit`
+    module (GET /api/v1/admin/audit/). Not updated or deleted in normal flow."""
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='admin_audit_entries')
+    role = models.CharField(max_length=100, null=True, blank=True)
+    action = models.CharField(max_length=255)
+    moduleKey = models.CharField(max_length=100, db_index=True)
+    detail = models.TextField(null=True, blank=True)
+    createdAt = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    def __str__(self):
+        return f"{self.moduleKey}:{self.action} by {self.actor_id} @ {self.createdAt}"
+
+    class Meta:
+        ordering = ['-createdAt']
+        verbose_name = "Admin Audit Log"
