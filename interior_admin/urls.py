@@ -5,7 +5,7 @@ from .Views.AdminLeadsViews import AdminLeadsViewsV1,AdminLeadsViewsV2
 from .Views.AdminUserViews import AdminUserViews, SendUserCredentialsView
 
 from .Views import AdminLeadsViews, BusinessInfoViews, PannelSearchViews, MatchLeadsViews, FinanceViews, GMBLeadsViews
-from .Views import AuditViews, PaymentsViews, SupportViews, TemplatesViews
+from .Views import AuditViews, PaymentsViews, SupportViews, TemplatesViews, BrandAssetViews
 urlpatterns = [
     ############################################################
     # v3 Admin Ops Console — audit trail (promptsadmin task 45)
@@ -21,6 +21,8 @@ urlpatterns = [
     # Notification templates (promptsadmin task 48)
     path('templates/', TemplatesViews.TemplatesCollectionView, name='admin_templates'),
     path('templates/<int:templateId>/', TemplatesViews.TemplateDetailView, name='admin_template_detail'),
+    # Brand logo / assets (promptsadmin task 49) — level-3
+    path('brand-logo/', BrandAssetViews.BrandLogoView, name='admin_brand_logo'),
 
     path('paginate-business/', AdminPanelViewsV1.GetBusinessTilesStatsView, name='get_business_tiles_stats'),
     path('dashboard/', AdminPanelViewsV1.GetAdminDashboardStatsView, name='get_admin_dashboard_stats'),

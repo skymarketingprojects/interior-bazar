@@ -137,3 +137,15 @@ class NotificationTemplate(models.Model):
 
     class Meta:
         ordering = ['key']
+
+
+class BrandAsset(models.Model):
+    """Singleton brand assets for the admin `brand-logo` module (promptsadmin
+    task 49). Stores S3 URLs uploaded client-side (same pattern as the rest of
+    the app's images). Row id=1 is the live brand. Level-3 (audited) on write."""
+    logoUrl = models.URLField(max_length=1000, default='', blank=True)
+    faviconUrl = models.URLField(max_length=1000, default='', blank=True)
+    updatedAt = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"BrandAsset #{self.pk}"
