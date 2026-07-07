@@ -139,6 +139,26 @@ class NotificationTemplate(models.Model):
         ordering = ['key']
 
 
+class Testimonial(models.Model):
+    """Customer testimonial for the admin `testimonials` module (promptsadmin
+    task 53) and the marketing site's public read. Distinct from Feedback/Review."""
+    author = models.CharField(max_length=200)
+    role = models.CharField(max_length=200, default='', blank=True)   # e.g. "Founder, XYZ Interiors"
+    quote = models.TextField()
+    type = models.CharField(max_length=50, default='text')           # text | video | banner
+    featured = models.BooleanField(default=False)                    # banner/featured placement
+    status = models.CharField(max_length=20, default='active')       # active | hidden
+    avatarUrl = models.URLField(max_length=1000, default='', blank=True)
+    createdAt = models.DateTimeField(auto_now_add=True)
+    updatedAt = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.author}: {self.quote[:40]}"
+
+    class Meta:
+        ordering = ['-featured', '-createdAt']
+
+
 class Expense(models.Model):
     """Operating expense line for the admin `revenue` module (promptsadmin task
     52). Feeds unit-economics aggregation alongside real payment revenue."""

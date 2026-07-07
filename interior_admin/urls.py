@@ -5,7 +5,7 @@ from .Views.AdminLeadsViews import AdminLeadsViewsV1,AdminLeadsViewsV2
 from .Views.AdminUserViews import AdminUserViews, SendUserCredentialsView
 
 from .Views import AdminLeadsViews, BusinessInfoViews, PannelSearchViews, MatchLeadsViews, FinanceViews, GMBLeadsViews
-from .Views import AuditViews, PaymentsViews, SupportViews, TemplatesViews, BrandAssetViews, SlotsViews, WeightsViews, RevenueViews
+from .Views import AuditViews, PaymentsViews, SupportViews, TemplatesViews, BrandAssetViews, SlotsViews, WeightsViews, RevenueViews, TestimonialsViews
 urlpatterns = [
     ############################################################
     # v3 Admin Ops Console — audit trail (promptsadmin task 45)
@@ -31,6 +31,10 @@ urlpatterns = [
     # Revenue & unit economics (promptsadmin task 52)
     path('revenue/', RevenueViews.RevenueOverviewView, name='admin_revenue'),
     path('revenue/expense/', RevenueViews.AddExpenseView, name='admin_revenue_expense'),
+    # Testimonials (promptsadmin task 53) — admin CRUD + public read
+    path('testimonials/', TestimonialsViews.TestimonialsCollectionView, name='admin_testimonials'),
+    path('testimonials/public/', TestimonialsViews.PublicTestimonialsView, name='public_testimonials'),
+    path('testimonials/<int:testimonialId>/', TestimonialsViews.TestimonialDetailView, name='admin_testimonial_detail'),
 
     path('paginate-business/', AdminPanelViewsV1.GetBusinessTilesStatsView, name='get_business_tiles_stats'),
     path('dashboard/', AdminPanelViewsV1.GetAdminDashboardStatsView, name='get_admin_dashboard_stats'),
