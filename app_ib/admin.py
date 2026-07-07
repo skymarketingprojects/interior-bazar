@@ -7,7 +7,7 @@ from app_ib import models
 from app_ib.engine_models import (
     Award, ProcessStep, UserSession, RelatedItem,
     BusinessSpecialization, SpecializationJob, Testimonial, Differentiator,
-    JoinUsCta, JoinUsStep, ShopUpdate, ShopQuestion, ShopImage,
+    JoinUsCta, JoinUsStep, ShopUpdate, ShopQuestion, ShopImage, TeamMember,
 )
 
 
@@ -114,6 +114,17 @@ class ShopImageAdmin(admin.ModelAdmin):
     list_filter = ("isActive",)
     search_fields = ("shop__name", "imageUrl")
     ordering = ("index", "timestamp")
+
+
+@admin.register(TeamMember)
+class TeamMemberAdmin(admin.ModelAdmin):
+    """About-page team grid (served by team/). Real people that change over time;
+    `isPlaceholder` marks the non-person "we're hiring" tile. `gradient` fills the
+    avatar chip when `photoUrl` is empty."""
+    list_display = ("name", "role", "isPlaceholder", "displayOrder", "isActive")
+    list_filter = ("isActive", "isPlaceholder")
+    search_fields = ("name", "role", "bio")
+    ordering = ("displayOrder", "id")
 
 
 @admin.register(UserSession)

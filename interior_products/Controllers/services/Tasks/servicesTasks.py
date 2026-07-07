@@ -147,6 +147,11 @@ class SERVICES_TASKS:
             faqs = await sync_to_async(
                 lambda: list(service.faqs.order_by('displayOrder').values('question', 'answer'))
             )()
+            # Owner may not have a UserProfile (signup doesn't create one) — same
+            # guard as products' getProduct (F-prof), else the reverse O2O raises
+            # and the whole service is reported as failed/dropped.
+            _owner = service.business.user if service.business else None
+            _profile = getattr(_owner, 'user_profile', None)
             serviceData = {
                 'id':service.id,
                 'title':service.title,
@@ -166,8 +171,8 @@ class SERVICES_TASKS:
                 # ("By <business>") and link back to it. See ISSUE-004.
                 "businessId":service.business.id,
                 "businessName":service.business.businessName,
-                "phone":service.business.user.user_profile.phone,
-                "countryCode":service.business.user.user_profile.countryCode
+                "phone": getattr(_profile, 'phone', '') if _profile else '',
+                "countryCode": getattr(_profile, 'countryCode', '') if _profile else ''
             }
             return serviceData
         except Exception as e:

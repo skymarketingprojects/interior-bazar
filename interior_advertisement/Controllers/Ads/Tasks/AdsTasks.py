@@ -394,7 +394,11 @@ class ADS_TASKS:
     async def GetAdPlacementsTask(cls):
         try:
             PlacementsQS = await sync_to_async(list)(AdPlacement.objects.all().values(NAMES.PK, NAMES.CODE, NAMES.DAILY_PRICE,NAMES.ASPECT_RATIO))
-            PlacementsQS = [{NAMES.ID: item[NAMES.PK], **{k: v for k, v in item.items() if k != NAMES.PK}} for item in PlacementsQS]
+            # AdPlacement has no label column — derive one from code (e.g.
+            # products_listing → "Products Listing"); the dashboard select needs it.
+            PlacementsQS = [{NAMES.ID: item[NAMES.PK],
+                             'label': str(item[NAMES.CODE]).replace('_', ' ').title(),
+                             **{k: v for k, v in item.items() if k != NAMES.PK}} for item in PlacementsQS]
             
             return True, PlacementsQS
         except Exception as e:

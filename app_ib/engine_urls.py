@@ -166,6 +166,7 @@ urlpatterns = [
     path("analytics/chart/", EngineGapsView.AnalyticsChartView, name="EngineAnalyticsChartView"),
     # leads (item 10)
     path("leads/", EngineGapsView.LeadCreateView, name="EngineLeadCreateView"),  # buyer-facing connect wizard
+    path("leads/manual/", EngineGapsView.LeadManualCreateView, name="EngineLeadManualCreateView"),  # seller-logged off-platform enquiry
     path("leads/prioritized/", EngineGapsView.LeadsPrioritizedView, name="EngineLeadsPrioritizedView"),
     path("leads/<int:leadId>/accept/", EngineGapsView.LeadAcceptView, name="EngineLeadAcceptView"),
     path("leads/<int:leadId>/stage/", EngineGapsView.LeadStageView, name="EngineLeadStageView"),  # kanban stage persist (task 62)

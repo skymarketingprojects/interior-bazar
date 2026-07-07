@@ -63,6 +63,15 @@ class _CrudController:
             if field in payload:
                 setattr(shop, field, payload[field])
         shop.save()
+        # Gallery: payload["images"] = full ordered URL list → replace ShopImage rows
+        # (dashboard "Photos & media" tab sends the whole list on every change).
+        if isinstance(payload.get("images"), list):
+            from app_ib.engine_models import ShopImage
+            shop.images.all().delete()
+            ShopImage.objects.bulk_create([
+                ShopImage(shop=shop, imageUrl=url, index=i)
+                for i, url in enumerate(payload["images"]) if isinstance(url, str) and url
+            ])
         return self._shop_dict(shop)
 
     def delete_shop(self, user, shop_id):

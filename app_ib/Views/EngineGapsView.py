@@ -857,6 +857,19 @@ def LeadDeclineView(request, leadId):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
+def LeadManualCreateView(request):
+    """Seller-logged off-platform enquiry (dashboard '+ Enquiry' panel)."""
+    d = request.data or {}
+    if not (d.get("buyerName") or "").strip() or not (d.get("lookingFor") or "").strip():
+        return _bad("buyerName and lookingFor are required")
+    try:
+        return _ok(GC.create_manual_lead(request.user, d), "Lead created")
+    except Exception as e:
+        return _err(e)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def LeadCreateView(request):
     """Buyer-facing enquiry/lead create — universal connect wizard."""
     if not request.data.get("intent"):

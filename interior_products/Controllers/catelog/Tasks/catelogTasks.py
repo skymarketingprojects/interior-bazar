@@ -55,8 +55,10 @@ class CATELOG_TASKS:
                 "uploadedForTime": time_ago,
                 "categories":prodCategory,
                 "subCategories":prodSubCategory,
-                "phone":catelog.business.user.user_profile.phone,
-                "countryCode":catelog.business.user.user_profile.countryCode
+                # Owner may not have a UserProfile (signup doesn't create one) — same
+                # guard as products/services, else the whole catalogue is dropped.
+                "phone": getattr(getattr(catelog.business.user, 'user_profile', None), 'phone', ''),
+                "countryCode": getattr(getattr(catelog.business.user, 'user_profile', None), 'countryCode', '')
             }
             pass
             return data
