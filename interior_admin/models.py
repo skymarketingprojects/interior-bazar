@@ -139,6 +139,22 @@ class NotificationTemplate(models.Model):
         ordering = ['key']
 
 
+class AdminModuleAccess(models.Model):
+    """One (role, module) → permission-level cell of the admin RBAC matrix
+    (promptsadmin task 55). Level: 0 none / 1 read / 2 write / 3 sensitive.
+    Keyed to the existing rbac_module.Role so is_full_access + user assignment
+    keep working; super_admin (is_full_access) short-circuits to 3 everywhere."""
+    role = models.ForeignKey('rbac_module.Role', on_delete=models.CASCADE, related_name='module_access')
+    moduleKey = models.CharField(max_length=100, db_index=True)
+    level = models.PositiveSmallIntegerField(default=0)  # 0..3
+
+    def __str__(self):
+        return f"{self.role_id}:{self.moduleKey}={self.level}"
+
+    class Meta:
+        unique_together = ('role', 'moduleKey')
+
+
 class ListingReport(models.Model):
     """User-submitted report against a business/listing for the admin `reports`
     module (promptsadmin task 54). Generic target (targetType+targetId) to avoid
