@@ -5,7 +5,7 @@ from .Views.AdminLeadsViews import AdminLeadsViewsV1,AdminLeadsViewsV2
 from .Views.AdminUserViews import AdminUserViews, SendUserCredentialsView
 
 from .Views import AdminLeadsViews, BusinessInfoViews, PannelSearchViews, MatchLeadsViews, FinanceViews, GMBLeadsViews
-from .Views import AuditViews, PaymentsViews, SupportViews, TemplatesViews, BrandAssetViews, SlotsViews, WeightsViews, RevenueViews, TestimonialsViews, ReportsViews, RolesViews, PlansViews, BannersViews, BannerAdsViews
+from .Views import AuditViews, PaymentsViews, SupportViews, TemplatesViews, BrandAssetViews, SlotsViews, WeightsViews, RevenueViews, TestimonialsViews, ReportsViews, RolesViews, PlansViews, BannersViews, BannerAdsViews, BuyersViews
 urlpatterns = [
     ############################################################
     # v3 Admin Ops Console — audit trail (promptsadmin task 45)
@@ -53,6 +53,9 @@ urlpatterns = [
     path('banners-ad/', BannerAdsViews.BannerAdsListView, name='admin_banners_ad'),
     path('banners-ad/<int:adId>/approve/', BannerAdsViews.BannerAdApproveView, name='admin_banner_ad_approve'),
     path('banners-ad/<int:adId>/reject/', BannerAdsViews.BannerAdRejectView, name='admin_banner_ad_reject'),
+    # Buyers (promptsadmin task 18)
+    path('buyers/', BuyersViews.BuyersListView, name='admin_buyers'),
+    path('buyers/<int:buyerId>/toggle/', BuyersViews.BuyerToggleView, name='admin_buyer_toggle'),
 
     path('paginate-business/', AdminPanelViewsV1.GetBusinessTilesStatsView, name='get_business_tiles_stats'),
     path('dashboard/', AdminPanelViewsV1.GetAdminDashboardStatsView, name='get_admin_dashboard_stats'),
