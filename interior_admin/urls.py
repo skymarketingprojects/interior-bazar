@@ -5,7 +5,7 @@ from .Views.AdminLeadsViews import AdminLeadsViewsV1,AdminLeadsViewsV2
 from .Views.AdminUserViews import AdminUserViews, SendUserCredentialsView
 
 from .Views import AdminLeadsViews, BusinessInfoViews, PannelSearchViews, MatchLeadsViews, FinanceViews, GMBLeadsViews
-from .Views import AuditViews, PaymentsViews, SupportViews, TemplatesViews, BrandAssetViews, SlotsViews, WeightsViews, RevenueViews, TestimonialsViews, ReportsViews, RolesViews, PlansViews
+from .Views import AuditViews, PaymentsViews, SupportViews, TemplatesViews, BrandAssetViews, SlotsViews, WeightsViews, RevenueViews, TestimonialsViews, ReportsViews, RolesViews, PlansViews, BannersViews
 urlpatterns = [
     ############################################################
     # v3 Admin Ops Console — audit trail (promptsadmin task 45)
@@ -45,6 +45,10 @@ urlpatterns = [
     # Plans & pricing (promptsadmin task 14) — price edits level-3
     path('plans/', PlansViews.PlansListView, name='admin_plans'),
     path('plans/<int:planId>/', PlansViews.PlanUpdateView, name='admin_plan_update'),
+    # House banners (promptsadmin task 15)
+    path('banners-house/', BannersViews.BannersCollectionView, name='admin_banners_house'),
+    path('banners-house/<int:bannerId>/', BannersViews.BannerDetailView, name='admin_banner_detail'),
+    path('banners-house/<int:bannerId>/move/', BannersViews.BannerMoveView, name='admin_banner_move'),
 
     path('paginate-business/', AdminPanelViewsV1.GetBusinessTilesStatsView, name='get_business_tiles_stats'),
     path('dashboard/', AdminPanelViewsV1.GetAdminDashboardStatsView, name='get_admin_dashboard_stats'),

@@ -672,9 +672,15 @@ class Banners(models.Model):
     supportText = models.TextField()
     title = models.TextField()
     banner = models.FileField(null=True, blank=True ,upload_to='banners')
+    # Admin ops console (promptsadmin task 15): S3 URL uploaded client-side
+    # (new banners) + display order for the reorder controls.
+    bannerUrl = models.URLField(max_length=1000, default='', blank=True)
+    order = models.PositiveIntegerField(default=0, db_index=True)
     isActive = models.BooleanField(default=False)
     def __str__(self):
         return f' pk {self.pk} title:{self.title}'
+    class Meta:
+        ordering = ['order', 'id']
 
 class OfferHeading(models.Model):
     title = models.TextField()
