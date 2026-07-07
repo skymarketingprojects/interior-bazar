@@ -77,6 +77,8 @@ class AdCampaign(models.Model):
 
     createdAt = models.DateTimeField(default=timezone.now)
     updatedAt = models.DateTimeField(auto_now=True)
+    # Admin ad-moderation reject reason (promptsadmin task 16).
+    rejectReason = models.TextField(default='', blank=True)
 
     def __str__(self):
         return f"{self.title or 'Untitled'} ({self.status.code})"
