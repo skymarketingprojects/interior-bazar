@@ -139,6 +139,27 @@ class NotificationTemplate(models.Model):
         ordering = ['key']
 
 
+class ListingReport(models.Model):
+    """User-submitted report against a business/listing for the admin `reports`
+    module (promptsadmin task 54). Generic target (targetType+targetId) to avoid
+    coupling to a single model. Public submit; admin resolve."""
+    reporter = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='listing_reports')
+    reporterEmail = models.EmailField(blank=True, default='')
+    targetType = models.CharField(max_length=50, default='business')  # business | listing | product
+    targetId = models.CharField(max_length=100, default='', blank=True)
+    reason = models.TextField()
+    status = models.CharField(max_length=20, default='open')          # open | resolved | dismissed
+    resolver = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='reports_resolved')
+    createdAt = models.DateTimeField(auto_now_add=True)
+    updatedAt = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Report #{self.pk} {self.targetType}:{self.targetId} ({self.status})"
+
+    class Meta:
+        ordering = ['-createdAt']
+
+
 class Testimonial(models.Model):
     """Customer testimonial for the admin `testimonials` module (promptsadmin
     task 53) and the marketing site's public read. Distinct from Feedback/Review."""

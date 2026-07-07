@@ -5,7 +5,7 @@ from .Views.AdminLeadsViews import AdminLeadsViewsV1,AdminLeadsViewsV2
 from .Views.AdminUserViews import AdminUserViews, SendUserCredentialsView
 
 from .Views import AdminLeadsViews, BusinessInfoViews, PannelSearchViews, MatchLeadsViews, FinanceViews, GMBLeadsViews
-from .Views import AuditViews, PaymentsViews, SupportViews, TemplatesViews, BrandAssetViews, SlotsViews, WeightsViews, RevenueViews, TestimonialsViews
+from .Views import AuditViews, PaymentsViews, SupportViews, TemplatesViews, BrandAssetViews, SlotsViews, WeightsViews, RevenueViews, TestimonialsViews, ReportsViews
 urlpatterns = [
     ############################################################
     # v3 Admin Ops Console — audit trail (promptsadmin task 45)
@@ -35,6 +35,10 @@ urlpatterns = [
     path('testimonials/', TestimonialsViews.TestimonialsCollectionView, name='admin_testimonials'),
     path('testimonials/public/', TestimonialsViews.PublicTestimonialsView, name='public_testimonials'),
     path('testimonials/<int:testimonialId>/', TestimonialsViews.TestimonialDetailView, name='admin_testimonial_detail'),
+    # Reported listings (promptsadmin task 54) — admin list/resolve + public submit
+    path('reports/', ReportsViews.ReportsListView, name='admin_reports'),
+    path('reports/submit/', ReportsViews.ReportSubmitView, name='public_report_submit'),
+    path('reports/<int:reportId>/', ReportsViews.ReportResolveView, name='admin_report_resolve'),
 
     path('paginate-business/', AdminPanelViewsV1.GetBusinessTilesStatsView, name='get_business_tiles_stats'),
     path('dashboard/', AdminPanelViewsV1.GetAdminDashboardStatsView, name='get_admin_dashboard_stats'),
