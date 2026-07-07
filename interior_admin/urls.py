@@ -5,7 +5,7 @@ from .Views.AdminLeadsViews import AdminLeadsViewsV1,AdminLeadsViewsV2
 from .Views.AdminUserViews import AdminUserViews, SendUserCredentialsView
 
 from .Views import AdminLeadsViews, BusinessInfoViews, PannelSearchViews, MatchLeadsViews, FinanceViews, GMBLeadsViews
-from .Views import AuditViews, PaymentsViews, SupportViews
+from .Views import AuditViews, PaymentsViews, SupportViews, TemplatesViews
 urlpatterns = [
     ############################################################
     # v3 Admin Ops Console — audit trail (promptsadmin task 45)
@@ -18,6 +18,9 @@ urlpatterns = [
     path('support/<int:ticketId>/', SupportViews.GetTicketView, name='admin_support_detail'),
     path('support/<int:ticketId>/reply/', SupportViews.ReplyTicketView, name='admin_support_reply'),
     path('support/<int:ticketId>/close/', SupportViews.CloseTicketView, name='admin_support_close'),
+    # Notification templates (promptsadmin task 48)
+    path('templates/', TemplatesViews.TemplatesCollectionView, name='admin_templates'),
+    path('templates/<int:templateId>/', TemplatesViews.TemplateDetailView, name='admin_template_detail'),
 
     path('paginate-business/', AdminPanelViewsV1.GetBusinessTilesStatsView, name='get_business_tiles_stats'),
     path('dashboard/', AdminPanelViewsV1.GetAdminDashboardStatsView, name='get_admin_dashboard_stats'),

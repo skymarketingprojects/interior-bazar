@@ -117,3 +117,23 @@ class AdminAuditLog(models.Model):
     class Meta:
         ordering = ['-createdAt']
         verbose_name = "Admin Audit Log"
+
+
+class NotificationTemplate(models.Model):
+    """Editable notification templates for the admin `templates` module
+    (promptsadmin task 48). The delivery system renders channel messages from
+    these by `key`. `variables` lists the placeholder names available to body."""
+    key = models.CharField(max_length=150, unique=True)
+    channel = models.CharField(max_length=50, default='email')  # email | sms | whatsapp | push | inapp
+    subject = models.CharField(max_length=300, default='', blank=True)
+    body = models.TextField(default='', blank=True)
+    variables = models.JSONField(default=list, blank=True)
+    active = models.BooleanField(default=True)
+    createdAt = models.DateTimeField(auto_now_add=True)
+    updatedAt = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.key} ({self.channel})"
+
+    class Meta:
+        ordering = ['key']
