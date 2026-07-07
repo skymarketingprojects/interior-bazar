@@ -139,6 +139,23 @@ class NotificationTemplate(models.Model):
         ordering = ['key']
 
 
+class Expense(models.Model):
+    """Operating expense line for the admin `revenue` module (promptsadmin task
+    52). Feeds unit-economics aggregation alongside real payment revenue."""
+    label = models.CharField(max_length=300)
+    amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    category = models.CharField(max_length=100, default='', blank=True)
+    incurredAt = models.DateField(null=True, blank=True)
+    createdBy = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='expenses_added')
+    createdAt = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.label}: {self.amount}"
+
+    class Meta:
+        ordering = ['-incurredAt', '-createdAt']
+
+
 class QualificationWeightConfig(models.Model):
     """Singleton signal→weight config for lead qualification (admin `weights`
     module, promptsadmin task 51). The qualification pipeline reads row id=1.

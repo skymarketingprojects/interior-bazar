@@ -5,7 +5,7 @@ from .Views.AdminLeadsViews import AdminLeadsViewsV1,AdminLeadsViewsV2
 from .Views.AdminUserViews import AdminUserViews, SendUserCredentialsView
 
 from .Views import AdminLeadsViews, BusinessInfoViews, PannelSearchViews, MatchLeadsViews, FinanceViews, GMBLeadsViews
-from .Views import AuditViews, PaymentsViews, SupportViews, TemplatesViews, BrandAssetViews, SlotsViews, WeightsViews
+from .Views import AuditViews, PaymentsViews, SupportViews, TemplatesViews, BrandAssetViews, SlotsViews, WeightsViews, RevenueViews
 urlpatterns = [
     ############################################################
     # v3 Admin Ops Console — audit trail (promptsadmin task 45)
@@ -28,6 +28,9 @@ urlpatterns = [
     path('slots/<int:slotId>/', SlotsViews.SlotOverrideView, name='admin_slot_override'),
     # Qualification weights (promptsadmin task 51) — super-admin, level-3
     path('weights/', WeightsViews.WeightsView, name='admin_weights'),
+    # Revenue & unit economics (promptsadmin task 52)
+    path('revenue/', RevenueViews.RevenueOverviewView, name='admin_revenue'),
+    path('revenue/expense/', RevenueViews.AddExpenseView, name='admin_revenue_expense'),
 
     path('paginate-business/', AdminPanelViewsV1.GetBusinessTilesStatsView, name='get_business_tiles_stats'),
     path('dashboard/', AdminPanelViewsV1.GetAdminDashboardStatsView, name='get_admin_dashboard_stats'),
