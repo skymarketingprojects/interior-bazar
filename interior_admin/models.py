@@ -139,6 +139,25 @@ class NotificationTemplate(models.Model):
         ordering = ['key']
 
 
+class SlotInventory(models.Model):
+    """Priority-slot inventory grid for the admin `slots` module (promptsadmin
+    task 50): 12 categories × 6 priority regions. Each cell = one row. Overrides
+    (capacity/holder) are level-3 (audited)."""
+    category = models.CharField(max_length=150, db_index=True)
+    region = models.CharField(max_length=150, db_index=True)
+    capacity = models.PositiveIntegerField(default=0)
+    holder = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='held_slots')
+    priority = models.PositiveIntegerField(default=0)
+    updatedAt = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.category}/{self.region} cap={self.capacity}"
+
+    class Meta:
+        ordering = ['category', 'region']
+        unique_together = ('category', 'region')
+
+
 class BrandAsset(models.Model):
     """Singleton brand assets for the admin `brand-logo` module (promptsadmin
     task 49). Stores S3 URLs uploaded client-side (same pattern as the rest of
