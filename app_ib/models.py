@@ -804,5 +804,26 @@ class ReelSection(models.Model):
         indexShifting(instance=self,filter_attr='index')
         super().save(*args, **kwargs)
 
+
+class RoundRobinCounter(models.Model):
+    """
+    Persistent round-robin counter stored in the database.
+    Survives Redis restarts, server reboots, and cache evictions.
+    Only one row is used (key='default'); the count is incremented
+    atomically via select_for_update() inside a transaction.
+    """
+    key = models.CharField(max_length=100, unique=True)
+    count = models.BigIntegerField(default=0)
+    updatedAt = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Round Robin Counter"
+        verbose_name_plural = "Round Robin Counters"
+
+    def __str__(self):
+        return f'RoundRobinCounter key={self.key} count={self.count}'
+
+
 # --- v2.1.0.0 engine models (Shop, Architect, Review, ViewEvent, TrendingScore, ...) ---
 from app_ib.engine_models import *  # noqa: E402,F401,F403
+

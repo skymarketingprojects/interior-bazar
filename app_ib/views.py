@@ -2,6 +2,7 @@ from django.core.mail import send_mail
 import httpx
 import asyncio
 from django.core.cache import cache
+from django.db import transaction
 from django.http import JsonResponse
 from asgiref.sync import sync_to_async
 from adrf.decorators import api_view
@@ -13,7 +14,7 @@ from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from django.views.decorators.csrf import csrf_exempt
 from app_ib.Controllers.UrlGenrator.UrlGenrator import imageUrlGenrator
-from .models import OurClients,ReelSection
+from .models import OurClients,ReelSection,RoundRobinCounter
 from app_ib.Utils.MyMethods import MY_METHODS
 from rest_framework.serializers import ModelSerializer
 
@@ -24,13 +25,17 @@ _phone_numbers = ['9315663588', '8920898168']
 _PHONE_COUNTER_KEY = 'round_robin_phone_counter'
 
 def _get_next_phone():
-	# cache.incr is atomic in redis, safe across multiple uvicorn workers/processes
-	try:
-		count = cache.incr(_PHONE_COUNTER_KEY)
-	except ValueError:
-		cache.set(_PHONE_COUNTER_KEY, 1)
-		count = 1
-	return _phone_numbers[(count - 1) % len(_phone_numbers)]
+	# DB-backed counter: survives Redis restarts, server reboots, and cache evictions.
+	# select_for_update() acquires a row-level lock so concurrent requests cannot
+	# both read the same value — the increment is fully atomic.
+	with transaction.atomic():
+		obj, _ = RoundRobinCounter.objects.select_for_update().get_or_create(
+			key=_PHONE_COUNTER_KEY,
+			defaults={'count': 0}
+		)
+		obj.count += 1
+		obj.save(update_fields=['count', 'updatedAt'])
+	return _phone_numbers[(obj.count - 1) % len(_phone_numbers)]
 # Create your views here.
 @api_view(['GET'])
 async def TestView(request):
