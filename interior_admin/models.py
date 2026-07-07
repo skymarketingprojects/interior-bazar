@@ -139,6 +139,17 @@ class NotificationTemplate(models.Model):
         ordering = ['key']
 
 
+class QualificationWeightConfig(models.Model):
+    """Singleton signal→weight config for lead qualification (admin `weights`
+    module, promptsadmin task 51). The qualification pipeline reads row id=1.
+    Writes are super-admin only, level-3 (audited)."""
+    weights = models.JSONField(default=dict, blank=True)  # {signal_key: weight}
+    updatedAt = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"QualificationWeightConfig #{self.pk}"
+
+
 class SlotInventory(models.Model):
     """Priority-slot inventory grid for the admin `slots` module (promptsadmin
     task 50): 12 categories × 6 priority regions. Each cell = one row. Overrides
