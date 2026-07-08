@@ -6,6 +6,7 @@ from .Views.AdminUserViews import AdminUserViews, SendUserCredentialsView
 
 from .Views import AdminLeadsViews, BusinessInfoViews, PannelSearchViews, MatchLeadsViews, FinanceViews, GMBLeadsViews
 from .Views import AuditViews, PaymentsViews, SupportViews, TemplatesViews, BrandAssetViews, SlotsViews, WeightsViews, RevenueViews, TestimonialsViews, ReportsViews, RolesViews, PlansViews, BannersViews, BannerAdsViews, BuyersViews, BusinessesViews
+from .Views import OpsModulesViews as OM
 urlpatterns = [
     ############################################################
     # v3 Admin Ops Console — audit trail (promptsadmin task 45)
@@ -43,6 +44,22 @@ urlpatterns = [
     # RBAC — roles editor + acting-user permissions (promptsadmin task 55)
     path('roles/', RolesViews.RolesView, name='admin_roles'),
     path('me/permissions/', RolesViews.MePermissionsView, name='admin_me_permissions'),
+    # Remaining ops modules (promptsadmin 20/24/25/27/30/32/34/35/36)
+    path('subs/', OM.SubsView, name='admin_subs'),
+    path('routing/', OM.RoutingView, name='admin_routing'),
+    path('routing/<int:leadId>/action/', OM.RoutingActionView, name='admin_routing_action'),
+    path('quarantine/', OM.QuarantineView, name='admin_quarantine'),
+    path('quarantine/<int:leadId>/action/', OM.QuarantineActionView, name='admin_quarantine_action'),
+    path('web-analytics/', OM.WebAnalyticsView, name='admin_web_analytics'),
+    path('reviews/', OM.ReviewsView, name='admin_reviews'),
+    path('reviews/<int:reviewId>/hide/', OM.ReviewHideView, name='admin_review_hide'),
+    path('taxonomy/', OM.TaxonomyView, name='admin_taxonomy'),
+    path('feedback/', OM.FeedbackView, name='admin_feedback'),
+    path('feedback/<int:feedbackId>/status/', OM.FeedbackStatusView, name='admin_feedback_status'),
+    path('plan-requests/', OM.PlanRequestsView, name='admin_plan_requests'),
+    path('plan-requests/<int:requestId>/stage/', OM.PlanRequestStageView, name='admin_plan_request_stage'),
+    path('content/', OM.ContentView, name='admin_content'),
+    path('content/<int:blogId>/feature/', OM.ContentFeatureView, name='admin_content_feature'),
     # Plans & pricing (promptsadmin task 14) — price edits level-3
     path('plans/', PlansViews.PlansListView, name='admin_plans'),
     path('plans/<int:planId>/', PlansViews.PlanUpdateView, name='admin_plan_update'),
