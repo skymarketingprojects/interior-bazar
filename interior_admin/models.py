@@ -124,7 +124,10 @@ class NotificationTemplate(models.Model):
     (promptsadmin task 48). The delivery system renders channel messages from
     these by `key`. `variables` lists the placeholder names available to body."""
     key = models.CharField(max_length=150, unique=True)
+    name = models.CharField(max_length=200, default='', blank=True)  # human-friendly label
     channel = models.CharField(max_length=50, default='email')  # email | sms | whatsapp | push | inapp
+    # DLT/TRAI-registered template id — required for India SMS delivery (sms channel).
+    dltId = models.CharField(max_length=100, default='', blank=True)
     subject = models.CharField(max_length=300, default='', blank=True)
     body = models.TextField(default='', blank=True)
     variables = models.JSONField(default=list, blank=True)

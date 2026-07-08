@@ -7,6 +7,10 @@ from email.mime.application import MIMEApplication
 from email.mime.image import MIMEImage
 import os
 
+# ponytail: templates are admin-CRUD only; no send path reads NotificationTemplate yet.
+# The functions below hardcode message bodies (WhatsApp uses the Meta template
+# "lead_query"; email/sms take subject/body as args). Future task: wire these to
+# load body/subject by NotificationTemplate.key so admin template edits take effect.
 
 
 def publishToTopic(subject, message):

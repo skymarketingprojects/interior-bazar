@@ -11,7 +11,8 @@ from .Validators.TemplatesValidators import TemplateCreateSchema, TemplateUpdate
 
 def _tmpl_dict(t: NotificationTemplate) -> Dict[str, Any]:
     return {
-        "id": t.id, "key": t.key, "channel": t.channel, "subject": t.subject,
+        "id": t.id, "key": t.key, "name": t.name, "channel": t.channel,
+        "dltId": t.dltId, "subject": t.subject,
         "body": t.body, "variables": t.variables or [], "active": t.active,
         "updatedAt": t.updatedAt.isoformat() if t.updatedAt else "",
     }
@@ -31,8 +32,8 @@ class TemplatesController:
         if await NotificationTemplate.objects.filter(key=payload.key).aexists():
             return False, {"message": f"Template key '{payload.key}' already exists"}
         t = await NotificationTemplate.objects.acreate(
-            key=payload.key, channel=payload.channel or 'email',
-            subject=payload.subject or '', body=payload.body or '',
+            key=payload.key, name=payload.name or '', channel=payload.channel or 'email',
+            dltId=payload.dltId or '', subject=payload.subject or '', body=payload.body or '',
             variables=payload.variables or [], active=payload.active if payload.active is not None else True)
         return True, _tmpl_dict(t)
 
@@ -42,7 +43,7 @@ class TemplatesController:
         t = await NotificationTemplate.objects.filter(id=templateId).afirst()
         if t is None:
             return False, {"message": "Template not found"}
-        for field in ("channel", "subject", "body", "variables", "active"):
+        for field in ("name", "channel", "dltId", "subject", "body", "variables", "active"):
             val = getattr(payload, field)
             if val is not None:
                 setattr(t, field, val)
