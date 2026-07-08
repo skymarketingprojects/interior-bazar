@@ -208,6 +208,16 @@ BANNER_PAGE_CHOICES = [
 ]
 BANNER_PAGE_DEFAULT = "home"
 
+# Which signed-in cohort a slide targets. 'all' = everyone (incl. anon);
+# 'buyers' = signed-in users who don't own a business; 'sellers' = users who
+# own a Business. HomeBannerController filters slides by the requester's bucket.
+BANNER_AUDIENCE_CHOICES = [
+    ("all", "Everyone"),
+    ("buyers", "Signed-in buyers"),
+    ("sellers", "Business owners"),
+]
+BANNER_AUDIENCE_DEFAULT = "all"
+
 
 class HomeHeroBanner(models.Model):
     """One slide of a page's hero carousel.
@@ -231,6 +241,9 @@ class HomeHeroBanner(models.Model):
     backgroundImageUrl = models.TextField(blank=True, default='')                  # optional background image
     displayOrder = models.PositiveIntegerField(default=0, db_index=True)    # carousel position (asc)
     isActive = models.BooleanField(default=True)                            # soft on/off switch for editors
+    # Cohort this slide targets (all/buyers/sellers) — filtered per requester.
+    audience = models.CharField(max_length=10, choices=BANNER_AUDIENCE_CHOICES,
+                                default=BANNER_AUDIENCE_DEFAULT, db_index=True)
     # Optional scheduling window — both nullable so an evergreen banner needs no dates.
     startsAt = models.DateTimeField(null=True, blank=True)
     endsAt = models.DateTimeField(null=True, blank=True)

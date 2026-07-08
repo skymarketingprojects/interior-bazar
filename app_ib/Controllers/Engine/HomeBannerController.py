@@ -34,14 +34,51 @@ def cache_key_for(page):
     return CACHE_KEY if page == DEFAULT_PAGE else f"banners:{page}"
 
 
+# Audience buckets a requester can fall into, and which slide audiences each
+# is allowed to see. anon → only 'all'; a signed-in buyer → all+buyers; a
+# business owner → all+sellers. Slides are cached per (page, bucket).
+AUDIENCE_BUCKETS = ("anon", "buyers", "sellers")
+_ALLOWED_AUDIENCES = {
+    "anon": ["all"],
+    "buyers": ["all", "buyers"],
+    "sellers": ["all", "sellers"],
+}
+
+
+def _bucket_for(user):
+    if user is None or not getattr(user, "is_authenticated", False):
+        return "anon"
+    from app_ib.models import Business
+    # ponytail: a user "owns a business" iff a Business row points at them.
+    if Business.objects.filter(user=user).exists():
+        return "sellers"
+    return "buyers"
+
+
+def bucketed_key(page, bucket):
+    return f"{cache_key_for(page)}:{bucket}"
+
+
+def invalidate_page(page):
+    """Drop every audience bucket's cache for a page (+ the legacy base key)
+    so an admin edit shows near-live for anon/buyer/seller alike."""
+    page = page or DEFAULT_PAGE
+    cache.delete(cache_key_for(page))  # legacy base key (seed import)
+    for bucket in AUDIENCE_BUCKETS:
+        cache.delete(bucketed_key(page, bucket))
+
+
 class _HomeBannerController:
 
-    def hero_banners(self, page=DEFAULT_PAGE):
-        """Return a page's active, in-window hero slides as plain dicts.
+    def hero_banners(self, page=DEFAULT_PAGE, user=None):
+        """Return a page's active, in-window hero slides as plain dicts,
+        filtered to the requester's audience bucket.
 
         `page` selects which page's banners to serve (home/architects/shops/…);
         any page with no rows returns [] and the frontend keeps its static
-        fallback. Response item shape (consumed by the v3 hero adapters):
+        fallback. `user` scopes visibility: anon sees only audience='all',
+        buyers see all+buyers, business owners see all+sellers. Response item
+        shape (consumed by the v3 hero adapters):
         { id, tag, title, description,
           background: {gradient, imageUrl},
           buttons:    [{label, link, isPrimary}],        # 0–2, primary first
@@ -49,7 +86,8 @@ class _HomeBannerController:
           businesses: [2 × {id, name, slug, imageUrl, rating, city}] }
         """
         page = page or DEFAULT_PAGE
-        key = cache_key_for(page)
+        bucket = _bucket_for(user)
+        key = bucketed_key(page, bucket)
         cached = cache.get(key)
         if cached is not None:
             return cached
@@ -57,7 +95,8 @@ class _HomeBannerController:
         from interior_advertisement.models import HomeHeroBanner, BannerButton, BannerMetric
 
         now = timezone.now()
-        qs = (HomeHeroBanner.objects.filter(isActive=True, page=page)
+        qs = (HomeHeroBanner.objects.filter(isActive=True, page=page,
+                                            audience__in=_ALLOWED_AUDIENCES[bucket])
               # NULL window bounds mean "evergreen" — only exclude when a bound exists and is violated
               .exclude(startsAt__isnull=False, startsAt__gt=now)
               .exclude(endsAt__isnull=False, endsAt__lt=now)

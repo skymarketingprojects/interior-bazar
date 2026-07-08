@@ -63,9 +63,11 @@ urlpatterns = [
     # Plans & pricing (promptsadmin task 14) — price edits level-3
     path('plans/', PlansViews.PlansListView, name='admin_plans'),
     path('plans/<int:planId>/', PlansViews.PlanUpdateView, name='admin_plan_update'),
+    path('plans/<int:planId>/archive/', PlansViews.PlanArchiveView, name='admin_plan_archive'),
     # House banners (promptsadmin task 15)
     path('banners-house/', BannersViews.BannersCollectionView, name='admin_banners_house'),
     path('banners-house/<int:bannerId>/', BannersViews.BannerDetailView, name='admin_banner_detail'),
+    path('banners-house/<int:bannerId>/toggle/', BannersViews.BannerToggleView, name='admin_banner_toggle'),
     path('banners-house/<int:bannerId>/move/', BannersViews.BannerMoveView, name='admin_banner_move'),
     # Banner ads moderation (promptsadmin task 16)
     path('banners-ad/', BannerAdsViews.BannerAdsListView, name='admin_banners_ad'),

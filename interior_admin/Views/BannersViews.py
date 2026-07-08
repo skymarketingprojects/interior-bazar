@@ -17,11 +17,12 @@ from interior_admin.Validators.adminValidators import hasAccess
 @permission_classes([IsAuthenticated])
 @exceptionHandler(errorMessage=RESPONSE_MESSAGES.default_error, responseFunc=ServerResponse)
 async def BannersCollectionView(request: Request):
-    """GET/POST /api/v1/admin/banners-house/ — list / create house banners."""
+    """GET/POST /api/v1/admin/banners-house/ — list (all pages, ?page= filter) /
+    create a HomeHeroBanner slide."""
     await hasAccess(request=request)
     if request.method == 'POST':
-        return await BANNERS_CONTROLLER.Create(payload=BannerCreateSchema(**request.data))
-    return await BANNERS_CONTROLLER.List()
+        return await BANNERS_CONTROLLER.Create(payload=BannerCreateSchema(**request.data), actor=request.user)
+    return await BANNERS_CONTROLLER.List(page=request.GET.get('page') or None)
 
 
 @api_view(['PUT', 'DELETE'])
@@ -31,8 +32,18 @@ async def BannerDetailView(request: Request, bannerId: int):
     """PUT/DELETE /api/v1/admin/banners-house/<id>/ — edit / delete."""
     await hasAccess(request=request)
     if request.method == 'DELETE':
-        return await BANNERS_CONTROLLER.Delete(bannerId=bannerId)
-    return await BANNERS_CONTROLLER.Update(bannerId=bannerId, payload=BannerUpdateSchema(**request.data))
+        return await BANNERS_CONTROLLER.Delete(bannerId=bannerId, actor=request.user)
+    return await BANNERS_CONTROLLER.Update(bannerId=bannerId,
+                                           payload=BannerUpdateSchema(**request.data), actor=request.user)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@exceptionHandler(errorMessage=RESPONSE_MESSAGES.default_error, responseFunc=ServerResponse)
+async def BannerToggleView(request: Request, bannerId: int):
+    """POST /api/v1/admin/banners-house/<id>/toggle/ — stop/run (flip isActive)."""
+    await hasAccess(request=request)
+    return await BANNERS_CONTROLLER.Toggle(bannerId=bannerId, actor=request.user)
 
 
 @api_view(['POST'])
@@ -41,4 +52,5 @@ async def BannerDetailView(request: Request, bannerId: int):
 async def BannerMoveView(request: Request, bannerId: int):
     """POST /api/v1/admin/banners-house/<id>/move/ — reorder up/down."""
     await hasAccess(request=request)
-    return await BANNERS_CONTROLLER.Move(bannerId=bannerId, payload=BannerMoveSchema(**request.data))
+    return await BANNERS_CONTROLLER.Move(bannerId=bannerId,
+                                         payload=BannerMoveSchema(**request.data), actor=request.user)

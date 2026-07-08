@@ -18,7 +18,7 @@ from app_ib.Controllers.Engine.HomeBannerController import HOME_BANNER_CONTROLLE
 @permission_classes([AllowAny])
 def HomeBannersView(request):
     return ServerResponse(response=True, code=RESPONSE_CODES.success, message="ok",
-                          data=HOME_BANNER_CONTROLLER.hero_banners(page="home"))
+                          data=HOME_BANNER_CONTROLLER.hero_banners(page="home", user=request.user))
 
 
 # Generic per-page hero carousel slides: GET /engine/banners/?page=architects
@@ -30,4 +30,4 @@ def HomeBannersView(request):
 def BannersView(request):
     page = request.GET.get("page") or "home"
     return ServerResponse(response=True, code=RESPONSE_CODES.success, message="ok",
-                          data=HOME_BANNER_CONTROLLER.hero_banners(page=page))
+                          data=HOME_BANNER_CONTROLLER.hero_banners(page=page, user=request.user))
