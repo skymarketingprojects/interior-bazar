@@ -91,7 +91,9 @@ class AUTH_TASK:
         try:
             """Check if user exists in database"""
             user = await sync_to_async(CustomUser.objects.get)(username=username)
-            if check_password(password, user.password):
+            # Reject blocked/deleted users so an admin block can't be bypassed by
+            # re-logging in to mint fresh tokens (buyers block-invalidates-tokens).
+            if check_password(password, user.password) and user.is_active and not user.is_delete:
                 return user
             return False
         except Exception as e:
