@@ -187,8 +187,13 @@ class Testimonial(models.Model):
     quote = models.TextField()
     type = models.CharField(max_length=50, default='text')           # text | video | banner
     featured = models.BooleanField(default=False)                    # banner/featured placement
-    status = models.CharField(max_length=20, default='active')       # active | hidden
+    status = models.CharField(max_length=20, default='active')       # active | hidden (UI: Published/Hidden)
     avatarUrl = models.URLField(max_length=1000, default='', blank=True)
+    # task 20: explicit display order + video/rating/business metadata.
+    index = models.IntegerField(default=0, db_index=True)
+    videoUrl = models.URLField(max_length=1000, default='', blank=True)  # full YouTube/other link
+    rating = models.FloatField(null=True, blank=True)
+    businessName = models.CharField(max_length=200, default='', blank=True)
     createdAt = models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
 
@@ -196,15 +201,18 @@ class Testimonial(models.Model):
         return f"{self.author}: {self.quote[:40]}"
 
     class Meta:
-        ordering = ['-featured', '-createdAt']
+        ordering = ['index']
 
 
 class Expense(models.Model):
     """Operating expense line for the admin `revenue` module (promptsadmin task
     52). Feeds unit-economics aggregation alongside real payment revenue."""
+    KIND_CHOICES = [('fixed', 'Fixed'), ('reinvestment', 'Reinvestment')]
     label = models.CharField(max_length=300)
     amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     category = models.CharField(max_length=100, default='', blank=True)
+    # Split for the P&L waterfall (task 17): fixed opex vs growth reinvestment.
+    kind = models.CharField(max_length=20, choices=KIND_CHOICES, default='fixed')
     incurredAt = models.DateField(null=True, blank=True)
     createdBy = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='expenses_added')
     createdAt = models.DateTimeField(auto_now_add=True)
@@ -214,6 +222,20 @@ class Expense(models.Model):
 
     class Meta:
         ordering = ['-incurredAt', '-createdAt']
+
+
+class RevenueAssumption(models.Model):
+    """Singleton (id=1) of admin-tunable unit-economics assumptions (task 17), so
+    LTV / CAC / payback are transparent inputs rather than invented numbers.
+    ponytail: one settings row, not per-value tables."""
+    avgLifetimeMonths = models.PositiveIntegerField(default=18)
+    grossMargin = models.DecimalField(max_digits=4, decimal_places=2, default=0.70)  # 0..1
+    revenueTarget = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    newCustomersThisMonth = models.PositiveIntegerField(default=0)
+    updatedAt = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"assumptions(lifetime={self.avgLifetimeMonths}mo margin={self.grossMargin})"
 
 
 class QualificationWeightConfig(models.Model):
@@ -252,7 +274,28 @@ class BrandAsset(models.Model):
     the app's images). Row id=1 is the live brand. Level-3 (audited) on write."""
     logoUrl = models.URLField(max_length=1000, default='', blank=True)
     faviconUrl = models.URLField(max_length=1000, default='', blank=True)
+    tagline = models.CharField(max_length=200, default='', blank=True)  # default brand tagline
     updatedAt = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"BrandAsset #{self.pk}"
+
+
+class BrandLogo(models.Model):
+    """A scheduled brand logo (seasonal/campaign) for the `brand-logo` module
+    (task 27). The public resolver picks today's active one by date window;
+    BrandAsset(id=1) is the always-on default fallback.
+    ponytail: FIXED calendar dates (YYYY-MM-DD), not recurring month-day — a
+    "Diwali 2027" entry is added yearly. Recurring windows are a future option."""
+    label = models.CharField(max_length=200, default='', blank=True)
+    imageUrl = models.URLField(max_length=1000)
+    tagline = models.CharField(max_length=200, default='', blank=True)
+    activeFrom = models.DateField(null=True, blank=True)   # null → open start (always-on if activeTo also null)
+    activeTo = models.DateField(null=True, blank=True)     # null → open end
+    createdAt = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"BrandLogo #{self.pk} {self.label}"
+
+    class Meta:
+        ordering = ['-activeFrom', '-createdAt']

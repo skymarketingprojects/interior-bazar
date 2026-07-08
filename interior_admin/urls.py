@@ -23,8 +23,10 @@ urlpatterns = [
     # Notification templates (promptsadmin task 48)
     path('templates/', TemplatesViews.TemplatesCollectionView, name='admin_templates'),
     path('templates/<int:templateId>/', TemplatesViews.TemplateDetailView, name='admin_template_detail'),
-    # Brand logo / assets (promptsadmin task 49) — level-3
+    # Brand logo / assets (promptsadmin task 49) — level-3. Scheduled logos: task 27.
     path('brand-logo/', BrandAssetViews.BrandLogoView, name='admin_brand_logo'),
+    path('brand-logo/logos/', BrandAssetViews.LogosCollectionView, name='admin_brand_logos'),
+    path('brand-logo/logos/<int:logoId>/', BrandAssetViews.LogoDetailView, name='admin_brand_logo_detail'),
     # Slot inventory grid (promptsadmin task 50) — overrides level-3
     path('slots/', SlotsViews.SlotsGridView, name='admin_slots_grid'),
     path('slots/<int:slotId>/', SlotsViews.SlotOverrideView, name='admin_slot_override'),

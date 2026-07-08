@@ -619,6 +619,16 @@ def SupportConfigView(request):
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
+def BrandLogoPublicView(request):
+    # Public: today's active brand logo + tagline (task 27).
+    try:
+        return _ok(GC.brand_logo())
+    except Exception as e:
+        return _err(e)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
 def TeamMembersView(request):
     # Public About-page team grid (task 77).
     try:

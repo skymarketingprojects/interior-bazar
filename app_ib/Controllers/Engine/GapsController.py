@@ -2723,6 +2723,13 @@ def support_config():
     }
 
 
+def brand_logo():
+    """Public: today's active brand logo + tagline (task 27). The resolver lives
+    in interior_admin; lazy-imported here to avoid a core→admin import cycle."""
+    from interior_admin.Controllers.BrandAsset.BrandAssetController import resolve_active_logo
+    return resolve_active_logo()
+
+
 def my_quotations(user, limit=50):
     """List the seller's own saved quotation documents, newest first."""
     from app_ib.engine_models import Quotation

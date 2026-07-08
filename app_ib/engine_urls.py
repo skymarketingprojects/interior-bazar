@@ -77,6 +77,7 @@ urlpatterns = [
     path("my/engagement/", EngineGapsView.MyEngagementView, name="EngineMyEngagementView"),  # auth: inbound activity on owned entities
     path("my/engagement/read/", EngineGapsView.MyEngagementReadView, name="EngineMyEngagementReadView"),  # auth: mark feed read
     path("support-config/", EngineGapsView.SupportConfigView, name="EngineSupportConfigView"),  # public: support/contact channels (task 75)
+    path("brand-logo/", EngineGapsView.BrandLogoPublicView, name="EngineBrandLogoView"),  # public: today's active brand logo (task 27)
     path("team/", EngineGapsView.TeamMembersView, name="EngineTeamMembersView"),  # public: About team grid (task 77)
     path("help/content/", EngineGapsView.HelpContentView, name="EngineHelpContentView"),  # public: FAQs/topics/tutorials (task 76)
     path("support/tickets/", EngineGapsView.SupportTicketsView, name="EngineSupportTicketsView"),  # POST raise / GET my tickets (task 76)
