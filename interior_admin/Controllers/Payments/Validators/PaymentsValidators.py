@@ -12,5 +12,11 @@ class RefundSchema(BaseValidator):
 class PaymentListFilters(BaseValidator):
     status: Optional[str] = Field(default=None)     # orderStatus, e.g. PAID / REFUNDED
     refunded: Optional[bool] = Field(default=None)  # only refunded rows
+    paymentMethod: Optional[str] = Field(default=None)  # e.g. manual / gateway
     pageNo: Optional[int] = Field(default=1)
     pageSize: Optional[int] = Field(default=20)
+
+
+class RejectPaymentSchema(BaseValidator):
+    # Reject a submitted manual payment (task 11). Reason is audited.
+    reason: Optional[str] = Field(default="")
