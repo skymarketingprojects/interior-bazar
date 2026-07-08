@@ -9,7 +9,7 @@ from rbac_module.models import Role
 from interior_admin.models import AdminModuleAccess
 from interior_admin.Controllers.Audit.AuditController import append_audit
 from .rbac_matrix import MODULE_KEYS
-from .Validators.RolesValidators import RoleUpdateSchema
+from .Validators.RolesValidators import RoleUpdateSchema, RoleCreateSchema
 
 
 class RolesController:
@@ -63,6 +63,30 @@ class RolesController:
                 role=role, moduleKey=mod, defaults={"level": lvl})
         await append_audit(actor=actor, action='role_matrix_updated', module_key='roles',
                            detail=f"role={payload.roleName} changed={list((payload.modules or {}).keys())}")
+        cells = await sync_to_async(lambda: {c.moduleKey: c.level for c in role.module_access.all()})()
+        modules = {k: cells.get(k, 0) for k in MODULE_KEYS}
+        return True, {"name": role.name, "isFullAccess": role.is_full_access, "modules": modules}
+
+    @classmethod
+    @controllerExceptionHandler(errorMessage=RESPONSE_MESSAGES.default_error, responseFunc=LocalResponse)
+    async def CreateRole(cls, payload: RoleCreateSchema, actor=None) -> Tuple[bool, Dict[str, Any]]:
+        """Create a non-full-access role and seed its module-access cells from
+        payload.modules (clamped 0..3, only known MODULE_KEYS). Rejects duplicate
+        names. Super-admin only — the view enforces the 403 guard."""
+        name = (payload.name or "").strip()
+        if not name:
+            return False, {"message": "Role name is required"}
+        if await Role.objects.filter(name=name).aexists():
+            return False, {"message": f"Role '{name}' already exists"}
+        role = await Role.objects.acreate(name=name, is_full_access=False)
+        for mod, level in (payload.modules or {}).items():
+            if mod not in MODULE_KEYS:
+                continue
+            lvl = max(0, min(3, int(level)))
+            await AdminModuleAccess.objects.aupdate_or_create(
+                role=role, moduleKey=mod, defaults={"level": lvl})
+        await append_audit(actor=actor, action='role_created', module_key='roles',
+                           detail=f"role={name}")
         cells = await sync_to_async(lambda: {c.moduleKey: c.level for c in role.module_access.all()})()
         modules = {k: cells.get(k, 0) for k in MODULE_KEYS}
         return True, {"name": role.name, "isFullAccess": role.is_full_access, "modules": modules}
