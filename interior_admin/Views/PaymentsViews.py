@@ -8,8 +8,17 @@ from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.decorators.ViewDecorator import exceptionHandler
 
 from interior_admin.Controllers.Payments.PaymentsController import PAYMENTS_CONTROLLER
-from interior_admin.Controllers.Payments.Validators.PaymentsValidators import RefundSchema
+from interior_admin.Controllers.Payments.Validators.PaymentsValidators import RefundSchema, PaymentListFilters
 from interior_admin.Validators.adminValidators import hasAccess
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+@exceptionHandler(errorMessage=RESPONSE_MESSAGES.default_error, responseFunc=ServerResponse)
+async def PaymentsListView(request: Request):
+    """GET /api/v1/admin/payments/ — transactions, filter by status/refunded."""
+    await hasAccess(request=request)
+    return await PAYMENTS_CONTROLLER.List(queryParams=PaymentListFilters(**request.query_params.dict()))
 
 
 @api_view(['POST'])

@@ -6,12 +6,38 @@ from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.decorators.ViewDecorator import controllerExceptionHandler
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 
+from django.db.models import Q
 from app_ib.models import TransectionData
 from interior_admin.Controllers.Audit.AuditController import append_audit
-from .Validators.PaymentsValidators import RefundSchema
+from .Validators.PaymentsValidators import RefundSchema, PaymentListFilters
+
+
+def _txn_dict(t: TransectionData) -> Dict[str, Any]:
+    return {
+        "id": t.id, "orderId": t.orderId, "transactionId": t.transactionId,
+        "amount": t.amount, "paymentFor": t.paymentFor, "orderStatus": t.orderStatus,
+        "refundStatus": t.refundStatus, "refundAmount": t.refundAmount,
+        "createdAt": t.createdAt.isoformat() if t.createdAt else "",
+    }
 
 
 class PaymentsController:
+
+    @classmethod
+    @controllerExceptionHandler(errorMessage=RESPONSE_MESSAGES.default_error, responseFunc=LocalResponse)
+    async def List(cls, queryParams: PaymentListFilters) -> Tuple[bool, Dict[str, Any]]:
+        filters = Q()
+        if queryParams.status:
+            filters &= Q(orderStatus=queryParams.status)
+        if queryParams.refunded is True:
+            filters &= Q(refundStatus="REFUNDED")
+        pageNo = max(1, queryParams.pageNo or 1)
+        pageSize = min(100, max(1, queryParams.pageSize or 20))
+        start = (pageNo - 1) * pageSize
+        qs = TransectionData.objects.filter(filters).order_by("-id")
+        total = await qs.acount()
+        rows = await sync_to_async(list)(qs[start:start + pageSize])
+        return True, {"payments": [_txn_dict(t) for t in rows], "total": total, "pageNo": pageNo, "pageSize": pageSize}
 
     @classmethod
     @controllerExceptionHandler(

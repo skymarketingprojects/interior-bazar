@@ -11,7 +11,8 @@ urlpatterns = [
     # v3 Admin Ops Console — audit trail (promptsadmin task 45)
     ############################################################
     path('audit/', AuditViews.GetAuditLogView, name='admin_audit_log'),
-    # Refund action (promptsadmin task 46) — level-3
+    # Payments list (promptsadmin task 22) + refund action (task 46, level-3)
+    path('payments/', PaymentsViews.PaymentsListView, name='admin_payments'),
     path('payments/<int:txnId>/refund/', PaymentsViews.RefundView, name='admin_payment_refund'),
     # Support desk (promptsadmin task 47)
     path('support/', SupportViews.ListTicketsView, name='admin_support_list'),
