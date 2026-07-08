@@ -27,7 +27,7 @@ class BLOG_CONTROLLER:
 
         try:
             all_blogs = await sync_to_async(list)(
-                Blog.objects.all().order_by(f'-{NAMES.TIMESTAMP}')
+                Blog.objects.filter(status='published').order_by(f'-{NAMES.TIMESTAMP}')
             )
 
             # Step 2: Paginate the evaluated list
@@ -80,7 +80,7 @@ class BLOG_CONTROLLER:
 
         try:
             all_blogs = await sync_to_async(list)(
-                Blog.objects.all().order_by(f'-{NAMES.TIMESTAMP}')
+                Blog.objects.filter(status='published').order_by(f'-{NAMES.TIMESTAMP}')
             )
 
             # Step 3: Gather blog data concurrently
@@ -110,7 +110,8 @@ class BLOG_CONTROLLER:
     async def GetBlogById(self, id):
         try:
 
-            blog_instance = await sync_to_async(Blog.objects.get)(id=id)
+            # Public detail is published-only — a draft must 404 for anon visitors.
+            blog_instance = await Blog.objects.filter(id=id, status='published').afirst()
             if blog_instance is None:
                 return LocalResponse(
                     code=RESPONSE_CODES.error,

@@ -40,6 +40,8 @@ class BLOG_TASK:
                 NAMES.AUTHOR_IMAGE: blog_instance.authorImageUrl,
                 NAMES.PUBLISH_DATE: blog_instance.timestamp.strftime(NAMES.DMY_FORMAT),
                 NAMES.READ_TIME: await MY_METHODS.getReadTime(blog_instance.description.html),
+                "metaTitle": blog_instance.metaTitle or "",
+                "metaDescription": blog_instance.metaDescription or "",
             }
             return blog_data
 

@@ -18,6 +18,7 @@ from interior_admin.Controllers.Taxonomy.TaxonomyController import TAXONOMY_CONT
 from interior_admin.Controllers.Feedback.FeedbackController import FEEDBACK_CONTROLLER
 from interior_admin.Controllers.PlanRequests.PlanRequestsController import PLAN_REQUESTS_CONTROLLER
 from interior_admin.Controllers.Content.ContentController import CONTENT_CONTROLLER
+from interior_admin.Controllers.Content.Validators.ContentValidators import BlogCreateSchema, BlogUpdateSchema
 
 
 def _int(v, d):
@@ -36,7 +37,13 @@ def gated(fn):
 @gated
 async def SubsView(request: Request):
     await hasAccess(request=request)
-    return await SUBS_CONTROLLER.List(status=request.query_params.get('status') or None)
+    qp = request.query_params
+    return await SUBS_CONTROLLER.List(
+        family=qp.get('family') or None,
+        status=qp.get('status') or None,
+        pageNo=int(qp.get('pageNo') or 1),
+        pageSize=int(qp.get('pageSize') or 20),
+    )
 
 
 # ── routing (task 24) ──
@@ -46,7 +53,10 @@ async def SubsView(request: Request):
 async def RoutingView(request: Request):
     await hasAccess(request=request)
     q = request.query_params
-    return await LEADS_CONTROLLER.List(status=q.get('status') or None, pageNo=_int(q.get('pageNo'), 1), pageSize=_int(q.get('pageSize'), 20))
+    return await LEADS_CONTROLLER.List(
+        status=q.get('status') or None, tier=q.get('tier') or None,
+        excludeQuarantine=True,  # routing must not show quarantined/spam leads
+        pageNo=_int(q.get('pageNo'), 1), pageSize=_int(q.get('pageSize'), 20))
 
 
 @api_view(['POST'])
@@ -83,7 +93,8 @@ async def QuarantineActionView(request: Request, leadId: int):
 @gated
 async def WebAnalyticsView(request: Request):
     await hasAccess(request=request)
-    return await WEB_ANALYTICS_CONTROLLER.Get()
+    q = request.query_params
+    return await WEB_ANALYTICS_CONTROLLER.Get(start=q.get('start') or None, end=q.get('end') or None)
 
 
 # ── reviews (task 30) ──
@@ -104,16 +115,83 @@ async def ReviewHideView(request: Request, reviewId: int):
     return await REVIEWS_CONTROLLER.Hide(reviewId=reviewId, actor=request.user)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+@gated
+async def ReviewsQAView(request: Request):
+    await hasAccess(request=request)
+    q = request.query_params
+    return await REVIEWS_CONTROLLER.QA(pageNo=_int(q.get('pageNo'), 1), pageSize=_int(q.get('pageSize'), 20))
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@gated
+async def ReviewsQAHideView(request: Request, questionId: int):
+    await hasAccess(request=request)
+    return await REVIEWS_CONTROLLER.QAHide(questionId=questionId, actor=request.user)
+
+
 # ── cat-region taxonomy (task 32) ──
+from interior_admin.Controllers.Taxonomy.Validators.TaxonomyValidators import (
+    CategoryCreateSchema, CategoryUpdateSchema, SegmentCreateSchema, SegmentUpdateSchema,
+    StateCreateSchema, StateUpdateSchema)
+
+
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 @gated
 async def TaxonomyView(request: Request):
     await hasAccess(request=request)
     if request.method == 'POST':
-        d = request.data or {}
-        return await TAXONOMY_CONTROLLER.AddCategory(value=d.get('value', ''), label=d.get('label', ''), actor=request.user)
+        return await TAXONOMY_CONTROLLER.AddCategory(payload=CategoryCreateSchema(**request.data), actor=request.user)
     return await TAXONOMY_CONTROLLER.List()
+
+
+@api_view(['PUT', 'DELETE'])
+@permission_classes([IsAuthenticated])
+@gated
+async def TaxonomyCategoryDetailView(request: Request, categoryId: int):
+    await hasAccess(request=request)
+    if request.method == 'DELETE':
+        return await TAXONOMY_CONTROLLER.DeleteCategory(categoryId=categoryId, actor=request.user)
+    return await TAXONOMY_CONTROLLER.UpdateCategory(categoryId=categoryId, payload=CategoryUpdateSchema(**request.data), actor=request.user)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@gated
+async def TaxonomySegmentView(request: Request):
+    await hasAccess(request=request)
+    return await TAXONOMY_CONTROLLER.AddSegment(payload=SegmentCreateSchema(**request.data), actor=request.user)
+
+
+@api_view(['PUT', 'DELETE'])
+@permission_classes([IsAuthenticated])
+@gated
+async def TaxonomySegmentDetailView(request: Request, segmentId: int):
+    await hasAccess(request=request)
+    if request.method == 'DELETE':
+        return await TAXONOMY_CONTROLLER.DeleteSegment(segmentId=segmentId, actor=request.user)
+    return await TAXONOMY_CONTROLLER.UpdateSegment(segmentId=segmentId, payload=SegmentUpdateSchema(**request.data), actor=request.user)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@gated
+async def TaxonomyStateView(request: Request):
+    await hasAccess(request=request)
+    return await TAXONOMY_CONTROLLER.AddState(payload=StateCreateSchema(**request.data), actor=request.user)
+
+
+@api_view(['PUT', 'DELETE'])
+@permission_classes([IsAuthenticated])
+@gated
+async def TaxonomyStateDetailView(request: Request, stateId: int):
+    await hasAccess(request=request)
+    if request.method == 'DELETE':
+        return await TAXONOMY_CONTROLLER.DeleteState(stateId=stateId, actor=request.user)
+    return await TAXONOMY_CONTROLLER.UpdateState(stateId=stateId, payload=StateUpdateSchema(**request.data), actor=request.user)
 
 
 # ── feedback (task 34) ──
@@ -131,7 +209,7 @@ async def FeedbackView(request: Request):
 @gated
 async def FeedbackStatusView(request: Request, feedbackId: int):
     await hasAccess(request=request)
-    return await FEEDBACK_CONTROLLER.SetStatus(feedbackId=feedbackId, status=(request.data or {}).get('status', 'viewed'))
+    return await FEEDBACK_CONTROLLER.SetStatus(feedbackId=feedbackId, status=(request.data or {}).get('status', 'reviewing'), actor=request.user)
 
 
 # ── plan-requests (task 35) ──
@@ -152,14 +230,39 @@ async def PlanRequestStageView(request: Request, requestId: int):
     return await PLAN_REQUESTS_CONTROLLER.SetStage(requestId=requestId, stage=(request.data or {}).get('stage', ''), actor=request.user)
 
 
-# ── content / blog (task 36) ──
-@api_view(['GET'])
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@gated
+async def PlanRequestVerifyView(request: Request, requestId: int):
+    """POST /admin/plan-requests/<id>/verify/ {subscriptionId, entityType} — verify
+    the manual payment and grant+activate the chosen plan for the requester."""
+    await hasAccess(request=request)
+    d = request.data or {}
+    return await PLAN_REQUESTS_CONTROLLER.Verify(
+        requestId=requestId, subscriptionId=int(d.get('subscriptionId') or 0),
+        entityType=(d.get('entityType') or ''), actor=request.user)
+
+
+# ── content / blog (task 36 + blog editor task 25) ──
+@api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 @gated
 async def ContentView(request: Request):
     await hasAccess(request=request)
+    if request.method == 'POST':
+        return await CONTENT_CONTROLLER.Create(payload=BlogCreateSchema(**request.data), actor=request.user)
     q = request.query_params
     return await CONTENT_CONTROLLER.List(pageNo=_int(q.get('pageNo'), 1), pageSize=_int(q.get('pageSize'), 20))
+
+
+@api_view(['PUT', 'DELETE'])
+@permission_classes([IsAuthenticated])
+@gated
+async def ContentDetailView(request: Request, blogId: int):
+    await hasAccess(request=request)
+    if request.method == 'DELETE':
+        return await CONTENT_CONTROLLER.Delete(blogId=blogId, actor=request.user)
+    return await CONTENT_CONTROLLER.Update(blogId=blogId, payload=BlogUpdateSchema(**request.data), actor=request.user)
 
 
 @api_view(['POST'])

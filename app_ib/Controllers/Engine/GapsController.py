@@ -158,7 +158,7 @@ def _business_categories(period, limit):
         pass
 
     # ultimate fallback: categories with trending=True ordered by index
-    cats = BusinessCategory.objects.filter(trending=True).order_by("index")[:limit]
+    cats = BusinessCategory.objects.filter(isActive=True, trending=True).order_by("index")[:limit]
     return [{
         "id": c.id,
         "name": c.lable or c.value or "",
@@ -1406,7 +1406,7 @@ def list_business_categories():
     businessCategory value or lable); empty categories are omitted."""
     from django.db.models import Count, Q
     from app_ib.models import BusinessCategory
-    cats = (BusinessCategory.objects
+    cats = (BusinessCategory.objects.filter(isActive=True)
             .annotate(bizCount=Count(
                 "business_category", filter=Q(business_category__user__is_active=True), distinct=True))
             .filter(bizCount__gt=0)
@@ -2224,56 +2224,87 @@ def create_lead(user, data):
 # ---------------------------------------------------------------------------
 # 11. Platform ads
 # ---------------------------------------------------------------------------
+def _ad_creative(asset):
+    """Pull the render creative out of an AdAsset. Creative is a free-form JSON
+    blob (AdAsset.meta) + the image URL (AdAsset.s3Key), so tolerate key variants
+    from the business ad-builder and the admin fallback authoring alike."""
+    if asset is None:
+        return {}
+    m = asset.meta or {}
+
+    def pick(*keys):
+        for k in keys:
+            v = m.get(k)
+            if v:
+                return v
+        return ""
+
+    return {
+        "eyebrow": pick("eyebrow"),
+        "heading1": pick("heading1", "headline", "title", "heading"),
+        "heading2": pick("heading2", "subheading"),
+        "description": pick("description", "sub", "subtitle", "body"),
+        "features": m.get("features") or [],
+        "buttonLabel": pick("buttonLabel", "ctaLabel", "cta"),
+        "buttonLink": pick("buttonLink", "ctaUrl", "ctaLink", "link"),
+        "imageUrl": pick("imageUrl", "image") or asset.s3Key,
+        "theme": pick("theme") or "green",
+    }
+
+
 def get_ads(page_slug="", placement=""):
-    from app_ib.models import AdPage, PlatformAd
+    # Unified ad render path (task 16): render live AdCampaigns (the model admin
+    # moderates), NOT the retired PlatformAd. A slot shows PAID ads (advertiser
+    # set) when any match; otherwise it falls back to house ads (advertiser null).
+    from interior_advertisement.models import AdCampaign
     now = timezone.now()
-    qs = PlatformAd.objects.filter(isActive=True).select_related("page")
-    # active window
-    qs = qs.filter(
-        Q(startsAt__isnull=True) | Q(startsAt__lte=now)
-    ).filter(
-        Q(endsAt__isnull=True) | Q(endsAt__gte=now)
+    qs = (
+        AdCampaign.objects.filter(status__code="active")  # NAMES.ACTIVE = live
+        .filter(startDate__lte=now, endDate__gte=now)
+        .select_related("advertiser", "placement")
+        .prefetch_related("assets")
     )
-    if page_slug:
-        qs = qs.filter(page__slug=page_slug)
     if placement:
-        qs = qs.filter(placement=placement)
-    qs = qs.order_by("placement", "displayOrder", "timestamp")
+        qs = qs.filter(placement__code=placement)
+    if page_slug:
+        # House ads target a page; paid ads (page="") match any page.
+        qs = qs.filter(Q(page=page_slug) | Q(page=""))
+    qs = qs.order_by("-priceTotal", "-createdAt")
+
+    live = list(qs)
+    paid = [c for c in live if c.advertiser_id]
+    chosen = paid if paid else [c for c in live if not c.advertiser_id]
 
     ads = []
-    ids = []
-    for ad in qs:
-        ids.append(ad.id)
+    for c in chosen:
+        assets = list(c.assets.all())
+        cr = _ad_creative(assets[0] if assets else None)
         ads.append({
-            "id": ad.id,
-            "page": ad.page.slug if ad.page_id else "",
-            "placement": ad.placement,
-            "eyebrow": ad.eyebrow,
-            "heading1": ad.heading1,
-            "heading2": ad.heading2,
-            "description": ad.description,
-            "buttonLabel": ad.buttonLabel,
-            "buttonLink": ad.buttonLink,
-            "imageUrl": ad.imageUrl,
-            "theme": ad.theme,
-            "displayOrder": ad.displayOrder,
+            "id": c.id,
+            "page": c.page or "",
+            "placement": c.placement.code if c.placement_id else "",
+            "eyebrow": cr.get("eyebrow", ""),
+            "heading1": cr.get("heading1") or (c.title or ""),
+            "heading2": cr.get("heading2", ""),
+            "description": cr.get("description", ""),
+            "features": cr.get("features", []),
+            "buttonLabel": cr.get("buttonLabel", ""),
+            "buttonLink": cr.get("buttonLink", ""),
+            "imageUrl": cr.get("imageUrl", ""),
+            "theme": cr.get("theme", "green"),
+            "displayOrder": 0,
+            # "Sponsored by X" line; empty for house/fallback ads.
+            "sponsoredBy": (getattr(c.advertiser, "businessName", "") or "") if c.advertiser_id else "",
         })
-    # fire-and-forget impression increment
-    if ids:
-        try:
-            PlatformAd.objects.filter(id__in=ids).update(impressionCount=F("impressionCount") + 1)
-        except Exception:
-            pass
-
+    # ponytail: impression tracking dropped with PlatformAd; AdCampaign has no
+    # counter yet. Re-add via AdEvent when analytics needs it.
     return {"page": page_slug, "ads": ads}
 
 
 def click_ad(ad_id):
-    from app_ib.models import PlatformAd
-    from django.db.models import F
-    updated = PlatformAd.objects.filter(id=ad_id).update(clickCount=F("clickCount") + 1)
-    if not updated:
-        raise NotFound_("ad not found")
+    # ponytail: click tracking not yet modelled on AdCampaign (PlatformAd counters
+    # retired). Accept the ping so the best-effort frontend call succeeds; wire to
+    # AdEvent when ad analytics is built.
     return {"ok": True}
 
 
@@ -3586,7 +3617,7 @@ def featured_blogs(limit=1):
     from app_ib.Utils.Names import NAMES as _N
 
     qs = (Blog.objects
-          .filter(isFeatured=True)
+          .filter(isFeatured=True, status="published")
           .order_by("featuredOrder", "-timestamp")[:limit])
 
     items = []

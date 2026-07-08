@@ -33,9 +33,11 @@ urlpatterns = [
     # Revenue & unit economics (promptsadmin task 52)
     path('revenue/', RevenueViews.RevenueOverviewView, name='admin_revenue'),
     path('revenue/expense/', RevenueViews.AddExpenseView, name='admin_revenue_expense'),
+    path('revenue/assumptions/', RevenueViews.RevenueAssumptionsView, name='admin_revenue_assumptions'),
     # Testimonials (promptsadmin task 53) — admin CRUD + public read
     path('testimonials/', TestimonialsViews.TestimonialsCollectionView, name='admin_testimonials'),
     path('testimonials/public/', TestimonialsViews.PublicTestimonialsView, name='public_testimonials'),
+    path('testimonials/<int:testimonialId>/reorder/', TestimonialsViews.TestimonialReorderView, name='admin_testimonial_reorder'),
     path('testimonials/<int:testimonialId>/', TestimonialsViews.TestimonialDetailView, name='admin_testimonial_detail'),
     # Reported listings (promptsadmin task 54) — admin list/resolve + public submit
     path('reports/', ReportsViews.ReportsListView, name='admin_reports'),
@@ -52,13 +54,22 @@ urlpatterns = [
     path('quarantine/<int:leadId>/action/', OM.QuarantineActionView, name='admin_quarantine_action'),
     path('web-analytics/', OM.WebAnalyticsView, name='admin_web_analytics'),
     path('reviews/', OM.ReviewsView, name='admin_reviews'),
+    path('reviews/qa/', OM.ReviewsQAView, name='admin_reviews_qa'),
+    path('reviews/qa/<int:questionId>/hide/', OM.ReviewsQAHideView, name='admin_reviews_qa_hide'),
     path('reviews/<int:reviewId>/hide/', OM.ReviewHideView, name='admin_review_hide'),
     path('taxonomy/', OM.TaxonomyView, name='admin_taxonomy'),
+    path('taxonomy/category/<int:categoryId>/', OM.TaxonomyCategoryDetailView, name='admin_taxonomy_category'),
+    path('taxonomy/segment/', OM.TaxonomySegmentView, name='admin_taxonomy_segment_add'),
+    path('taxonomy/segment/<int:segmentId>/', OM.TaxonomySegmentDetailView, name='admin_taxonomy_segment'),
+    path('taxonomy/state/', OM.TaxonomyStateView, name='admin_taxonomy_state_add'),
+    path('taxonomy/state/<int:stateId>/', OM.TaxonomyStateDetailView, name='admin_taxonomy_state'),
     path('feedback/', OM.FeedbackView, name='admin_feedback'),
     path('feedback/<int:feedbackId>/status/', OM.FeedbackStatusView, name='admin_feedback_status'),
     path('plan-requests/', OM.PlanRequestsView, name='admin_plan_requests'),
     path('plan-requests/<int:requestId>/stage/', OM.PlanRequestStageView, name='admin_plan_request_stage'),
+    path('plan-requests/<int:requestId>/verify/', OM.PlanRequestVerifyView, name='admin_plan_request_verify'),
     path('content/', OM.ContentView, name='admin_content'),
+    path('content/<int:blogId>/', OM.ContentDetailView, name='admin_content_detail'),
     path('content/<int:blogId>/feature/', OM.ContentFeatureView, name='admin_content_feature'),
     # Plans & pricing (promptsadmin task 14) — price edits level-3
     path('plans/', PlansViews.PlansListView, name='admin_plans'),
@@ -71,6 +82,7 @@ urlpatterns = [
     path('banners-house/<int:bannerId>/move/', BannersViews.BannerMoveView, name='admin_banner_move'),
     # Banner ads moderation (promptsadmin task 16)
     path('banners-ad/', BannerAdsViews.BannerAdsListView, name='admin_banners_ad'),
+    path('banners-ad/fallback/', BannerAdsViews.BannerAdFallbackView, name='admin_banner_ad_fallback'),
     path('banners-ad/<int:adId>/approve/', BannerAdsViews.BannerAdApproveView, name='admin_banner_ad_approve'),
     path('banners-ad/<int:adId>/reject/', BannerAdsViews.BannerAdRejectView, name='admin_banner_ad_reject'),
     # Buyers (promptsadmin task 18)
@@ -78,6 +90,7 @@ urlpatterns = [
     path('buyers/<int:buyerId>/toggle/', BuyersViews.BuyerToggleView, name='admin_buyer_toggle'),
     # Businesses (promptsadmin task 19)
     path('businesses/', BusinessesViews.BusinessesListView, name='admin_businesses'),
+    path('businesses/moderation/', BusinessesViews.BusinessModerationView, name='admin_business_moderation'),
     path('businesses/<int:businessId>/toggle-verified/', BusinessesViews.BusinessToggleVerifiedView, name='admin_business_toggle_verified'),
 
     path('paginate-business/', AdminPanelViewsV1.GetBusinessTilesStatsView, name='get_business_tiles_stats'),

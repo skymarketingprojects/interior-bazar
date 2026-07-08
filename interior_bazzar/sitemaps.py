@@ -43,7 +43,7 @@ class StaticPageSitemap(Sitemap):
 
 class BlogPostSitemap(Sitemap):
     def items(self):
-        return Blog.objects.all()
+        return Blog.objects.filter(status='published')
 
     def location(self, obj):
         return f'/blog/{slugify(obj.title, obj.id)}/'

@@ -104,6 +104,9 @@ class BusinessCategory(models.Model):
     shortValue = models.CharField(max_length=250,null=True,blank=True)
     trending = models.BooleanField(default=False)
     index = models.IntegerField(default=0)
+    # Reversible hide (task 22): admin can hide a category from public dropdowns
+    # without hard-deleting (which would orphan linked businesses).
+    isActive = models.BooleanField(default=True)
     def __str__(self):
         return f'business category - {self.lable}'
     def save(self, *args, **kwargs):
@@ -121,6 +124,8 @@ class BusinessSegment(models.Model):
     lable = models.CharField(max_length=250)
     shortValue = models.CharField(max_length=250,null=True,blank=True)
     trending = models.BooleanField(default=False)
+    # Reversible hide (task 22): mirrors BusinessCategory.isActive.
+    isActive = models.BooleanField(default=True)
     def __str__(self):
         return f'business segment - {self.lable}'
 
@@ -271,6 +276,12 @@ class LeadQuery(models.Model):
     originId = models.IntegerField(null=True, blank=True)
     formType = models.CharField(max_length=50, blank=True, default='')
     messageCount = models.PositiveIntegerField(default=0)
+
+    # Qualification (task 13): computed ONCE at creation from the weights
+    # singleton (QualificationWeightConfig). Never recomputed on update, so
+    # tuning weights only affects NEW leads.
+    tier = models.CharField(max_length=1, default='', blank=True, db_index=True)
+    score = models.PositiveIntegerField(default=0)
 
     timestamp= models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
@@ -546,6 +557,11 @@ class TransectionData(models.Model):
     refundReason= models.TextField(default='', blank=True)
     refundedAt= models.DateTimeField(null=True, blank=True)
     refundedBy= models.ForeignKey('CustomUser', on_delete=models.SET_NULL, null=True, blank=True, related_name='refunds_actioned')
+    # Manual-payment verification (promptsadmin task 11). 'manual' rows carry a
+    # SUBMITTED->PAID/REJECTED lifecycle in orderStatus, verified by an admin.
+    paymentMethod= models.CharField(max_length=20, default='gateway')  # 'gateway' | 'manual'
+    verifiedBy= models.ForeignKey('CustomUser', on_delete=models.SET_NULL, null=True, blank=True, related_name='payments_verified')
+    verifiedAt= models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f" transection data for {self.paymentFor} with transaction id {self.transactionId}"
@@ -621,6 +637,10 @@ class Blog(models.Model):
     authorImageUrl = models.URLField(default='',null=True, blank=True)
     isFeatured = models.BooleanField(default=False)
     featuredOrder = models.PositiveIntegerField(default=0)
+    metaTitle = models.CharField(max_length=300, blank=True, default='')
+    metaDescription = models.TextField(blank=True, default='')
+    focusKeyword = models.CharField(max_length=200, blank=True, default='')
+    status = models.CharField(max_length=10, choices=(('draft', 'draft'), ('published', 'published')), default='draft')
     timestamp= models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
 
