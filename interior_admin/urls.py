@@ -15,6 +15,9 @@ urlpatterns = [
     # Payments list (promptsadmin task 22) + refund action (task 46, level-3)
     path('payments/', PaymentsViews.PaymentsListView, name='admin_payments'),
     path('payments/<int:txnId>/refund/', PaymentsViews.RefundView, name='admin_payment_refund'),
+    # Manual-payment verify/reject (task 11)
+    path('payments/<int:txnId>/verify/', PaymentsViews.VerifyView, name='admin_payment_verify'),
+    path('payments/<int:txnId>/reject/', PaymentsViews.RejectView, name='admin_payment_reject'),
     # Support desk (promptsadmin task 47)
     path('support/', SupportViews.ListTicketsView, name='admin_support_list'),
     path('support/<int:ticketId>/', SupportViews.GetTicketView, name='admin_support_detail'),
