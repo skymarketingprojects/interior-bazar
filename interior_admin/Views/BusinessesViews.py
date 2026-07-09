@@ -21,6 +21,16 @@ async def BusinessesListView(request: Request):
     return await BUSINESSES_CONTROLLER.List(queryParams=BusinessListFilters(**request.query_params.dict()))
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+@exceptionHandler(errorMessage=RESPONSE_MESSAGES.default_error, responseFunc=ServerResponse)
+async def BusinessModerationView(request: Request):
+    """GET /api/v1/admin/businesses/moderation/ — Catalog & Trust moderation view
+    (profile score + catalog/review counts)."""
+    await hasAccess(request=request)
+    return await BUSINESSES_CONTROLLER.Moderation(queryParams=BusinessListFilters(**request.query_params.dict()))
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 @exceptionHandler(errorMessage=RESPONSE_MESSAGES.default_error, responseFunc=ServerResponse)

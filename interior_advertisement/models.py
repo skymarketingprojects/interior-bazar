@@ -64,8 +64,12 @@ class AdPlacement(models.Model):
 
 
 class AdCampaign(models.Model):
-    advertiser = models.ForeignKey('app_ib.Business', on_delete=models.CASCADE, related_name='adCampaigns')
+    # advertiser is null for house/fallback ads authored by admin (task 16).
+    advertiser = models.ForeignKey('app_ib.Business', on_delete=models.CASCADE, related_name='adCampaigns', null=True, blank=True)
     title = models.CharField(max_length=255, blank=True, null=True)
+    # Page-slug targeting for house/fallback ads ("" = any page). Paid ads leave
+    # this blank and target by placement only.
+    page = models.CharField(max_length=255, blank=True, default='')
     placement = models.ForeignKey(AdPlacement, on_delete=models.CASCADE, related_name='adCampaigns')
     startDate = models.DateTimeField()
     endDate = models.DateTimeField()

@@ -153,7 +153,7 @@ class BUSS_CONTROLLER:
     @classmethod
     async def GetAllBusinessCategories(self):
         try:
-            categoryInstances = await sync_to_async(list)(BusinessCategory.objects.all())
+            categoryInstances = await sync_to_async(list)(BusinessCategory.objects.filter(isActive=True))
             category_list = []
             for categoryInstance in categoryInstances:
                 categoryData = await BUSS_TASK.GetBusinessTypeData(categoryInstance)

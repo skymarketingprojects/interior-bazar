@@ -274,7 +274,7 @@ class BUSS_CONTROLLER:
                     data=cached_data)
 
             categoryInstances = await sync_to_async(list)(
-                BusinessCategory.objects.annotate(num_related=Count(NAMES.BUSINESS_CATEGORY_RELATION)).filter(num_related__gt=0)
+                BusinessCategory.objects.filter(isActive=True).annotate(num_related=Count(NAMES.BUSINESS_CATEGORY_RELATION)).filter(num_related__gt=0)
             )
             category_list = []
             for categoryInstance in categoryInstances:
@@ -283,7 +283,7 @@ class BUSS_CONTROLLER:
                     categoryData[NAMES.TYPE]=NAMES.CATEGORY
                     category_list.append(categoryData)
             segmentInstances = await sync_to_async(list)(
-                BusinessSegment.objects.annotate(num_related=Count(NAMES.BUSINESS_SEGMENT_RELATION)).filter(num_related__gt=0)
+                BusinessSegment.objects.filter(isActive=True).annotate(num_related=Count(NAMES.BUSINESS_SEGMENT_RELATION)).filter(num_related__gt=0)
                 )
             for segmentInstance in segmentInstances:
                 segmentData = await BUSS_TASK.GetBusinessTypeData(segmentInstance)
@@ -325,12 +325,12 @@ class BUSS_CONTROLLER:
             categoryInstances = []
 
             if trending:
-                categoryInstances = await sync_to_async(list)(BusinessCategory.objects.filter(trending=True).order_by('index'))
+                categoryInstances = await sync_to_async(list)(BusinessCategory.objects.filter(isActive=True, trending=True).order_by('index'))
             else:
                 if query:
-                    categoryInstances = await sync_to_async(list)(BusinessCategory.objects.filter(lable__icontains=query).order_by('index'))
+                    categoryInstances = await sync_to_async(list)(BusinessCategory.objects.filter(isActive=True, lable__icontains=query).order_by('index'))
                 else:
-                    categoryInstances = await sync_to_async(list)(BusinessCategory.objects.all())
+                    categoryInstances = await sync_to_async(list)(BusinessCategory.objects.filter(isActive=True))
             category_list = []
             for categoryInstance in categoryInstances:
                 categoryData = await BUSS_TASK.GetBusinessTypeData(categoryInstance)
@@ -414,7 +414,7 @@ class BUSS_CONTROLLER:
                     data=cached_data
                 )
 
-            categoryInstances = await sync_to_async(list)(BusinessCategory.objects.exclude(trending=False).order_by('index'))
+            categoryInstances = await sync_to_async(list)(BusinessCategory.objects.filter(isActive=True).exclude(trending=False).order_by('index'))
             data = []
             for categoryInstance in categoryInstances:
                 categoryData = await BUSS_TASK.GetBusinessTypeData(categoryInstance)

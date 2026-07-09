@@ -11,6 +11,10 @@ class TestimonialCreateSchema(BaseValidator):
     featured: Optional[bool] = Field(default=False)
     status: Optional[str] = Field(default='active')
     avatarUrl: Optional[str] = Field(default='')
+    index: Optional[int] = Field(default=None)
+    videoUrl: Optional[str] = Field(default='')
+    rating: Optional[float] = Field(default=None)
+    businessName: Optional[str] = Field(default='')
 
 
 class TestimonialUpdateSchema(BaseValidator):
@@ -21,3 +25,10 @@ class TestimonialUpdateSchema(BaseValidator):
     featured: Optional[bool] = Field(default=None)
     status: Optional[str] = Field(default=None)
     avatarUrl: Optional[str] = Field(default=None)
+    videoUrl: Optional[str] = Field(default=None)
+    rating: Optional[float] = Field(default=None)
+    businessName: Optional[str] = Field(default=None)
+
+
+class TestimonialReorderSchema(BaseValidator):
+    index: int

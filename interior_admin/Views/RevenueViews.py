@@ -8,7 +8,7 @@ from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.decorators.ViewDecorator import exceptionHandler
 
 from interior_admin.Controllers.Revenue.RevenueController import REVENUE_CONTROLLER
-from interior_admin.Controllers.Revenue.Validators.RevenueValidators import ExpenseSchema
+from interior_admin.Controllers.Revenue.Validators.RevenueValidators import ExpenseSchema, AssumptionsSchema
 from interior_admin.Validators.adminValidators import hasAccess
 
 
@@ -29,3 +29,13 @@ async def AddExpenseView(request: Request):
     """POST /api/v1/admin/revenue/expense/ — add an operating expense line."""
     await hasAccess(request=request)
     return await REVENUE_CONTROLLER.AddExpense(payload=ExpenseSchema(**request.data), actor=request.user)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+@exceptionHandler(errorMessage=RESPONSE_MESSAGES.default_error, responseFunc=ServerResponse)
+async def RevenueAssumptionsView(request: Request):
+    """PUT /api/v1/admin/revenue/assumptions/ — edit the unit-economics
+    assumptions singleton (avgLifetimeMonths/grossMargin/revenueTarget/newCustomers)."""
+    await hasAccess(request=request)
+    return await REVENUE_CONTROLLER.SetAssumptions(payload=AssumptionsSchema(**request.data), actor=request.user)

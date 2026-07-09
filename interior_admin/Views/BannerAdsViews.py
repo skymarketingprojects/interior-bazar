@@ -8,7 +8,7 @@ from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.decorators.ViewDecorator import exceptionHandler
 
 from interior_admin.Controllers.BannerAds.BannerAdsController import BANNER_ADS_CONTROLLER
-from interior_admin.Controllers.BannerAds.Validators.BannerAdsValidators import BannerAdListFilters, RejectAdSchema
+from interior_admin.Controllers.BannerAds.Validators.BannerAdsValidators import BannerAdListFilters, RejectAdSchema, FallbackAdSchema
 from interior_admin.Validators.adminValidators import hasAccess
 
 
@@ -37,3 +37,13 @@ async def BannerAdRejectView(request: Request, adId: int):
     """POST /api/v1/admin/banners-ad/<id>/reject/ — reject an ad with a reason."""
     await hasAccess(request=request)
     return await BANNER_ADS_CONTROLLER.Reject(adId=adId, payload=RejectAdSchema(**request.data), actor=request.user)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@exceptionHandler(errorMessage=RESPONSE_MESSAGES.default_error, responseFunc=ServerResponse)
+async def BannerAdFallbackView(request: Request):
+    """POST /api/v1/admin/banners-ad/fallback/ — create a house/fallback ad
+    (AdCampaign with no advertiser, auto-approved to live)."""
+    await hasAccess(request=request)
+    return await BANNER_ADS_CONTROLLER.CreateFallback(payload=FallbackAdSchema(**request.data), actor=request.user)

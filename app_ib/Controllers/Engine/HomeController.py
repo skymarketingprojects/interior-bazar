@@ -534,7 +534,7 @@ class _HomeController:
             return cached
         from django.db.models import Count
         from app_ib.models import BusinessCategory
-        qs = (BusinessCategory.objects
+        qs = (BusinessCategory.objects.filter(isActive=True)
               .annotate(bizCount=Count("business_category"))
               .order_by("-trending", "-bizCount", "index")[:HOME_FILTER.MAX_CATEGORY_PILLS])
         result = [(c.id, c.lable) for c in qs]

@@ -8,7 +8,76 @@ from ..Validators.QueryValidators import LeadQueryCreateSchema,LeadQueryUpdateSc
 from interior_admin.Controllers.AdminLeads.Validators.AdminLeadsValidators import AdminLeadsCreateSchema,AdminLeadsUpdateSchema
 from datetime import datetime
 
+def _detect_anomaly(name: str, phone: str):
+    """Cheap anomaly checks run at lead creation (task 14). Returns a short reason
+    slug if the lead looks fake/garbage, else None. Tunable heuristics."""
+    digits = "".join(ch for ch in (phone or "") if ch.isdigit())
+    # ponytail: India 10-digit; widen to 10-12 for country code if needed
+    if len(digits) != 10:
+        return "phone_digits"
+    n = (name or "").strip()
+    # ponytail: trivial-name heuristic; tune thresholds if false positives appear
+    if len(n) < 3:
+        return "name_trivial"
+    if any(ch.isdigit() for ch in n):
+        return "name_has_digits"
+    lower = n.lower()
+    if not any(v in lower for v in "aeiou"):
+        return "name_no_vowel"
+    letters = [c for c in lower if c.isalpha()]
+    if letters and len(set(letters)) == 1:  # 'aaa', 'xxxx'
+        return "name_repeated_char"
+    return None
+
+
 class LEAD_QUERY_TASK:
+
+    @classmethod
+    async def _score_and_tier(self, lead: LeadQuery):
+        """Additive qualification score from the weights singleton → tier via the
+        tier_* thresholds (task 15). Read QualificationWeightConfig directly to
+        avoid a controller import cycle.
+        # ponytail: urgency_* weights are intentionally NOT applied — LeadQuery has
+        # no timeline/urgency capture field to source them. Score = contact +
+        # genuineness + detail; add a timeline field later to honor urgency sliders."""
+        from interior_admin.Controllers.Weights.WeightsController import DEFAULT_WEIGHTS, merged_weights
+        try:
+            from interior_admin.models import QualificationWeightConfig
+            cfg, _ = await QualificationWeightConfig.objects.aget_or_create(id=1)
+            w = merged_weights(cfg.weights)
+        except Exception:
+            w = dict(DEFAULT_WEIGHTS)
+
+        def num(key):
+            try:
+                return float(w.get(key, DEFAULT_WEIGHTS.get(key, 0)))
+            except (TypeError, ValueError):
+                return float(DEFAULT_WEIGHTS.get(key, 0))
+
+        phone_digits = "".join(ch for ch in (lead.phone or "") if ch.isdigit())
+        name = (lead.name or "").strip()
+        text = f"{lead.query or ''} {lead.interested or ''}".strip()
+
+        score = 0.0
+        if len(phone_digits) >= 10:  # contact present
+            score += num("contact")
+        if len(name) >= 3 and any(v in name.lower() for v in "aeiou"):  # genuine-looking
+            score += num("genuineness")
+        if len(text) >= 20:  # detailed enquiry
+            score += num("detail")
+
+        score = round(score)
+        if score >= num("tier_A"):
+            tier = "A"
+        elif score >= num("tier_B"):
+            tier = "B"
+        elif score >= num("tier_C"):
+            tier = "C"
+        elif score >= num("tier_D"):
+            tier = "D"
+        else:
+            tier = "E"
+        return score, tier
 
     @classmethod
     async def CreateLeadQueryTask(self, data:LeadQueryCreateSchema|AdminLeadsCreateSchema,user:CustomUser=None):
@@ -23,6 +92,15 @@ class LEAD_QUERY_TASK:
             lead_query_ins.query= getattr(data, 'query', None) or ""
             lead_query_ins.state= getattr(data, 'state', None) or ""
             lead_query_ins.country= getattr(data, 'country', None) or ""
+            # Admin-authored leads carry these too (public schema omits them →
+            # getattr yields None → "" default). Without this the ported Add-lead
+            # form silently dropped city/status/priority/remark.
+            lead_query_ins.city= getattr(data, 'city', None) or ""
+            _status = getattr(data, 'status', None)
+            if _status:
+                lead_query_ins.status = _status
+            lead_query_ins.priority= getattr(data, 'priority', None) or ""
+            lead_query_ins.remark= getattr(data, 'remark', None) or ""
             lead_query_ins.tag= NAMES.QUERY_TAG
 
             try:
@@ -75,6 +153,17 @@ class LEAD_QUERY_TASK:
                         lambda: Business.objects.filter(id=business_id).first())()
                 elif user:
                     lead_query_ins.business= user.user_business
+
+            # Anomaly gate (task 14): fake phone / gibberish name → quarantine,
+            # reason packed into remark. ponytail: reason in remark; add a reason
+            # column only if reasons need filtering.
+            anomaly = _detect_anomaly(lead_query_ins.name, lead_query_ins.phone)
+            if anomaly:
+                lead_query_ins.status = 'quarantine'
+                lead_query_ins.remark = f"quarantine:{anomaly}"
+
+            # Qualification score+tier computed ONCE here (creation-only).
+            lead_query_ins.score, lead_query_ins.tier = await self._score_and_tier(lead_query_ins)
 
             await sync_to_async(lead_query_ins.save)()
 

@@ -1,5 +1,5 @@
 from asgiref.sync import sync_to_async
-from django.db.models import Q, Prefetch
+from django.db.models import Q, Prefetch, Count
 from typing import Any, Dict, Tuple
 
 from app_ib.Utils.LocalResponse import LocalResponse
@@ -9,6 +9,19 @@ from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.models import Business, BusinessPlan
 from interior_admin.Controllers.Audit.AuditController import append_audit
 from .Validators.BusinessesValidators import BusinessListFilters
+
+
+def _moderation_dict(b: Business) -> Dict[str, Any]:
+    cats = list(b.businessCategory.all())  # prefetched → no N+1
+    city = b.business_location.city if hasattr(b, "business_location") and b.business_location else ""
+    return {
+        "id": b.id, "businessName": b.businessName,
+        "category": (cats[0].lable if cats else ""),
+        "city": city or "",
+        "catalogCount": getattr(b, "catalogCount", 0),
+        "reviewCount": b.totalReviews or 0,
+        "profileScore": b.completionPercent or 0,  # already persisted
+    }
 
 
 def _biz_dict(b: Business) -> Dict[str, Any]:
@@ -55,6 +68,29 @@ class BusinessesController:
         total = await qs.acount()
         rows = await sync_to_async(list)(qs[start:start + pageSize])
         return True, {"businesses": [_biz_dict(b) for b in rows], "total": total, "pageNo": pageNo, "pageSize": pageSize}
+
+    @classmethod
+    @controllerExceptionHandler(errorMessage=RESPONSE_MESSAGES.default_error, responseFunc=LocalResponse)
+    async def Moderation(cls, queryParams: BusinessListFilters) -> Tuple[bool, Dict[str, Any]]:
+        """Catalog & Trust moderation view: profile-completeness + catalog/review
+        counts per business (distinct from the Users>Businesses list shape)."""
+        filters = Q()
+        if queryParams.search:
+            filters &= Q(businessName__icontains=queryParams.search)
+        pageNo = max(1, queryParams.pageNo or 1)
+        pageSize = min(100, max(1, queryParams.pageSize or 20))
+        start = (pageNo - 1) * pageSize
+        qs = (Business.objects.filter(filters)
+              .select_related("business_location")
+              .prefetch_related("businessCategory")
+              .annotate(catalogCount=Count("catelogues", distinct=True))
+              .order_by("-id"))
+        total = await qs.acount()
+        rows = await sync_to_async(list)(qs[start:start + pageSize])
+        return True, {
+            "businesses": await sync_to_async(lambda: [_moderation_dict(b) for b in rows])(),
+            "total": total, "pageNo": pageNo, "pageSize": pageSize,
+        }
 
     @classmethod
     @controllerExceptionHandler(errorMessage=RESPONSE_MESSAGES.default_error, responseFunc=LocalResponse)

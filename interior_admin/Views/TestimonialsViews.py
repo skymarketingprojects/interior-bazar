@@ -9,7 +9,7 @@ from app_ib.decorators.ViewDecorator import exceptionHandler
 
 from interior_admin.Controllers.Testimonials.TestimonialsController import TESTIMONIALS_CONTROLLER
 from interior_admin.Controllers.Testimonials.Validators.TestimonialsValidators import (
-    TestimonialCreateSchema, TestimonialUpdateSchema)
+    TestimonialCreateSchema, TestimonialUpdateSchema, TestimonialReorderSchema)
 from interior_admin.Validators.adminValidators import hasAccess
 
 
@@ -34,6 +34,15 @@ async def TestimonialDetailView(request: Request, testimonialId: int):
     if request.method == 'DELETE':
         return await TESTIMONIALS_CONTROLLER.Delete(testimonialId=testimonialId)
     return await TESTIMONIALS_CONTROLLER.Update(testimonialId=testimonialId, payload=TestimonialUpdateSchema(**request.data))
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@exceptionHandler(errorMessage=RESPONSE_MESSAGES.default_error, responseFunc=ServerResponse)
+async def TestimonialReorderView(request: Request, testimonialId: int):
+    """POST /api/v1/admin/testimonials/<id>/reorder/ {index} — move + resequence."""
+    await hasAccess(request=request)
+    return await TESTIMONIALS_CONTROLLER.Reorder(testimonialId=testimonialId, newIndex=TestimonialReorderSchema(**request.data).index)
 
 
 @api_view(['GET'])

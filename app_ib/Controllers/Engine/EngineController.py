@@ -152,7 +152,7 @@ class _EngineController:
         if (category_fallback or not board) and len(board) < min_items:
             from app_ib.models import BusinessCategory
             existing = {b["query"].lower() for b in board}
-            cats = BusinessCategory.objects.order_by("-trending", "index")
+            cats = BusinessCategory.objects.filter(isActive=True).order_by("-trending", "index")
             for c in cats:
                 label = (c.lable or c.value or "").strip()
                 if label and label.lower() not in existing:

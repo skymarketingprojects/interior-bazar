@@ -14,6 +14,7 @@ def _lead(l: LeadQuery) -> Dict[str, Any]:
         "id": l.id, "name": l.name, "phone": l.phone, "email": l.email,
         "interested": l.interested, "query": l.query, "city": l.city, "state": l.state,
         "status": l.status, "leadStatus": l.leadStatus,
+        "tier": l.tier, "score": l.score, "remark": l.remark,
         "business": l.business.businessName if l.business_id else None,
     }
 
@@ -24,10 +25,17 @@ class LeadsController:
 
     @classmethod
     @controllerExceptionHandler(errorMessage=RESPONSE_MESSAGES.default_error, responseFunc=LocalResponse)
-    async def List(cls, status: str = None, pageNo: int = 1, pageSize: int = 20) -> Tuple[bool, Dict[str, Any]]:
+    async def List(cls, status: str = None, tier: str = None, excludeQuarantine: bool = False,
+                   pageNo: int = 1, pageSize: int = 20) -> Tuple[bool, Dict[str, Any]]:
         filters = Q()
         if status:
             filters &= Q(status__icontains=status)
+        if tier:
+            filters &= Q(tier=tier)
+        # Routing passes excludeQuarantine=True so quarantined/spam leads don't leak
+        # into the routing queue (fixes the bug where status=None returned ALL leads).
+        if excludeQuarantine:
+            filters &= ~Q(status__icontains="quarantine") & ~Q(status__icontains="spam")
         pageNo = max(1, pageNo or 1); pageSize = min(100, max(1, pageSize or 20))
         start = (pageNo - 1) * pageSize
         qs = LeadQuery.objects.filter(filters).select_related("business").order_by("-id")

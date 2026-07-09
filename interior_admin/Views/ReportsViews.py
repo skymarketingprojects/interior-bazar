@@ -26,9 +26,10 @@ async def ReportsListView(request: Request):
 @permission_classes([IsAuthenticated])
 @exceptionHandler(errorMessage=RESPONSE_MESSAGES.default_error, responseFunc=ServerResponse)
 async def ReportResolveView(request: Request, reportId: int):
-    """PUT /api/v1/admin/reports/<id>/ — set report status (resolve/dismiss)."""
+    """PUT /api/v1/admin/reports/<id>/ — advance the report along the 4-state
+    moderation machine (open→reviewing→actioned→dismissed)."""
     await hasAccess(request=request)
-    return await REPORTS_CONTROLLER.Resolve(reportId=reportId, payload=ReportResolveSchema(**request.data), actor=request.user)
+    return await REPORTS_CONTROLLER.Transition(reportId=reportId, toStatus=ReportResolveSchema(**request.data).status, actor=request.user)
 
 
 @api_view(['POST'])

@@ -7,7 +7,16 @@ from app_ib.decorators.ViewDecorator import controllerExceptionHandler
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 
 from interior_admin.models import ListingReport
+from interior_admin.Controllers.Audit.AuditController import append_audit
 from .Validators.ReportsValidators import ReportListFilters, ReportSubmitSchema, ReportResolveSchema
+
+# 4-state moderation board: open → reviewing → actioned → dismissed (terminal).
+ALLOWED_TRANSITIONS = {
+    "open": {"reviewing", "actioned", "dismissed"},
+    "reviewing": {"actioned", "dismissed"},
+    "actioned": {"dismissed"},
+    "dismissed": set(),  # terminal
+}
 
 
 def _r_dict(r: ListingReport) -> Dict[str, Any]:
@@ -16,7 +25,8 @@ def _r_dict(r: ListingReport) -> Dict[str, Any]:
             "reporter": r.reporter.username if r.reporter else None,
             "reporterEmail": r.reporterEmail,
             "resolver": r.resolver.username if r.resolver else None,
-            "createdAt": r.createdAt.isoformat() if r.createdAt else ""}
+            "createdAt": r.createdAt.isoformat() if r.createdAt else "",
+            "updatedAt": r.updatedAt.isoformat() if r.updatedAt else ""}
 
 
 class ReportsController:
@@ -51,13 +61,20 @@ class ReportsController:
 
     @classmethod
     @controllerExceptionHandler(errorMessage=RESPONSE_MESSAGES.default_error, responseFunc=LocalResponse)
-    async def Resolve(cls, reportId: int, payload: ReportResolveSchema, actor=None) -> Tuple[bool, Dict[str, Any]]:
+    async def Transition(cls, reportId: int, toStatus: str, actor=None) -> Tuple[bool, Dict[str, Any]]:
+        """Advance a report along the moderation state machine. Rejects any edge
+        not in ALLOWED_TRANSITIONS (e.g. a backward/skip jump)."""
         r = await ListingReport.objects.filter(id=reportId).afirst()
         if r is None:
             return False, {"message": "Report not found"}
-        r.status = payload.status
+        current = r.status or "open"
+        if toStatus not in ALLOWED_TRANSITIONS.get(current, set()):
+            return False, {"message": "Invalid transition"}
+        r.status = toStatus
         r.resolver = actor if getattr(actor, "is_authenticated", False) else None
-        await sync_to_async(r.save)()
+        await sync_to_async(r.save)()  # updatedAt auto_now
+        await append_audit(actor=actor, action=f"report_{toStatus}", module_key="reports",
+                           detail=f"report={r.id} {current}->{toStatus}")
         return True, _r_dict(r)
 
 
