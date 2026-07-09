@@ -560,6 +560,7 @@ class TransectionData(models.Model):
     # Manual-payment verification (promptsadmin task 11). 'manual' rows carry a
     # SUBMITTED->PAID/REJECTED lifecycle in orderStatus, verified by an admin.
     paymentMethod= models.CharField(max_length=20, default='gateway')  # 'gateway' | 'manual'
+    proofUrl= models.TextField(default='', blank=True)  # buyer-uploaded UPI/NEFT payment proof (manual)
     verifiedBy= models.ForeignKey('CustomUser', on_delete=models.SET_NULL, null=True, blank=True, related_name='payments_verified')
     verifiedAt= models.DateTimeField(null=True, blank=True)
 

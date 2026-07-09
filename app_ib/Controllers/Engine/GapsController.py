@@ -2881,16 +2881,20 @@ def payment_card(user, transaction_id):
     return {"transactionId": transaction_id, "status": status, "found": False}
 
 
-def create_manual_plan(user, plan_id, transaction_id):
+def create_manual_plan(user, plan_id, transaction_id, proof_url=""):
     """Manual (offline) payment path: the buyer pays by bank/UPI transfer off-site,
-    then submits their transaction/UTR id here. We create the chosen entity plan
-    INACTIVE (entity FK null — buy-first) recording that id, and flip the buyer to a
-    SELLER immediately so they can open the seller dashboard. The plan stays pending
-    until the backend team verifies the transfer and activates it (ActivateEntityPlan
-    / admin), which is what unlocks entity creation. Gateway (Cashfree) is the other,
-    instant-activation path — this is the manual sibling of it."""
+    then submits their transaction/UTR id (and optionally a proof image) here. We
+    create the chosen entity plan INACTIVE (entity FK null — buy-first) recording
+    that id, record a SUBMITTED manual TransectionData so it surfaces in the admin
+    payments queue, and flip the buyer to a SELLER immediately so they can open the
+    seller dashboard. The plan stays pending until an admin verifies the transfer and
+    activates it (admin Verify → ActivateEntityPlan), which is what unlocks entity
+    creation. Gateway (Cashfree) is the other, instant-activation path."""
     from asgiref.sync import async_to_sync
-    from app_ib.models import Subscription
+    from django.db import transaction
+    from django.utils import timezone
+    from dateutil.relativedelta import relativedelta
+    from app_ib.models import Subscription, TransectionData
     from app_ib.Controllers.Plans.PlanController import PLAN_CONTROLLER
     from app_ib.Utils.Names import NAMES
 
@@ -2901,12 +2905,28 @@ def create_manual_plan(user, plan_id, transaction_id):
     if not sub:
         raise NotFound_("plan not found")
 
-    # Create the inactive entity plan for this user (routes by Subscription.entityType).
-    resp = async_to_sync(PLAN_CONTROLLER.CreateEntityPlan)(
-        planId=sub.id, userId=user.id, transectionId=txn
-    )
-    if not resp or not getattr(resp, "response", False):
-        raise ValueError(getattr(resp, "message", "could not create plan") if resp else "could not create plan")
+    # Idempotent on the transaction id: a buyer re-submitting the same UTR must NOT
+    # create a second plan/txn. A duplicate plan would break admin-Verify, whose
+    # ActivateEntityPlan does .get(transactionId=…) and raises on multiple rows.
+    if not TransectionData.objects.filter(transactionId=txn).exists():
+        with transaction.atomic():
+            # Inactive entity plan for this user (routes by Subscription.entityType).
+            resp = async_to_sync(PLAN_CONTROLLER.CreateEntityPlan)(
+                planId=sub.id, userId=user.id, transectionId=txn
+            )
+            if not resp or not getattr(resp, "response", False):
+                raise ValueError(getattr(resp, "message", "could not create plan") if resp else "could not create plan")
+
+            # Record the payment as a SUBMITTED manual transaction so it surfaces in
+            # the admin Payments queue (task 11 Verify → ActivateEntityPlan finds the
+            # plan by this same txn id). Committed atomically with the plan.
+            now = timezone.now()
+            TransectionData.objects.create(
+                orderId=txn, transactionId=txn, amount=str(sub.amount or ""),
+                paymentFor=NAMES.PLAN, paymentMethod="manual", orderStatus="SUBMITTED",
+                proofUrl=(proof_url or "").strip(),
+                createdAt=now, expiryAt=now + relativedelta(days=7),
+            )
 
     # Become a seller now (dashboard access) — verification is still pending.
     if user.type != NAMES.BUSINESS:

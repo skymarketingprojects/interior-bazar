@@ -739,11 +739,12 @@ def ManualPlanView(request):
     try:
         plan_id = request.data.get("planId")
         txn = request.data.get("transactionId")
+        proof_url = request.data.get("proofUrl", "")
         if not plan_id:
             return _bad("planId required")
         if not txn:
             return _bad("transactionId required")
-        return _ok(GC.create_manual_plan(request.user, plan_id, txn))
+        return _ok(GC.create_manual_plan(request.user, plan_id, txn, proof_url))
     except Exception as e:
         return _err(e)
 

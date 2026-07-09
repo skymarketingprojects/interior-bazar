@@ -18,7 +18,7 @@ def _txn_dict(t: TransectionData) -> Dict[str, Any]:
     return {
         "id": t.id, "orderId": t.orderId, "transactionId": t.transactionId,
         "amount": t.amount, "paymentFor": t.paymentFor, "orderStatus": t.orderStatus,
-        "paymentMethod": t.paymentMethod,
+        "paymentMethod": t.paymentMethod, "proofUrl": t.proofUrl,
         "refundStatus": t.refundStatus, "refundAmount": t.refundAmount,
         "refundReason": t.refundReason,
         "refundedBy": t.refundedBy.username if t.refundedBy_id else None,
