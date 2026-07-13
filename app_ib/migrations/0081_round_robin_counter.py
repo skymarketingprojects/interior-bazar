@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('app_ib', '0033_business_isactive'),
+        ('app_ib', '0080_remove_platformad_page_delete_adpage_and_more'),
     ]
 
     operations = [
