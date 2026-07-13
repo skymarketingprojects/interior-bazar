@@ -1,12 +1,7 @@
 from django.core.mail import send_mail
 import httpx
 import asyncio
-<<<<<<< HEAD
-=======
-from django.core.cache import cache
 from django.db import transaction
-from django.http import JsonResponse
->>>>>>> 25a2557c3a00532279b25e9e82b4dbb17cb70557
 from asgiref.sync import sync_to_async
 from adrf.decorators import api_view
 from rest_framework.decorators import permission_classes
