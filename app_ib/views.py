@@ -1,6 +1,12 @@
 from django.core.mail import send_mail
 import httpx
 import asyncio
+<<<<<<< HEAD
+=======
+from django.core.cache import cache
+from django.db import transaction
+from django.http import JsonResponse
+>>>>>>> 25a2557c3a00532279b25e9e82b4dbb17cb70557
 from asgiref.sync import sync_to_async
 from adrf.decorators import api_view
 from rest_framework.decorators import permission_classes
@@ -11,11 +17,28 @@ from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from django.views.decorators.csrf import csrf_exempt
 from app_ib.Controllers.UrlGenrator.UrlGenrator import imageUrlGenrator
-from .models import OurClients,ReelSection
+from .models import OurClients,ReelSection,RoundRobinCounter
 from app_ib.Utils.MyMethods import MY_METHODS
 from rest_framework.serializers import ModelSerializer
 
 userCtrl = imageUrlGenrator()
+
+# ponytail: hardcoded temp list, remove this whole view when the real routing feature lands
+_phone_numbers = ['9315663588', '8920898168']
+_PHONE_COUNTER_KEY = 'round_robin_phone_counter'
+
+def _get_next_phone():
+	# DB-backed counter: survives Redis restarts, server reboots, and cache evictions.
+	# select_for_update() acquires a row-level lock so concurrent requests cannot
+	# both read the same value — the increment is fully atomic.
+	with transaction.atomic():
+		obj, _ = RoundRobinCounter.objects.select_for_update().get_or_create(
+			key=_PHONE_COUNTER_KEY,
+			defaults={'count': 0}
+		)
+		obj.count += 1
+		obj.save(update_fields=['count', 'updatedAt'])
+	return _phone_numbers[(obj.count - 1) % len(_phone_numbers)]
 # Create your views here.
 @api_view(['GET'])
 async def TestView(request):
@@ -137,3 +160,22 @@ async def generateUploadUrlView(request):
             data={'error': str(e)},
             code=RESPONSE_CODES.error
         )
+
+@api_view(['GET'])
+@csrf_exempt
+async def RoundRobinPhoneView(request):
+	try:
+		phone = _get_next_phone()
+		return ServerResponse(
+			response=RESPONSE_MESSAGES.success,
+			message='Phone number retrieved successfully',
+			data={'phoneNumber': phone},
+			code=RESPONSE_CODES.success
+		)
+	except Exception as e:
+		return ServerResponse(
+			response=RESPONSE_MESSAGES.error,
+			message='Failed to retrieve phone number',
+			data={'error': str(e)},
+			code=RESPONSE_CODES.error
+		)

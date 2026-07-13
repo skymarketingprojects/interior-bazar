@@ -176,6 +176,11 @@ urlpatterns = [
     path('v1/payment/refund/', PaymentView.RefundTransactionView, name='RefundTransactionView'),
 
     ######################################################
+    # temp: round-robin phone number
+    ######################################################
+    path('v1/round-robin-phone/', views.RoundRobinPhoneView, name='RoundRobinPhoneView'),
+
+    ######################################################
     # include
     ######################################################
     path('v1/admin/', include('interior_admin.urls')),

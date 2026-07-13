@@ -275,7 +275,9 @@ CSRF_TRUSTED_ORIGINS = [
     'http://stage.interiorbazzar.com',
     'https://stage.interiorbazzar.com',
     'http://stagefrontend.interiorbazzar.com',
-    'https://stagefrontend.interiorbazzar.com'
+    'https://stagefrontend.interiorbazzar.com',
+    'http://salesprospect.interiorbazzar.com',
+    'https://salesprospect.interiorbazzar.com'
 ]
 
 # DB Configuration based on MODE
