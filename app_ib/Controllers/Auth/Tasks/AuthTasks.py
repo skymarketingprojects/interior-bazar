@@ -13,14 +13,34 @@ from asgiref.sync import sync_to_async
 
 logger = logging.getLogger(__name__)
 
+
+def _resolve_user_by_identifier(identifier):
+    """Resolve a login identifier to a user: (user, ambiguous).
+
+    Old (pre-v3) accounts have handle usernames (e.g. 'furnin') with the email
+    on UserProfile; v3 creates users with username = email. Try exact username
+    first (case-SENSITIVE — prod has distinct 'suhaniraj'/'Suhaniraj'), then
+    the profile email case-insensitively. An email shared by >1 account is
+    ambiguous: refuse rather than guess or fork a new account.
+    """
+    user = CustomUser.objects.filter(username=identifier).first()
+    if user:
+        return user, False
+    matches = list(CustomUser.objects.filter(
+        user_profile__email__iexact=(identifier or "").strip())[:2])
+    if len(matches) > 1:
+        return None, True
+    return (matches[0] if matches else None), False
+
+
 class AUTH_TASK:
 
     @classmethod
     async def IsUserExist(self, username):
         try:
             """Check if user exists in database"""
-            is_user_exist = await sync_to_async(CustomUser.objects.filter(username=username).exists)()
-            return is_user_exist
+            user, _ = await sync_to_async(_resolve_user_by_identifier)(username)
+            return user is not None
         except Exception as e:
             pass
             return None
@@ -89,8 +109,12 @@ class AUTH_TASK:
     @classmethod
     async def LoginUser(self, username, password):
         try:
-            """Check if user exists in database"""
-            user = await sync_to_async(CustomUser.objects.get)(username=username)
+            """Check if user exists in database. The v3 login screen sends the
+            EMAIL as `username`; old accounts have handle usernames with the
+            email on UserProfile — resolve both (ambiguous email -> deny)."""
+            user, ambiguous = await sync_to_async(_resolve_user_by_identifier)(username)
+            if not user or ambiguous:
+                return False
             # Reject blocked/deleted users so an admin block can't be bypassed by
             # re-logging in to mint fresh tokens (buyers block-invalidates-tokens).
             if check_password(password, user.password) and user.is_active and not user.is_delete:
@@ -219,7 +243,13 @@ class AUTH_TASK:
     @classmethod
     async def FindOrCreateOtpUser(self, username, profile_defaults):
         try:
-            user = await sync_to_async(CustomUser.objects.filter(username=username).first)()
+            # Resolve by username OR profile email so a verified OTP lands on
+            # the user's REAL (pre-v3) account instead of forking a new empty
+            # one. Ambiguous email (shared by >1 account) -> refuse outright.
+            user, ambiguous = await sync_to_async(_resolve_user_by_identifier)(username)
+            if ambiguous:
+                logger.warning('OTP login refused: email %s maps to multiple accounts', username)
+                return None, False
             created = False
             if not user:
                 user = CustomUser(username=username, type="user", is_active=True, is_delete=False,

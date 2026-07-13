@@ -54,11 +54,19 @@ class AdminLeadsCreateSchema(BaseValidator):
     ]] = None
 
     itemId: Optional[int] = Field(None, gt=0)
-    
+
     status: Optional[str] = None
     tag: Optional[str] = None
     priority: Optional[str] = None
     remark: Optional[str] = None
+    # Buyer timeline → urgency signal (task 33).
+    timeline: Optional[Literal['30d', '90d', '90plus', 'browsing']] = None
+
+    @validator("timeline", pre=True, allow_reuse=True)
+    def blank_timeline_to_none(cls, v):
+        if v is None or (isinstance(v, str) and not v.strip()):
+            return None
+        return v
 
     @validator("phone", allow_reuse=True)
     def validate_phone(cls, v):
@@ -93,6 +101,14 @@ class AdminLeadsUpdateSchema(BaseValidator):
     tag: Optional[str] = None
     priority: Optional[str] = None
     remark: Optional[str] = None
+    # Buyer timeline → urgency signal (task 33).
+    timeline: Optional[Literal['30d', '90d', '90plus', 'browsing']] = None
+
+    @validator("timeline", pre=True, allow_reuse=True)
+    def blank_timeline_to_none(cls, v):
+        if v is None or (isinstance(v, str) and not v.strip()):
+            return None
+        return v
 
     @validator("phone", allow_reuse=True)
     def validate_phone(cls, v):

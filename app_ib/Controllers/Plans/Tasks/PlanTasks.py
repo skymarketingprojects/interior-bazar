@@ -1,3 +1,4 @@
+import logging
 from asgiref.sync import sync_to_async
 from app_ib.models import PlanQuery,BusinessPlan,ShopPlan,ArchitectPlan,AutomationPlan,Business,CustomUser,Subscription,TransectionData
 from app_ib.Utils.MyMethods import MY_METHODS
@@ -8,24 +9,29 @@ from django.utils import timezone
 import time
 from app_ib.Utils.Names import NAMES
 
+logger = logging.getLogger(__name__)
+
 class PLAN_TASKS:
 
     @classmethod
-    async def CreateTransectionData(self,data,paymentFor:str):
+    async def CreateTransectionData(self,data,paymentFor:str,planFamily:str=''):
         try:
             transection = TransectionData()
             transection.orderId= data.get(NAMES.CF_ORDER_ID,NAMES.EMPTY)
             transection.transactionId= data.get(NAMES.ORDER_ID,NAMES.EMPTY)
             transection.amount= data.get(NAMES.ORDER_AMOUNT,NAMES.EMPTY)
             transection.paymentFor= paymentFor
+            transection.planFamily= planFamily or ''
             transection.createdAt = data.get("created_at",NAMES.EMPTY)
             transection.expiryAt = data.get(NAMES.ORDER_EXPIRY_TIME,NAMES.EMPTY)
             transection.orderStatus= data.get(NAMES.ORDER_STATUS,NAMES.EMPTY)
             transection.paymentSessionId= data.get(NAMES.PAYMENT_SESSION_ID,NAMES.EMPTY)
-            transection.save()
+            await sync_to_async(transection.save)()
             return True
         except Exception as e:
-            pass
+            # A swallowed failure here silently loses the payment record (this is the
+            # bug that emptied /v3/admin/payments). Log it so it's never silent again.
+            logger.exception("CreateTransectionData failed for paymentFor=%s: %s", paymentFor, e)
             return False
     @classmethod
     async def CreatePlanTask(self, payment_proof, user_ins, data):
@@ -77,24 +83,49 @@ class PLAN_TASKS:
         
 
     @classmethod
-    async def _computeExpiry(self, plan:Subscription):
+    async def _computeExpiry(self, months):
+        # months is the snapshotted PlanBillingCycle.durationMonths (int).
         today = await MY_METHODS.getCurrentDateTime()
-        planDuration = await MY_METHODS.parseDurationToDays(plan.duration)
         today_date = timezone.make_aware(datetime(today.tm_year, today.tm_mon, today.tm_mday))
-        return today_date + relativedelta(months=planDuration)
+        return today_date + relativedelta(months=int(months or 0))
 
     @classmethod
-    async def CreateBusinessPlan(self,plan:Subscription,user:CustomUser,transectionId):
+    async def _resolveCycle(self, plan:Subscription, cycleId=None):
+        """Resolve the purchased (price, months) from the plan's PlanBillingCycle rows:
+        the explicit cycleId if given, else the plan's only/lowest active cycle. Falls
+        back to legacy amount/duration for pre-migration rows with no cycles."""
+        from app_ib.models import PlanBillingCycle
+        def pick():
+            qs = PlanBillingCycle.objects.filter(plan_id=plan.id, isActive=True)
+            cyc = qs.filter(id=cycleId).first() if cycleId else None
+            return cyc or qs.order_by("durationMonths").first()
+        cyc = await sync_to_async(pick)()
+        if cyc:
+            price = cyc.price
+            price = str(int(price)) if price == price.to_integral_value() else str(price)
+            return price, int(cyc.durationMonths)
+        # Legacy fallback for pre-migration rows with no cycles. parseDurationToDays
+        # returns DAYS for word forms ('1 year' -> 365) but bare numerics ('3') pass
+        # through meaning MONTHS — normalize with the >=28-is-days heuristic (same as
+        # migration 0067) so '1 year' becomes 12 months, not relativedelta(months=365).
+        n = int(await MY_METHODS.parseDurationToDays(plan.duration or "0") or 0)
+        months = max(1, round(n / 30)) if n >= 28 else n
+        return (plan.amount or "0"), months
+
+    @classmethod
+    async def CreateBusinessPlan(self,plan:Subscription,user:CustomUser,transectionId,cycleId=None):
         # Buy-before-entity: attach to the USER with business FK NULL (filled when
         # the Business is created in-dashboard later — Prompt 7).
         try:
-            expiry_date = await self._computeExpiry(plan)
+            price, months = await self._resolveCycle(plan, cycleId)
+            expiry_date = await self._computeExpiry(months)
             businessPlanIns = BusinessPlan()
             businessPlanIns.user= user
             businessPlanIns.business= None
             businessPlanIns.plan= plan
             businessPlanIns.services= plan.services
-            businessPlanIns.amount= plan.amount
+            businessPlanIns.amount= price
+            businessPlanIns.durationMonths= months
             businessPlanIns.isActive= False
             businessPlanIns.transactionId= transectionId
             businessPlanIns.expireDate= expiry_date
@@ -105,15 +136,17 @@ class PLAN_TASKS:
             return None
 
     @classmethod
-    async def CreateShopPlan(self,plan:Subscription,user:CustomUser,transectionId):
+    async def CreateShopPlan(self,plan:Subscription,user:CustomUser,transectionId,cycleId=None):
         try:
-            expiry_date = await self._computeExpiry(plan)
+            price, months = await self._resolveCycle(plan, cycleId)
+            expiry_date = await self._computeExpiry(months)
             shopPlanIns = ShopPlan()
             shopPlanIns.user= user
             shopPlanIns.shop= None
             shopPlanIns.plan= plan
             shopPlanIns.services= plan.services
-            shopPlanIns.amount= plan.amount
+            shopPlanIns.amount= price
+            shopPlanIns.durationMonths= months
             shopPlanIns.isActive= False
             shopPlanIns.transactionId= transectionId
             shopPlanIns.expireDate= expiry_date
@@ -124,15 +157,17 @@ class PLAN_TASKS:
             return None
 
     @classmethod
-    async def CreateArchitectPlan(self,plan:Subscription,user:CustomUser,transectionId):
+    async def CreateArchitectPlan(self,plan:Subscription,user:CustomUser,transectionId,cycleId=None):
         try:
-            expiry_date = await self._computeExpiry(plan)
+            price, months = await self._resolveCycle(plan, cycleId)
+            expiry_date = await self._computeExpiry(months)
             archPlanIns = ArchitectPlan()
             archPlanIns.user= user
             archPlanIns.architect= None
             archPlanIns.plan= plan
             archPlanIns.services= plan.services
-            archPlanIns.amount= plan.amount
+            archPlanIns.amount= price
+            archPlanIns.durationMonths= months
             archPlanIns.isActive= False
             archPlanIns.transactionId= transectionId
             archPlanIns.expireDate= expiry_date
@@ -192,16 +227,18 @@ class PLAN_TASKS:
             return None
 
     @classmethod
-    async def CreateAutomationPlan(self,plan:Subscription,user:CustomUser,transectionId):
+    async def CreateAutomationPlan(self,plan:Subscription,user:CustomUser,transectionId,cycleId=None):
         # Bundle plan: entity-less at purchase (all three entity FKs stay NULL until
         # the user creates each entity). Unlocks all three tabs via grantsEntityTypes.
         try:
-            expiry_date = await self._computeExpiry(plan)
+            price, months = await self._resolveCycle(plan, cycleId)
+            expiry_date = await self._computeExpiry(months)
             autoPlanIns = AutomationPlan()
             autoPlanIns.user= user
             autoPlanIns.plan= plan
             autoPlanIns.services= plan.services
-            autoPlanIns.amount= plan.amount
+            autoPlanIns.amount= price
+            autoPlanIns.durationMonths= months
             autoPlanIns.status= PLAN_STATUS.PENDING
             autoPlanIns.transactionId= transectionId
             autoPlanIns.expireDate= expiry_date

@@ -220,3 +220,10 @@ prod.json
 *.json
 AIDOCS/
 CLAUDE.md
+# local-only VPS briefing, never commit
+VPS-ACCESS.md
+# local working files
+*.sqlite3
+MIGRATION-PLAN.md
+CHANGED-ROUTES.md
+debug_ingest.py

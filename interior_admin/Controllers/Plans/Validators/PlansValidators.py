@@ -11,7 +11,27 @@ class PlanUpdateSchema(BaseValidator):
     discountPercentage: Optional[str] = Field(default=None)
     duration: Optional[str] = Field(default=None)
     tag: Optional[str] = Field(default=None)
+    badge: Optional[str] = Field(default=None)      # "Most popular" ribbon on the public card
+    badgeIcon: Optional[str] = Field(default=None)  # tabler icon name
+    tier: Optional[int] = Field(default=None)       # ordering + upgrade rank
     features: Optional[List] = Field(default=None)  # [str] or [{text}] → [{text}]
+
+
+class PlanCycleCreateSchema(BaseValidator):
+    """One PlanBillingCycle. price/oldPrice accepted as strings (Decimal money)."""
+    durationMonths: int
+    price: str
+    oldPrice: Optional[str] = Field(default=None)
+    badgeLabel: Optional[str] = Field(default=None)
+    isActive: Optional[bool] = Field(default=None)
+
+
+class PlanCycleUpdateSchema(BaseValidator):
+    durationMonths: Optional[int] = Field(default=None)
+    price: Optional[str] = Field(default=None)
+    oldPrice: Optional[str] = Field(default=None)
+    badgeLabel: Optional[str] = Field(default=None)
+    isActive: Optional[bool] = Field(default=None)
 
 
 class PlanCreateSchema(BaseValidator):
@@ -24,9 +44,12 @@ class PlanCreateSchema(BaseValidator):
     discountPercentage: Optional[str] = Field(default=None)
     duration: Optional[str] = Field(default=None)
     tag: Optional[str] = Field(default=None)
+    badge: Optional[str] = Field(default=None)
+    badgeIcon: Optional[str] = Field(default=None)
     services: Optional[str] = Field(default=None)
     tier: Optional[int] = Field(default=None)
     features: Optional[List] = Field(default=None)
+    cycles: Optional[List[PlanCycleCreateSchema]] = Field(default=None)  # create plan + cycles in one call
 
 
 class PlanArchiveSchema(BaseValidator):

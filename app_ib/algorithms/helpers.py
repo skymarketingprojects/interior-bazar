@@ -10,9 +10,9 @@ from app_ib.Utils.EngineConfig import ENTITY_TYPE
 
 # entity_type string -> (app_label, model_name)
 ENTITY_MODELS = {
-    ENTITY_TYPE.BUSINESS: ("app_ib", "Business"),
-    ENTITY_TYPE.SHOP: ("app_ib", "Shop"),
-    ENTITY_TYPE.ARCHITECT: ("app_ib", "Architect"),
+    ENTITY_TYPE.BUSINESS: ("interior_business", "Business"),
+    ENTITY_TYPE.SHOP: ("interior_engine", "Shop"),
+    ENTITY_TYPE.ARCHITECT: ("interior_engine", "Architect"),
     ENTITY_TYPE.PRODUCT: ("interior_products", "Product"),
     ENTITY_TYPE.SERVICE: ("interior_products", "Service"),
     ENTITY_TYPE.CATELOGUE: ("interior_products", "Catelogue"),

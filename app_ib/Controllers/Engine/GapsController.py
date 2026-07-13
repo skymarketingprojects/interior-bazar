@@ -15,6 +15,7 @@ Areas covered:
   11. ads/?page=  + ads/<id>/click/
   12. SSE ?token= auth (handled in EngineGapsView, not here)
 """
+import json
 import logging
 from app_ib.Utils.SafeCache import safe_cache as cache
 from django.db import transaction
@@ -23,6 +24,19 @@ from django.utils import timezone
 from datetime import timedelta, date
 
 logger = logging.getLogger(__name__)
+
+
+def _parse_tag_list(raw):
+    """Tags are stored either as a Python-repr list string (old prod:
+    "['Custom Interiors', 'LED Lighting']") or a plain comma-separated string
+    (v3 create form). Same defensive parse as PRODUCTS_V3_CONTROLLER._tags."""
+    if not raw:
+        return []
+    try:
+        parsed = json.loads(str(raw).replace("'", '"'))
+        return [str(t) for t in parsed] if isinstance(parsed, list) else []
+    except Exception:
+        return [t.strip() for t in str(raw).split(",") if t.strip()]
 
 from app_ib.Utils.EngineConfig import (
     ENTITY_TYPE, TRENDING_PERIOD, CONVERSATION_STATUS,
@@ -346,6 +360,13 @@ _DEFAULT_SETTINGS = {
         "newMessages": True,
         "weeklyDigest": False,
         "marketing": False,
+        # Seller profile "Communication preferences" toggles (task 7). Kept in the
+        # same notifications block so the existing get/update merge handles them;
+        # the buyer Settings view ignores keys it doesn't render.
+        "enquiryAlerts": True,
+        "responseReminders": True,
+        "weeklyReport": True,
+        "marketingUpdates": False,
     },
     "privacy": {
         "publicProfile": True,
@@ -474,14 +495,15 @@ def _first_business(user):
     return Business.objects.filter(user=user).first()
 
 
-def change_plan(user, entity_type, target_plan_id):
+def change_plan(user, entity_type, target_plan_id, target_cycle_id=None):
     """In-dashboard plan change (task 61). Money-safe: an UPGRADE (higher tier, or
     no active plan) requires payment → the client routes to checkout; a DOWNGRADE
     to an equal/lower tier is switched immediately (no extra charge, since it's an
-    already-paid-for-or-cheaper tier). Business plans only (seller dashboard)."""
-    from app_ib.models import BusinessPlan, Subscription
+    already-paid-for-or-cheaper tier). Target resolved as (planId, cycleId) — the
+    cycle's price/durationMonths are snapshotted on the row. Business plans only."""
+    from app_ib.models import BusinessPlan, Subscription, PlanBillingCycle
     from django.db.models import Q
-    target = Subscription.objects.filter(id=target_plan_id).first()
+    target = Subscription.objects.filter(id=target_plan_id, is_delete=False).first()
     if not target:
         raise NotFound_("plan not found")
     target_tier = target.tier or 0
@@ -492,12 +514,21 @@ def change_plan(user, entity_type, target_plan_id):
     if not active_plans or target_tier > current_tier:
         # Upgrade / first purchase — must go through the paid checkout flow.
         return {"requiresPayment": True, "targetPlanId": target.id,
-                "targetPlanName": target.title or "Plan"}
+                "targetCycleId": target_cycle_id, "targetPlanName": target.title or "Plan"}
     # Downgrade (or same tier): switch the highest-tier active plan immediately —
     # no additional charge (moving to an equal/cheaper, already-paid tier).
+    cyc = (PlanBillingCycle.objects.filter(plan_id=target.id, id=target_cycle_id, isActive=True).first()
+           if target_cycle_id else None)
+    if not cyc:
+        cyc = PlanBillingCycle.objects.filter(plan_id=target.id, isActive=True).order_by("durationMonths").first()
     holder = max(active_plans, key=lambda bp: (bp.plan.tier or 0) if bp.plan_id else -1)
     holder.plan = target
-    holder.save(update_fields=["plan"])
+    fields = ["plan"]
+    if cyc:
+        holder.amount = str(int(cyc.price)) if cyc.price == cyc.price.to_integral_value() else str(cyc.price)
+        holder.durationMonths = int(cyc.durationMonths)
+        fields += ["amount", "durationMonths"]
+    holder.save(update_fields=fields)
     return {"requiresPayment": False, "changed": True,
             "planName": target.title or "Plan", "tier": target_tier}
 
@@ -1459,7 +1490,7 @@ def _service_full_dict(s):
         "trendingScore": s.trendingScore,
         "label": s.label,
         "category": s.category.first().lable if s.category.exists() else "",
-        "serviceTags": [t.strip() for t in (s.serviceTags or "").split(",") if t.strip()],
+        "serviceTags": _parse_tag_list(s.serviceTags),
         "displayPrice": s.displayPrice,
         "orignalPrice": _orig_price(s),
         "discountType": s.discountType,
@@ -2190,6 +2221,17 @@ def create_lead(user, data):
     fields = data.get("fields") or {}
     query_text = "\n".join(f"{k}: {v}" for k, v in fields.items() if v not in (None, "", []))
 
+    # Map the connect-wizard's timeline tokens → canonical LeadQuery.timeline
+    # choices (task 33). The wizard uses UI-facing tokens that differ per intent
+    # (project/catalogue: now/soon/later; service: week/month/ahead/unsure).
+    # Canonical values pass through unchanged (classic/admin paths already send them).
+    _WIZARD_TIMELINE = {
+        "now": "30d", "soon": "90d", "later": "90plus", "browsing": "browsing",
+        "week": "30d", "month": "90d", "ahead": "90plus", "unsure": "browsing",
+        "30d": "30d", "90d": "90d", "90plus": "90plus",
+    }
+    timeline = _WIZARD_TIMELINE.get((fields.get("timeline") or "").strip(), "")
+
     # backfill city/state/country from the buyer's saved location, same source
     # QueryTasks.CreateLeadQueryTask reads for the classic (non-engine) query form
     city = state = country = ""
@@ -2202,11 +2244,23 @@ def create_lead(user, data):
     lead = LeadQuery.objects.create(
         user=user, name=name, phone=phone, email=email, business=business,
         interested=interested, query=query_text, city=city, state=state, country=country,
-        category=item_type or intent,
+        category=item_type or intent, timeline=timeline,
         sourceChannel="connect_wizard", formType=intent, originType=item_type or "",
         originId=item_id or None,
         product=product, service=service, catalouge=catalouge,
     )
+
+    # Qualification score+tier from the weights singleton (task 33). Creation-only,
+    # like the classic path; never let a scoring hiccup fail the enquiry.
+    try:
+        from app_ib.Controllers.Query.Tasks.QueryTasks import compute_score_and_tier
+        from interior_admin.models import QualificationWeightConfig
+        from interior_admin.Controllers.Weights.WeightsController import merged_weights
+        cfg, _ = QualificationWeightConfig.objects.get_or_create(id=1)
+        lead.score, lead.tier = compute_score_and_tier(lead, merged_weights(cfg.weights))
+        lead.save(update_fields=["score", "tier"])
+    except Exception:
+        logger.exception("create_lead: scoring failed for lead %s", lead.id)
 
     # bridge into chat only when there's a business with a real owner who isn't
     # the buyer themself — never let a chat failure fail the lead
@@ -2246,7 +2300,9 @@ def _ad_creative(asset):
         "description": pick("description", "sub", "subtitle", "body"),
         "features": m.get("features") or [],
         "buttonLabel": pick("buttonLabel", "ctaLabel", "cta"),
-        "buttonLink": pick("buttonLink", "ctaUrl", "ctaLink", "link"),
+        # no "link" fallback: in legacy prod assets meta['link'] is the IMAGE url,
+        # not a CTA destination (migrate_prod_repair remaps it to imageUrl)
+        "buttonLink": pick("buttonLink", "ctaUrl", "ctaLink"),
         "imageUrl": pick("imageUrl", "image") or asset.s3Key,
         "theme": pick("theme") or "green",
     }
@@ -2881,7 +2937,7 @@ def payment_card(user, transaction_id):
     return {"transactionId": transaction_id, "status": status, "found": False}
 
 
-def create_manual_plan(user, plan_id, transaction_id, proof_url=""):
+def create_manual_plan(user, plan_id, transaction_id, proof_url="", cycle_id=None):
     """Manual (offline) payment path: the buyer pays by bank/UPI transfer off-site,
     then submits their transaction/UTR id (and optionally a proof image) here. We
     create the chosen entity plan INACTIVE (entity FK null — buy-first) recording
@@ -2894,16 +2950,27 @@ def create_manual_plan(user, plan_id, transaction_id, proof_url=""):
     from django.db import transaction
     from django.utils import timezone
     from dateutil.relativedelta import relativedelta
-    from app_ib.models import Subscription, TransectionData
+    from app_ib.models import Subscription, TransectionData, PlanBillingCycle
     from app_ib.Controllers.Plans.PlanController import PLAN_CONTROLLER
     from app_ib.Utils.Names import NAMES
 
     txn = (transaction_id or "").strip()
     if not txn:
         raise ValueError("transactionId required")
-    sub = Subscription.objects.filter(id=plan_id, isActive=True).first()
+    sub = Subscription.objects.filter(id=plan_id, isActive=True, is_delete=False).first()
     if not sub:
         raise NotFound_("plan not found")
+
+    # Chosen billing cycle (explicit, else the plan's only/lowest active cycle) — its
+    # price is what the buyer transferred and what surfaces in the admin payments queue.
+    cyc = (PlanBillingCycle.objects.filter(plan_id=sub.id, id=cycle_id, isActive=True).first()
+           if cycle_id else None)
+    if not cyc:
+        cyc = PlanBillingCycle.objects.filter(plan_id=sub.id, isActive=True).order_by("durationMonths").first()
+    if cyc:
+        cyc_amount = str(int(cyc.price)) if cyc.price == cyc.price.to_integral_value() else str(cyc.price)
+    else:
+        cyc_amount = str(sub.amount or "")
 
     # Idempotent on the transaction id: a buyer re-submitting the same UTR must NOT
     # create a second plan/txn. A duplicate plan would break admin-Verify, whose
@@ -2912,7 +2979,7 @@ def create_manual_plan(user, plan_id, transaction_id, proof_url=""):
         with transaction.atomic():
             # Inactive entity plan for this user (routes by Subscription.entityType).
             resp = async_to_sync(PLAN_CONTROLLER.CreateEntityPlan)(
-                planId=sub.id, userId=user.id, transectionId=txn
+                planId=sub.id, userId=user.id, transectionId=txn, cycleId=cycle_id
             )
             if not resp or not getattr(resp, "response", False):
                 raise ValueError(getattr(resp, "message", "could not create plan") if resp else "could not create plan")
@@ -2922,7 +2989,7 @@ def create_manual_plan(user, plan_id, transaction_id, proof_url=""):
             # plan by this same txn id). Committed atomically with the plan.
             now = timezone.now()
             TransectionData.objects.create(
-                orderId=txn, transactionId=txn, amount=str(sub.amount or ""),
+                orderId=txn, transactionId=txn, amount=cyc_amount,
                 paymentFor=NAMES.PLAN, paymentMethod="manual", orderStatus="SUBMITTED",
                 proofUrl=(proof_url or "").strip(),
                 createdAt=now, expiryAt=now + relativedelta(days=7),
@@ -2937,17 +3004,63 @@ def create_manual_plan(user, plan_id, transaction_id, proof_url=""):
     return payment_card(user, txn)
 
 
+def _fmt_inr(n):
+    """₹ with Indian digit grouping (₹2,12,399)."""
+    s = str(int(round(n)))
+    if len(s) <= 3:
+        return "₹" + s
+    head, tail = s[:-3], s[-3:]
+    parts = []
+    while len(head) > 2:
+        parts.insert(0, head[-2:])
+        head = head[:-2]
+    if head:
+        parts.insert(0, head)
+    return "₹" + ",".join(parts + [tail])
+
+
+def _cycle_label(n):
+    """durationMonths -> (cycle key, period label). ONE unit: months."""
+    key = {1: "1m", 3: "3m", 6: "6m", 12: "1y"}.get(n, f"{n}m")
+    period = {1: "/month", 12: "/year"}.get(n, f"/{n} months")
+    return key, period
+
+
+def _plan_cycles(s):
+    """Billing cycles for the public plans page, straight from the PlanBillingCycle
+    child rows (money source of truth). Only active cycles, cheapest→dearest. Prices
+    formatted ₹ Indian grouping, GST-inclusive; oldPrice/badgeLabel from the row."""
+    out = []
+    for c in s.billingCycles.filter(isActive=True).order_by("durationMonths"):
+        n = int(c.durationMonths or 0)
+        key, period = _cycle_label(n)
+        price = _fmt_inr(c.price)
+        entry = {
+            "id": c.id,
+            "cycle": key,
+            "durationMonths": n,
+            "price": price,
+            "period": period,
+            "gstLine": "incl. GST",
+            "total": price,
+            "badgeLabel": c.badgeLabel or period.lstrip("/"),
+        }
+        if c.oldPrice and c.oldPrice > c.price:
+            entry["oldPrice"] = _fmt_inr(c.oldPrice)
+            entry["savingNote"] = f"Save {_fmt_inr(c.oldPrice - c.price)}"
+        out.append(entry)
+    return out
+
+
 def plan_templates(entity_type=""):
     from app_ib.models import Subscription
-    qs = list(Subscription.objects.filter(isActive=True))
+    qs = list(Subscription.objects.filter(isActive=True, is_delete=False))
     if entity_type:
         qs = [s for s in qs if s.entityType == entity_type]
     qs.sort(key=lambda s: (s.tier or 0, s.id))
-    # Full v3 display catalogue (task 78): features/badge + per-cycle display
-    # strings straight from the DB (seeded verbatim in 0055 — no computation).
-    # Multi-cycle plans repeat `key` across rows, one row per billing cycle;
-    # billingCycles carries that row's cycle pricing. Add-ons: the shipped UI has
-    # no add-on section, so there is deliberately no addOns field (YAGNI).
+    # Full v3 display catalogue: ONE item per plan (multi-cycle plans are one
+    # Subscription row + PlanBillingCycle children now). Per-cycle pricing comes
+    # straight from the child rows — the frontend renders a per-card cycle selector.
     items = [{
         "id": s.id,
         "key": s.tag or "",
@@ -2960,7 +3073,7 @@ def plan_templates(entity_type=""):
         "badge": s.badge,
         "badgeIcon": s.badgeIcon,
         "features": s.features or [],
-        "billingCycles": s.availableDuration or [],
+        "billingCycles": _plan_cycles(s),
     } for s in qs]
     out = {"items": items, "total": len(items)}
     # Assemble the family compare table from per-plan compareRows columns

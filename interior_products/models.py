@@ -54,13 +54,13 @@ class ProductSubCategory(models.Model):
 #catelog
 class Catelogue(models.Model):
     catelougeImage = models.URLField()
-    business = models.ForeignKey('app_ib.Business', on_delete=models.CASCADE,related_name='catelogues')
+    business = models.ForeignKey('interior_business.Business', on_delete=models.CASCADE,related_name='catelogues')
     catelougePdf = models.URLField()
     title = models.CharField(max_length=500)
     totalDownload = models.IntegerField(default=0)
     category = models.CharField(max_length=500,null=True,blank=True)
-    catelogueType = models.ForeignKey('app_ib.BusinessType', on_delete=models.PROTECT)
-    # category = models.ForeignKey('app_ib.BusinessCategory', on_delete=models.CASCADE)
+    catelogueType = models.ForeignKey('interior_business.BusinessType', on_delete=models.PROTECT)
+    # category = models.ForeignKey('interior_business.BusinessCategory', on_delete=models.CASCADE)
     createdAt = models.DateTimeField(auto_now_add=True)
     ytLink = models.URLField(null=True, blank=True)
     index = models.IntegerField(default=1)
@@ -108,7 +108,7 @@ class CatelogueImage(models.Model):
 
 # Product model
 class Product(models.Model):
-    business = models.ForeignKey('app_ib.Business', on_delete=models.CASCADE,related_name='products')
+    business = models.ForeignKey('interior_business.Business', on_delete=models.CASCADE,related_name='products')
     title = models.CharField(max_length=500)
     index = models.IntegerField(default=1)
 
@@ -137,7 +137,7 @@ class Product(models.Model):
     totalReviews = models.PositiveIntegerField(default=0)
     ratingBreakdown = models.JSONField(default=dict, blank=True)
     label = models.CharField(max_length=50, blank=True, default='')
-    tags = models.ManyToManyField('app_ib.Tag', blank=True, related_name='products')
+    tags = models.ManyToManyField('interior_engine.Tag', blank=True, related_name='products')
 
     # --- product-detail "Installation & care" tab (additive; [] = tab hidden) ---
     installationSteps = models.JSONField(default=list, blank=True)
@@ -177,7 +177,7 @@ class ProductSpecification(models.Model):
 # Service model
 
 class Service(models.Model):
-    business = models.ForeignKey('app_ib.Business', on_delete=models.CASCADE,related_name='services')
+    business = models.ForeignKey('interior_business.Business', on_delete=models.CASCADE,related_name='services')
     title = models.CharField(max_length=500)
     
     orignalPrice = models.FloatField()
@@ -213,7 +213,7 @@ class Service(models.Model):
     ratingBreakdown = models.JSONField(default=dict, blank=True)
     label = models.CharField(max_length=50, blank=True, default='')
     serviceAreas = models.JSONField(default=list, blank=True)
-    tags = models.ManyToManyField('app_ib.Tag', blank=True, related_name='services')
+    tags = models.ManyToManyField('interior_engine.Tag', blank=True, related_name='services')
 
     def __str__(self):
         return self.title

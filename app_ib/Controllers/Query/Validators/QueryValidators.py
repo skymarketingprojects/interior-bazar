@@ -91,6 +91,9 @@ class LeadQueryCreateSchema(BaseValidator):
 
     itemId: Optional[int] = Field(None, gt=0)
 
+    # Buyer timeline → urgency signal (task 33). Optional; blank scores 0 urgency.
+    timeline: Optional[Literal['30d', '90d', '90plus', 'browsing']] = None
+
     # Direct business link — used when the enquiry originates from something tied
     # to a business but not a product/service/catalogue item (e.g. a reel on a
     # business profile). When an item resolves, the item's business still wins.
@@ -105,6 +108,13 @@ class LeadQueryCreateSchema(BaseValidator):
         # contact form (or an authenticated user whose profile email is empty, which
         # the view injects) would otherwise fail with "value is not a valid email"
         # and the whole enquiry would be rejected ("Unable to generate query").
+        if v is None or (isinstance(v, str) and not v.strip()):
+            return None
+        return v
+
+    @validator("timeline", pre=True, allow_reuse=True)
+    def blank_timeline_to_none(cls, v):
+        # A blank timeline (unset dropdown) must not hit the Literal check.
         if v is None or (isinstance(v, str) and not v.strip()):
             return None
         return v

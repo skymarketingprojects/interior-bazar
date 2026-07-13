@@ -1,16 +1,17 @@
 """Home-page section views (sync DRF). Mostly public; 'for you' personalizes when
-a JWT is present but still works anonymously (city-only)."""
+a JWT is present but still works anonymously (city-only).
+
+Canonical responder stack (task 20): @exceptionHandler(responseFunc=ServerResponse,
+errorMessage=...) wraps each view; views return ServerResponse(...) directly."""
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
+from app_ib.decorators.ViewDecorator import exceptionHandler
 from app_ib.Utils.EngineConfig import ENTITY_TYPE, HOME_FILTER
 from app_ib.Controllers.Engine.HomeController import HOME_CONTROLLER
-
-
-def _ok(data):
-    return ServerResponse(response=True, code=RESPONSE_CODES.success, message="ok", data=data)
 
 
 def _user(request):
@@ -55,8 +56,10 @@ def _resolve_location(request):
 # 1. Trending reels
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@exceptionHandler(responseFunc=ServerResponse, errorMessage=RESPONSE_MESSAGES.engine_error)
 def ReelsView(request):
-    return _ok(HOME_CONTROLLER.reels())
+    return ServerResponse(response=True, code=RESPONSE_CODES.success, message=RESPONSE_MESSAGES.ok,
+                          data=HOME_CONTROLLER.reels())
 
 
 # 2/3/4/7. For-you recommendations (business/product/service/catelogue)
@@ -68,11 +71,12 @@ def ReelsView(request):
 #   radiusKm — override the default for-you radius (HOME_FILTER.FORYOU_RADIUS_KM).
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@exceptionHandler(responseFunc=ServerResponse, errorMessage=RESPONSE_MESSAGES.engine_error)
 def ForYouView(request, entityType):
     if entityType not in (ENTITY_TYPE.BUSINESS, ENTITY_TYPE.PRODUCT,
                           ENTITY_TYPE.SERVICE, ENTITY_TYPE.CATELOGUE):
         return ServerResponse(response=False, code=RESPONSE_CODES.bad_request,
-                              message="unsupported entityType", data={})
+                              message=RESPONSE_MESSAGES.unsupported_entity_type, data={})
     # unknown filter codes / malformed ids are ignored, never an error — a stale
     # frontend pill must degrade to the unfiltered feed, not break the home page
     filter_code = request.GET.get("filter", "")
@@ -92,11 +96,12 @@ def ForYouView(request, entityType):
     except (TypeError, ValueError):
         radius_km = None
     city, state = _resolve_location(request)
-    return _ok(HOME_CONTROLLER.recommend(entityType, user=_user(request),
-                                         city=city, state=state,
-                                         filter_code=filter_code,
-                                         category_id=category_id,
-                                         lat=lat, lng=lng, radius_km=radius_km))
+    return ServerResponse(response=True, code=RESPONSE_CODES.success, message=RESPONSE_MESSAGES.ok,
+                          data=HOME_CONTROLLER.recommend(entityType, user=_user(request),
+                                                         city=city, state=state,
+                                                         filter_code=filter_code,
+                                                         category_id=category_id,
+                                                         lat=lat, lng=lng, radius_km=radius_km))
 
 
 # 0. Home filter bar — basic pills (with icons) + personalized category pills.
@@ -104,17 +109,21 @@ def ForYouView(request, entityType):
 # (resolved by _user, same pattern as ForYouView) personalizes from history.
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@exceptionHandler(responseFunc=ServerResponse, errorMessage=RESPONSE_MESSAGES.engine_error)
 def HomeFiltersView(request):
-    return _ok(HOME_CONTROLLER.home_filters(user=_user(request)))
+    return ServerResponse(response=True, code=RESPONSE_CODES.success, message=RESPONSE_MESSAGES.ok,
+                          data=HOME_CONTROLLER.home_filters(user=_user(request)))
 
 
 # 5. Verified business = architects (legacy; kept for the architects page)
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@exceptionHandler(responseFunc=ServerResponse, errorMessage=RESPONSE_MESSAGES.engine_error)
 def ArchitectsRecommendedView(request):
     city, state = _resolve_location(request)
-    return _ok(HOME_CONTROLLER.recommend_architects(user=_user(request),
-                                                    city=city, state=state))
+    return ServerResponse(response=True, code=RESPONSE_CODES.success, message=RESPONSE_MESSAGES.ok,
+                          data=HOME_CONTROLLER.recommend_architects(user=_user(request),
+                                                                    city=city, state=state))
 
 
 # 5b. Verified businesses — ranked by the combined verified-business score
@@ -122,62 +131,78 @@ def ArchitectsRecommendedView(request):
 # + rating). Powers the home "Verified businesses" section.
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@exceptionHandler(responseFunc=ServerResponse, errorMessage=RESPONSE_MESSAGES.engine_error)
 def VerifiedBusinessesView(request):
     city, state = _resolve_location(request)
-    return _ok(HOME_CONTROLLER.verified_businesses(user=_user(request),
-                                                   city=city, state=state))
+    return ServerResponse(response=True, code=RESPONSE_CODES.success, message=RESPONSE_MESSAGES.ok,
+                          data=HOME_CONTROLLER.verified_businesses(user=_user(request),
+                                                                   city=city, state=state))
 
 
 # "Join us" — final CTA band (eyebrow/heading/desc/buttons/trust-tags/process steps).
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@exceptionHandler(responseFunc=ServerResponse, errorMessage=RESPONSE_MESSAGES.engine_error)
 def JoinUsView(request):
-    return _ok(HOME_CONTROLLER.join_us())
+    return ServerResponse(response=True, code=RESPONSE_CODES.success, message=RESPONSE_MESSAGES.ok,
+                          data=HOME_CONTROLLER.join_us())
 
 
 # "What makes IB different" — differentiator cards (icon/heading/description/eliminates).
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@exceptionHandler(responseFunc=ServerResponse, errorMessage=RESPONSE_MESSAGES.engine_error)
 def DifferentiatorsView(request):
-    return _ok(HOME_CONTROLLER.differentiators())
+    return ServerResponse(response=True, code=RESPONSE_CODES.success, message=RESPONSE_MESSAGES.ok,
+                          data=HOME_CONTROLLER.differentiators())
 
 
 # 8. Get inspired — most-popular products/services as a photo gallery.
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@exceptionHandler(responseFunc=ServerResponse, errorMessage=RESPONSE_MESSAGES.engine_error)
 def GetInspiredView(request):
-    return _ok(HOME_CONTROLLER.get_inspired())
+    return ServerResponse(response=True, code=RESPONSE_CODES.success, message=RESPONSE_MESSAGES.ok,
+                          data=HOME_CONTROLLER.get_inspired())
 
 
 # 7b. Fresh catalogues — "Fresh from manufacturers": newest catalogues, daily cron.
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@exceptionHandler(responseFunc=ServerResponse, errorMessage=RESPONSE_MESSAGES.engine_error)
 def FreshCataloguesView(request):
-    return _ok(HOME_CONTROLLER.fresh_catalogues())
+    return ServerResponse(response=True, code=RESPONSE_CODES.success, message=RESPONSE_MESSAGES.ok,
+                          data=HOME_CONTROLLER.fresh_catalogues())
 
 
 # 6. Shops near you
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@exceptionHandler(responseFunc=ServerResponse, errorMessage=RESPONSE_MESSAGES.engine_error)
 def ShopsNearbyView(request):
     lat = request.GET.get("lat")
     lng = request.GET.get("lng")
     radius = request.GET.get("radius")
     city, state = _resolve_location(request)
-    return _ok(HOME_CONTROLLER.nearby_shops(
-        float(lat) if lat else None, float(lng) if lng else None,
-        float(radius) if radius else None, city=city, state=state))
+    return ServerResponse(response=True, code=RESPONSE_CODES.success, message=RESPONSE_MESSAGES.ok,
+                          data=HOME_CONTROLLER.nearby_shops(
+                              float(lat) if lat else None, float(lng) if lng else None,
+                              float(radius) if radius else None, city=city, state=state))
 
 
 # 9. Video stories = testimonials
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@exceptionHandler(responseFunc=ServerResponse, errorMessage=RESPONSE_MESSAGES.engine_error)
 def TestimonialsView(request):
-    return _ok(HOME_CONTROLLER.testimonials())
+    return ServerResponse(response=True, code=RESPONSE_CODES.success, message=RESPONSE_MESSAGES.ok,
+                          data=HOME_CONTROLLER.testimonials())
 
 
 # 11. In their words = random reviews
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@exceptionHandler(responseFunc=ServerResponse, errorMessage=RESPONSE_MESSAGES.engine_error)
 def RandomReviewsView(request):
-    return _ok(HOME_CONTROLLER.random_reviews())
+    return ServerResponse(response=True, code=RESPONSE_CODES.success, message=RESPONSE_MESSAGES.ok,
+                          data=HOME_CONTROLLER.random_reviews())

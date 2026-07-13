@@ -8,6 +8,50 @@ from ..Validators.QueryValidators import LeadQueryCreateSchema,LeadQueryUpdateSc
 from interior_admin.Controllers.AdminLeads.Validators.AdminLeadsValidators import AdminLeadsCreateSchema,AdminLeadsUpdateSchema
 from datetime import datetime
 
+# Urgency ladder from the lead's `timeline` answer (task 33). Hardcoded — the
+# per-bucket sliders were dropped; add them back only if someone asks to tune it.
+_URGENCY_LADDER = {"30d": 1.0, "90d": 0.66, "90plus": 0.33, "browsing": 0.0}
+
+
+def _signal_values(lead: "LeadQuery"):
+    """Each qualification signal as a 0..1 strength. Budget is deliberately never
+    a signal (task 33). Missing timeline → urgency 0, normalization still holds."""
+    phone_digits = "".join(ch for ch in (lead.phone or "") if ch.isdigit())
+    name = (lead.name or "").strip()
+    text = f"{lead.query or ''} {lead.interested or ''}".strip()
+    return {
+        "contact": 1.0 if len(phone_digits) >= 10 else 0.0,
+        "genuineness": 1.0 if (len(name) >= 3 and any(v in name.lower() for v in "aeiou")) else 0.0,
+        # graded by enquiry length; ~100+ chars counts as fully detailed
+        "detail": min(1.0, len(text) / 100.0),
+        "urgency": _URGENCY_LADDER.get((getattr(lead, "timeline", "") or "").strip(), 0.0),
+    }
+
+
+def compute_score_and_tier(lead: "LeadQuery", weights: dict):
+    """Pure, sync scoring (task 33): normalized weighted average of the 0..1
+    signals → score = round(100 * Σ(w·s) / Σw), so it can NEVER exceed 100 whatever
+    the admin enters. `weights` is a merged config (signal weights + tier_*
+    thresholds). Shared by the async creation path and the re-score command."""
+    from interior_admin.Controllers.Weights.WeightsController import DEFAULT_WEIGHTS
+
+    def wnum(key):
+        try:
+            return float(weights.get(key, DEFAULT_WEIGHTS.get(key, 0)))
+        except (TypeError, ValueError):
+            return float(DEFAULT_WEIGHTS.get(key, 0))
+
+    signals = _signal_values(lead)
+    ws = {k: max(0.0, wnum(k)) for k in signals}
+    total = sum(ws.values())
+    score = 0 if total <= 0 else round(100 * sum(ws[k] * signals[k] for k in signals) / total)
+
+    for tier, key in (("A", "tier_A"), ("B", "tier_B"), ("C", "tier_C"), ("D", "tier_D")):
+        if score >= wnum(key):
+            return score, tier
+    return score, "E"
+
+
 def _detect_anomaly(name: str, phone: str):
     """Cheap anomaly checks run at lead creation (task 14). Returns a short reason
     slug if the lead looks fake/garbage, else None. Tunable heuristics."""
@@ -34,12 +78,8 @@ class LEAD_QUERY_TASK:
 
     @classmethod
     async def _score_and_tier(self, lead: LeadQuery):
-        """Additive qualification score from the weights singleton → tier via the
-        tier_* thresholds (task 15). Read QualificationWeightConfig directly to
-        avoid a controller import cycle.
-        # ponytail: urgency_* weights are intentionally NOT applied — LeadQuery has
-        # no timeline/urgency capture field to source them. Score = contact +
-        # genuineness + detail; add a timeline field later to honor urgency sliders."""
+        """Load the weights singleton, then delegate to the pure normalized scorer
+        (task 33). Read QualificationWeightConfig directly to avoid an import cycle."""
         from interior_admin.Controllers.Weights.WeightsController import DEFAULT_WEIGHTS, merged_weights
         try:
             from interior_admin.models import QualificationWeightConfig
@@ -47,37 +87,7 @@ class LEAD_QUERY_TASK:
             w = merged_weights(cfg.weights)
         except Exception:
             w = dict(DEFAULT_WEIGHTS)
-
-        def num(key):
-            try:
-                return float(w.get(key, DEFAULT_WEIGHTS.get(key, 0)))
-            except (TypeError, ValueError):
-                return float(DEFAULT_WEIGHTS.get(key, 0))
-
-        phone_digits = "".join(ch for ch in (lead.phone or "") if ch.isdigit())
-        name = (lead.name or "").strip()
-        text = f"{lead.query or ''} {lead.interested or ''}".strip()
-
-        score = 0.0
-        if len(phone_digits) >= 10:  # contact present
-            score += num("contact")
-        if len(name) >= 3 and any(v in name.lower() for v in "aeiou"):  # genuine-looking
-            score += num("genuineness")
-        if len(text) >= 20:  # detailed enquiry
-            score += num("detail")
-
-        score = round(score)
-        if score >= num("tier_A"):
-            tier = "A"
-        elif score >= num("tier_B"):
-            tier = "B"
-        elif score >= num("tier_C"):
-            tier = "C"
-        elif score >= num("tier_D"):
-            tier = "D"
-        else:
-            tier = "E"
-        return score, tier
+        return compute_score_and_tier(lead, w)
 
     @classmethod
     async def CreateLeadQueryTask(self, data:LeadQueryCreateSchema|AdminLeadsCreateSchema,user:CustomUser=None):
@@ -101,6 +111,9 @@ class LEAD_QUERY_TASK:
                 lead_query_ins.status = _status
             lead_query_ins.priority= getattr(data, 'priority', None) or ""
             lead_query_ins.remark= getattr(data, 'remark', None) or ""
+            # Timeline (task 33) drives the urgency signal. Public + admin schemas
+            # both carry it; blank when omitted → urgency contributes 0.
+            lead_query_ins.timeline= getattr(data, 'timeline', None) or ""
             lead_query_ins.tag= NAMES.QUERY_TAG
 
             try:
@@ -189,6 +202,9 @@ class LEAD_QUERY_TASK:
             lead_query_ins.priority= getattr(data, NAMES.PRIORITY, None) or lead_query_ins.priority
             lead_query_ins.remark= getattr(data, NAMES.REMARK, None) or lead_query_ins.remark
             lead_query_ins.city= getattr(data, NAMES.CITY, None) or lead_query_ins.city
+            # Editable so a re-score picks up a corrected timeline (score stays
+            # creation-only). ponytail: no recompute on update by design (task 33).
+            lead_query_ins.timeline= getattr(data, 'timeline', None) or lead_query_ins.timeline
 
             try:
                 for logs in data.clientLogs:

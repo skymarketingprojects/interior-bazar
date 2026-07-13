@@ -41,10 +41,11 @@ def LiveFeedInitView(request):
     from app_ib.models import FeedEvent
     from app_ib.Utils.ServerResponse import ServerResponse
     from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+    from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
     rows = FeedEvent.objects.order_by("-timestamp")[:6]
     data = [{"id": e.id, "eventType": e.eventType, "template": e.template,
              "city": e.city, "timestamp": e.timestamp.isoformat()} for e in rows]
-    return ServerResponse(response=True, code=RESPONSE_CODES.success, message="ok", data=data)
+    return ServerResponse(response=True, code=RESPONSE_CODES.success, message=RESPONSE_MESSAGES.ok, data=data)
 
 
 @api_view(["GET"])
@@ -57,12 +58,13 @@ def LiveFeedBatchView(request):
     from app_ib.algorithms.feed import generate_feed_batch
     from app_ib.Utils.ServerResponse import ServerResponse
     from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+    from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
     try:
         limit = int(request.GET.get("limit", 20))
     except (TypeError, ValueError):
         limit = 20
     data = generate_feed_batch(limit)
-    return ServerResponse(response=True, code=RESPONSE_CODES.success, message="ok", data=data)
+    return ServerResponse(response=True, code=RESPONSE_CODES.success, message=RESPONSE_MESSAGES.ok, data=data)
 
 
 @api_view(["GET"])

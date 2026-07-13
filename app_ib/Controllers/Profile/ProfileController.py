@@ -183,7 +183,12 @@ class PROFILE_CONTROLLER:
                         data=user_profile_data
                     )
 
-            # If profile doesn't exist
+            # If profile doesn't exist, still return name/email/phone as "" so the
+            # frontend gets a consistent shape (never missing keys) and can render
+            # its own empty state instead of blank labels.
+            user_data.setdefault(NAMES.NAME, NAMES.EMPTY)
+            user_data.setdefault(NAMES.EMAIL, NAMES.EMPTY)
+            user_data.setdefault(NAMES.PHONE, NAMES.EMPTY)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.user_profile_fetch_success,

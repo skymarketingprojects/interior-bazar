@@ -22,6 +22,10 @@ class RolesController:
         if not getattr(user, "is_authenticated", False):
             return True, {"role": None, "modules": {k: 0 for k in MODULE_KEYS}}
 
+        # Django superusers get full access even without an explicit role row
+        if getattr(user, "is_superuser", False):
+            return True, {"role": "super_admin", "modules": {k: 3 for k in MODULE_KEYS}}
+
         role = await sync_to_async(lambda: user.roles.order_by("-is_full_access", "id").first())()
         if role is None:
             return True, {"role": None, "modules": {k: 0 for k in MODULE_KEYS}}

@@ -21,9 +21,9 @@ import asyncio
 class PLAN_CONTROLLER:
 
     @classmethod
-    async def CreateTransectionData(self,data):
+    async def CreateTransectionData(self,data,planFamily:str=''):
         try:
-            transection = await PLAN_TASKS.CreateTransectionData(data,paymentFor=NAMES.PLAN)
+            transection = await PLAN_TASKS.CreateTransectionData(data,paymentFor=NAMES.PLAN,planFamily=planFamily)
             if transection:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
@@ -113,10 +113,11 @@ class PLAN_CONTROLLER:
                 })
 
     @classmethod
-    async def CreateEntityPlan(self,planId,userId,transectionId):
+    async def CreateEntityPlan(self,planId,userId,transectionId,cycleId=None):
         # Buy-before-entity: attach the purchased plan to the USER (entity FK NULL),
         # routing to the right plan model by Subscription.entityType. No entity is
         # required to exist — that hard dependency (user.user_business.id) is removed.
+        # cycleId selects the purchased PlanBillingCycle (price + durationMonths snapshot).
         try:
             user = await sync_to_async(CustomUser.objects.get)(id=userId)
             plan = await sync_to_async(Subscription.objects.get)(id=planId)
@@ -124,13 +125,13 @@ class PLAN_CONTROLLER:
             # the legacy entityType for rows that predate planFamily.
             family = plan.planFamily or plan.entityType or NAMES.BUSINESS
             if family == PLAN_FAMILY.AUTOMATION:
-                data = await PLAN_TASKS.CreateAutomationPlan(plan=plan,user=user,transectionId=transectionId)
+                data = await PLAN_TASKS.CreateAutomationPlan(plan=plan,user=user,transectionId=transectionId,cycleId=cycleId)
             elif family == ENTITY_TYPE.SHOP:
-                data = await PLAN_TASKS.CreateShopPlan(plan=plan,user=user,transectionId=transectionId)
+                data = await PLAN_TASKS.CreateShopPlan(plan=plan,user=user,transectionId=transectionId,cycleId=cycleId)
             elif family == ENTITY_TYPE.ARCHITECT:
-                data = await PLAN_TASKS.CreateArchitectPlan(plan=plan,user=user,transectionId=transectionId)
+                data = await PLAN_TASKS.CreateArchitectPlan(plan=plan,user=user,transectionId=transectionId,cycleId=cycleId)
             else:
-                data = await PLAN_TASKS.CreateBusinessPlan(plan=plan,user=user,transectionId=transectionId)
+                data = await PLAN_TASKS.CreateBusinessPlan(plan=plan,user=user,transectionId=transectionId,cycleId=cycleId)
             if data:
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success,
@@ -226,9 +227,10 @@ class PLAN_CONTROLLER:
         )()
 
     @classmethod
-    async def PreviewUpgrade(self, user, entityType, targetPlanId):
+    async def PreviewUpgrade(self, user, entityType, targetPlanId, targetCycleId=None):
         """Validate an upgrade and compute the prorated settlement. Rejects downgrade /
-        same-tier and expired plans (expired → must buy fresh). Returns allowed + settleAmount."""
+        same-tier and expired plans (expired → must buy fresh). Returns allowed + settleAmount.
+        Target price comes from the chosen PlanBillingCycle (targetCycleId)."""
         try:
             plan = await self._get_active_plan(user, entityType)
             target = await sync_to_async(lambda: Subscription.objects.filter(id=targetPlanId).first())()
@@ -250,7 +252,8 @@ class PLAN_CONTROLLER:
                 return LocalResponse(response=RESPONSE_MESSAGES.error, message="Only upgrades to a higher tier are allowed",
                                      code=RESPONSE_CODES.error, data={NAMES.ALLOWED: False, NAMES.REASON: "not_higher_tier"})
             cur_amt = float(await MY_METHODS.formatAmount(plan.amount or current_sub.amount or "0"))
-            tgt_amt = float(await MY_METHODS.formatAmount(target.amount or "0"))
+            tgt_price, _tgt_months = await PLAN_TASKS._resolveCycle(target, targetCycleId)
+            tgt_amt = float(await MY_METHODS.formatAmount(tgt_price or "0"))
             credit = 0.0
             last = self._aware(plan.lastActivate)
             if exp and last:
@@ -273,13 +276,14 @@ class PLAN_CONTROLLER:
                                  code=RESPONSE_CODES.error, data={NAMES.ALLOWED: False, NAMES.ERROR: str(e)})
 
     @classmethod
-    async def StashUpgradeIntent(self, user, entityType, targetPlanId, transactionId):
-        """Mark the user's active plan with the pending upgrade target + new txn, so the
-        on-PAID handler can apply it. Stored in buyIntent: 'upgrade:<targetId>:<txn>'."""
+    async def StashUpgradeIntent(self, user, entityType, targetPlanId, transactionId, targetCycleId=None):
+        """Mark the user's active plan with the pending upgrade target + cycle + new txn,
+        so the on-PAID handler can apply it. Stored in buyIntent:
+        'upgrade:<targetId>:<cycleId>:<txn>' (cycleId may be empty)."""
         plan = await self._get_active_plan(user, entityType)
         if not plan:
             return False
-        plan.buyIntent = f"upgrade:{targetPlanId}:{transactionId}"
+        plan.buyIntent = f"upgrade:{targetPlanId}:{targetCycleId or ''}:{transactionId}"
         await sync_to_async(plan.save)()
         return True
 
@@ -297,19 +301,29 @@ class PLAN_CONTROLLER:
                 )()
                 if not planIns:
                     continue
+                # buyIntent: 'upgrade:<targetId>:<cycleId>:<txn>' (new) or legacy
+                # 'upgrade:<targetId>:<txn>' (no cycle). Parse both.
+                parts = planIns.buyIntent.split(":")
                 try:
-                    targetId = int(planIns.buyIntent.split(":")[1])
+                    targetId = int(parts[1])
                 except (IndexError, ValueError):
                     return False
+                cycleId = None
+                if len(parts) >= 4 and parts[2]:
+                    try:
+                        cycleId = int(parts[2])
+                    except ValueError:
+                        cycleId = None
                 target = await sync_to_async(lambda: Subscription.objects.filter(id=targetId).first())()
                 if not target:
                     return False
-                planDuration = await MY_METHODS.parseDurationToDays(target.duration)
+                price, months = await PLAN_TASKS._resolveCycle(target, cycleId)
                 today = await MY_METHODS.getCurrentDateTime()
                 base = datetime(today.tm_year, today.tm_mon, today.tm_mday)
                 planIns.plan = target
-                planIns.amount = target.amount
-                planIns.expireDate = base + relativedelta(months=planDuration)
+                planIns.amount = price
+                planIns.durationMonths = months
+                planIns.expireDate = base + relativedelta(months=int(months or 0))
                 planIns.buyIntent = NAMES.WEBSITE
                 await sync_to_async(planIns.save)()
                 return True

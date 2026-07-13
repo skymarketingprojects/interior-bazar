@@ -32,17 +32,14 @@ PAGES = [
 
 
 def seed_pages(apps, schema_editor):
+    # Seed-only: existing rows (e.g. restored prod content) are NEVER overwritten.
     Pages = apps.get_model("app_ib", "Pages")
     for page in PAGES:
         quill_json = json.dumps({"delta": "", "html": page["html"]})
-        obj, created = Pages.objects.get_or_create(
+        Pages.objects.get_or_create(
             pageName=page["pageName"],
             defaults={"title": page["title"], "content": quill_json},
         )
-        if not created:
-            obj.title = page["title"]
-            obj.content = quill_json
-            obj.save()
 
 
 def remove_pages(apps, schema_editor):

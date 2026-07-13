@@ -9,9 +9,12 @@ urlpatterns = [
     path('nearby/<int:businessId>/',SearchView.GetNearbyBusinessView, name='GetnearbyBusinessView'),
 
     #########################################################
-    # Business:  
+    # Business:
     #########################################################
-    path('detail//header/<int:businessId>/',BusinessView.GetBusinessHeaderView, name='GetBusinessHeaderView'),
+    # (removed) dead+broken 'detail//header/<int:businessId>/' route: the double-slash
+    # made it unreachable via the real 'detail/header/<id>/' path, and its handler
+    # GetBusinessHeaderView(request) takes no businessId arg so it would TypeError if hit.
+    # The live header route is 'detail/header/<int:businessId>/' below. See CHANGED-ROUTES.md.
     path('create/', BusinessView.CreateBusinessView, name='CreateBusinessView'),
     path('update/', BusinessView.UpdateBusinessView, name='UpdateBusinessView'),
     path('<int:id>/', BusinessView.GetBusinessByIdView, name='GetBusinessByIdView'),

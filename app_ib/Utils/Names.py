@@ -33,6 +33,7 @@ class NAMES:
     COMMA=','
 
     INDEX='index'
+    UPDATED='updated'
     ISACTIVE='isActive'
     IS_DELETE='is_delete'
     UPDATED_AT='updatedAt'
@@ -200,6 +201,7 @@ class NAMES:
 
     BUSINESS_ID='businessId'
     PLAN_ID='planId'
+    CYCLE_ID='cycleId'  # chosen PlanBillingCycle at checkout (task 30)
     PLAN_NAME='planName'
 
     # entity-typed plans (buy-before-entity model)

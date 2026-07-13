@@ -65,7 +65,7 @@ class AdPlacement(models.Model):
 
 class AdCampaign(models.Model):
     # advertiser is null for house/fallback ads authored by admin (task 16).
-    advertiser = models.ForeignKey('app_ib.Business', on_delete=models.CASCADE, related_name='adCampaigns', null=True, blank=True)
+    advertiser = models.ForeignKey('interior_business.Business', on_delete=models.CASCADE, related_name='adCampaigns', null=True, blank=True)
     title = models.CharField(max_length=255, blank=True, null=True)
     # Page-slug targeting for house/fallback ads ("" = any page). Paid ads leave
     # this blank and target by placement only.
@@ -103,8 +103,8 @@ class AdCampaign(models.Model):
 class AdAsset(models.Model):
     campaign = models.ForeignKey(AdCampaign, on_delete=models.CASCADE, related_name='assets')
     assetType = models.ForeignKey(AdAssetType, on_delete=models.PROTECT)
-    category = models.ManyToManyField('app_ib.BusinessCategory')
-    subCategory = models.ManyToManyField('app_ib.BusinessSegment')
+    category = models.ManyToManyField('interior_business.BusinessCategory')
+    subCategory = models.ManyToManyField('interior_business.BusinessSegment')
     productCategory = models.ManyToManyField("interior_products.ProductCategory")
     productSubCategory = models.ManyToManyField("interior_products.ProductSubCategory")
     s3Key = models.TextField()
@@ -130,10 +130,10 @@ class AdPayment(models.Model):
 class AdPersona(models.Model):
     campaign = models.ForeignKey(AdCampaign, on_delete=models.CASCADE, related_name='personas')
     gender = models.CharField(max_length=50, blank=True, null=True)
-    categories = models.ManyToManyField('app_ib.BusinessCategory', blank=True)
+    categories = models.ManyToManyField('interior_business.BusinessCategory', blank=True)
     ageBetween = models.CharField(max_length=50, blank=True, null=True)
     personaType = models.CharField(max_length=50, blank=True, null=True)
-    segment = models.ForeignKey('app_ib.BusinessSegment', on_delete=models.PROTECT, blank=True, null=True)
+    segment = models.ForeignKey('interior_business.BusinessSegment', on_delete=models.PROTECT, blank=True, null=True)
 
 
     def __str__(self):
@@ -253,7 +253,7 @@ class HomeHeroBanner(models.Model):
     endsAt = models.DateTimeField(null=True, blank=True)
     # Up to 2 businesses are RENDERED per slide; more may be assigned, the
     # endpoint takes the first 2 (stable id order) and backfills if short.
-    businesses = models.ManyToManyField('app_ib.Business', blank=True, related_name='heroBanners')
+    businesses = models.ManyToManyField('interior_business.Business', blank=True, related_name='heroBanners')
     createdAt = models.DateTimeField(default=timezone.now)
     updatedAt = models.DateTimeField(auto_now=True)
 

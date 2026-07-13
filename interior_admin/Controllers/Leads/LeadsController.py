@@ -13,8 +13,10 @@ def _lead(l: LeadQuery) -> Dict[str, Any]:
     return {
         "id": l.id, "name": l.name, "phone": l.phone, "email": l.email,
         "interested": l.interested, "query": l.query, "city": l.city, "state": l.state,
+        "country": l.country, "category": l.category, "stage": l.stage, "tag": l.tag,
         "status": l.status, "leadStatus": l.leadStatus,
         "tier": l.tier, "score": l.score, "remark": l.remark,
+        "timeline": l.timeline,
         "business": l.business.businessName if l.business_id else None,
     }
 
@@ -34,8 +36,11 @@ class LeadsController:
             filters &= Q(tier=tier)
         # Routing passes excludeQuarantine=True so quarantined/spam leads don't leak
         # into the routing queue (fixes the bug where status=None returned ALL leads).
+        # Also drop already-assigned leads: assigning sets business (AssignLeadQueryTask)
+        # but no status change, so without this an assigned lead stays in the queue.
         if excludeQuarantine:
             filters &= ~Q(status__icontains="quarantine") & ~Q(status__icontains="spam")
+            filters &= Q(business__isnull=True)
         pageNo = max(1, pageNo or 1); pageSize = min(100, max(1, pageSize or 20))
         start = (pageNo - 1) * pageSize
         qs = LeadQuery.objects.filter(filters).select_related("business").order_by("-id")

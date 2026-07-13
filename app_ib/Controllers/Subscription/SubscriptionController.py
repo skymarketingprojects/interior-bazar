@@ -106,7 +106,7 @@ class SUBSCRIPTION_CONTROLLER:
             # Evaluate the queryset to a list before iterating. Buyers only ever
             # see live plans — archived plans (isActive=False) stay admin-only.
             subscription_ins = await sync_to_async(list)(
-                Subscription.objects.filter(isActive=True)
+                Subscription.objects.filter(isActive=True, is_delete=False)
             )
 
             fetch_subscription_response = []

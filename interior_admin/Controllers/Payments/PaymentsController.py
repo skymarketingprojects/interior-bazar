@@ -65,6 +65,12 @@ class PaymentsController:
         if txn.refundStatus == 'REFUNDED':
             return False, {"message": "Transaction is already refunded"}
 
+        # Only money actually collected can be refunded. Gateway rows sit at "ACTIVE"
+        # until the buyer returns and the order flips to PAID; refunding one that never
+        # reached PAID would fabricate a refund against uncollected money.
+        if txn.orderStatus != NAMES.CF_PAID:
+            return False, {"message": "Only a paid transaction can be refunded"}
+
         if payload.reject:
             txn.refundStatus = 'REJECTED'
             txn.refundReason = payload.reason

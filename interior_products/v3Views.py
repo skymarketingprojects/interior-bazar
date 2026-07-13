@@ -8,63 +8,42 @@ old frontend and stay untouched):
     GET v1/market/v3/product/<productId>/related/       → category-related rail
     GET v1/market/v3/product/<productId>/from-business/ → same-seller rail
 
-Plain sync DRF views (same style as the engine layer). No cache reads/writes —
-every request hits the ORM directly, so the page keeps working with Redis down.
+Canonical responder stack (task 21): sync DRF @api_view functions wrapped by
+@exceptionHandler(responseFunc=ServerResponse, errorMessage=...) — the decorator maps any
+exception to a clean envelope (no per-view try/except, no local _serve/_error wrappers);
+views pass the controller's LocalResponse straight through as a ServerResponse. No cache
+reads/writes — every request hits the ORM directly, so the page keeps working with Redis down.
 """
-from rest_framework.views import APIView
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
-from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.decorators.ViewDecorator import exceptionHandler
 from .Controllers.products.productsV3Controller import PRODUCTS_V3_CONTROLLER
 
 
-def _serve(local) -> ServerResponse:
-    return ServerResponse(
-        response=local.response,
-        message=local.message,
-        code=local.code,
-        data=local.data,
-    )
+@api_view(["GET"])
+@permission_classes([AllowAny])
+@exceptionHandler(responseFunc=ServerResponse, errorMessage=RESPONSE_MESSAGES.product_fetch_error)
+def ProductDetailV3View(request, slugOrId: str):
+    local = PRODUCTS_V3_CONTROLLER.getProductDetailV3(slugOrId)
+    return ServerResponse(response=local.response, code=local.code, message=local.message, data=local.data)
 
 
-def _error(exc: Exception) -> ServerResponse:
-    return ServerResponse(
-        response=RESPONSE_MESSAGES.error,
-        message=RESPONSE_MESSAGES.product_fetch_error,
-        code=RESPONSE_CODES.error,
-        data={'error': str(exc)},
-    )
+@api_view(["GET"])
+@permission_classes([AllowAny])
+@exceptionHandler(responseFunc=ServerResponse, errorMessage=RESPONSE_MESSAGES.product_fetch_error)
+def RelatedProductsV3View(request, productId: int):
+    limit = request.GET.get('limit', None)
+    local = PRODUCTS_V3_CONTROLLER.getRelatedProductsV3(productId, int(limit) if limit else 10)
+    return ServerResponse(response=local.response, code=local.code, message=local.message, data=local.data)
 
 
-class ProductDetailV3View(APIView):
-    permission_classes = [AllowAny]
-
-    def get(self, request, slugOrId: str) -> ServerResponse:
-        try:
-            return _serve(PRODUCTS_V3_CONTROLLER.getProductDetailV3(slugOrId))
-        except Exception as e:
-            return _error(e)
-
-
-class RelatedProductsV3View(APIView):
-    permission_classes = [AllowAny]
-
-    def get(self, request, productId: int) -> ServerResponse:
-        try:
-            limit = request.GET.get('limit', None)
-            return _serve(PRODUCTS_V3_CONTROLLER.getRelatedProductsV3(productId, int(limit) if limit else 10))
-        except Exception as e:
-            return _error(e)
-
-
-class BusinessProductsV3View(APIView):
-    permission_classes = [AllowAny]
-
-    def get(self, request, productId: int) -> ServerResponse:
-        try:
-            limit = request.GET.get('limit', None)
-            return _serve(PRODUCTS_V3_CONTROLLER.getBusinessProductsV3(productId, int(limit) if limit else 10))
-        except Exception as e:
-            return _error(e)
+@api_view(["GET"])
+@permission_classes([AllowAny])
+@exceptionHandler(responseFunc=ServerResponse, errorMessage=RESPONSE_MESSAGES.product_fetch_error)
+def BusinessProductsV3View(request, productId: int):
+    limit = request.GET.get('limit', None)
+    local = PRODUCTS_V3_CONTROLLER.getBusinessProductsV3(productId, int(limit) if limit else 10)
+    return ServerResponse(response=local.response, code=local.code, message=local.message, data=local.data)

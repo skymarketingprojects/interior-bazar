@@ -24,6 +24,25 @@ PRODUCT_TTL = 1800
 # 7 days for static structural data
 STATIC_TTL = 604800
 
+
+def user_business_or_none(user):
+    """A fresh seller has no Business row yet — accessing user.user_business
+    raises RelatedObjectDoesNotExist. Return None instead so views can answer
+    with a clear 'create your business profile first' envelope."""
+    try:
+        return user.user_business
+    except Exception:
+        return None
+
+
+def no_business_response():
+    return ServerResponse(
+        response=RESPONSE_MESSAGES.error,
+        message="Create your business profile before managing listings",
+        code=410,
+        data={},
+    )
+
 class ProductView(AsyncAPIView):
     """
     Async class-based view handling GET, POST, PUT, DELETE
@@ -45,7 +64,9 @@ class ProductView(AsyncAPIView):
             cache_key = None
             
             if productId == None:
-                business = request.user.user_business
+                business = user_business_or_none(request.user)
+                if business is None:
+                    return no_business_response()
                 cache_key = f"cache:product:business:owner:{business.id}"
             else:
                 cache_key = f"cache:product:{productId}"
@@ -86,8 +107,11 @@ class ProductView(AsyncAPIView):
             )
     async def post(self, request: HttpRequest)->ServerResponse:
         try:
+            business = user_business_or_none(request.user)
+            if business is None:
+                return no_business_response()
             data = MY_METHODS.json_to_object(request.data)
-            productsResponse = await PRODUCTS_CONTROLLER.createProduct(request.user.user_business,data)
+            productsResponse = await PRODUCTS_CONTROLLER.createProduct(business,data)
             return ServerResponse(
                 response=productsResponse.response,
                 message=productsResponse.message,
@@ -104,8 +128,11 @@ class ProductView(AsyncAPIView):
             )
     async def put(self, request: HttpRequest,productId: int)->ServerResponse:
         try:
+            business = user_business_or_none(request.user)
+            if business is None:
+                return no_business_response()
             data = MY_METHODS.json_to_object(request.data)
-            productsResponse = await PRODUCTS_CONTROLLER.updateProduct(request.user.user_business,productId,data)
+            productsResponse = await PRODUCTS_CONTROLLER.updateProduct(business,productId,data)
             return ServerResponse(
                 response=productsResponse.response,
                 message=productsResponse.message,
@@ -122,7 +149,10 @@ class ProductView(AsyncAPIView):
             )
     async def delete(self, request: HttpRequest,productId: int)->ServerResponse:
         try:
-            productsResponse = await PRODUCTS_CONTROLLER.deleteProduct(request.user.user_business,productId)
+            business = user_business_or_none(request.user)
+            if business is None:
+                return no_business_response()
+            productsResponse = await PRODUCTS_CONTROLLER.deleteProduct(business,productId)
             return ServerResponse(
                 response=productsResponse.response,
                 message=productsResponse.message,
@@ -159,7 +189,9 @@ class ServiceView(AsyncAPIView):
             cache_key = None
 
             if serviceId == None:
-                business = request.user.user_business
+                business = user_business_or_none(request.user)
+                if business is None:
+                    return no_business_response()
                 cache_key = f"cache:service:business:owner:{business.id}"
             else:
                 cache_key = f"cache:service:{serviceId}"
@@ -201,7 +233,10 @@ class ServiceView(AsyncAPIView):
     async def post(self, request: HttpRequest)->ServerResponse:
         try:
             data = MY_METHODS.json_to_object(request.data)
-            servicesResponse = await SERVICES_CONTROLLER.createService(request.user.user_business,data)
+            business = user_business_or_none(request.user)
+            if business is None:
+                return no_business_response()
+            servicesResponse = await SERVICES_CONTROLLER.createService(business,data)
             return ServerResponse(
                 response=servicesResponse.response,
                 message=servicesResponse.message,
@@ -219,7 +254,10 @@ class ServiceView(AsyncAPIView):
     async def put(self, request: HttpRequest,serviceId: int)->ServerResponse:
         try:
             data = MY_METHODS.json_to_object(request.data)
-            servicesResponse = await SERVICES_CONTROLLER.updateService(request.user.user_business,serviceId,data)
+            business = user_business_or_none(request.user)
+            if business is None:
+                return no_business_response()
+            servicesResponse = await SERVICES_CONTROLLER.updateService(business,serviceId,data)
             return ServerResponse(
                 response=servicesResponse.response,
                 message=servicesResponse.message,
@@ -236,7 +274,10 @@ class ServiceView(AsyncAPIView):
             )
     async def delete(self, request: HttpRequest,serviceId: int)->ServerResponse:
         try:
-            servicesResponse = await SERVICES_CONTROLLER.deleteService(request.user.user_business,serviceId)
+            business = user_business_or_none(request.user)
+            if business is None:
+                return no_business_response()
+            servicesResponse = await SERVICES_CONTROLLER.deleteService(business,serviceId)
             return ServerResponse(
                 response=servicesResponse.response,
                 message=servicesResponse.message,
@@ -274,7 +315,9 @@ class CatelogView(AsyncAPIView):
             cache_key = None
 
             if catelogueId == None:
-                business = request.user.user_business
+                business = user_business_or_none(request.user)
+                if business is None:
+                    return no_business_response()
                 cache_key = f"cache:catalogue:business:owner:{business.id}"
             else:
                 cache_key = f"cache:catalogue:{catelogueId}"
@@ -319,8 +362,11 @@ class CatelogView(AsyncAPIView):
         try:
             user_ins = request.user
             data = MY_METHODS.json_to_object(request.data)
+            business = user_business_or_none(user_ins)
+            if business is None:
+                return no_business_response()
             auth_resp = await CATELOG_CONTROLLER.CreateCatelog(
-                business=user_ins.user_business,
+                business=business,
                 data=data
             )
             return ServerResponse(
@@ -343,8 +389,11 @@ class CatelogView(AsyncAPIView):
         try:
             user_ins = request.user
             data = MY_METHODS.json_to_object(request.data)
+            business = user_business_or_none(user_ins)
+            if business is None:
+                return no_business_response()
             auth_resp = await CATELOG_CONTROLLER.UpdateCatelog(
-                business=user_ins.user_business,
+                business=business,
                 catelogId=catelogueId,
                 data=data
             )
@@ -367,8 +416,11 @@ class CatelogView(AsyncAPIView):
         """Delete a catalog."""
         try:
             user_ins = request.user
+            business = user_business_or_none(user_ins)
+            if business is None:
+                return no_business_response()
             auth_resp = await CATELOG_CONTROLLER.DeleteCatelog(
-                business=user_ins.user_business,
+                business=business,
                 catelogId=catelogueId
             )
             return ServerResponse(

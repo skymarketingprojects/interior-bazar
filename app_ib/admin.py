@@ -189,9 +189,6 @@ class QNAAdmin(admin.ModelAdmin):
 # admin.site.register(models.Quate)
 # admin.site.register(models.PlanQuery)
 # admin.site.register(models.Feedback)
-# admin.site.register(models.Blog)
-# admin.site.register(models.Constants)
-# admin.site.register(models.Banners)
 # admin.site.register(models.OfferHeading)
 
 app_models = apps.get_app_config("app_ib").get_models()

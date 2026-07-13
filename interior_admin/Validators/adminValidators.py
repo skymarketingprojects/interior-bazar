@@ -28,7 +28,9 @@ async def hasAccess(user=None, accessName: str = None, request: Request = None):
     if not user:
         raise PermissionDenied(RESPONSE_MESSAGES.unauthorized)
 
-    # 2. Universal Access Check (is_full_access flag)
+    # 2. Universal Access Check (Django superuser or is_full_access role)
+    if getattr(user, "is_superuser", False):
+        return True
     if await Role.objects.filter(users=user, is_full_access=True).aexists():
         return True
 

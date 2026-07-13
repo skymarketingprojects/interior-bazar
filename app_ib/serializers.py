@@ -151,6 +151,15 @@ class SessionAwareTokenRefreshSerializer(TokenRefreshSerializer):
             new_jti = str(new_rt.get("jti", ""))
             if old_jti and new_jti:
                 _bump_session(old_jti, new_jti)
+            # Task 8 — the parent mints the new ACCESS token WITHOUT sjti; re-add it
+            # (= the new refresh jti, matching the bumped session) so refreshed tokens
+            # stay enforceable by SessionAwareJWTAuthentication and keep flagging
+            # isCurrent in my_sessions.
+            if new_jti and data.get("access"):
+                from rest_framework_simplejwt.tokens import AccessToken
+                at = AccessToken(data["access"])
+                at["sjti"] = new_jti
+                data["access"] = str(at)
         except Exception as exc:
             logger.warning("Session jti bump failed (non-fatal): %s", exc)
 

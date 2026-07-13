@@ -9,6 +9,8 @@ from rest_framework.permissions import AllowAny
 
 from app_ib.Utils.ServerResponse import ServerResponse
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
+from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
+from app_ib.decorators.ViewDecorator import exceptionHandler
 from app_ib.Controllers.Engine.HomeBannerController import HOME_BANNER_CONTROLLER
 
 
@@ -16,8 +18,9 @@ from app_ib.Controllers.Engine.HomeBannerController import HOME_BANNER_CONTROLLE
 # metrics + 2 featured businesses per slide, trending-backfilled).
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@exceptionHandler(responseFunc=ServerResponse, errorMessage=RESPONSE_MESSAGES.engine_error)
 def HomeBannersView(request):
-    return ServerResponse(response=True, code=RESPONSE_CODES.success, message="ok",
+    return ServerResponse(response=True, code=RESPONSE_CODES.success, message=RESPONSE_MESSAGES.ok,
                           data=HOME_BANNER_CONTROLLER.hero_banners(page="home", user=request.user))
 
 
@@ -27,7 +30,8 @@ def HomeBannersView(request):
 # keeps its static fallback.
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@exceptionHandler(responseFunc=ServerResponse, errorMessage=RESPONSE_MESSAGES.engine_error)
 def BannersView(request):
     page = request.GET.get("page") or "home"
-    return ServerResponse(response=True, code=RESPONSE_CODES.success, message="ok",
+    return ServerResponse(response=True, code=RESPONSE_CODES.success, message=RESPONSE_MESSAGES.ok,
                           data=HOME_BANNER_CONTROLLER.hero_banners(page=page, user=request.user))

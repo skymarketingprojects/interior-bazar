@@ -80,6 +80,9 @@ urlpatterns = [
     path('plans/', PlansViews.PlansListView, name='admin_plans'),
     path('plans/<int:planId>/', PlansViews.PlanUpdateView, name='admin_plan_update'),
     path('plans/<int:planId>/archive/', PlansViews.PlanArchiveView, name='admin_plan_archive'),
+    # Billing cycles (task 30) — add/enable/disable time·price options on a plan
+    path('plans/<int:planId>/cycles/', PlansViews.PlanCyclesView, name='admin_plan_cycles'),
+    path('plans/<int:planId>/cycles/<int:cycleId>/', PlansViews.PlanCycleDetailView, name='admin_plan_cycle_detail'),
     # House banners (promptsadmin task 15)
     path('banners-house/', BannersViews.BannersCollectionView, name='admin_banners_house'),
     path('banners-house/<int:bannerId>/', BannersViews.BannerDetailView, name='admin_banner_detail'),

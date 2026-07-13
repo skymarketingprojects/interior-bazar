@@ -8,6 +8,11 @@ from django.db import IntegrityError
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.MyMethods import MY_METHODS
+# Engine controllers signal not-found / ownership / conflict with these custom
+# exceptions (plain Exception subclasses, not Django's). Handling them here keeps
+# the codes identical to the old EngineGapsView _err wrapper (task 19). Safe import:
+# CrudController pulls only django.db + EngineConfig, never ViewDecorator.
+from app_ib.Controllers.Engine.CrudController import NotFound_, PermissionError_, Conflict_
 
 def exceptionHandler(
     *,
@@ -56,7 +61,32 @@ def exceptionHandler(
                     )
             
             except asyncio.CancelledError:
-                raise 
+                raise
+
+            # engine controller signals — preserve _err codes (task 19)
+            except NotFound_ as e:
+                return responseFunc(
+                    response=RESPONSE_MESSAGES.error,
+                    message=str(e),
+                    code=RESPONSE_CODES.not_exist,
+                    data={},
+                )
+
+            except PermissionError_ as e:
+                return responseFunc(
+                    response=RESPONSE_MESSAGES.error,
+                    message=str(e),
+                    code=RESPONSE_CODES.forbidden,
+                    data={},
+                )
+
+            except Conflict_ as e:
+                return responseFunc(
+                    response=RESPONSE_MESSAGES.error,
+                    message=str(e),
+                    code=RESPONSE_CODES.conflict,
+                    data={},
+                )
 
             except PermissionDenied as e:
                 pass
@@ -134,6 +164,31 @@ def exceptionHandler(
         def sync_wrapper(*args, **kwargs):
             try:
                 return func(*args, **kwargs)
+
+            # engine controller signals — preserve _err codes (task 19)
+            except NotFound_ as e:
+                return responseFunc(
+                    response=RESPONSE_MESSAGES.error,
+                    message=str(e),
+                    code=RESPONSE_CODES.not_exist,
+                    data={},
+                )
+
+            except PermissionError_ as e:
+                return responseFunc(
+                    response=RESPONSE_MESSAGES.error,
+                    message=str(e),
+                    code=RESPONSE_CODES.forbidden,
+                    data={},
+                )
+
+            except Conflict_ as e:
+                return responseFunc(
+                    response=RESPONSE_MESSAGES.error,
+                    message=str(e),
+                    code=RESPONSE_CODES.conflict,
+                    data={},
+                )
 
             except ValidationError as e:
                 return responseFunc(

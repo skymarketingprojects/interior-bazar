@@ -13,6 +13,7 @@ from django.db.models import Q
 from app_ib.Utils.LocalResponse import LocalResponse
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
+from app_ib.Utils.Names import NAMES
 from interior_products.models import Product
 
 # Human labels for the ProductSpecification titles the legacy product form
@@ -27,24 +28,6 @@ _SPEC_LABELS = {
 # Rail size bounds for related / from-business lists
 _DEFAULT_LIMIT = 10
 _MAX_LIMIT = 24
-
-
-def _not_found() -> LocalResponse:
-    return LocalResponse(
-        response=RESPONSE_MESSAGES.error,
-        message=RESPONSE_MESSAGES.product_fetch_error,
-        code=RESPONSE_CODES.not_exist,
-        data={'error': RESPONSE_MESSAGES.product_fetch_error},
-    )
-
-
-def _ok(data) -> LocalResponse:
-    return LocalResponse(
-        response=RESPONSE_MESSAGES.success,
-        message=RESPONSE_MESSAGES.product_fetch_success,
-        code=RESPONSE_CODES.success,
-        data=data,
-    )
 
 
 class PRODUCTS_V3_CONTROLLER:
@@ -116,7 +99,8 @@ class PRODUCTS_V3_CONTROLLER:
         value = str(slugOrId)
         product = qs.filter(id=int(value)).first() if value.isdigit() else qs.filter(slug=value).first()
         if not product:
-            return _not_found()
+            return LocalResponse(response=RESPONSE_MESSAGES.error, message=RESPONSE_MESSAGES.product_fetch_error,
+                                 code=RESPONSE_CODES.not_exist, data={NAMES.ERROR: RESPONSE_MESSAGES.product_fetch_error})
 
         business = product.business
         location = getattr(business, 'business_location', None) if business else None
@@ -182,7 +166,8 @@ class PRODUCTS_V3_CONTROLLER:
                 'avgResponseSeconds': business.avgResponseSeconds if business else None,
             },
         }
-        return _ok(data)
+        return LocalResponse(response=RESPONSE_MESSAGES.success, message=RESPONSE_MESSAGES.product_fetch_success,
+                             code=RESPONSE_CODES.success, data=data)
 
     @classmethod
     def getRelatedProductsV3(cls, productId: int, limit: int = _DEFAULT_LIMIT) -> LocalResponse:
@@ -190,7 +175,8 @@ class PRODUCTS_V3_CONTROLLER:
         limit = max(1, min(int(limit or _DEFAULT_LIMIT), _MAX_LIMIT))
         product = Product.objects.prefetch_related('category', 'subCategory').filter(id=productId).first()
         if not product:
-            return _not_found()
+            return LocalResponse(response=RESPONSE_MESSAGES.error, message=RESPONSE_MESSAGES.product_fetch_error,
+                                 code=RESPONSE_CODES.not_exist, data={NAMES.ERROR: RESPONSE_MESSAGES.product_fetch_error})
 
         cat_ids = list(product.category.values_list('id', flat=True))
         sub_ids = list(product.subCategory.values_list('id', flat=True))
@@ -207,7 +193,8 @@ class PRODUCTS_V3_CONTROLLER:
             rows = list(cls._rail_queryset(base)[:limit])
 
         items = [cls._card(p) for p in rows]
-        return _ok({'items': items, 'total': len(items)})
+        return LocalResponse(response=RESPONSE_MESSAGES.success, message=RESPONSE_MESSAGES.product_fetch_success,
+                             code=RESPONSE_CODES.success, data={'items': items, 'total': len(items)})
 
     @classmethod
     def getBusinessProductsV3(cls, productId: int, limit: int = _DEFAULT_LIMIT) -> LocalResponse:
@@ -215,14 +202,16 @@ class PRODUCTS_V3_CONTROLLER:
         limit = max(1, min(int(limit or _DEFAULT_LIMIT), _MAX_LIMIT))
         product = Product.objects.select_related('business').filter(id=productId).first()
         if not product or not product.business:
-            return _not_found()
+            return LocalResponse(response=RESPONSE_MESSAGES.error, message=RESPONSE_MESSAGES.product_fetch_error,
+                                 code=RESPONSE_CODES.not_exist, data={NAMES.ERROR: RESPONSE_MESSAGES.product_fetch_error})
 
         business = product.business
         rows = list(cls._rail_queryset(
             business.products.filter(isActive=True).exclude(id=product.id)
         )[:limit])
 
-        return _ok({
+        return LocalResponse(response=RESPONSE_MESSAGES.success, message=RESPONSE_MESSAGES.product_fetch_success,
+                             code=RESPONSE_CODES.success, data={
             'business': {
                 'id': business.id,
                 'name': business.businessName,

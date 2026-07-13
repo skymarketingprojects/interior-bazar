@@ -15,13 +15,31 @@ PAGES = json.loads(r'''[
 
 
 def update_pages(apps, schema_editor):
+    # Replaces ONLY the thin 0034 placeholders (or empty content) with the full
+    # copy. Real content — e.g. restored production legal pages — is never
+    # overwritten (prod wins on data).
+    import importlib
+    placeholder = {
+        p['pageName']: p['html']
+        for p in importlib.import_module('app_ib.migrations.0034_seed_legal_pages').PAGES
+    }
     Pages = apps.get_model('app_ib', 'Pages')
     for page in PAGES:
         quill_json = json.dumps({'delta': '', 'html': page['html']})
-        Pages.objects.update_or_create(
+        obj, created = Pages.objects.get_or_create(
             pageName=page['pageName'],
             defaults={'title': page['title'], 'content': quill_json},
         )
+        if created:
+            continue
+        # raw DB value, bypassing the QuillField descriptor
+        raw = Pages.objects.filter(pk=obj.pk).values_list('content', flat=True).first()
+        try:
+            current_html = json.loads(raw or '{}').get('html', '')
+        except (ValueError, AttributeError):
+            current_html = ''
+        if not current_html or current_html == placeholder.get(page['pageName']):
+            Pages.objects.filter(pk=obj.pk).update(title=page['title'], content=quill_json)
 
 
 class Migration(migrations.Migration):

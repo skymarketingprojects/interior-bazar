@@ -238,7 +238,9 @@ class _EngineController:
             ct = ContentType.objects.filter(id=it.get("contentType")).first()
             if not ct:
                 continue
-            obj = ct.model_class().objects.filter(id=it["objectId"]).first()
+            # ponytail: model_class() is None for a moved/removed model (or stale CT cache) → skip.
+            model = ct.model_class()
+            obj = model.objects.filter(id=it["objectId"]).first() if model else None
             if not obj:
                 continue
             out.append({"entityType": ct.model, "id": obj.id, "name": _name(obj),
@@ -325,7 +327,9 @@ class _EngineController:
         from app_ib.models import SavedItem
         out = []
         for s in SavedItem.objects.filter(user=user).order_by("-timestamp")[:100]:
-            obj = s.contentType.model_class().objects.filter(id=s.objectId).first()
+            # ponytail: guard None model_class() (moved/removed model or stale CT cache), same as recently_viewed().
+            model = s.contentType.model_class()
+            obj = model.objects.filter(id=s.objectId).first() if model else None
             if obj:
                 out.append({"entityType": s.contentType.model, "id": obj.id,
                             "objectId": s.objectId, "name": _name(obj),
@@ -338,7 +342,11 @@ class _EngineController:
         from app_ib.models import RecentlyViewed
         out = []
         for r in RecentlyViewed.objects.filter(user=user).order_by("-viewedAt")[:ALGO.RECENTLY_VIEWED_CAP]:
-            obj = r.contentType.model_class().objects.filter(id=r.objectId).first()
+            # ponytail: model_class() is None when the CT points at a moved/removed model
+            # (or a stale ContentType cache from a process that predates a relabel migration)
+            # -> skip the row instead of NoneType.objects blowing up the whole endpoint.
+            model = r.contentType.model_class()
+            obj = model.objects.filter(id=r.objectId).first() if model else None
             if obj:
                 count, count_label = _rv_count(obj)
                 out.append({"entityType": r.contentType.model, "id": obj.id,
@@ -364,7 +372,9 @@ class _EngineController:
         from app_ib.models import RecentlyViewed
         out = []
         for r in RecentlyViewed.objects.filter(user=user).order_by("-viewedAt")[:ALGO.RECENTLY_VIEWED_CAP]:
-            obj = r.contentType.model_class().objects.filter(id=r.objectId).first()
+            # ponytail: guard None model_class() (moved/removed model or stale CT cache), same as recently_viewed().
+            model = r.contentType.model_class()
+            obj = model.objects.filter(id=r.objectId).first() if model else None
             if obj:
                 out.append((_name(obj), r.viewedAt))
         return out

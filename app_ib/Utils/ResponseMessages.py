@@ -505,6 +505,98 @@ class RESPONSE_MESSAGES:
     engine_profile_success= 'Profile fetched successfully'
     invalid_email= 'Invalid email address'
 
+    ############################################
+    # Engine gap endpoints (task 19 — canonical responders)
+    # Values match the pre-conversion inline strings exactly (message parity).
+    ############################################
+    ok= 'ok'
+    engine_error= 'Unable to process request'
+    authentication_required= 'authentication required'
+
+    # success
+    notifications_marked_read= 'Marked all read'
+    plan_change_processed= 'Plan change processed'
+    keyword_added= 'Keyword added'
+    keyword_removed= 'Keyword removed'
+    settings_updated= 'Settings updated'
+    account_deactivated= 'Account deactivated'
+    shop_deleted= 'Shop deleted'
+    shop_updated= 'Shop updated'
+    architect_deleted= 'Architect deleted'
+    architect_updated= 'Architect updated'
+    engine_business_deleted= 'Business deleted'
+    engine_business_updated= 'Business updated'
+    ticket_raised= 'Ticket raised'
+    quotation_saved= 'Quotation saved'
+    quotation_updated= 'Quotation updated'
+    quotation_status_updated= 'Status updated'
+    video_created= 'Video created'
+    video_deleted= 'Video deleted'
+    video_updated= 'Video updated'
+    video_set_primary= 'Set as primary'
+    lead_stage_updated= 'Stage updated'
+    lead_created= 'Lead created'
+    award_created= 'Award created'
+    award_deleted= 'Award deleted'
+    award_updated= 'Award updated'
+    process_step_created= 'Process step created'
+    process_step_deleted= 'Process step deleted'
+    process_step_updated= 'Process step updated'
+    expertise_updated= 'Expertise updated'
+    sessions_signed_out= 'Signed out of other sessions'
+    password_updated= 'Password updated'
+
+    # validation (bad request)
+    invalid_period= 'invalid period'
+    entity_object_required= 'entityType and objectId required'
+    object_id_must_be_integer= 'objectId must be an integer'
+    date_range_format_error= 'from/to must be YYYY-MM-DD'
+    invalid_entity_type= 'invalid entityType'
+    transaction_id_required= 'transactionId required'
+    plan_id_required= 'planId required'
+    unsupported_entity_type= 'unsupported entityType'
+    business_id_must_be_integer= 'businessId must be an integer'
+    buyer_name_looking_for_required= 'buyerName and lookingFor are required'
+    intent_required= 'intent required'
+    email_required= 'email is required'
+
+    ############################################
+    # Engine endpoints (task 20 — canonical responders)
+    # Values match the pre-conversion inline strings exactly (message parity).
+    ############################################
+    tracked= 'tracked'
+    # validation (bad request)
+    unsupported_entity_type_plain= 'unsupported entity type'   # CompletionView (≠ 'unsupported entityType')
+    entity_object_id_required= 'entityType/objectId required'
+    entity_object_click_required= 'entityType/objectId/clickType required'
+    search_query_required= 'query required'
+    business_id_required= 'businessId required'
+    is_available_required= 'isAvailable (boolean) required'
+    quantity_must_be_integer= 'quantity must be an integer'
+    quantity_must_be_positive= 'quantity must be >= 1'
+    # chat success
+    conversation_started= 'Conversation started'
+    conversation_accepted= 'Accepted'
+    conversation_declined= 'Declined'
+    conversation_closed= 'Closed'
+    conversation_marked_unread= 'Marked unread'
+    conversation_reported= 'Reported'
+    conversation_deleted= 'Deleted'
+    conversation_labels_updated= 'Labels updated'
+    message_sent= 'Message sent'
+    messages_marked_read= 'Marked read'
+    # crud success
+    shop_created= 'Shop created'
+    engine_business_created= 'Business created'
+    architect_created= 'Architect created'
+    review_submitted= 'Review submitted'
+    review_deleted= 'Review deleted'
+    review_updated= 'Review updated'
+    review_marked_helpful= 'Marked helpful'
+    review_reply_posted= 'Reply posted'
+    # explore success
+    project_created= 'Project created'
+
 class VALIDATION_MESSAGES:
     password_length= 'Password must be at least 8 characters long'
     password_must_contain_digit= 'Password must contain at least one digit'

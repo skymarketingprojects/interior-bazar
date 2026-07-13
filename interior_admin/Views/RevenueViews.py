@@ -17,9 +17,11 @@ from interior_admin.Validators.adminValidators import hasAccess
 @exceptionHandler(errorMessage=RESPONSE_MESSAGES.default_error, responseFunc=ServerResponse)
 async def RevenueOverviewView(request: Request):
     """GET /api/v1/admin/revenue/ — revenue & unit-economics aggregates
-    (gross/net revenue, MRR proxy, CAC, expenses)."""
+    (gross/net revenue, MRR proxy, CAC, expenses). Optional ?start=&end= range
+    (gross/family/expenses); MRR/ARPU and the 6-month trend stay point-in-time."""
     await hasAccess(request=request)
-    return await REVENUE_CONTROLLER.Overview()
+    q = request.query_params
+    return await REVENUE_CONTROLLER.Overview(start=q.get('start') or None, end=q.get('end') or None)
 
 
 @api_view(['POST'])

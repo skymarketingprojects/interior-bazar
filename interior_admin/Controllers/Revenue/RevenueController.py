@@ -1,8 +1,10 @@
+import re
 from asgiref.sync import sync_to_async
 from collections import defaultdict
 from decimal import Decimal, InvalidOperation
 from typing import Any, Dict, Tuple
 
+from django.db.models import Q
 from django.utils import timezone
 
 from app_ib.Utils.LocalResponse import LocalResponse
@@ -15,6 +17,7 @@ from app_ib.models import (
 )
 from interior_admin.models import Expense, RevenueAssumption
 from interior_admin.Controllers.Audit.AuditController import append_audit
+from interior_admin.Controllers.WebAnalytics.WebAnalyticsController import _parse_date
 from .Validators.RevenueValidators import ExpenseSchema, AssumptionsSchema
 
 
@@ -26,9 +29,20 @@ def _num(s) -> Decimal:
 
 
 def _duration_months(dur) -> Decimal:
-    """Subscription.duration is a free string, stored as DAYS ('30','90') or as
-    MONTHS ('3','6','12') in dev data. Heuristic: >=28 → days, else months."""
-    n = int(_num(dur))
+    """Subscription.duration is a free string: DAYS ('30','90'), MONTHS ('3','6','12')
+    or word forms from old prod ('1 year', '6 months'). Bare-number heuristic:
+    >=28 → days, else months. Unparseable → 1 (monthly) as before."""
+    m = re.match(r"^(\d+(?:\.\d+)?)\s*([a-z]*)", str(dur or "").strip().lower())
+    if not m:
+        return Decimal("1")
+    n, unit = float(m.group(1)), m.group(2)
+    if unit.startswith("year"):
+        return Decimal(int(n * 12) or 1)
+    if unit.startswith("month"):
+        return Decimal(int(n) or 1)
+    if unit.startswith("day"):
+        return Decimal(max(1, round(n / 30)))
+    n = int(n)
     if n <= 0:
         return Decimal("1")
     if n >= 28:
@@ -58,25 +72,43 @@ class RevenueController:
 
     @classmethod
     @controllerExceptionHandler(errorMessage=RESPONSE_MESSAGES.default_error, responseFunc=LocalResponse)
-    async def Overview(cls) -> Tuple[bool, Dict[str, Any]]:
-        # Real revenue rows (amount, refundStatus, paymentFor, createdAt).
+    async def Overview(cls, start: str = None, end: str = None) -> Tuple[bool, Dict[str, Any]]:
+        startD = _parse_date(start); endD = _parse_date(end)
+        # A refunded row WAS paid (the refund action flips orderStatus to REFUNDED),
+        # so it belongs in gross — include it and let the refundStatus branch net it
+        # out. Filtering PAID-only made refunded permanently 0 and vanished the amount.
+        rangeQ = Q(orderStatus__in=[NAMES.CF_PAID, "REFUNDED"])
+        if startD:
+            rangeQ &= Q(createdAt__date__gte=startD)
+        if endD:
+            rangeQ &= Q(createdAt__date__lte=endD)
         paid = await sync_to_async(list)(
-            TransectionData.objects.filter(orderStatus=NAMES.CF_PAID)
-            .values_list("amount", "refundStatus", "paymentFor", "createdAt"))
+            TransectionData.objects.filter(rangeQ)
+            .values_list("amount", "refundStatus", "paymentFor", "refundAmount", "planFamily"))
 
         gross = Decimal("0"); refunded = Decimal("0")
-        by_family = defaultdict(Decimal); by_month = defaultdict(Decimal)
-        for amount, rs, fam, created in paid:
+        by_family = defaultdict(Decimal)
+        for amount, rs, fam, refundAmt, planFam in paid:
             amt = _num(amount)
             gross += amt
             if rs == "REFUNDED":
-                refunded += amt
+                # Partial refunds carry refundAmount; blank = the whole amount refunded.
+                refunded += _num(refundAmt) if str(refundAmt or "").strip() else amt
                 continue
-            by_family[fam or "other"] += amt
-            if created:
-                by_month[created.strftime("%Y-%m")] += amt
+            # Real per-family split: planFamily captured at write time, else paymentFor
+            # (old rows / ads / upgrades w/o a plan stay in their paymentFor bucket).
+            by_family[planFam or fam or "other"] += amt
         net_revenue = gross - refunded
-        paying_customers = len(paid)
+
+        # 6-month trend is a deliberate fixed trailing window — un-ranged. PAID-only rows
+        # are the non-refunded sales (refunds flip orderStatus), matching prior behavior.
+        by_month = defaultdict(Decimal)
+        trend_rows = await sync_to_async(list)(
+            TransectionData.objects.filter(orderStatus=NAMES.CF_PAID)
+            .values_list("amount", "createdAt"))
+        for amount, created in trend_rows:
+            if created:
+                by_month[created.strftime("%Y-%m")] += _num(amount)
 
         months = _last_6_month_keys()
         monthlyRevenue = [{"month": k, "amount": float(by_month.get(k, Decimal("0")))} for k in months]
@@ -90,18 +122,33 @@ class RevenueController:
                            sorted(by_family.items(), key=lambda kv: -kv[1])]
 
         # Real MRR: active plans, amount normalised to a monthly figure.
-        mrr = Decimal("0"); active_subscribers = 0
+        # payingCustomers is point-in-time (all-time), NOT ranged — sourced here off the
+        # active paid plans (TransectionData is near-empty and only ever covers future
+        # gateway purchases). Distinct paying users: a paid (amount>0) active plan with a
+        # non-null user; renewals/multiple plans per user collapse to one.
+        mrr = Decimal("0"); active_subscribers = 0; paying_user_ids = set()
         for model in (BusinessPlan, ShopPlan, ArchitectPlan, AutomationPlan):
             rows = await sync_to_async(list)(
                 model.objects.filter(isActive=True).select_related("plan")
-                .values_list("amount", "plan__duration"))
-            for amt, dur in rows:
+                .values_list("amount", "durationMonths", "plan__duration", "user_id"))
+            for amt, dm, dur, user_id in rows:
                 active_subscribers += 1
-                mrr += _num(amt) / _duration_months(dur)
+                # purchased-row snapshot first (ground truth); legacy string parse as fallback
+                mrr += _num(amt) / (Decimal(dm) if dm else _duration_months(dur))
+                if _num(amt) > 0 and user_id is not None:
+                    paying_user_ids.add(user_id)
         arpu = (mrr / active_subscribers) if active_subscribers else Decimal("0")
+        paying_customers = len(paying_user_ids)
 
-        # Expenses split for the P&L waterfall.
-        expenses = await sync_to_async(list)(Expense.objects.all())
+        # Expenses split for the P&L waterfall — ranged by incurredAt so net compares
+        # the same period as revenue. (No range = all-time. Undated expenses have no
+        # incurredAt, so they only count when the range is open.)
+        expenseQ = Q()
+        if startD:
+            expenseQ &= Q(incurredAt__gte=startD)
+        if endD:
+            expenseQ &= Q(incurredAt__lte=endD)
+        expenses = await sync_to_async(list)(Expense.objects.filter(expenseQ))
         expenses_total = sum((e.amount for e in expenses), Decimal("0"))
         expenses_fixed = sum((e.amount for e in expenses if e.kind == "fixed"), Decimal("0"))
         expenses_reinvest = sum((e.amount for e in expenses if e.kind == "reinvestment"), Decimal("0"))

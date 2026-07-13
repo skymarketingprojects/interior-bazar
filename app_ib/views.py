@@ -1,7 +1,6 @@
 from django.core.mail import send_mail
 import httpx
 import asyncio
-from django.http import JsonResponse
 from asgiref.sync import sync_to_async
 from adrf.decorators import api_view
 from rest_framework.decorators import permission_classes
@@ -20,29 +19,24 @@ userCtrl = imageUrlGenrator()
 # Create your views here.
 @api_view(['GET'])
 async def TestView(request):
+    # Debug/smoke endpoint (image-compression path commented out). Canonical
+    # ServerResponse envelope instead of bare JsonResponse (task 20).
     try:
-        # file = request.data.get("lawyer_profile_image")
-        # compress_image = await asyncio.gather(helpingMethods.MyImageCompression(type=COMPRESSSION_TYPE.LAWYER_PROFILE, image=file))
-        pass
-        return JsonResponse({"result": 'success'})
-
+        return ServerResponse(response=RESPONSE_MESSAGES.success, message=RESPONSE_MESSAGES.ok,
+                              data={}, code=RESPONSE_CODES.success)
     except Exception as e:
-        pass
-        return JsonResponse({"result": 'fail'})
+        return ServerResponse(response=RESPONSE_MESSAGES.error, message=RESPONSE_MESSAGES.engine_error,
+                              data={}, code=RESPONSE_CODES.error)
 
 @api_view(['POST'])
 async def TestMailView(request):
+    # Debug endpoint: sends a test email. Canonical ServerResponse envelope (task 20).
     try:
         data = request.data
         email= data.get('email')
         subject=data.get('subject')
         message=data.get('message')
         link=data.get('link')
-        pass
-        pass
-        pass
-        pass
-
 
         send_mail(
             subject=f'{subject}',
@@ -50,11 +44,11 @@ async def TestMailView(request):
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[f'{email}'],
         )
-        pass
-        return JsonResponse({"result": 'success'})
+        return ServerResponse(response=RESPONSE_MESSAGES.success, message=RESPONSE_MESSAGES.ok,
+                              data={}, code=RESPONSE_CODES.success)
     except Exception as e:
-        return JsonResponse({"result": 'error'})
-        pass
+        return ServerResponse(response=RESPONSE_MESSAGES.error, message=RESPONSE_MESSAGES.engine_error,
+                              data={'error': str(e)}, code=RESPONSE_CODES.error)
 
 @api_view(['GET'])
 async def GetOurClients(request):

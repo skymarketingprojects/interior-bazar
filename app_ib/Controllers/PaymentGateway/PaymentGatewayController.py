@@ -29,6 +29,7 @@ class PaymentGatewayController:
         """
         try:
             planId = data[NAMES.PLAN_ID]
+            cycleId = data.get(NAMES.CYCLE_ID)
             domain = redirectUrl
 
             is_plan_exist = await sync_to_async(Subscription.objects.filter(id=planId).exists)()
@@ -41,7 +42,10 @@ class PaymentGatewayController:
                 )
 
             plan = await sync_to_async(Subscription.objects.get)(id=planId)
-            planAmount = await MY_METHODS.formatAmount(plan.amount)
+            # Charge the chosen billing cycle's price (falls back to the plan's only
+            # active cycle, then legacy amount for pre-migration rows).
+            price, _months = await PLAN_TASKS._resolveCycle(plan, cycleId)
+            planAmount = await MY_METHODS.formatAmount(price)
             amount = float(planAmount)
 
             # Generate transaction data
@@ -53,15 +57,16 @@ class PaymentGatewayController:
             if response_data and response_data.get(NAMES.PAYMENT_SESSION_ID):
                 payment_url = ACTIVE_GATEWAY.checkout_url(response_data['payment_session_id'])
 
-                #create tansection data
-                transection= await PLAN_CONTROLLER.CreateTransectionData(data=response_data)
+                #create tansection data (tag the plan family for revenue-by-family analytics)
+                transection= await PLAN_CONTROLLER.CreateTransectionData(data=response_data, planFamily=plan.planFamily or '')
 
                 # Create the entity plan (routed by Subscription.entityType to
                 # business/shop/architect; attaches to the user, entity FK null).
                 businessPlan = await PLAN_CONTROLLER.CreateEntityPlan(
                     planId=plan.id,
                     userId=user.id,
-                    transectionId=transactionData[NAMES.TRANSACTION]
+                    transectionId=transactionData[NAMES.TRANSACTION],
+                    cycleId=cycleId
                 )
 
                 data = {
@@ -128,7 +133,8 @@ class PaymentGatewayController:
         try:
             entityType = data.get(NAMES.ENTITY_TYPE)
             targetPlanId = data.get(NAMES.TARGET_PLAN_ID)
-            preview = await PLAN_CONTROLLER.PreviewUpgrade(user, entityType, targetPlanId)
+            targetCycleId = data.get(NAMES.CYCLE_ID)
+            preview = await PLAN_CONTROLLER.PreviewUpgrade(user, entityType, targetPlanId, targetCycleId)
             if not preview.data.get(NAMES.ALLOWED):
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.error,
@@ -141,7 +147,7 @@ class PaymentGatewayController:
             # Full credit covers the upgrade → apply immediately, no gateway charge.
             if amount <= 0:
                 txn = f"UPG-FREE-{uuid4().hex[:12]}"
-                await PLAN_CONTROLLER.StashUpgradeIntent(user, entityType, targetPlanId, txn)
+                await PLAN_CONTROLLER.StashUpgradeIntent(user, entityType, targetPlanId, txn, targetCycleId)
                 applied = await PLAN_CONTROLLER.ApplyUpgrade(txn)
                 return LocalResponse(
                     response=RESPONSE_MESSAGES.success if applied else RESPONSE_MESSAGES.error,
@@ -158,9 +164,13 @@ class PaymentGatewayController:
                     response=RESPONSE_MESSAGES.error,
                     message=f"Failed to create Cashfree order: {response_data}",
                     code=RESPONSE_CODES.error, data={})
-            await PLAN_TASKS.CreateTransectionData(data=response_data, paymentFor=NAMES.PLAN_UPGRADE)
+            # Tag the target plan's family so upgrade revenue splits by family too.
+            targetFamily = await sync_to_async(
+                lambda: Subscription.objects.filter(id=targetPlanId).values_list("planFamily", flat=True).first()
+            )()
+            await PLAN_TASKS.CreateTransectionData(data=response_data, paymentFor=NAMES.PLAN_UPGRADE, planFamily=targetFamily or '')
             await PLAN_CONTROLLER.StashUpgradeIntent(
-                user, entityType, targetPlanId, transactionData[NAMES.TRANSACTION])
+                user, entityType, targetPlanId, transactionData[NAMES.TRANSACTION], targetCycleId)
             payment_url = ACTIVE_GATEWAY.checkout_url(response_data['payment_session_id'])
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
@@ -281,8 +291,8 @@ class PaymentGatewayController:
                 serviceActivated=await ADS_TASKS.UpdateAdPaymentTask(AdPaymentIns=adPayment,Data=data)
             
             serviceType.orderStatus = status
-            serviceType.save()
-            
+            await sync_to_async(serviceType.save)()  # bare sync save raised SynchronousOnlyOperation under async server → status never flipped
+
             data[NAMES.STATUS] = status
             data[NAMES.TRANSACTION] = transactionId
 

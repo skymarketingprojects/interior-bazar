@@ -7,10 +7,9 @@ from rest_framework_simplejwt.views import (TokenRefreshView)
 from app_ib.serializers import SessionAwareTokenRefreshView
 from app_ib.Views import AuthView, QueryView, FeedbackView, GoogleAuthView, FacebookAuthView, LinkedInAuthView
 from app_ib.Views import ProfileView
-# from app_ib.Views.Business import BusinessView
-# from app_ib.Views.Business import BusinessLocationView
-# from app_ib.Views.Business import BusinessProfileView
-# from app_ib.Views import SearchView
+# NOTE: app_ib's Business/Location/Profile/Search views were moved to the interior_business
+# app (mounted at v1/business/). Their imports used to sit here; removed as dead residue
+# during route de-dup (TASK 23). See CHANGED-ROUTES.md.
 from app_ib.Views import PlanQuateView
 from app_ib.Views import PlanView
 from app_ib.Views import AdsQueryView

@@ -71,6 +71,10 @@ INSTALLED_APPS = [
     'django_quill',
     'interior_notification.apps.InteriorNotificationConfig',
     'app_ib',
+    'interior_engine',
+    'interior_billing',
+    'interior_leads',
+    'interior_cms',
     'interior_admin',
     'django.contrib.sitemaps',
     'django.contrib.sites',
@@ -177,7 +181,7 @@ SITE_ID = 1
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'app_ib.authentication.SessionAwareJWTAuthentication',
     ]
 }
 
@@ -314,7 +318,8 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            # SQLITE_NAME env override lets a parallel instance run on a separate DB file
+            'NAME': env('SQLITE_NAME', default=str(BASE_DIR / 'db.sqlite3')),
         }
     }
     
