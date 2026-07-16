@@ -352,9 +352,11 @@ class PRODUCTS_CONTROLLER:
             )
         
     @classmethod
-    async def GetProductCategories(cls):
+    async def GetProductCategories(cls, kind="product"):
         try:
-            cache_key = "product_categories_all"
+            # Cache key varies by taxonomy — otherwise the service list would be
+            # served to product callers (and vice versa) out of a shared key.
+            cache_key = f"{kind}_categories_all"
             cached_data = cache.get(cache_key)
             if cached_data:
                 return LocalResponse(
@@ -364,7 +366,7 @@ class PRODUCTS_CONTROLLER:
                     data=cached_data
                 )
 
-            categories = await PRODUCTS_TASKS.getProductCategoriesTask()
+            categories = await PRODUCTS_TASKS.getProductCategoriesTask(kind)
             cache.set(cache_key, categories, 86400)  # Cache for 24 hours
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,

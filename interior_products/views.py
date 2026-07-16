@@ -741,12 +741,17 @@ async def GetOwnServicesView(request:HttpRequest):
 @api_view(['GET'])
 async def GetProductCategoriesView(request):
     try:
-        cache_key = "cache:product:categories"
+        # ?kind=service returns the SERVICE taxonomy (Interior Design,
+        # Architecture, …); anything else returns the product taxonomy. Both
+        # live in one table, told apart by the `svc-` value prefix, so the
+        # service form never offers a product category like Furniture.
+        kind = "service" if request.GET.get("kind") == "service" else "product"
+        cache_key = f"cache:{kind}:categories"
         cached_data = await cache_get(cache_key)
         if cached_data:
             return ServerResponse(**cached_data)
 
-        resp = await PRODUCTS_CONTROLLER.GetProductCategories()
+        resp = await PRODUCTS_CONTROLLER.GetProductCategories(kind)
         
         resp_dict = {
             'response': resp.response,

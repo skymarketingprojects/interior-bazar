@@ -188,7 +188,7 @@ def _product_categories(period, limit):
     """Product category trending — best-effort, never 500."""
     try:
         from interior_products.models import ProductCategory
-        cats = ProductCategory.objects.order_by("index")[:limit]
+        cats = ProductCategory.productOnes().order_by("index")[:limit]
         return [{
             "id": c.id,
             "name": getattr(c, "lable", None) or getattr(c, "value", None) or str(c),
@@ -1453,7 +1453,7 @@ def list_product_categories():
     omitted to keep the filter list meaningful."""
     from django.db.models import Count, Q
     from interior_products.models import ProductCategory
-    cats = (ProductCategory.objects
+    cats = (ProductCategory.productOnes()
             .annotate(productCount=Count(
                 "catProducts", filter=Q(catProducts__isActive=True), distinct=True))
             .filter(productCount__gt=0)
@@ -1464,14 +1464,17 @@ def list_product_categories():
 def list_service_categories():
     """Service category taxonomy for the services filter bar.
 
-    Services reuse the ProductCategory taxonomy (Service.category M2M ->
-    ProductCategory, related_name 'catServices'). Returns active categories
-    (editor `index` order) with the count of active services in each. `value`
-    is what list_services filters on (category__value); categories with no
-    active services are omitted so the chip list stays meaningful."""
+    Service categories live in the ProductCategory table (Service.category M2M
+    -> ProductCategory, related_name 'catServices') but are a SEPARATE
+    taxonomy, marked by the `svc-` value prefix — Furniture is a product
+    category and must never reach this chip row. Returns active service
+    categories (editor `index` order) with the count of active services in
+    each. `value` is what list_services filters on (category__value);
+    categories with no active services are omitted so the chip list stays
+    meaningful."""
     from django.db.models import Count, Q
     from interior_products.models import ProductCategory
-    cats = (ProductCategory.objects
+    cats = (ProductCategory.serviceOnes()
             .annotate(serviceCount=Count(
                 "catServices", filter=Q(catServices__isActive=True), distinct=True))
             .filter(serviceCount__gt=0)

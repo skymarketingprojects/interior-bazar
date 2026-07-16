@@ -249,9 +249,14 @@ class PRODUCTS_TASKS:
             return False
 
     @classmethod
-    async def getProductCategoriesTask(self):
+    async def getProductCategoriesTask(self, kind="product"):
         try:
-            categories = ProductCategory.objects.all()
+            # Products and services share this table but are SEPARATE taxonomies
+            # (service rows are marked by the `svc-` value prefix), so a caller
+            # must say which one it wants — a service must never be filed under
+            # a product category like Furniture.
+            categories = (ProductCategory.serviceOnes() if kind == "service"
+                          else ProductCategory.productOnes())
             data = []
             for cat in categories:
                 data.append({

@@ -13,6 +13,15 @@ def _unique_slug(model_class, text, pk):
         candidate = f'{base}-{n}'
     return candidate
 # Create your models here.
+
+# Services share this table with products (Service.category is an M2M to
+# ProductCategory), so the two taxonomies are told apart by a `value` prefix
+# rather than a column — no schema change. Service-shaped rows are `svc-*`.
+# ponytail: a prefix is the whole marker; add a real `kind` column only if a
+# third taxonomy ever moves in.
+SERVICE_CATEGORY_PREFIX = 'svc-'
+
+
 # Category
 class ProductCategory(models.Model):
     value = models.CharField(max_length=250)
@@ -25,7 +34,17 @@ class ProductCategory(models.Model):
    
     def __str__(self):
         return f'product category - {self.lable}'
-    
+
+    @classmethod
+    def productOnes(cls):
+        """The product taxonomy — everything that is not service-shaped."""
+        return cls.objects.exclude(value__startswith=SERVICE_CATEGORY_PREFIX)
+
+    @classmethod
+    def serviceOnes(cls):
+        """The service taxonomy (Interior Design, Architecture, …)."""
+        return cls.objects.filter(value__startswith=SERVICE_CATEGORY_PREFIX)
+
     def save(self, *args, **kwargs):
         if not self.index:
             self.index = self.__class__.objects.all().count()+1
