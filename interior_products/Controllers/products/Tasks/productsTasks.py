@@ -5,8 +5,29 @@ from app_ib.models import Business
 import json
 from app_ib.Utils.Names import NAMES
 
+def _applyCommercialTerms(product, data):
+    """Copy the optional MOQ/unit terms off the request object onto `product`.
+
+    Only keys the client actually SENT are touched — an absent key leaves the
+    stored value alone (the seller form is the only writer, but other callers
+    post partial payloads). Blank/0/garbage MOQ → None ("no minimum"), never a
+    fabricated default.
+    """
+    _missing = object()
+    moq = getattr(data, 'minOrderQty', _missing)
+    if moq is not _missing:
+        try:
+            moq = int(moq)
+            product.minOrderQty = moq if moq > 0 else None
+        except (TypeError, ValueError):
+            product.minOrderQty = None
+    unit = getattr(data, 'unit', _missing)
+    if unit is not _missing:
+        product.unit = str(unit or '').strip()[:30]
+
+
 class PRODUCTS_TASKS:
-    
+
     @classmethod
     async def deleteProduct(self,product:Product):
         try:
@@ -32,6 +53,7 @@ class PRODUCTS_TASKS:
             product.description = data.description
             product.productTags = data.productTags
             product.catelogue = catelouge
+            _applyCommercialTerms(product, data)
 
             categories = getattr(data, 'categories', None)
             if isinstance(categories, list) and len(categories) <= 3:
@@ -116,6 +138,8 @@ class PRODUCTS_TASKS:
                 description=data.description,
                 productTags=data.productTags,
             )
+            _applyCommercialTerms(product, data)
+            await sync_to_async(product.save)()
 
             category_ids = [cat.id for cat in getattr(data, 'categories', [])][:3]
             categories=[]
@@ -235,6 +259,8 @@ class PRODUCTS_TASKS:
                 'index':product.index,
                 "categories":prodCategory,
                 "subCategories":prodSubCategory,
+                "minOrderQty":product.minOrderQty,
+                "unit":product.unit or '',
                 "phone": getattr(_profile, 'phone', '') if _profile else '',
                 "countryCode": getattr(_profile, 'countryCode', '') if _profile else ''
             }

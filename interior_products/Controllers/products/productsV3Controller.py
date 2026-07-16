@@ -132,6 +132,10 @@ class PRODUCTS_V3_CONTROLLER:
             'specifications': specifications,
             'installationSteps': product.installationSteps or [],
             'careInstructions': product.careInstructions or [],
+            # Commercial terms. null/'' = seller never set them → the stepper falls
+            # back to min 1 and renders no unit rather than inventing one.
+            'minOrderQty': product.minOrderQty,
+            'unit': product.unit or '',
             # null stockQuantity = stock not tracked → sellable ("in stock")
             'stock': {
                 'inStock': product.stockQuantity is None or product.stockQuantity > 0,
