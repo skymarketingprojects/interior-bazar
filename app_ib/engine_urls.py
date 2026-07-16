@@ -46,6 +46,7 @@ urlpatterns = [
     path("chat/poll/", EngineChatView.ChatPollView, name="EngineChatPollView"),
     # --- Shop CRUD (write methods) + public GET by id (item 8) ---
     path("shop/create/", EngineCrudView.ShopCreateView, name="EngineShopCreateView"),
+    path("shop/<int:shopId>/publish/", EngineCrudView.ShopPublishView, name="EngineShopPublishView"),  # F4 — must precede shop/<id>/
     path("shop/slug/<slug:slug>/", EngineGapsView.ShopBySlugView, name="EngineShopBySlugView"),
     path("shop/<int:shopId>/", EngineGapsView.ShopDetailView, name="EngineShopDetailView"),
     # --- Authenticated owner lists (mine/) — must come before shops/ to avoid prefix clash ---

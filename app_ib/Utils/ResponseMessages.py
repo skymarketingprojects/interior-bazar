@@ -528,6 +528,8 @@ class RESPONSE_MESSAGES:
     engine_business_updated= 'Business updated'
     engine_business_published= 'Profile published — you are now live on Interior bazzar'
     engine_business_incomplete= 'Your profile is missing required information'
+    engine_shop_published= 'Shop is open — it is now live on Interior bazzar'
+    engine_shop_incomplete= 'Your shop is missing required information'
     ticket_raised= 'Ticket raised'
     quotation_saved= 'Quotation saved'
     quotation_updated= 'Quotation updated'

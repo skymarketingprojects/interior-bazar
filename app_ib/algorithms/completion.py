@@ -34,16 +34,24 @@ def _architect_satisfaction(obj):
 
 
 def _shop_satisfaction(obj):
-    from app_ib.models import ContactInfo
-    has_plan = bool(obj.business and obj.business.business_plan.filter(isActive=True).exists()) \
-        if obj.business_id else False
-    has_contact = ContactInfo.objects.filter(shop=obj).exists()
+    from app_ib.models import ContactInfo, DaySchedule, ShopPlan
+    # A shop is backed by its OWN ShopPlan (buy-first, _link_active_plan) — the linked
+    # business's plan is a fallback, not the subscription. Checking only the business
+    # plan made "subscription" (a live gate) unsatisfiable for a shop with no business.
+    has_plan = ShopPlan.objects.filter(shop_id=obj.pk, isActive=True).exists() or (
+        bool(obj.business_id) and obj.business.business_plan.filter(isActive=True).exists())
+    has_contact = ContactInfo.objects.filter(shop_id=obj.pk).exists()
+    # ponytail: no Location.shop / DaySchedule.shop FK in v1 — proxy off the shop's own
+    # city and, when the shop is display-linked to a business, that business's schedule.
+    # Both additive: nothing that satisfied these before stops satisfying them.
+    has_hours = bool(obj.business_id) and DaySchedule.objects.filter(
+        business_id=obj.business_id, isWorking=True).exists()
     return {
         "subscription": has_plan,
-        "location": bool(obj.bannerLink) or has_contact,   # proxy: no Location.shop FK in v1
+        "location": bool(obj.city) or bool(obj.bannerLink) or has_contact,
         "contact_info": has_contact,
         "cover_image": bool(obj.coverImage),
-        "hours": False,                                     # DaySchedule.shop not wired in v1
+        "hours": has_hours,
         "bio": bool(obj.bio),
     }
 

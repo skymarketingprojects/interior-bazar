@@ -45,6 +45,20 @@ def _demo():
     # `category` is deliberately NOT gated — the wizard cannot set BusinessCategory
     # (vocab disjoint, see §F1), so gating on it would make publishing impossible.
     assert "category" not in _CrudController._PUBLISH_GATE_KEYS
+
+    # F4 shop go-live: the gate is the SHOP checklist's isLiveGate items. If none were
+    # flagged, publish_shop would accept every empty shop; if one were unsatisfiable,
+    # no shop could ever open (that was the bug — `hours` was hardcoded False).
+    from app_ib.algorithms.completion import _shop_satisfaction
+    gates = [i["key"] for i in COMPLETION_CHECKLIST.SHOP if i["isLiveGate"]]
+    assert gates, "shop publish would accept anything: no isLiveGate item"
+
+    class _FakeShop:  # ponytail: a stub beats a DB fixture; pk=0 matches no plan/contact row
+        pk = 0; business_id = None; business = None; city = "Mumbai"
+        bannerLink = ""; coverImage = "x"; bio = "b"
+    sat = _shop_satisfaction(_FakeShop())
+    assert sat["location"] is True, "location must be satisfiable from the shop's own city"
+    assert set(sat) == {i["key"] for i in COMPLETION_CHECKLIST.SHOP}, "shop evaluator drifted from the checklist"
     print("ok")
 
 
@@ -109,10 +123,16 @@ class _CrudController:
         if isinstance(payload.get("images"), list):
             from app_ib.engine_models import ShopImage
             shop.images.all().delete()
+            urls = [u for u in payload["images"] if isinstance(u, str) and u]
             ShopImage.objects.bulk_create([
-                ShopImage(shop=shop, imageUrl=url, index=i)
-                for i, url in enumerate(payload["images"]) if isinstance(url, str) and url
+                ShopImage(shop=shop, imageUrl=url, index=i) for i, url in enumerate(urls)
             ])
+            # F4: the gallery is the only photo UI a seller has, and the completion
+            # checklist gates on coverImage — so the first gallery photo becomes the
+            # cover when none is set. Without this, uploading photos moved no needle.
+            if urls and not shop.coverImage:
+                shop.coverImage = urls[0]
+                shop.save(update_fields=["coverImage"])
         return self._shop_dict(shop)
 
     def delete_shop(self, user, shop_id):
@@ -127,6 +147,31 @@ class _CrudController:
         shop.isActive = False
         shop.save(update_fields=["isActive"])
         return True
+
+    # ---- F4: shop go-live ----
+    # The gate is the checklist's own isLiveGate items — i.e. exactly canGoLive. No
+    # second field list (unlike publish_business, whose gate must exclude `category`).
+    def publish_shop(self, user, shop_id):
+        """Owner-gated shop publish (mirrors publish_business). Recomputes completion,
+        then flips isActive=True or reports exactly WHICH live-gate items are unmet."""
+        from app_ib.models import Shop
+        from app_ib.algorithms.completion import compute_completion
+        shop = Shop.objects.filter(id=shop_id).first()
+        if not shop:
+            raise NotFound_("shop not found")
+        if shop.user_id != user.id:
+            raise PermissionError_("not the shop owner")
+        res = compute_completion(ENTITY_TYPE.SHOP, shop)  # persists completionPercent + canGoLive
+        missing = [{"key": i["key"], "label": i["label"]} for i in res["checklist"]
+                   if i["isLiveGate"] and not i["satisfied"]]
+        if not missing and not shop.isActive:
+            # isActive doubles as the soft-delete flag (no separate publish column exists);
+            # publishing is what brings a shop back into public reads. See delete_shop.
+            shop.isActive = True
+            shop.save(update_fields=["isActive"])
+        return {"published": not missing, "missing": missing,
+                "isActive": shop.isActive, "canGoLive": res["canGoLive"],
+                "completionPercent": res["percentage"]}
 
     def _shop_dict(self, s):
         return {"shopId": s.id, "name": s.name, "slug": s.slug, "shopType": s.shopType,

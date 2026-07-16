@@ -34,6 +34,21 @@ def ShopUpdateDeleteView(request, shopId):
                           data=CRUD_CONTROLLER.update_shop(request.user, shopId, request.data))
 
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+@exceptionHandler(responseFunc=ServerResponse, errorMessage=RESPONSE_MESSAGES.engine_error)
+def ShopPublishView(request, shopId):
+    """F4 — take a draft shop live. No request body (the only input is the URL id +
+    request.user), so no pydantic validator. Incomplete → response=False + 400 +
+    data.missing = the exact live-gate checklist items still unmet."""
+    data = CRUD_CONTROLLER.publish_shop(request.user, shopId)
+    if not data["published"]:
+        return ServerResponse(response=False, code=RESPONSE_CODES.bad_request,
+                              message=RESPONSE_MESSAGES.engine_shop_incomplete, data=data)
+    return ServerResponse(response=True, code=RESPONSE_CODES.success,
+                          message=RESPONSE_MESSAGES.engine_shop_published, data=data)
+
+
 # ---------------- Business (engine create, buy-first) ----------------
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
