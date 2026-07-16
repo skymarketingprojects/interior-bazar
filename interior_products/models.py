@@ -250,6 +250,14 @@ class Service(models.Model):
     serviceAreas = models.JSONField(default=list, blank=True)
     tags = models.ManyToManyField('interior_engine.Tag', blank=True, related_name='services')
 
+    # --- turnaround (additive; user-approved 2026-07-16, same pattern as
+    # Product.minOrderQty). Nullable, so every existing service is untouched and
+    # sellers fill it in over time. NEVER derived from tags/title — a delivery
+    # promise is a real field or it is empty (P3-26). null = no pill on the card. ---
+    turnaroundDays = models.PositiveIntegerField(null=True, blank=True,
+        help_text="Typical turnaround in days, as stated by the seller. "
+                  "0 = same day. null = not stated (the card shows no pill).")
+
     def __str__(self):
         return self.title
 

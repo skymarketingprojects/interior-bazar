@@ -5,6 +5,22 @@ from app_ib.models import Business
 import json
 from interior_products.Controllers.products.Tasks.productsTasks import PRODUCTS_TASKS
 
+
+def _clean_turnaround(data):
+    """Seller-stated turnaround in days, or None when not stated.
+
+    The form posts a string; '' / null / junk all mean "not stated" — never a
+    fabricated number (P3-26). Kept lenient rather than validated hard because
+    the whole service payload is an attribute bag (json_to_object), not a schema.
+    """
+    value = getattr(data, 'turnaroundDays', None)
+    try:
+        days = int(value)
+    except (TypeError, ValueError):
+        return None
+    return days if days >= 0 else None
+
+
 class SERVICES_TASKS:
     @classmethod
     async def deleteService(self,service:Service):
@@ -24,6 +40,7 @@ class SERVICES_TASKS:
             service.discountBy = data.discountBy
             service.description = data.description
             service.serviceTags = data.serviceTags
+            service.turnaroundDays = _clean_turnaround(data)
 
             categories = getattr(data, 'categories', None)
             if isinstance(categories, list) and len(categories) <= 3:
@@ -76,7 +93,8 @@ class SERVICES_TASKS:
                 discountType=data.discountType,
                 discountBy=data.discountBy,
                 description=data.description,
-                serviceTags=data.serviceTags
+                serviceTags=data.serviceTags,
+                turnaroundDays=_clean_turnaround(data)
             )
             category_ids = [cat.id for cat in getattr(data, 'categories', [])]
             if len(category_ids) > 3:
@@ -200,6 +218,9 @@ class SERVICES_TASKS:
                 'discountBy':service.discountBy,
                 'description':service.description,
                 'serviceTags':tags,
+                # Seller-stated turnaround; None = not stated (the form's input
+                # renders empty, the card's pill hides).
+                'turnaroundDays':service.turnaroundDays,
                 'images':serviceImageData,
                 'displayPrice':service.displayPrice,
                 'index':service.index,

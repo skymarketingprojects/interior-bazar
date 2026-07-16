@@ -1554,6 +1554,10 @@ def _service_full_dict(s):
         # Services have no stock — the owner flips availability. This is what the
         # card's attribute badge shows ("Accepting work" / "Not available").
         "isAvailable": s.isAvailable,
+        # Seller-stated turnaround in days — the card's pill (P3-26). null = not
+        # stated, and the pill does NOT render. Never derived: fabricating a
+        # delivery promise from tags/title is worse than no pill.
+        "turnaroundDays": s.turnaroundDays,
         # The provider's IB-verified state. The card's rosette is a TRUST CLAIM, so
         # it must be gated on this — it was rendered unconditionally because the
         # payload had no field to gate on (P3-17). Same shape as _product_full_dict.
