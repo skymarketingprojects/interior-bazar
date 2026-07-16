@@ -1845,6 +1845,12 @@ def _business_images(b):
     return urls
 
 
+def _primary_contact_field(b, field):
+    """Value of `field` on the business's primary ContactInfo row ("" when none)."""
+    c = b.contacts.order_by("-isPrimary", "id").first()
+    return getattr(c, field, "") or "" if c else ""
+
+
 def _business_social_links(b):
     out = []
     for sm in b.businessSocialMedia.select_related("socialMedia").all():
@@ -1967,6 +1973,12 @@ def _business_full_dict(b):
         "whatsapp": b.whatsapp or "",
         "gst": b.gst or "",
         "socialLinks": _business_social_links(b),
+        # F1: the wizard's own contact fields, read back off the primary contact row
+        # (the `contacts` list below is the multi-row view of the same data).
+        "publicEmail": _primary_contact_field(b, "email"),
+        "website": _primary_contact_field(b, "website"),
+        # F1: wizard step-2 keywords (same store as the Autogrowth tab).
+        "serviceKeywords": [k.term for k in b.autogrowth_keywords.all()],
         # --- meta ---
         "since": b.since or "",
         # F1 (2026-07-16): profile-wizard fields the seller edits + we now persist.
@@ -2019,7 +2031,8 @@ def _get_business_qs():
                             "business_location__locationCountry", "business_profile",
                             "specialization")
             .prefetch_related("businessSegment", "businessCategory",
-                              "businessSocialMedia__socialMedia", "schedules"))
+                              "businessSocialMedia__socialMedia", "schedules",
+                              "autogrowth_keywords", "contacts"))
 
 
 def get_business(id_or_slug, user=None):

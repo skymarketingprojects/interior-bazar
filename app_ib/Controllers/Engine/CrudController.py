@@ -2,9 +2,41 @@
 CrudController — write operations for Shop, Architect, and Review (engine entities).
 Ownership is always via request.user. Permission checks reject edits by non-owners.
 """
+import re as _re
+from datetime import time as _time
+
 from django.db import IntegrityError
 
 from app_ib.Utils.EngineConfig import ENTITY_TYPE, SHOP_TYPE
+
+
+_MIDNIGHT = _time(0, 0)
+
+
+def _parse_hours(text):
+    """"10:00 – 19:00" → (time,time,True) · "Closed" → (00:00,00:00,False) · ""/None → None.
+    DaySchedule.startTime/endTime are NOT NULL, so a closed day stores midnight and is
+    flagged isWorking=False (which is exactly how the detail payload reports it back).
+    Tolerates any dash and H:MM / HH:MM — the wizard field is free text."""
+    if not isinstance(text, str) or not text.strip():
+        return None
+    found = _re.findall(r"(\d{1,2}):(\d{2})", text)
+    if len(found) < 2:
+        return (_MIDNIGHT, _MIDNIGHT, False)  # "Closed" — or anything unparseable
+    (h1, m1), (h2, m2) = found[0], found[1]
+    try:
+        return (_time(int(h1), int(m1)), _time(int(h2), int(m2)), True)
+    except ValueError:
+        return (_MIDNIGHT, _MIDNIGHT, False)
+
+
+def _demo():
+    assert _parse_hours("") is None and _parse_hours(None) is None
+    assert _parse_hours("Closed") == (_MIDNIGHT, _MIDNIGHT, False)
+    assert _parse_hours("10:00 – 19:00") == (_time(10, 0), _time(19, 0), True)
+    assert _parse_hours("9:30-18:45") == (_time(9, 30), _time(18, 45), True)
+    assert _parse_hours("25:00 – 19:00") == (_MIDNIGHT, _MIDNIGHT, False)
+    print("ok")
 
 
 class PermissionError_(Exception):
@@ -164,7 +196,95 @@ class _CrudController:
             if key in payload and payload[key] is not None:
                 setattr(biz, attr, payload[key])
         biz.save()
+        self._write_business_relations(user, biz, payload)
         return self._business_dict(biz)
+
+    # ---- F1: relation-backed profile-wizard fields ----
+    # Every block is guarded on the KEY BEING PRESENT in the payload — a partial
+    # PATCH must never clear a relation the client didn't send.
+    @staticmethod
+    def _write_business_relations(user, biz, payload):
+        from interior_business.models import (BusinessProfile, Location, SocialMedia,
+                                              BusinessSocialMedia, DaySchedule)
+
+        # description → BusinessProfile.about · logoUrl → BusinessProfile.primaryImageUrl
+        if "description" in payload or "logoUrl" in payload:
+            prof, _ = BusinessProfile.objects.get_or_create(
+                business=biz, defaults={"about": "", "youtubeLink": ""})
+            if payload.get("description") is not None:
+                prof.about = payload["description"] or ""
+            if payload.get("logoUrl") is not None:
+                prof.primaryImageUrl = payload["logoUrl"] or ""
+            prof.save()
+
+        # headquartersCity / headquartersState → the business's Location row
+        if "headquartersCity" in payload or "headquartersState" in payload:
+            from app_ib.models import State
+            loc, _ = Location.objects.get_or_create(
+                business=biz, defaults={"pinCode": "", "city": "", "locationLink": ""})
+            if payload.get("headquartersCity") is not None:
+                loc.city = payload["headquartersCity"] or ""
+            if "headquartersState" in payload:
+                name = (payload.get("headquartersState") or "").strip()
+                loc.locationState = State.objects.filter(name__iexact=name).first() if name else None
+            loc.save()
+
+        # publicEmail / website → the primary ContactInfo row (created on demand)
+        if "publicEmail" in payload or "website" in payload:
+            from interior_engine.models import ContactInfo
+            c = (ContactInfo.objects.filter(business=biz).order_by("-isPrimary", "id").first()
+                 or ContactInfo(business=biz, label=biz.businessName, isPrimary=True))
+            if payload.get("publicEmail") is not None:
+                c.email = payload["publicEmail"] or ""
+            if payload.get("website") is not None:
+                c.website = payload["website"] or ""
+            c.save()
+
+        # socialLinks {instagram,linkedin,facebook,youtube} → BusinessSocialMedia rows.
+        # Blank link = the seller cleared it → drop the row.
+        social = payload.get("socialLinks")
+        if isinstance(social, dict):
+            for key, name in (("instagram", "Instagram"), ("linkedin", "LinkedIn"),
+                              ("facebook", "Facebook"), ("youtube", "YouTube")):
+                if key not in social:
+                    continue
+                link = (social.get(key) or "").strip()
+                sm = (SocialMedia.objects.filter(name__iexact=name).first()
+                      or SocialMedia.objects.create(name=name))
+                if link:
+                    BusinessSocialMedia.objects.update_or_create(
+                        business=biz, socialMedia=sm, defaults={"link": link})
+                else:
+                    BusinessSocialMedia.objects.filter(business=biz, socialMedia=sm).delete()
+
+        # businessHours {mon..sun: "10:00 – 19:00" | "Closed" | ""} → DaySchedule rows.
+        hours = payload.get("businessHours")
+        if isinstance(hours, dict):
+            day_num = {"mon": 1, "tue": 2, "wed": 3, "thu": 4, "fri": 5, "sat": 6, "sun": 7}
+            for key, num in day_num.items():
+                if key not in hours:
+                    continue
+                parsed = _parse_hours(hours.get(key))
+                if parsed is None:            # blank → the day has no schedule at all
+                    DaySchedule.objects.filter(business=biz, day=num).delete()
+                    continue
+                start, end, working = parsed
+                DaySchedule.objects.update_or_create(
+                    business=biz, day=num,
+                    defaults={"startTime": start, "endTime": end, "isWorking": working})
+
+        # serviceKeywords → the seller's business-scoped AutogrowthKeyword rows.
+        # Judgement call (F1): the wizard is a second writer for the same store as the
+        # Autogrowth tab; the tab's plan-tier cap lives on its own add endpoint and is
+        # NOT applied here — the wizard offers a fixed 6-item list, not free entry.
+        kws = payload.get("serviceKeywords")
+        if isinstance(kws, list):
+            from interior_engine.models import AutogrowthKeyword
+            terms = [t.strip() for t in kws if isinstance(t, str) and t.strip()]
+            AutogrowthKeyword.objects.filter(user=user, business=biz).exclude(term__in=terms).delete()
+            for t in terms:
+                AutogrowthKeyword.objects.update_or_create(
+                    user=user, term=t[:100], defaults={"business": biz})
 
     def delete_business(self, user, business_id):
         from app_ib.models import Business
