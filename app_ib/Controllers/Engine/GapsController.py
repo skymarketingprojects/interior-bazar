@@ -1279,13 +1279,24 @@ def _biz_full_dict(b):
 
 
 def list_businesses(city="", business_type="", search="", sort="trending", page=1, page_size=20,
-                    category="", verified=False):
+                    category="", verified=False, min_rating=None, min_years=None):
     from app_ib.models import Business
     qs = (Business.objects
           .select_related("businessType", "business_location")
           .filter(user__is_active=True))
     if city:
         qs = qs.filter(business_location__city__icontains=city)
+    if min_rating:
+        # businesses-mobile.html's "4.7★ & up" check — real field, no new column.
+        qs = qs.filter(ratingValue__gte=min_rating)
+    if min_years:
+        # "10+ years in business". `since` is a free-text CharField, so only a plain
+        # 4-digit year is comparable at all — and for fixed-width digit strings a
+        # lexical <= IS the numeric <=. Rows with junk (or blank) `since` are excluded
+        # rather than guessed at.
+        import datetime
+        cutoff = datetime.date.today().year - int(min_years)
+        qs = qs.filter(since__regex=r"^\d{4}$", since__lte=str(cutoff))
     if business_type:
         qs = qs.filter(businessType__value=business_type)
     if category:

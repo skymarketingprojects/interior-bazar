@@ -375,9 +375,14 @@ def BusinessesListView(request):
     verified = _flag_param(request, "verified")
     search = request.GET.get("search", "")
     sort = request.GET.get("sort", "trending")
+    # The phone advanced-filters sheet's two other checks ("4.7★ & up", "10+ years in
+    # business") — both backed by fields the list already returns (rating / since).
+    min_rating = _float_param(request, "minRating")
+    min_years = _float_param(request, "minYears")
     page, page_size = _list_paging(request)
     return ServerResponse(response=True, code=RESPONSE_CODES.success, message=RESPONSE_MESSAGES.ok, data=GC.list_businesses(city, business_type, search, sort, page, page_size,
-                                       category=category, verified=verified))
+                                       category=category, verified=verified,
+                                       min_rating=min_rating, min_years=min_years))
 
 
 @api_view(["GET"])
