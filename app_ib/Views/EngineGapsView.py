@@ -450,7 +450,9 @@ def ServicesListView(request):
                                      min_price=_float_param(request, "minPrice"),
                                      max_price=_float_param(request, "maxPrice"),
                                      verified=_flag_param(request, "verified"),
-                                     rating_min=_float_param(request, "ratingMin")))
+                                     rating_min=_float_param(request, "ratingMin"),
+                                     available=_flag_param(request, "available"),
+                                     free_consult=_flag_param(request, "freeConsult")))
 
 
 @api_view(["GET"])

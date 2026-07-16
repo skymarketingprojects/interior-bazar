@@ -1554,6 +1554,10 @@ def _service_full_dict(s):
         # Services have no stock — the owner flips availability. This is what the
         # card's attribute badge shows ("Accepting work" / "Not available").
         "isAvailable": s.isAvailable,
+        # The provider's IB-verified state. The card's rosette is a TRUST CLAIM, so
+        # it must be gated on this — it was rendered unconditionally because the
+        # payload had no field to gate on (P3-17). Same shape as _product_full_dict.
+        "isVerified": bool(s.business.isVerified) if s.business_id and s.business else False,
         "city": _business_city(s.business) if s.business_id else "",
         "businessName": s.business.businessName if s.business_id and s.business else "",
         "viewCount": s.viewCount,
@@ -1562,7 +1566,8 @@ def _service_full_dict(s):
 
 
 def list_services(city="", category="", search="", sort="trending", page=1, page_size=20,
-                  min_price=None, max_price=None, verified=False, rating_min=None):
+                  min_price=None, max_price=None, verified=False, rating_min=None,
+                  available=False, free_consult=False):
     from interior_products.models import Service
     qs = (Service.objects
           .select_related("business", "business__business_location")
@@ -1575,6 +1580,18 @@ def list_services(city="", category="", search="", sort="trending", page=1, page
         qs = qs.filter(title__icontains=search)
     if verified:
         qs = qs.filter(business__isVerified=True)
+    # "Open today" — the owner-controlled accepting-work switch (services have no
+    # stock). The sheet's checkbox filters on the field that already exists.
+    if available:
+        qs = qs.filter(isAvailable=True)
+    # "Free consultation" — there is no such field on Service and a schema change
+    # is out of scope, so it is DERIVED from the service's own text, the same way
+    # catalogue_kind() is. Nothing is invented: a service only matches if it says
+    # so itself, in its tags, title or description.
+    if free_consult:
+        qs = qs.filter(Q(serviceTags__icontains="free consult")
+                       | Q(title__icontains="free consult")
+                       | Q(description__icontains="free consult"))
     if rating_min is not None:
         qs = qs.filter(ratingValue__gte=rating_min)
     price_range = _price_bounds(qs)
