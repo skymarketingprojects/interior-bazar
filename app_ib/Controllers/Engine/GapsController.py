@@ -1991,6 +1991,11 @@ def _business_full_dict(b):
         "businessModel": b.businessModel or "",
         "productPriceTiers": b.productPriceTiers or [],
         "isVerified": b.isVerified,
+        # F2: publish state. isActive doubles as the soft-delete flag — there is no
+        # separate publish column — so `isActive` IS "is this profile live".
+        "isActive": b.isActive,
+        "canGoLive": b.canGoLive,
+        "completionPercent": b.completionPercent,
         "viewCount": b.viewCount,
         "trendingScore": b.trendingScore,
         # Already on the model and already used by product/service detail to derive

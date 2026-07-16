@@ -36,6 +36,15 @@ def _demo():
     assert _parse_hours("10:00 – 19:00") == (_time(10, 0), _time(19, 0), True)
     assert _parse_hours("9:30-18:45") == (_time(9, 30), _time(18, 45), True)
     assert _parse_hours("25:00 – 19:00") == (_MIDNIGHT, _MIDNIGHT, False)
+
+    # F2 publish gate: every gate key must be a REAL checklist key, else it silently
+    # never gates (a typo would make publish accept an incomplete profile).
+    from app_ib.Utils.EngineConfig import COMPLETION_CHECKLIST
+    keys = {i["key"] for i in COMPLETION_CHECKLIST.BUSINESS}
+    assert set(_CrudController._PUBLISH_GATE_KEYS) <= keys, "publish gate names a non-existent checklist key"
+    # `category` is deliberately NOT gated — the wizard cannot set BusinessCategory
+    # (vocab disjoint, see §F1), so gating on it would make publishing impossible.
+    assert "category" not in _CrudController._PUBLISH_GATE_KEYS
     print("ok")
 
 
@@ -285,6 +294,40 @@ class _CrudController:
             for t in terms:
                 AutogrowthKeyword.objects.update_or_create(
                     user=user, term=t[:100], defaults={"business": biz})
+
+    # ---- F2: publish gate ----
+    # The completion checklist (COMPLETION_CHECKLIST.BUSINESS) is the single source of
+    # truth for "is this profile good enough to be public" — publish reuses it rather
+    # than inventing a second field list that would drift from completionPercent.
+    # `category` is DELIBERATELY excluded: it is the BusinessCategory M2M, whose
+    # vocabulary is disjoint from the wizard's option list (see §F1) — the wizard cannot
+    # set it, so gating on it would make publishing impossible for a new seller.
+    # ponytail: a tuple, not a config table — one caller, one list.
+    _PUBLISH_GATE_KEYS = ("subscription", "business_name", "bio", "cover_image",
+                          "contact_info", "location")
+
+    def publish_business(self, user, business_id):
+        """Owner-gated publish. Recomputes completion, then either flips isActive=True
+        or reports exactly WHICH checklist items are unmet. Never raises for the
+        incomplete case — the caller needs the field list, not an error string."""
+        from app_ib.models import Business
+        from app_ib.algorithms.completion import compute_completion
+        biz = Business.objects.filter(id=business_id).first()
+        if not biz:
+            raise NotFound_("business not found")
+        if biz.user_id != user.id:
+            raise PermissionError_("not the business owner")
+        res = compute_completion(ENTITY_TYPE.BUSINESS, biz)  # persists completionPercent + canGoLive
+        missing = [{"key": i["key"], "label": i["label"]} for i in res["checklist"]
+                   if i["key"] in self._PUBLISH_GATE_KEYS and not i["satisfied"]]
+        if not missing and not biz.isActive:
+            # isActive doubles as the soft-delete flag (no separate publish column exists);
+            # publishing is what brings a business back into public reads.
+            biz.isActive = True
+            biz.save(update_fields=["isActive"])
+        return {"published": not missing, "missing": missing,
+                "isActive": biz.isActive, "canGoLive": res["canGoLive"],
+                "completionPercent": res["percentage"]}
 
     def delete_business(self, user, business_id):
         from app_ib.models import Business

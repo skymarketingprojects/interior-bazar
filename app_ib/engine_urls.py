@@ -70,6 +70,7 @@ urlpatterns = [
     path("business/<int:businessId>/products/", EngineGapsView.BusinessProductsView, name="EngineBusinessProductsView"),
     path("business/<int:businessId>/services/", EngineGapsView.BusinessServicesView, name="EngineBusinessServicesView"),
     path("business/<int:businessId>/catalogues/", EngineGapsView.BusinessCataloguesView, name="EngineBusinessCataloguesView"),
+    path("business/<int:businessId>/publish/", EngineCrudView.BusinessPublishView, name="EngineBusinessPublishView"),  # F2
     path("business/<int:businessId>/", EngineGapsView.BusinessDetailView, name="EngineBusinessDetailView"),
     # --- Entity-typed subscription plans (buy-first model, Prompt 6) ---
     path("my/plans/", EngineGapsView.MyPlansView, name="EngineMyPlansView"),          # auth: buying history union

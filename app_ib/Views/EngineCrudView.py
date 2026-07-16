@@ -43,6 +43,21 @@ def BusinessCreateView(request):
                           data=CRUD_CONTROLLER.create_business(request.user, request.data))
 
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+@exceptionHandler(responseFunc=ServerResponse, errorMessage=RESPONSE_MESSAGES.engine_error)
+def BusinessPublishView(request, businessId):
+    """F2 — take the seller's business live. No request body (nothing to validate with a
+    pydantic validator; the only input is the URL id + request.user), so this view has none.
+    Incomplete profile → response=False + 400 + data.missing = the exact checklist items."""
+    data = CRUD_CONTROLLER.publish_business(request.user, businessId)
+    if not data["published"]:
+        return ServerResponse(response=False, code=RESPONSE_CODES.bad_request,
+                              message=RESPONSE_MESSAGES.engine_business_incomplete, data=data)
+    return ServerResponse(response=True, code=RESPONSE_CODES.success,
+                          message=RESPONSE_MESSAGES.engine_business_published, data=data)
+
+
 # ---------------- Architect ----------------
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])

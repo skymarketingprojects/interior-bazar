@@ -526,6 +526,8 @@ class RESPONSE_MESSAGES:
     architect_updated= 'Architect updated'
     engine_business_deleted= 'Business deleted'
     engine_business_updated= 'Business updated'
+    engine_business_published= 'Profile published — you are now live on Interior bazzar'
+    engine_business_incomplete= 'Your profile is missing required information'
     ticket_raised= 'Ticket raised'
     quotation_saved= 'Quotation saved'
     quotation_updated= 'Quotation updated'
