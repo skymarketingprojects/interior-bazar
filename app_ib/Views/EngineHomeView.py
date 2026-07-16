@@ -115,6 +115,19 @@ def HomeFiltersView(request):
                           data=HOME_CONTROLLER.home_filters(user=_user(request)))
 
 
+# 0b. Browse by location — top cities by business count (public, no personalization)
+@api_view(["GET"])
+@permission_classes([AllowAny])
+@exceptionHandler(responseFunc=ServerResponse, errorMessage=RESPONSE_MESSAGES.engine_error)
+def HomeCitiesView(request):
+    try:
+        limit = int(request.GET.get("limit", "") or 5)
+    except (TypeError, ValueError):
+        limit = 5
+    return ServerResponse(response=True, code=RESPONSE_CODES.success, message=RESPONSE_MESSAGES.ok,
+                          data=HOME_CONTROLLER.top_cities(limit=max(1, min(limit, 20))))
+
+
 # 5. Verified business = architects (legacy; kept for the architects page)
 @api_view(["GET"])
 @permission_classes([AllowAny])

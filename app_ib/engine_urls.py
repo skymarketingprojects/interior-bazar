@@ -15,6 +15,7 @@ urlpatterns = [
     path("home/filters/", EngineHomeView.HomeFiltersView, name="EngineHomeFiltersView"),         # 0 filter bar pills
     path("home/banners/", EngineHomeBannerView.HomeBannersView, name="EngineHomeBannersView"),   # home hero carousel slides
     path("banners/", EngineHomeBannerView.BannersView, name="EngineBannersView"),                # per-page hero slides (?page=)
+    path("home/cities/", EngineHomeView.HomeCitiesView, name="EngineHomeCitiesView"),             # 0b browse by location
     path("home/reels/", EngineHomeView.ReelsView, name="EngineReelsView"),                       # 1 trending reels
     path("home/for-you/<str:entityType>/", EngineHomeView.ForYouView, name="EngineForYouView"),  # 2,3,4,7 recommendations
     path("home/architects/", EngineHomeView.ArchitectsRecommendedView, name="EngineArchitectsRecommendedView"),  # 5 (legacy) architects

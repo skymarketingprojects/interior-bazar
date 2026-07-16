@@ -118,6 +118,26 @@ class Business(models.Model):
     completionPercent = models.PositiveIntegerField(default=0)
     canGoLive = models.BooleanField(default=False)
     avgResponseSeconds = models.IntegerField(null=True, blank=True)
+    # --- trust/quality signals (additive; user-approved 2026-07-15) ---
+    # avgProjectValue → KPI grid 4th cell; the two flags → credentials grid.
+    # All nullable/false so existing businesses are untouched and the UI shows
+    # each only when set.
+    avgProjectValue = models.PositiveIntegerField(null=True, blank=True,
+        help_text="Average project value in rupees. null = cell omitted from the KPI grid.")
+    coaRegistered = models.BooleanField(default=False,
+        help_text="Council-of-Architecture registered → 'COA registered' credential chip.")
+    liabilityInsured = models.BooleanField(default=False,
+        help_text="Carries liability insurance → 'Liability insured' credential chip.")
+    # --- Business profile-wizard fields (F1, user-approved 2026-07-16, additive) ---
+    # The 4-step wizard collected these but persist() discarded them. All nullable/
+    # blank so existing rows are untouched; the seller form fills them over time.
+    cin = models.CharField(max_length=50, blank=True, default='', help_text="Company Identification Number.")
+    pan = models.CharField(max_length=20, blank=True, default='', help_text="PAN.")
+    udyam = models.CharField(max_length=50, blank=True, default='', help_text="Udyam / MSME registration number.")
+    founderName = models.CharField(max_length=200, blank=True, default='')
+    teamSize = models.CharField(max_length=50, blank=True, default='')
+    businessModel = models.CharField(max_length=50, blank=True, default='')
+    productPriceTiers = models.JSONField(default=list, blank=True, help_text="Product price-tier labels the seller serves.")
     label = models.CharField(max_length=50, blank=True, default='')
     # Geo coordinates for radius (haversine) search on the home filter bar.
     # Additive + nullable: legacy businesses have no coordinates and fall back to

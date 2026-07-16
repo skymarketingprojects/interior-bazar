@@ -143,6 +143,19 @@ class Product(models.Model):
     installationSteps = models.JSONField(default=list, blank=True)
     careInstructions = models.JSONField(default=list, blank=True)
 
+    # --- commercial terms (additive; user-approved 2026-07-15). All nullable/blank
+    # so every existing product is untouched and the UI renders each only when set. ---
+    minOrderQty = models.PositiveIntegerField(null=True, blank=True,
+        help_text="Minimum order quantity. null = no minimum (stepper starts at 1).")
+    unit = models.CharField(max_length=30, blank=True, default='',
+        help_text="Unit of measure, e.g. 'sq ft'. Blank falls back to 'units'.")
+    samplePrice = models.FloatField(null=True, blank=True,
+        help_text="Price of a sample. null = no sample price shown.")
+    sampleRefundable = models.BooleanField(default=False,
+        help_text="Whether the sample price is refundable on order.")
+    origin = models.CharField(max_length=100, blank=True, default='',
+        help_text="Country/region of origin, e.g. 'Italy'. Blank = no origin chip.")
+
     def __str__(self):
         return self.title
 
@@ -169,6 +182,9 @@ class ProductSpecification(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE,related_name='productSpecifications')
     title = models.CharField(max_length=500)
     description = models.TextField(null=True, blank=True)
+    # Optional group header ("Physical properties" etc.) — additive, 2026-07-15.
+    # Blank = ungrouped (renders as a flat row). Drives the grouped spec sub-tables.
+    group = models.CharField(max_length=120, blank=True, default='')
 
 
     def __str__(self):

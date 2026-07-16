@@ -94,6 +94,42 @@ class Architect(models.Model):
         return f"Architect {self.name} (pk {self.pk})"
 
 
+class ArchitectPackage(models.Model):
+    """An architect's engagement/pricing package (added 2026-07-15, user-approved
+    Option B). 1:many so an architect can offer MULTIPLE packages/tiers — the future
+    need the user confirmed. Today most architects have one; the detail price card
+    summarises them as "New projects from ₹<min fromValue>" + the primary package's
+    consultation/timeline terms.
+
+    Why a model, not columns on Architect: pricing is expected to grow into tiers,
+    and 1:many can't be expressed as columns. See the Architect price-card render for
+    how the summary line is derived; when multiple packages exist the detail page can
+    list them all without a schema change.
+    """
+    architect = models.ForeignKey(Architect, on_delete=models.CASCADE, related_name="packages")
+    title = models.CharField(max_length=120, blank=True, default="",
+        help_text="Package name, e.g. 'Full home design'. Blank for a single default package.")
+    fromValue = models.PositiveIntegerField(null=True, blank=True,
+        help_text="Starting project value in rupees → 'New projects from ₹X'.")
+    typicalTimeline = models.CharField(max_length=80, blank=True, default="",
+        help_text="Typical timeline for this package, e.g. '2–3 weeks'.")
+    freeConsultation = models.BooleanField(default=False,
+        help_text="This package includes a free initial consultation.")
+    description = models.TextField(blank=True, default="")
+    index = models.PositiveIntegerField(default=0, help_text="Display order; lowest = primary.")
+    isActive = models.BooleanField(default=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    updatedAt = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "app_ib_architect_package"
+        app_label = "interior_engine"
+        ordering = ["index", "id"]
+
+    def __str__(self):
+        return f"{self.title or 'Package'} for architect {self.architect_id}"
+
+
 class Shop(models.Model):
     """Independent top-level entity. Ownership via .user; .business is a soft display link only."""
     user = models.ForeignKey(USER, on_delete=models.SET_NULL, null=True, related_name="shops")

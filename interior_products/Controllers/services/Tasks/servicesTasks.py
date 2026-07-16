@@ -152,6 +152,45 @@ class SERVICES_TASKS:
             # and the whole service is reported as failed/dropped.
             _owner = service.business.user if service.business else None
             _profile = getattr(_owner, 'user_profile', None)
+
+            # Provider credentials for the detail chip row (task 88). Same Award model
+            # the shop/architect/business detail payloads already use: kind='credential'
+            # are plain chips, kind='award' render as "<title> <year>". Both are the
+            # provider's, since a service has no credentials of its own.
+            from app_ib.engine_models import Award
+            def _cred_chips(business):
+                if not business:
+                    return []
+                rows = Award.objects.filter(
+                    business=business, isActive=True
+                ).order_by('index', '-timestamp')
+                out = []
+                for a in rows:
+                    if a.kind == 'credential':
+                        out.append(a.title)
+                    elif a.kind == 'award':
+                        out.append(f"{a.title} {a.year}".strip())
+                return out
+            credentials = await sync_to_async(_cred_chips)(service.business)
+
+            # Provider identity for the detail provider CARD (task 90) — the payload
+            # carried only the name, so the card had no avatar, type, city or
+            # response time to render. Mirrors _biz_full_dict's derivation.
+            def _provider(business):
+                if not business:
+                    return {}
+                bt = business.businessType
+                loc = getattr(business, 'business_location', None)
+                return {
+                    "businessSlug": business.slug or "",
+                    "businessType": bt.lable if bt else "",
+                    "businessCity": loc.city if loc else "",
+                    "businessLogo": business.coverImageUrl or "",
+                    "businessResponseSeconds": business.avgResponseSeconds,
+                    # Drives the "IB Verified" attribute chip (P8-22).
+                    "businessIsVerified": business.isVerified,
+                }
+            provider = await sync_to_async(_provider)(service.business)
             serviceData = {
                 'id':service.id,
                 'title':service.title,
@@ -172,7 +211,15 @@ class SERVICES_TASKS:
                 "businessId":service.business.id,
                 "businessName":service.business.businessName,
                 "phone": getattr(_profile, 'phone', '') if _profile else '',
-                "countryCode": getattr(_profile, 'countryCode', '') if _profile else ''
+                "countryCode": getattr(_profile, 'countryCode', '') if _profile else '',
+                # Engine label ("Most booked" etc.) — drives the badge on the detail
+                # hero. Empty for every seeded service today, so the badge renders
+                # nothing until an admin sets one.
+                "label": service.label or "",
+                # Provider credential chips (task 88); [] → the row hides.
+                "credentials": credentials,
+                # Provider identity for the provider card (task 90).
+                **provider
             }
             return serviceData
         except Exception as e:

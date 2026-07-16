@@ -1112,6 +1112,29 @@ def _specialization_for(business):
     return spec.cards if spec is not None else []
 
 
+def _architect_pricing(a):
+    """Summarise the architect's ArchitectPackage rows for the detail price card
+    (task 108). Card shows a single line derived from the packages; the full list is
+    returned too so a future multi-package UI needs no payload change.
+    fromValue = cheapest active package; timeline/freeConsultation from the primary
+    (lowest-index) active package. All None/""/[] when the architect has no packages."""
+    pkgs = [p for p in a.packages.all() if p.isActive]
+    if not pkgs:
+        return {"fromValue": None, "freeConsultation": False, "typicalTimeline": "", "packages": []}
+    priced = [p for p in pkgs if p.fromValue]
+    from_value = min((p.fromValue for p in priced), default=None)
+    primary = pkgs[0]  # Meta.ordering = index, id → lowest index first
+    return {
+        "fromValue": from_value,
+        "freeConsultation": any(p.freeConsultation for p in pkgs),
+        "typicalTimeline": primary.typicalTimeline or "",
+        "packages": [{
+            "title": p.title, "fromValue": p.fromValue, "typicalTimeline": p.typicalTimeline,
+            "freeConsultation": p.freeConsultation, "description": p.description,
+        } for p in pkgs],
+    }
+
+
 def _arch_full_dict(a, include_details=True, project_count=None):
     from app_ib.models import Project
     # use pre-annotated value when available (avoids N+1 in list view)
@@ -1145,6 +1168,7 @@ def _arch_full_dict(a, include_details=True, project_count=None):
         d["credentials"] = _credentials_for(a, "architect")
         d["processSteps"] = _process_steps_for(a, "architect")
         d["expertise"] = _expertise_for(a)
+        d["pricing"] = _architect_pricing(a)  # task 108 price card
     return d
 
 
@@ -1337,16 +1361,43 @@ def _product_full_dict(p):
         "totalReviews": p.totalReviews,
         "trendingScore": p.trendingScore,
         "label": p.label,
-        "category": p.category.first().lable if p.category.exists() else "",
+        # Category is what the card's eyebrow shows. Some products carry only a
+        # sub-category, so fall back to it rather than sending "" and letting the
+        # frontend print a generic "PRODUCT".
+        "category": _product_category(p),
         "displayPrice": p.displayPrice,
         "orignalPrice": _orig_price(p),
         "discountType": p.discountType,
         "discountBy": p.discountBy,
+        # Drives the card's attribute badge (in stock / made to order / sold out).
+        # Nullable by design: no stock tracked = made to order.
+        "stockQuantity": p.stockQuantity,
         "city": _business_city(p.business) if p.business_id else "",
         "businessName": p.business.businessName if p.business_id and p.business else "",
+        # Drives the card's verified check-mark. The prototype shows it ONLY for a
+        # verified seller, so the flag has to travel with the row (P2-43).
+        "isVerified": bool(p.business.isVerified) if p.business_id and p.business else False,
         "viewCount": p.viewCount,
         "timestamp": p.updatedAt.isoformat(),
     }
+
+
+def _product_category(p):
+    """Real category label for a product: its category, else its sub-category, else ''."""
+    cat = p.category.first()
+    if cat is not None:
+        return cat.lable
+    sub = p.subCategory.first()
+    return sub.lable if sub is not None else ""
+
+
+def _service_category(s):
+    """Real category label for a service (same rule as products)."""
+    cat = s.category.first()
+    if cat is not None:
+        return cat.lable
+    sub = s.subCategory.first()
+    return sub.lable if sub is not None else ""
 
 
 def list_products(city="", category="", search="", sort="trending", page=1, page_size=20,
@@ -1489,12 +1540,17 @@ def _service_full_dict(s):
         "totalReviews": s.totalReviews,
         "trendingScore": s.trendingScore,
         "label": s.label,
-        "category": s.category.first().lable if s.category.exists() else "",
+        # Same fallback as products: a service with only a sub-category still has a
+        # real eyebrow instead of an empty one.
+        "category": _service_category(s),
         "serviceTags": _parse_tag_list(s.serviceTags),
         "displayPrice": s.displayPrice,
         "orignalPrice": _orig_price(s),
         "discountType": s.discountType,
         "discountBy": s.discountBy,
+        # Services have no stock — the owner flips availability. This is what the
+        # card's attribute badge shows ("Accepting work" / "Not available").
+        "isAvailable": s.isAvailable,
         "city": _business_city(s.business) if s.business_id else "",
         "businessName": s.business.businessName if s.business_id and s.business else "",
         "viewCount": s.viewCount,
@@ -1556,12 +1612,66 @@ def _catalogue_full_dict(c):
         "category": (c.category
                      or (c.catelogueType.lable if c.catelogueType_id and c.catelogueType else "")),
         "catalogueType": c.catelogueType.value if c.catelogueType_id and c.catelogueType else "",
+        # The catalogue's KIND — what the card's eyebrow shows and what the filter
+        # chips select on. Derived (see catalogue_kind); no schema change.
+        "kind": catalogue_kind(c),
+        "kindLabel": CATALOGUE_KIND_LABEL[catalogue_kind(c)],
         "city": _business_city(c.business) if c.business_id else "",
         "businessId": c.business_id,
         "businessName": c.business.businessName if c.business_id and c.business else "",
         "viewCount": c.viewCount,
         "timestamp": c.createdAt.isoformat(),
     }
+
+
+def catalogue_kind(c):
+    """The catalogue's KIND — brand catalogue / project portfolio / editor pick.
+
+    There is no kind field on the model (Catelogue.catelogueType is a BusinessType:
+    Interior/Sanitary), so it is DERIVED from what the catalogue actually is:
+    an editor pick is labelled as one; a portfolio/lookbook says so in its title;
+    anything else is a business's own brand catalogue. Nothing is invented — the
+    signal is the catalogue's own text."""
+    label = (c.label or "").lower()
+    if "editor" in label or "pick" in label:
+        return "editor"
+    text = f"{c.title or ''} {c.description or ''}".lower()
+    if any(w in text for w in ("portfolio", "lookbook", "project")):
+        return "portfolio"
+    return "brand"
+
+
+CATALOGUE_KIND_LABEL = {
+    "brand": "Brand catalogue",
+    "portfolio": "Project portfolio",
+    "editor": "Editor pick",
+}
+
+# The frontend's chip ids for the same three kinds (catalogues.content.ts).
+CATALOGUE_KIND_ALIAS = {
+    "project": "portfolio",
+    "collection": "editor",
+    "portfolio": "portfolio",
+    "editor": "editor",
+    "brand": "brand",
+}
+
+# The same rules as catalogue_kind(), expressed as querysets so the filter chips
+# ("Brand catalogues" / "Project portfolios" / "IB Editor picks") actually return
+# results instead of always being empty.
+def _filter_catalogue_kind(qs, kind):
+    from django.db.models import Q
+    editor_q = Q(label__icontains="editor") | Q(label__icontains="pick")
+    portfolio_q = (Q(title__icontains="portfolio") | Q(description__icontains="portfolio")
+                   | Q(title__icontains="lookbook") | Q(description__icontains="lookbook")
+                   | Q(title__icontains="project") | Q(description__icontains="project"))
+    if kind == "editor":
+        return qs.filter(editor_q)
+    if kind == "portfolio":
+        return qs.filter(portfolio_q).exclude(editor_q)
+    if kind == "brand":
+        return qs.exclude(editor_q).exclude(portfolio_q)
+    return qs
 
 
 def list_catalogues(city="", category="", search="", sort="trending", page=1, page_size=20,
@@ -1573,7 +1683,14 @@ def list_catalogues(city="", category="", search="", sort="trending", page=1, pa
     if city:
         qs = qs.filter(business__business_location__city__icontains=city)
     if category:
-        qs = qs.filter(catelogueType__value=category)
+        # The chip ids ARE catalogue kinds (brand/portfolio/editor). They used to be
+        # matched against catelogueType__value, which only ever holds "Interior" /
+        # "Sanitary" — so every one of those chips returned ZERO results (P6-18).
+        kind = CATALOGUE_KIND_ALIAS.get(category)
+        if kind:
+            qs = _filter_catalogue_kind(qs, kind)
+        else:
+            qs = qs.filter(catelogueType__value=category)
     if search:
         qs = qs.filter(title__icontains=search)
     if verified:
@@ -1817,9 +1934,26 @@ def _business_full_dict(b):
         "socialLinks": _business_social_links(b),
         # --- meta ---
         "since": b.since or "",
+        # F1 (2026-07-16): profile-wizard fields the seller edits + we now persist.
+        "brandName": b.brandName or "",
+        "cin": b.cin or "",
+        "pan": b.pan or "",
+        "udyam": b.udyam or "",
+        "founderName": b.founderName or "",
+        "teamSize": b.teamSize or "",
+        "businessModel": b.businessModel or "",
+        "productPriceTiers": b.productPriceTiers or [],
         "isVerified": b.isVerified,
         "viewCount": b.viewCount,
         "trendingScore": b.trendingScore,
+        # Already on the model and already used by product/service detail to derive
+        # "Responds within N hrs" — it just never reached the business payload (P9-4).
+        "avgResponseSeconds": b.avgResponseSeconds,
+        # Trust/quality fields added 2026-07-15 (user-approved). null/false → the
+        # KPI cell / credential chip is omitted (P9-20).
+        "avgProjectValue": b.avgProjectValue,
+        "coaRegistered": b.coaRegistered,
+        "liabilityInsured": b.liabilityInsured,
         "schedule": _business_schedule(b),
         "timestamp": b.timestamp.isoformat(),
         # --- badge ---
@@ -2053,6 +2187,8 @@ def prioritized_leads(user, business_id=None):
             "stage": lead.stage or "",
             "messageCount": lead.messageCount or 0,
             "createdAt": lead.timestamp.isoformat(),
+            # Seller's estimated deal value in rupees (null when not estimated).
+            "dealValueEst": lead.dealValueEst,
         })
     return {"leads": out}
 

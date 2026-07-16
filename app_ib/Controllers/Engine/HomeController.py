@@ -461,6 +461,22 @@ class _HomeController:
                         "timestamp": r.timestamp.isoformat()})
         return out
 
+    # ---------------- browse by location (GET home/cities/) ----------------
+    def top_cities(self, limit=5):
+        """Cities with the most businesses -> [{"city": str, "count": int}].
+
+        Powers the home "Browse by location" cards. Blank cities are dropped, so
+        a business with no address simply doesn't vote for a city."""
+        from django.db.models import Count
+        from app_ib.models import Business
+        rows = (Business.objects
+                .exclude(business_location__city__isnull=True)
+                .exclude(business_location__city__exact="")
+                .values("business_location__city")
+                .annotate(count=Count("id"))
+                .order_by("-count")[:limit])
+        return [{"city": r["business_location__city"], "count": r["count"]} for r in rows]
+
     # ---------------- home filter bar (GET home/filters/) ----------------
     def home_filters(self, user=None):
         """Pills for the home-page filter row.

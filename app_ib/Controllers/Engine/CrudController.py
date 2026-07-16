@@ -142,11 +142,15 @@ class _CrudController:
     # present in the payload are written (PATCH-friendly partial updates).
     _BUSINESS_FIELD_MAP = {
         "name": "businessName", "businessName": "businessName",
-        "brandName": "brandName", "whatsapp": "whatsapp", "gst": "gst",
+        "brandName": "brandName", "legalName": "brandName", "whatsapp": "whatsapp", "gst": "gst",
         "since": "since", "bio": "bio", "label": "label",
         "coverImage": "coverImageUrl", "coverImageUrl": "coverImageUrl",
         "bannerImage": "bannerImageUrl", "bannerImageUrl": "bannerImageUrl",
         "bannerLink": "bannerLink", "bannerText": "bannerText",
+        # F1 (2026-07-16): profile-wizard fields the persist used to discard.
+        "cin": "cin", "pan": "pan", "udyam": "udyam",
+        "founderName": "founderName", "teamSize": "teamSize",
+        "businessModel": "businessModel", "productPriceTiers": "productPriceTiers",
     }
 
     def update_business(self, user, business_id, payload):
@@ -291,6 +295,8 @@ class _CrudController:
                         "timestamp": r.timestamp.isoformat(),
                         "reviewerName": name or "User",
                         "reviewerAvatarUrl": (profile.profileImageUrl or "") if profile else "",
+                        # Already on the model and already set — it just never reached the UI.
+                        "isVerifiedPurchase": r.isVerifiedPurchase,
                         # Seller reply + attribute tags (task 64).
                         "reply": ({"text": r.replyText, "at": r.replyAt.isoformat() if r.replyAt else None}
                                   if r.replyText else None),

@@ -50,6 +50,10 @@ class LeadQuery(models.Model):
     originId = models.IntegerField(null=True, blank=True)
     formType = models.CharField(max_length=50, blank=True, default='')
     messageCount = models.PositiveIntegerField(default=0)
+    # Seller's estimated deal value in rupees (nullable). Drives the seller-dashboard
+    # "money on the table" alert (Σ over pending) + the per-enquiry "₹X est." badge.
+    # Null = not estimated → nothing shown / summed (never fake a figure).
+    dealValueEst = models.PositiveIntegerField(null=True, blank=True)
 
     # Qualification (task 13): computed ONCE at creation from the weights
     # singleton (QualificationWeightConfig). Never recomputed on update, so
