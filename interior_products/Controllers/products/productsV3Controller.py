@@ -111,7 +111,9 @@ class PRODUCTS_V3_CONTROLLER:
 
         specifications = [
             {'label': _SPEC_LABELS.get(s.title, str(s.title).replace('_', ' ').capitalize()),
-             'value': s.description or ''}
+             'value': s.description or '',
+             # '' = ungrouped → the client renders it as a flat row, no sub-header.
+             'group': s.group or ''}
             for s in product.productSpecifications.all()
             if (s.description or '').strip()
         ]
@@ -136,6 +138,11 @@ class PRODUCTS_V3_CONTROLLER:
             # back to min 1 and renders no unit rather than inventing one.
             'minOrderQty': product.minOrderQty,
             'unit': product.unit or '',
+            # null samplePrice = no sample offered → the client prints no sample
+            # clause at all (never a fabricated one). Same for '' origin.
+            'samplePrice': product.samplePrice,
+            'sampleRefundable': bool(product.sampleRefundable),
+            'origin': product.origin or '',
             # null stockQuantity = stock not tracked → sellable ("in stock")
             'stock': {
                 'inStock': product.stockQuantity is None or product.stockQuantity > 0,
