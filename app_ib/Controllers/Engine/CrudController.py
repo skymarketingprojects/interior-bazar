@@ -117,6 +117,12 @@ class _CrudController:
                       "city", "state"):
             if field in payload:
                 setattr(shop, field, payload[field])
+        # F5 "Close shop": isActive is the only real status column (see publish_shop /
+        # delete_shop). The CLOSE direction is a plain PATCH; the OPEN direction is
+        # publish_shop's alone — it runs the live gate, so a bare PATCH must never be
+        # able to set isActive=True and bypass it.
+        if payload.get("isActive") is False:
+            shop.isActive = False
         shop.save()
         # Gallery: payload["images"] = full ordered URL list → replace ShopImage rows
         # (dashboard "Photos & media" tab sends the whole list on every change).
@@ -187,6 +193,7 @@ class _CrudController:
         existing = Architect.objects.filter(user=user).first()
         if existing:
             self._link_active_plan(user, ENTITY_TYPE.ARCHITECT, existing)
+            self._write_architect_relations(existing, payload)
             return self._arch_dict(existing)
         arch = Architect(
             user=user, name=payload.get("name", "").strip() or "Architect",
@@ -196,6 +203,7 @@ class _CrudController:
         arch.save()
         # Buy-first: link the active ArchitectPlan (1 per user).
         self._link_active_plan(user, ENTITY_TYPE.ARCHITECT, arch)
+        self._write_architect_relations(arch, payload)
         return self._arch_dict(arch)
 
     # ------------------- Business (engine create, buy-first) -------------------
@@ -394,10 +402,86 @@ class _CrudController:
         if arch.user_id != user.id:
             raise PermissionError_("not the architect owner")
         for field in ("name", "city", "state", "bio", "coverImage"):
-            if field in payload:
+            if field in payload and payload[field] is not None:
                 setattr(arch, field, payload[field])
+        # slug (custom profile URL) — only accept a unique, non-empty value; a
+        # collision would raise IntegrityError and fail the whole save.
+        slug = (payload.get("slug") or "").strip()
+        if slug and not Architect.objects.filter(slug=slug).exclude(id=arch.id).exists():
+            arch.slug = slug
         arch.save()
+        self._write_architect_relations(arch, payload)
         return self._arch_dict(arch)
+
+    # ---- F6 (task 158): relation-backed architect editor fields ----
+    # The 6-tab editor collects ~35 fields; the direct Architect columns hold only
+    # name/bio/coverImage/state/slug. The rest route into the SAME relation models the
+    # detail endpoint already reads (ContactInfo / Award / expertiseTags / ArchitectPackage),
+    # mirroring the Business F1 _write_business_relations pattern. Every block is guarded on
+    # the key being PRESENT — a partial PATCH never clears a relation the client didn't send.
+    #
+    # NO SCHEMA HOME (persisted nowhere — needs new columns, deferred per night-shift no-ask):
+    #   title, firm, type, experienceYears, teamSize, serviceRadius, acceptingNewProjects,
+    #   leadTime, responseTime, enquiryRoutingMode, enquiryForms, magicalWords, philosophy,
+    #   linkedin, headshot, statesServed[1:]  → logged in the run ledger, not silently dropped.
+    @staticmethod
+    def _write_architect_relations(arch, payload):
+        from interior_engine.models import ContactInfo, Award, Tag, ArchitectPackage
+
+        # contacts → single primary ContactInfo(architect) row.
+        contact_keys = ("phone", "whatsapp", "email", "website")
+        if any(k in payload for k in contact_keys):
+            c = (ContactInfo.objects.filter(architect=arch).order_by("-isPrimary", "id").first()
+                 or ContactInfo(architect=arch, label=arch.name, isPrimary=True))
+            for k in contact_keys:
+                if payload.get(k) is not None:
+                    setattr(c, k, payload[k] or "")
+            c.save()
+
+        # credentials (COA no. + education institutions) → Award(kind="credential").
+        if "credentials" in payload:
+            creds = [t.strip() for t in (payload.get("credentials") or [])
+                     if isinstance(t, str) and t.strip()]
+            Award.objects.filter(architect=arch, kind="credential").delete()
+            for i, title in enumerate(creds):
+                Award.objects.create(architect=arch, kind="credential", title=title[:255], index=i)
+
+        # awards (free text, one per line) → Award(kind="award").
+        if "awards" in payload:
+            aw = payload.get("awards")
+            items = aw if isinstance(aw, list) else ([aw] if aw else [])
+            titles = [t.strip() for t in items if isinstance(t, str) and t.strip()]
+            Award.objects.filter(architect=arch, kind="award").delete()
+            for i, title in enumerate(titles):
+                Award.objects.create(architect=arch, kind="award", title=title[:255], index=i)
+
+        # expertise (specialisations + design styles) → expertiseTags M2M.
+        # Resolve tags by value OR slug before creating — Tag.getOrCreateFromText matches
+        # on value only, so a normalized value whose slug collides with a different
+        # existing tag raises a UNIQUE(slug) IntegrityError and would abort the save.
+        if "expertise" in payload:
+            from app_ib.algorithms.text import normalize
+            from django.utils.text import slugify
+            resolved = []
+            for x in (payload.get("expertise") or []):
+                if not isinstance(x, str) or not x.strip():
+                    continue
+                value = normalize(x, strip_stopwords=True)
+                if not value:
+                    continue
+                slug = slugify(value) or value
+                tag = (Tag.objects.filter(value=value).first()
+                       or Tag.objects.filter(slug=slug).first()
+                       or Tag.objects.create(value=value, slug=slug))
+                resolved.append(tag)
+            arch.expertiseTags.set(resolved)
+
+        # startingPrice → primary ArchitectPackage.fromValue (detail price card).
+        if "startingPrice" in payload:
+            digits = "".join(ch for ch in str(payload.get("startingPrice") or "") if ch.isdigit())
+            pkg = arch.packages.order_by("index", "id").first() or ArchitectPackage(architect=arch, index=0)
+            pkg.fromValue = int(digits) if digits else None
+            pkg.save()
 
     def delete_architect(self, user, arch_id):
         from app_ib.models import Architect

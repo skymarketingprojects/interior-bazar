@@ -88,6 +88,7 @@ urlpatterns = [
     path("quotations/", EngineGapsView.QuotationCreateView, name="EngineQuotationCreateView"),  # auth: create quotation (task 63)
     path("quotations/<int:quotationId>/", EngineGapsView.QuotationUpdateView, name="EngineQuotationUpdateView"),  # auth: update owned quotation
     path("quotations/<int:quotationId>/status/", EngineGapsView.QuotationStatusView, name="EngineQuotationStatusView"),  # auth: transition status
+    path("quotations/<int:quotationId>/send/", EngineGapsView.QuotationSendView, name="EngineQuotationSendView"),  # auth: send to buyer (F12)
     # Phase 2 — active-sessions dashboard (JWT session management)
     path("my/sessions/", EngineGapsView.MySessionsView, name="EngineMySessionsView"),  # auth: list active sessions
     path("my/sessions/<int:sessionId>/revoke/", EngineGapsView.RevokeSessionView, name="EngineRevokeSessionView"),  # auth: revoke one session

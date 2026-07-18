@@ -2274,8 +2274,11 @@ def create_manual_lead(user, data):
 _PIPELINE_STAGES = {"new", "contacted", "quoted", "meeting", "won", "lost"}
 
 
-def set_lead_stage(user, lead_id, stage):
-    """Persist a lead's pipeline stage from a kanban drag (task 62). Owner-gated."""
+def set_lead_stage(user, lead_id, stage, deal_value=None):
+    """Persist a lead's pipeline stage from a kanban drag (task 62). Owner-gated.
+    F8: when the seller closes a deal (won/lost) the panel sends `deal_value` — the
+    estimated/final deal value in rupees. Parse the digits out of whatever they typed
+    ("₹6,00,000", "600000") and store it on dealValueEst (read by tasks 140/141)."""
     from app_ib.models import LeadQuery
     stage = (stage or "").strip().lower()
     if stage not in _PIPELINE_STAGES:
@@ -2286,8 +2289,13 @@ def set_lead_stage(user, lead_id, stage):
     if not lead.business or lead.business.user_id != user.id:
         raise PermissionError_("not the business owner")
     lead.stage = stage
-    lead.save(update_fields=["stage"])
-    return {"leadId": lead.id, "stage": stage}
+    update_fields = ["stage"]
+    if deal_value is not None:
+        digits = "".join(ch for ch in str(deal_value) if ch.isdigit())
+        lead.dealValueEst = int(digits) if digits else None
+        update_fields.append("dealValueEst")
+    lead.save(update_fields=update_fields)
+    return {"leadId": lead.id, "stage": stage, "dealValueEst": lead.dealValueEst}
 
 
 def accept_lead(user, lead_id):
@@ -3075,6 +3083,57 @@ def set_quotation_status(user, quotation_id, status):
     q.status = st
     q.save(update_fields=["status", "updatedAt"])
     return _quotation_dict(q)
+
+
+def _quotation_message_body(q):
+    """Human-readable quote summary posted into the buyer's chat thread (F12)."""
+    total = f"₹{float(q.grandTotal or 0):,.0f}"
+    lines = [f"📄 Quotation {q.number} — {total}"]
+    if q.validUntil:
+        lines.append(f"Valid until {q.validUntil.strftime('%d %b %Y')}")
+    note = (q.noteToBuyer or "").strip()
+    if note:
+        lines.append(note)
+    return "\n".join(lines)
+
+
+def send_quotation(user, quotation_id):
+    """F12: mark a quotation sent AND actually deliver it to the buyer. When the
+    quotation's lead has a platform buyer, post a quote-summary chat message into the
+    lead's conversation (creating/reopening it as needed) via the chat controller —
+    which pushes to the buyer's SSE stream and raises an unread notification, so the
+    buyer genuinely receives it. Off-platform leads (no buyer user) get sent-state
+    only (delivered=False); the send itself still succeeds. Owner-gated."""
+    from app_ib.engine_models import Quotation
+    from app_ib.models import Conversation
+    from app_ib.Controllers.Engine.ChatController import CHAT_CONTROLLER
+    q = Quotation.objects.filter(id=quotation_id).first()
+    if not q:
+        raise NotFound_("quotation not found")
+    if q.user_id != user.id:
+        raise PermissionError_("not the quotation owner")
+    q.status = "sent"
+    q.sentAt = timezone.now()
+    q.save(update_fields=["status", "sentAt", "updatedAt"])
+
+    delivered = False
+    buyer = q.lead.user if (q.lead_id and q.lead) else None
+    if buyer:
+        conv = Conversation.objects.filter(lead=q.lead).first()
+        if not conv:
+            conv = Conversation.objects.create(
+                lead=q.lead, business=q.business, clientUser=buyer,
+                businessUser=user, status=CONVERSATION_STATUS.ACCEPTED)
+        elif conv.status not in (CONVERSATION_STATUS.ACCEPTED, CONVERSATION_STATUS.REQUESTED):
+            # a declined/closed thread is reopened so the quote can land
+            conv.status = CONVERSATION_STATUS.ACCEPTED
+            conv.save(update_fields=["status", "updatedAt"])
+        CHAT_CONTROLLER.send_message(user, conv.id, _quotation_message_body(q))
+        delivered = True
+
+    data = _quotation_dict(q)
+    data["delivered"] = delivered
+    return data
 
 
 # ---------------------------------------------------------------------------
@@ -4017,6 +4076,30 @@ def trending_catalogues(period="", city="", limit=12):
 # ---------------------------------------------------------------------------
 # Phase 3 — 5. Engine my/profile/
 # ---------------------------------------------------------------------------
+def update_my_profile(user, data):
+    """PATCH my/profile/ — persist name/phone/city from the Settings account form (F13)."""
+    from app_ib.models import UserProfile, Location
+    name = (data.get("name") or "").strip()
+    phone = (data.get("phone") or "").strip()
+    city = (data.get("city") or "").strip()
+    try:
+        profile = user.user_profile
+        if name:
+            profile.name = name
+        if phone:
+            profile.phone = phone
+        profile.save(update_fields=["name", "phone"])
+    except Exception:
+        pass
+    if city:
+        try:
+            loc = user.user_location
+            loc.city = city
+            loc.save(update_fields=["city"])
+        except Exception:
+            pass
+
+
 def my_profile(user):
     """Engine profile for the authenticated user.
 

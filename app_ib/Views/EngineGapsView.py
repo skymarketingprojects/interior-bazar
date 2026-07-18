@@ -631,6 +631,14 @@ def QuotationStatusView(request, quotationId):
     return ServerResponse(response=True, code=RESPONSE_CODES.success, message=RESPONSE_MESSAGES.quotation_status_updated, data=GC.set_quotation_status(request.user, quotationId, request.data.get("status", "")))
 
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+@exceptionHandler(responseFunc=ServerResponse, errorMessage=RESPONSE_MESSAGES.engine_error)
+def QuotationSendView(request, quotationId):
+    # F12 — mark sent + actually DELIVER the quote to the buyer (chat message + notification).
+    return ServerResponse(response=True, code=RESPONSE_CODES.success, message=RESPONSE_MESSAGES.quotation_status_updated, data=GC.send_quotation(request.user, quotationId))
+
+
 @api_view(["GET"])
 @permission_classes([AllowAny])
 @exceptionHandler(responseFunc=ServerResponse, errorMessage=RESPONSE_MESSAGES.engine_error)
@@ -766,7 +774,11 @@ def LeadAcceptView(request, leadId):
 @permission_classes([IsAuthenticated])
 @exceptionHandler(responseFunc=ServerResponse, errorMessage=RESPONSE_MESSAGES.engine_error)
 def LeadStageView(request, leadId):
-    return ServerResponse(response=True, code=RESPONSE_CODES.success, message=RESPONSE_MESSAGES.lead_stage_updated, data=GC.set_lead_stage(request.user, leadId, request.data.get("stage", "")))
+    # F8: an optional `dealValueEst` (rupees) rides along when a deal is closed
+    # won/lost, so the value the seller enters is actually persisted.
+    return ServerResponse(response=True, code=RESPONSE_CODES.success, message=RESPONSE_MESSAGES.lead_stage_updated,
+                          data=GC.set_lead_stage(request.user, leadId, request.data.get("stage", ""),
+                                                 request.data.get("dealValueEst")))
 
 
 @api_view(["POST"])
@@ -1096,10 +1108,12 @@ def TrendingCataloguesView(request):
 # ==========================================================================
 # Phase 3 — 5. Engine my/profile/
 # ==========================================================================
-@api_view(["GET"])
+@api_view(["GET", "PATCH"])
 @permission_classes([IsAuthenticated])
 @exceptionHandler(responseFunc=ServerResponse, errorMessage=RESPONSE_MESSAGES.engine_error)
 def MyProfileView(request):
+    if request.method == "PATCH":
+        GC.update_my_profile(request.user, request.data)
     return ServerResponse(response=True, code=RESPONSE_CODES.success, message=RESPONSE_MESSAGES.ok, data=GC.my_profile(request.user))
 
 
