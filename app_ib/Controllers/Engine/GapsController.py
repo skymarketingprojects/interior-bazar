@@ -445,20 +445,42 @@ def deactivate_account(user):
 _AUTOGROWTH_TIER_LIMITS = {0: 5, 1: 15, 2: 30, 3: 60}
 _AUTOGROWTH_FREE_LIMIT = 3
 
+# Setup caps per tier for the Autogrowth ▸ Setup tab (S8). None = unlimited.
+_AUTOGROWTH_SETUP_CAPS = {
+    0: {"states": 2,    "segments": 2,    "depth": "2-step", "exclusive": False},
+    1: {"states": 2,    "segments": 2,    "depth": "3-step", "exclusive": False},
+    2: {"states": 5,    "segments": 3,    "depth": "4-step", "exclusive": True},
+    3: {"states": None, "segments": None, "depth": "4-step", "exclusive": True},
+}
+
 
 def _autogrowth_plan(user):
-    """The seller's active plan (name, tier, keyword limit). Falls back to a small
-    free-tier cap when there's no active plan."""
+    """The seller's active plan (name, tier, keyword limit, setup caps). Falls back to a
+    small free-tier cap when there's no active plan."""
     from app_ib.models import BusinessPlan
     from django.db.models import Q
     bp = (BusinessPlan.objects.filter(Q(user=user) | Q(business__user=user), isActive=True)
           .select_related("plan").order_by("-plan__tier").first())
     if bp and bp.plan:
         tier = bp.plan.tier or 0
-        # Subscription's display field is `title` (it has no `name`)
-        return {"planName": bp.plan.title or "Plan",
-                "limit": _AUTOGROWTH_TIER_LIMITS.get(tier, _AUTOGROWTH_FREE_LIMIT)}
-    return {"planName": "Free", "limit": _AUTOGROWTH_FREE_LIMIT}
+        caps = _AUTOGROWTH_SETUP_CAPS.get(tier, _AUTOGROWTH_SETUP_CAPS[0])
+        return {
+            "planName": bp.plan.title or "Plan",
+            "limit": _AUTOGROWTH_TIER_LIMITS.get(tier, _AUTOGROWTH_FREE_LIMIT),
+            "statesCap": caps["states"],
+            "segmentsCap": caps["segments"],
+            "depth": caps["depth"],
+            "exclusive": caps["exclusive"],
+        }
+    caps = _AUTOGROWTH_SETUP_CAPS[0]
+    return {
+        "planName": "Free",
+        "limit": _AUTOGROWTH_FREE_LIMIT,
+        "statesCap": caps["states"],
+        "segmentsCap": caps["segments"],
+        "depth": caps["depth"],
+        "exclusive": caps["exclusive"],
+    }
 
 
 def autogrowth_list(user):
@@ -466,8 +488,17 @@ def autogrowth_list(user):
     plan = _autogrowth_plan(user)
     kws = list(AutogrowthKeyword.objects.filter(user=user).order_by("-id")
                .values("id", "term"))
-    return {"keywords": kws, "quota": {"used": len(kws), "limit": plan["limit"],
-                                       "planName": plan["planName"]}}
+    return {
+        "keywords": kws,
+        "quota": {"used": len(kws), "limit": plan["limit"], "planName": plan["planName"]},
+        "caps": {
+            "states": plan["statesCap"],
+            "segments": plan["segmentsCap"],
+            "terms": plan["limit"],
+            "depth": plan["depth"],
+            "exclusive": plan["exclusive"],
+        },
+    }
 
 
 def autogrowth_add(user, term):
@@ -2244,6 +2275,52 @@ def prioritized_leads(user, business_id=None):
             "dealValueEst": lead.dealValueEst,
         })
     return {"leads": out}
+
+
+def autogrowth_analytics(user, business_id=None):
+    """S9 — real counts for the Autogrowth > Analytics processing funnel.
+    Stages are derived from LeadQuery's own stored fields (phone/status/tier) —
+    no re-run of the creation-time scorer, no new columns. 'Agent verified' has
+    no real backend signal yet (no agent-call-confirmation flow exists), so it
+    is never counted here; the frontend renders it as the prototype's own
+    locked/upsell stage for every seller until that signal exists for real."""
+    from app_ib.models import Business, LeadQuery
+
+    if business_id:
+        biz = Business.objects.filter(id=business_id).first()
+        if not biz:
+            raise NotFound_("business not found")
+        if biz.user_id != user.id:
+            raise PermissionError_("not your business")
+    else:
+        biz = Business.objects.filter(user=user).first()
+        if not biz:
+            raise NotFound_("no business found for user")
+
+    leads = list(LeadQuery.objects.filter(business=biz).values("phone", "status", "tier"))
+    total = len(leads)
+    contact_verified = sum(1 for l in leads if len("".join(c for c in (l["phone"] or "") if c.isdigit())) >= 10)
+    genuine = sum(1 for l in leads if (l["status"] or "") != "quarantine")
+    qualified = [l for l in leads if (l["tier"] or "") in ("A", "B")]
+    tag_counts = {"Urgent": 0, "Intent": 0, "Interested": 0}
+    for l in leads:
+        tier = l["tier"] or ""
+        if tier == "A":
+            tag_counts["Urgent"] += 1
+        elif tier == "B":
+            tag_counts["Intent"] += 1
+        elif tier in ("C", "D", "E"):
+            tag_counts["Interested"] += 1
+
+    return {
+        "totalQueries": total,
+        "stages": [
+            {"name": "Contact verified", "n": contact_verified, "note": "real, reachable contact"},
+            {"name": "Genuine", "n": genuine, "note": "spam & tyre-kickers removed"},
+            {"name": "Intent & urgency", "n": len(qualified), "note": "timeline captured & scored"},
+        ],
+        "tagCounts": tag_counts,
+    }
 
 
 def create_manual_lead(user, data):

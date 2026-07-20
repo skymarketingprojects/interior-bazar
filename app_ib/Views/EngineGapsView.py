@@ -763,6 +763,20 @@ def LeadsPrioritizedView(request):
     return ServerResponse(response=True, code=RESPONSE_CODES.success, message=RESPONSE_MESSAGES.ok, data=GC.prioritized_leads(request.user, business_id))
 
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+@exceptionHandler(responseFunc=ServerResponse, errorMessage=RESPONSE_MESSAGES.engine_error)
+def AutogrowthAnalyticsView(request):
+    """S9 — the Autogrowth > Analytics processing funnel, real counts only."""
+    business_id = request.GET.get("businessId")
+    if business_id:
+        try:
+            business_id = int(business_id)
+        except (ValueError, TypeError):
+            return ServerResponse(response=False, code=RESPONSE_CODES.bad_request, message=RESPONSE_MESSAGES.business_id_must_be_integer, data={})
+    return ServerResponse(response=True, code=RESPONSE_CODES.success, message=RESPONSE_MESSAGES.ok, data=GC.autogrowth_analytics(request.user, business_id))
+
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 @exceptionHandler(responseFunc=ServerResponse, errorMessage=RESPONSE_MESSAGES.engine_error)

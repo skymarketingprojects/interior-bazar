@@ -173,6 +173,7 @@ urlpatterns = [
     path("leads/", EngineGapsView.LeadCreateView, name="EngineLeadCreateView"),  # buyer-facing connect wizard
     path("leads/manual/", EngineGapsView.LeadManualCreateView, name="EngineLeadManualCreateView"),  # seller-logged off-platform enquiry
     path("leads/prioritized/", EngineGapsView.LeadsPrioritizedView, name="EngineLeadsPrioritizedView"),
+    path("autogrowth/analytics/", EngineGapsView.AutogrowthAnalyticsView, name="EngineAutogrowthAnalyticsView"),  # S9 processing funnel
     path("leads/<int:leadId>/accept/", EngineGapsView.LeadAcceptView, name="EngineLeadAcceptView"),
     path("leads/<int:leadId>/stage/", EngineGapsView.LeadStageView, name="EngineLeadStageView"),  # kanban stage persist (task 62)
     path("leads/<int:leadId>/decline/", EngineGapsView.LeadDeclineView, name="EngineLeadDeclineView"),
