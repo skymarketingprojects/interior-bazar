@@ -216,6 +216,10 @@ data.json
 dev.json
 prod.json
 *.json
+# Seed data that MUST ship in the image (build context is a git URL, so an
+# ignored file does not exist at build time).
+!interior_cms/data/*.json
+!interior_forms/fixtures/*.json
 AIDOCS/
 CLAUDE.md
 # local-only VPS briefing, never commit

@@ -1,0 +1,1263 @@
+[
+{
+  "model": "interior_forms.formdefinition",
+  "pk": 3,
+  "fields": {
+    "key": "ads-query",
+    "page": "sponsored InteriorAdSlot banners (products/services/explore/shops v3)",
+    "component": "src/components/shared/Forms/AdsQueryForm (step 1 only)",
+    "schema": {
+      "steps": [
+        {
+          "title": "",
+          "fields": [
+            {
+              "id": "interested",
+              "type": "text",
+              "label": "Interested in",
+              "placeholder": "Interested in",
+              "helpText": "",
+              "required": true,
+              "validation": {
+                "message": "Please tell us what you're interested in"
+              },
+              "options": [],
+              "defaultValue": ""
+            },
+            {
+              "id": "phone",
+              "type": "phone",
+              "label": "Phone",
+              "placeholder": "Phone",
+              "helpText": "",
+              "required": true,
+              "validation": {
+                "pattern": "^\\d{10}$",
+                "message": "Invalid phone number",
+                "requiredMessage": "Phone number is required"
+              },
+              "options": [],
+              "defaultValue": ""
+            }
+          ]
+        }
+      ],
+      "style": {
+        "background": "#FFFFFF",
+        "surface": "#FFFFFF",
+        "border": "#424242",
+        "text": "#121212",
+        "placeholder": "#424242",
+        "primaryButtonBg": "#19472D",
+        "primaryButtonText": "#FFFFFF",
+        "focusRing": "#131313",
+        "error": "#FF0015",
+        "radius": "5.008px",
+        "spacing": "11.2px",
+        "fontSize": "16px",
+        "inputPadding": "9.6px",
+        "fieldGap": "6.4px",
+        "buttonPadding": "10px 30px",
+        "actionsGap": "11.2px"
+      },
+      "submit": {
+        "endpoint": "v1/query/ads/create/",
+        "method": "POST",
+        "payloadMap": {
+          "interested": "interested",
+          "phone": "phone",
+          "id": {
+            "fromContext": "businessId"
+          }
+        }
+      },
+      "behavior": {
+        "multiStep": false,
+        "authRequired": false,
+        "stashOnAnon": false,
+        "resumeAfterLogin": false
+      }
+    },
+    "is_active": true,
+    "version": 1,
+    "createdOn": "2026-07-23T09:45:37.000Z",
+    "updatedOn": "2026-07-24T08:58:42.826Z"
+  }
+},
+{
+  "model": "interior_forms.formdefinition",
+  "pk": 4,
+  "fields": {
+    "key": "catalogue-download",
+    "page": "src/components/cataloguesV3/CatalogueDetail",
+    "component": "handleDownload (headless — no visible fields)",
+    "schema": {
+      "steps": [],
+      "style": {
+        "background": "#FFFDF8",
+        "surface": "#FFFFFF",
+        "border": "#D8D5CB",
+        "text": "#1A1A17",
+        "placeholder": "#5D584F",
+        "primaryButtonBg": "#085041",
+        "primaryButtonText": "#FFFFFF",
+        "focusRing": "#085041",
+        "error": "#C0392B",
+        "radius": "10px",
+        "spacing": "18px",
+        "fontSize": "14px"
+      },
+      "submit": {
+        "endpoint": "v1/engine/leads/",
+        "method": "POST",
+        "payloadMap": {
+          "enquiryType": {
+            "static": "download"
+          }
+        }
+      },
+      "behavior": {
+        "multiStep": false,
+        "authRequired": true,
+        "stashOnAnon": true,
+        "resumeAfterLogin": true
+      }
+    },
+    "is_active": true,
+    "version": 1,
+    "createdOn": "2026-07-23T09:45:37.158Z",
+    "updatedOn": "2026-07-24T08:58:42.941Z"
+  }
+},
+{
+  "model": "interior_forms.formdefinition",
+  "pk": 2,
+  "fields": {
+    "key": "contact-v3",
+    "page": "src/pages/Contact/v3",
+    "component": "ContactV3 (index.tsx + useContactV3.ts)",
+    "schema": {
+      "steps": [
+        {
+          "title": "",
+          "fields": [
+            {
+              "id": "name",
+              "type": "text",
+              "label": "Your name",
+              "placeholder": "e.g. Ananya Sharma",
+              "helpText": "",
+              "required": true,
+              "validation": {
+                "requiredMessage": "Please enter your name."
+              },
+              "options": [],
+              "defaultValue": ""
+            },
+            {
+              "id": "phone",
+              "type": "phone",
+              "label": "Phone",
+              "placeholder": "+91 …",
+              "helpText": "",
+              "required": true,
+              "validation": {
+                "pattern": "^\\d{10}$",
+                "message": "Please enter a valid phone number."
+              },
+              "options": [],
+              "defaultValue": ""
+            },
+            {
+              "id": "email",
+              "type": "email",
+              "label": "Email",
+              "placeholder": "you@example.com",
+              "helpText": "",
+              "required": false,
+              "validation": {},
+              "options": [],
+              "defaultValue": ""
+            },
+            {
+              "id": "city",
+              "type": "text",
+              "label": "City",
+              "placeholder": "e.g. New Delhi",
+              "helpText": "",
+              "required": false,
+              "validation": {},
+              "options": [],
+              "defaultValue": ""
+            },
+            {
+              "id": "message",
+              "type": "textarea",
+              "label": "What do you need?",
+              "placeholder": "Tell us about your project, budget, and timeline…",
+              "helpText": "",
+              "required": true,
+              "validation": {
+                "requiredMessage": "Please tell us what you need."
+              },
+              "options": [],
+              "defaultValue": ""
+            }
+          ]
+        }
+      ],
+      "style": {
+        "background": "#F9F9F9",
+        "surface": "#FFFFFF",
+        "border": "#E3E3E3",
+        "text": "#121212",
+        "placeholder": "#424242",
+        "primaryButtonBg": "#19472D",
+        "primaryButtonText": "#FFFFFF",
+        "focusRing": "#19472D",
+        "error": "#B3261E",
+        "radius": "5px",
+        "buttonRadius": "30px",
+        "spacing": "16px",
+        "fontSize": "17.6px",
+        "inputPadding": "11px 14px",
+        "fieldGap": "6px",
+        "buttonPadding": "14px",
+        "actionsGap": "20px"
+      },
+      "copy": {
+        "submitLabel": "Connect",
+        "submittingLabel": "Sending…"
+      },
+      "submit": {
+        "endpoint": "v1/query/create/",
+        "method": "POST",
+        "payloadMap": {
+          "name": "name",
+          "phone": "phone",
+          "message": "query",
+          "email": "email",
+          "city": "city"
+        }
+      },
+      "behavior": {
+        "multiStep": false,
+        "authRequired": false,
+        "stashOnAnon": false,
+        "resumeAfterLogin": false
+      }
+    },
+    "is_active": true,
+    "version": 1,
+    "createdOn": "2026-07-23T09:45:36.791Z",
+    "updatedOn": "2026-07-24T08:58:42.675Z"
+  }
+},
+{
+  "model": "interior_forms.formdefinition",
+  "pk": 5,
+  "fields": {
+    "key": "enquiry-wizard",
+    "page": "shared — opened from home CTA / products / shops / services / catalogues / trending",
+    "component": "src/components/shared/EnquiryWizard (index.tsx + useEnquiryWizard.ts)",
+    "schema": {
+      "steps": [
+        {
+          "stepLabel": "Step 1 of 3 — Contact",
+          "title": "What’s the best number to reach you?",
+          "fields": [
+            {
+              "id": "phone",
+              "type": "phone",
+              "label": "Phone",
+              "placeholder": "Mobile number",
+              "helpText": "OTP-verified · we never share your number",
+              "required": true,
+              "validation": {
+                "minLength": 7,
+                "message": "Enter a valid mobile number"
+              },
+              "options": [],
+              "defaultValue": ""
+            }
+          ]
+        },
+        {
+          "stepLabel": "Step 2 of 3 — Project",
+          "title": "What kind of project is this?",
+          "fields": [
+            {
+              "id": "projectType",
+              "type": "option-tile",
+              "label": "Project type",
+              "placeholder": "",
+              "helpText": "",
+              "required": true,
+              "validation": {
+                "message": "Pick what you need first"
+              },
+              "layout": "list",
+              "options": [
+                {
+                  "value": "residential",
+                  "label": "Residential",
+                  "icon": "home-2"
+                },
+                {
+                  "value": "commercial",
+                  "label": "Commercial",
+                  "icon": "building"
+                },
+                {
+                  "value": "hospitality",
+                  "label": "Hospitality",
+                  "icon": "building-community"
+                },
+                {
+                  "value": "industrial",
+                  "label": "Industrial",
+                  "icon": "building-factory"
+                }
+              ],
+              "defaultValue": ""
+            },
+            {
+              "id": "name",
+              "type": "text",
+              "label": "Your name",
+              "placeholder": "Your name",
+              "helpText": "",
+              "required": true,
+              "validation": {},
+              "options": [],
+              "defaultValue": ""
+            }
+          ],
+          "expander": {
+            "label": "Add project details",
+            "fields": [
+              {
+                "id": "brief",
+                "type": "text",
+                "label": "Brief",
+                "placeholder": "Tell us a bit about the space or what you have in mind (optional)",
+                "helpText": "",
+                "required": false,
+                "validation": {},
+                "options": [],
+                "defaultValue": ""
+              }
+            ]
+          }
+        },
+        {
+          "stepLabel": "Step 3 of 3 — Timeline",
+          "title": "When do you need to start?",
+          "fields": [
+            {
+              "id": "timeline",
+              "type": "option-tile",
+              "label": "Timeline",
+              "placeholder": "",
+              "helpText": "",
+              "required": true,
+              "validation": {
+                "message": "Pick what you need first"
+              },
+              "layout": "list",
+              "options": [
+                {
+                  "value": "now",
+                  "label": "Within 30 days",
+                  "icon": "bolt",
+                  "sub": "High intent"
+                },
+                {
+                  "value": "soon",
+                  "label": "30–90 days",
+                  "icon": "calendar",
+                  "sub": "Planning stage"
+                },
+                {
+                  "value": "later",
+                  "label": "90+ days",
+                  "icon": "clock",
+                  "sub": "Future project"
+                },
+                {
+                  "value": "browsing",
+                  "label": "Just exploring",
+                  "icon": "search",
+                  "sub": "No commitment"
+                }
+              ],
+              "defaultValue": ""
+            }
+          ]
+        }
+      ],
+      "variants": {
+        "project": {
+          "title": "Start a qualified connection",
+          "eyebrow": "attract · qualify · connect",
+          "steps": [
+            {
+              "stepLabel": "Step 1 of 3 — Contact",
+              "title": "What’s the best number to reach you?",
+              "fields": [
+                {
+                  "id": "phone",
+                  "type": "phone",
+                  "label": "Phone",
+                  "placeholder": "Mobile number",
+                  "helpText": "OTP-verified · we never share your number",
+                  "required": true,
+                  "validation": {
+                    "minLength": 7,
+                    "message": "Enter a valid mobile number"
+                  },
+                  "options": [],
+                  "defaultValue": ""
+                }
+              ]
+            },
+            {
+              "stepLabel": "Step 2 of 3 — Project",
+              "title": "What kind of project is this?",
+              "fields": [
+                {
+                  "id": "projectType",
+                  "type": "option-tile",
+                  "label": "Project type",
+                  "placeholder": "",
+                  "helpText": "",
+                  "required": true,
+                  "validation": {
+                    "message": "Pick what you need first"
+                  },
+                  "layout": "list",
+                  "options": [
+                    {
+                      "value": "residential",
+                      "label": "Residential",
+                      "icon": "home-2"
+                    },
+                    {
+                      "value": "commercial",
+                      "label": "Commercial",
+                      "icon": "building"
+                    },
+                    {
+                      "value": "hospitality",
+                      "label": "Hospitality",
+                      "icon": "building-community"
+                    },
+                    {
+                      "value": "industrial",
+                      "label": "Industrial",
+                      "icon": "building-factory"
+                    }
+                  ],
+                  "defaultValue": ""
+                },
+                {
+                  "id": "name",
+                  "type": "text",
+                  "label": "Your name",
+                  "placeholder": "Your name",
+                  "helpText": "",
+                  "required": true,
+                  "validation": {},
+                  "options": [],
+                  "defaultValue": ""
+                }
+              ],
+              "expander": {
+                "label": "Add project details",
+                "fields": [
+                  {
+                    "id": "brief",
+                    "type": "text",
+                    "label": "Brief",
+                    "placeholder": "Tell us a bit about the space or what you have in mind (optional)",
+                    "helpText": "",
+                    "required": false,
+                    "validation": {},
+                    "options": [],
+                    "defaultValue": ""
+                  }
+                ]
+              }
+            },
+            {
+              "stepLabel": "Step 3 of 3 — Timeline",
+              "title": "When do you need to start?",
+              "fields": [
+                {
+                  "id": "timeline",
+                  "type": "option-tile",
+                  "label": "Timeline",
+                  "placeholder": "",
+                  "helpText": "",
+                  "required": true,
+                  "validation": {
+                    "message": "Pick what you need first"
+                  },
+                  "layout": "list",
+                  "options": [
+                    {
+                      "value": "now",
+                      "label": "Within 30 days",
+                      "icon": "bolt",
+                      "sub": "High intent"
+                    },
+                    {
+                      "value": "soon",
+                      "label": "30–90 days",
+                      "icon": "calendar",
+                      "sub": "Planning stage"
+                    },
+                    {
+                      "value": "later",
+                      "label": "90+ days",
+                      "icon": "clock",
+                      "sub": "Future project"
+                    },
+                    {
+                      "value": "browsing",
+                      "label": "Just exploring",
+                      "icon": "search",
+                      "sub": "No commitment"
+                    }
+                  ],
+                  "defaultValue": ""
+                }
+              ]
+            }
+          ]
+        },
+        "product": {
+          "title": "Ask about this product",
+          "eyebrow": "product connection",
+          "steps": [
+            {
+              "stepLabel": "What do you need?",
+              "title": "What do you need?",
+              "fields": [
+                {
+                  "id": "need",
+                  "type": "option-tile",
+                  "label": "What do you need?",
+                  "placeholder": "",
+                  "helpText": "",
+                  "required": true,
+                  "validation": {
+                    "message": "Pick what you need first"
+                  },
+                  "layout": "list",
+                  "options": [
+                    {
+                      "value": "price",
+                      "label": "Check price & availability",
+                      "icon": "tag"
+                    },
+                    {
+                      "value": "sample",
+                      "label": "Request a sample",
+                      "icon": "package"
+                    },
+                    {
+                      "value": "bulk",
+                      "label": "Bulk / trade connection",
+                      "icon": "stack-2",
+                      "sub": "Tell us quantity"
+                    },
+                    {
+                      "value": "custom",
+                      "label": "Custom size or colour",
+                      "icon": "ruler-measure",
+                      "sub": "Tell us the spec"
+                    }
+                  ],
+                  "defaultValue": ""
+                },
+                {
+                  "id": "detail",
+                  "type": "textarea",
+                  "label": "Details",
+                  "placeholder": "",
+                  "helpText": "",
+                  "required": true,
+                  "validation": {},
+                  "options": [],
+                  "defaultValue": "",
+                  "showWhen": {
+                    "field": "need",
+                    "in": [
+                      "bulk",
+                      "custom"
+                    ],
+                    "placeholderWhen": {
+                      "bulk": "Roughly how many units, and for what use?",
+                      "custom": "What size, colour, or finish do you need?"
+                    }
+                  }
+                },
+                {
+                  "id": "note",
+                  "type": "text",
+                  "label": "Note",
+                  "placeholder": "Anything else? (optional)",
+                  "helpText": "",
+                  "required": false,
+                  "validation": {},
+                  "options": [],
+                  "defaultValue": ""
+                }
+              ]
+            }
+          ]
+        },
+        "shop": {
+          "title": "Connect with this shop",
+          "eyebrow": "showroom connection",
+          "steps": [
+            {
+              "stepLabel": "How to connect",
+              "title": "How would you like to connect?",
+              "fields": [
+                {
+                  "id": "how",
+                  "type": "option-tile",
+                  "label": "How to connect",
+                  "placeholder": "",
+                  "helpText": "",
+                  "required": true,
+                  "validation": {
+                    "message": "Pick what you need first"
+                  },
+                  "layout": "list",
+                  "options": [
+                    {
+                      "value": "visit",
+                      "label": "Visit the showroom",
+                      "icon": "walk",
+                      "sub": "Plan a trip"
+                    },
+                    {
+                      "value": "callback",
+                      "label": "Request a callback",
+                      "icon": "phone",
+                      "sub": "They call me"
+                    },
+                    {
+                      "value": "catalogue",
+                      "label": "Send catalogue / quote",
+                      "icon": "file-text",
+                      "sub": "Over chat"
+                    },
+                    {
+                      "value": "stock",
+                      "label": "Just check availability",
+                      "icon": "box",
+                      "sub": "Quick yes/no"
+                    }
+                  ],
+                  "defaultValue": ""
+                },
+                {
+                  "id": "note",
+                  "type": "text",
+                  "label": "Note",
+                  "placeholder": "What are you looking for? (optional)",
+                  "helpText": "",
+                  "required": false,
+                  "validation": {},
+                  "options": [],
+                  "defaultValue": ""
+                }
+              ]
+            }
+          ]
+        },
+        "service": {
+          "title": "Book a consultation",
+          "eyebrow": "service request",
+          "steps": [
+            {
+              "stepLabel": "Step 1 of 3 — Requirement",
+              "title": "What best describes your requirement?",
+              "fields": [
+                {
+                  "id": "requirement",
+                  "type": "option-tile",
+                  "label": "Requirement",
+                  "placeholder": "",
+                  "helpText": "",
+                  "required": true,
+                  "validation": {
+                    "message": "Pick what you need first"
+                  },
+                  "layout": "list",
+                  "autoAdvance": true,
+                  "options": [
+                    {
+                      "value": "newquote",
+                      "label": "New project quote",
+                      "icon": "file-description"
+                    },
+                    {
+                      "value": "ongoing",
+                      "label": "Work in progress",
+                      "icon": "tools"
+                    },
+                    {
+                      "value": "advice",
+                      "label": "Consultation / advice",
+                      "icon": "messages"
+                    }
+                  ],
+                  "defaultValue": ""
+                }
+              ]
+            },
+            {
+              "stepLabel": "Step 2 of 3 — How you'll work",
+              "title": "How would you like to work together?",
+              "fields": [
+                {
+                  "id": "mode",
+                  "type": "option-tile",
+                  "label": "Mode",
+                  "placeholder": "",
+                  "helpText": "",
+                  "required": true,
+                  "validation": {
+                    "message": "Pick what you need first"
+                  },
+                  "layout": "list",
+                  "options": [
+                    {
+                      "value": "onsite",
+                      "label": "On-site visit",
+                      "icon": "map-pin",
+                      "sub": "Come see the space"
+                    },
+                    {
+                      "value": "remote",
+                      "label": "Remote / online",
+                      "icon": "device-laptop",
+                      "sub": "Calls & shared files"
+                    },
+                    {
+                      "value": "either",
+                      "label": "Either works",
+                      "icon": "arrows-shuffle",
+                      "sub": "Whatever suits"
+                    }
+                  ],
+                  "defaultValue": ""
+                }
+              ],
+              "expander": {
+                "label": "Add project readiness & details",
+                "fields": [
+                  {
+                    "id": "ready",
+                    "type": "chip-group",
+                    "label": "How ready are you?",
+                    "placeholder": "",
+                    "helpText": "",
+                    "required": false,
+                    "validation": {},
+                    "options": [
+                      {
+                        "value": "idea",
+                        "label": "Just an idea"
+                      },
+                      {
+                        "value": "measured",
+                        "label": "Have measurements"
+                      },
+                      {
+                        "value": "drawings",
+                        "label": "Have drawings / plans"
+                      },
+                      {
+                        "value": "sitelive",
+                        "label": "Site is live"
+                      }
+                    ],
+                    "defaultValue": ""
+                  },
+                  {
+                    "id": "brief",
+                    "type": "text",
+                    "label": "Brief",
+                    "placeholder": "Tell us a bit about the space or project",
+                    "helpText": "",
+                    "required": false,
+                    "validation": {},
+                    "options": [],
+                    "defaultValue": ""
+                  }
+                ]
+              }
+            },
+            {
+              "stepLabel": "Step 3 of 3 — Timeline",
+              "title": "When do you need this?",
+              "fields": [
+                {
+                  "id": "timeline",
+                  "type": "option-tile",
+                  "label": "Timeline",
+                  "placeholder": "",
+                  "helpText": "",
+                  "required": true,
+                  "validation": {
+                    "message": "Pick what you need first"
+                  },
+                  "layout": "list",
+                  "options": [
+                    {
+                      "value": "week",
+                      "label": "This week",
+                      "icon": "bolt",
+                      "sub": "Urgent"
+                    },
+                    {
+                      "value": "month",
+                      "label": "This month",
+                      "icon": "calendar",
+                      "sub": "Soon"
+                    },
+                    {
+                      "value": "ahead",
+                      "label": "Planning ahead",
+                      "icon": "clock",
+                      "sub": "No rush"
+                    },
+                    {
+                      "value": "unsure",
+                      "label": "Not sure yet",
+                      "icon": "help",
+                      "sub": "Just exploring"
+                    }
+                  ],
+                  "defaultValue": ""
+                }
+              ]
+            }
+          ]
+        },
+        "catalogue": {
+          "title": "Connect with this maker",
+          "eyebrow": "catalogue connection",
+          "steps": [
+            {
+              "stepLabel": "Step 1 of 3 — Purpose",
+              "title": "What do you need from this maker?",
+              "fields": [
+                {
+                  "id": "purpose",
+                  "type": "option-tile",
+                  "label": "Purpose",
+                  "placeholder": "",
+                  "helpText": "",
+                  "required": true,
+                  "validation": {
+                    "message": "Pick what you need first"
+                  },
+                  "layout": "list",
+                  "options": [
+                    {
+                      "value": "quote",
+                      "label": "Pricing / quote",
+                      "icon": "file-invoice",
+                      "sub": "For specific items"
+                    },
+                    {
+                      "value": "bulk",
+                      "label": "Bulk / trade order",
+                      "icon": "building-store",
+                      "sub": "Dealer or project"
+                    },
+                    {
+                      "value": "stock",
+                      "label": "Availability & lead time",
+                      "icon": "box",
+                      "sub": "What's in stock"
+                    },
+                    {
+                      "value": "custom",
+                      "label": "Custom spec",
+                      "icon": "ruler-measure",
+                      "sub": "Size, finish, colour"
+                    }
+                  ],
+                  "defaultValue": ""
+                },
+                {
+                  "id": "name",
+                  "type": "text",
+                  "label": "Your name",
+                  "placeholder": "Your name",
+                  "helpText": "",
+                  "required": true,
+                  "validation": {},
+                  "options": [],
+                  "defaultValue": ""
+                }
+              ]
+            },
+            {
+              "stepLabel": "Step 2 of 3 — Contact",
+              "title": "What’s the best number to reach you?",
+              "fields": [
+                {
+                  "id": "phone",
+                  "type": "phone",
+                  "label": "Phone",
+                  "placeholder": "Mobile number",
+                  "helpText": "OTP-verified · we never share your number",
+                  "required": true,
+                  "validation": {
+                    "minLength": 7,
+                    "message": "Enter a valid mobile number"
+                  },
+                  "options": [],
+                  "defaultValue": ""
+                }
+              ]
+            },
+            {
+              "stepLabel": "Step 3 of 3 — Timeline",
+              "title": "When do you need to decide?",
+              "fields": [
+                {
+                  "id": "timeline",
+                  "type": "option-tile",
+                  "label": "Timeline",
+                  "placeholder": "",
+                  "helpText": "",
+                  "required": true,
+                  "validation": {
+                    "message": "Pick what you need first"
+                  },
+                  "layout": "list",
+                  "options": [
+                    {
+                      "value": "now",
+                      "label": "Within 30 days",
+                      "icon": "bolt",
+                      "sub": "High intent"
+                    },
+                    {
+                      "value": "soon",
+                      "label": "30–90 days",
+                      "icon": "calendar",
+                      "sub": "Planning stage"
+                    },
+                    {
+                      "value": "later",
+                      "label": "90+ days",
+                      "icon": "clock",
+                      "sub": "Future project"
+                    },
+                    {
+                      "value": "browsing",
+                      "label": "Just exploring",
+                      "icon": "search",
+                      "sub": "No commitment"
+                    }
+                  ],
+                  "defaultValue": ""
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "style": {
+        "background": "#FFFDF8",
+        "surface": "#FFFFFF",
+        "border": "#D8D5CB",
+        "text": "#1A1A17",
+        "placeholder": "#5D584F",
+        "primaryButtonBg": "#085041",
+        "primaryButtonText": "#FFFFFF",
+        "focusRing": "#085041",
+        "error": "#C0392B",
+        "radius": "10px",
+        "buttonRadius": "30px",
+        "spacing": "18px",
+        "fontSize": "14px"
+      },
+      "copy": {
+        "submitLabel": "Connect",
+        "submittingLabel": "Sending…"
+      },
+      "submit": {
+        "endpoint": "v1/engine/leads/",
+        "method": "POST",
+        "payloadMap": {
+          "name": "name",
+          "phone": "phone"
+        }
+      },
+      "behavior": {
+        "multiStep": true,
+        "authRequired": true,
+        "stashOnAnon": true,
+        "resumeAfterLogin": true
+      }
+    },
+    "is_active": true,
+    "version": 1,
+    "createdOn": "2026-07-24T06:48:17.111Z",
+    "updatedOn": "2026-07-24T08:58:42.397Z"
+  }
+},
+{
+  "model": "interior_forms.formdefinition",
+  "pk": 6,
+  "fields": {
+    "key": "match-wizard",
+    "page": "mobile overlay — opened with ?match=1 from every v3 page (phone only)",
+    "component": "src/components/shared/mobile/MatchWizard (index.tsx + useMatchWizard.ts)",
+    "schema": {
+      "steps": [
+        {
+          "title": "What are you planning?",
+          "fields": [
+            {
+              "id": "what",
+              "type": "option-tile",
+              "label": "What are you planning?",
+              "placeholder": "",
+              "helpText": "Pick the closest — you can add details in chat.",
+              "required": true,
+              "validation": {
+                "message": "Pick what you need first"
+              },
+              "layout": "grid-2",
+              "options": [
+                {
+                  "value": "home",
+                  "label": "Full home",
+                  "icon": "home"
+                },
+                {
+                  "value": "kitchen",
+                  "label": "Kitchen",
+                  "icon": "tools-kitchen-2"
+                },
+                {
+                  "value": "room",
+                  "label": "One room",
+                  "icon": "sofa"
+                },
+                {
+                  "value": "product",
+                  "label": "A product",
+                  "icon": "armchair"
+                },
+                {
+                  "value": "service",
+                  "label": "A service",
+                  "icon": "brush"
+                },
+                {
+                  "value": "unsure",
+                  "label": "Not sure yet",
+                  "icon": "help-circle"
+                }
+              ],
+              "defaultValue": ""
+            }
+          ]
+        },
+        {
+          "title": "How big, and your budget?",
+          "fields": [
+            {
+              "id": "space",
+              "type": "chip-group",
+              "label": "Space",
+              "placeholder": "",
+              "helpText": "",
+              "required": true,
+              "validation": {
+                "message": "Pick a size first"
+              },
+              "options": [
+                {
+                  "value": "1 BHK",
+                  "label": "1 BHK"
+                },
+                {
+                  "value": "2 BHK",
+                  "label": "2 BHK"
+                },
+                {
+                  "value": "3 BHK",
+                  "label": "3 BHK"
+                },
+                {
+                  "value": "4 BHK+",
+                  "label": "4 BHK+"
+                },
+                {
+                  "value": "Villa",
+                  "label": "Villa"
+                },
+                {
+                  "value": "Office",
+                  "label": "Office"
+                }
+              ],
+              "defaultValue": ""
+            },
+            {
+              "id": "budget",
+              "type": "slider",
+              "label": "Approx. budget",
+              "placeholder": "",
+              "helpText": "",
+              "required": false,
+              "validation": {},
+              "options": [],
+              "min": 1,
+              "max": 50,
+              "step": 1,
+              "valueLabel": "₹{v}L{max+}",
+              "defaultValue": "8"
+            }
+          ]
+        },
+        {
+          "title": "Where, and how soon?",
+          "fields": [
+            {
+              "id": "city",
+              "type": "text",
+              "label": "Location",
+              "placeholder": "Your city",
+              "helpText": "",
+              "required": false,
+              "validation": {},
+              "options": [],
+              "defaultValue": ""
+            },
+            {
+              "id": "when",
+              "type": "chip-group",
+              "label": "Timeline",
+              "placeholder": "",
+              "helpText": "",
+              "required": true,
+              "validation": {
+                "message": "Pick a timeline first"
+              },
+              "options": [
+                {
+                  "value": "now",
+                  "label": "This month",
+                  "icon": "flame"
+                },
+                {
+                  "value": "soon",
+                  "label": "1–3 months",
+                  "icon": "calendar"
+                },
+                {
+                  "value": "idea",
+                  "label": "Just exploring",
+                  "icon": "eye"
+                }
+              ],
+              "defaultValue": ""
+            }
+          ]
+        },
+        {
+          "title": "Where should they reach you?",
+          "fields": [
+            {
+              "id": "name",
+              "type": "text",
+              "label": "Your name",
+              "placeholder": "Your name",
+              "helpText": "",
+              "required": true,
+              "validation": {
+                "message": "Your name is required"
+              },
+              "options": [],
+              "defaultValue": ""
+            },
+            {
+              "id": "phone",
+              "type": "phone",
+              "label": "Phone number",
+              "placeholder": "Phone number",
+              "helpText": "",
+              "required": true,
+              "validation": {
+                "minLength": 6,
+                "message": "Enter a valid phone number"
+              },
+              "options": [],
+              "defaultValue": ""
+            }
+          ]
+        }
+      ],
+      "style": {
+        "background": "#FFFDF8",
+        "surface": "#FFFDF8",
+        "border": "#E8E6DF",
+        "text": "#1A1A17",
+        "placeholder": "#5D584F",
+        "primaryButtonBg": "#085041",
+        "primaryButtonText": "#FFFFFF",
+        "focusRing": "#085041",
+        "error": "#B3261E",
+        "radius": "14px",
+        "buttonRadius": "14px",
+        "spacing": "11px",
+        "fontSize": "16px"
+      },
+      "copy": {
+        "submitLabel": "Connect",
+        "submittingLabel": "Sending…"
+      },
+      "submit": {
+        "endpoint": "v1/engine/leads/",
+        "method": "POST",
+        "payloadMap": {
+          "name": "name",
+          "phone": "phone",
+          "intent": {
+            "static": "project"
+          },
+          "enquiryType": {
+            "static": "match"
+          }
+        }
+      },
+      "behavior": {
+        "multiStep": true,
+        "authRequired": false,
+        "stashOnAnon": false,
+        "resumeAfterLogin": false
+      }
+    },
+    "is_active": true,
+    "version": 1,
+    "createdOn": "2026-07-24T06:48:17.302Z",
+    "updatedOn": "2026-07-24T08:58:42.545Z"
+  }
+}
+]
