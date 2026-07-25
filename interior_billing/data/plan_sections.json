@@ -1,0 +1,324 @@
+{
+ "sections": {
+  "automation": {
+   "family": "automation",
+   "hero": {
+    "eyebrow": "attract · qualify · convert",
+    "eyebrowIcon": "ti-sparkles",
+    "sub": "A full AI qualification engine — every enquiry screened before it reaches you. One qualified enquiry → one business. Never broadcast to competitors.",
+    "trust": [
+     {
+      "icon": "ti-star-filled",
+      "text": "4.8 rated platform"
+     },
+     {
+      "icon": "ti-shield-check",
+      "text": "Govt of India registered"
+     },
+     {
+      "icon": "ti-certificate",
+      "text": "MSME certified"
+     },
+     {
+      "icon": "ti-users",
+      "text": "500+ active businesses"
+     }
+    ],
+    "headingLead": "The process your businessnever had time to",
+    "headingAccent": "build.",
+    "headingTrail": ""
+   },
+   "tab": {
+    "label": "Autogrowth",
+    "sub": "AI qualified enquiries",
+    "icon": "ti-sparkles"
+   },
+   "durations": [],
+   "gridVariant": "grid-3"
+  },
+  "business": {
+   "family": "business",
+   "hero": {
+    "eyebrow": "for designers, studios & firms",
+    "eyebrowIcon": "ti-building",
+    "sub": "A networking, visibility &amp; authority platform for the interior &amp; sanitary ecosystem. Plans differ by market reach, visibility and opportunity access.",
+    "trust": [
+     {
+      "icon": "ti-rosette",
+      "text": "IB verified listing"
+     },
+     {
+      "icon": "ti-book",
+      "text": "Product & catalogue upload"
+     },
+     {
+      "icon": "ti-map-pin",
+      "text": "Local + national visibility"
+     }
+    ],
+    "headingLead": "Your",
+    "headingAccent": "business profile",
+    "headingTrail": ",built to attract."
+   },
+   "tab": {
+    "label": "Business",
+    "sub": "Firms & studios",
+    "icon": "ti-building"
+   },
+   "durations": [
+    {
+     "label": "Monthly",
+     "saveBadge": "",
+     "cycle": "mo"
+    },
+    {
+     "label": "Quarterly",
+     "saveBadge": "",
+     "cycle": "q"
+    },
+    {
+     "label": "Annual",
+     "saveBadge": "Save 17%",
+     "cycle": "yr"
+    }
+   ],
+   "gridVariant": "grid-3"
+  },
+  "shop": {
+   "family": "shop",
+   "hero": {
+    "eyebrow": "for showrooms, retailers & distributors",
+    "eyebrowIcon": "ti-building-store",
+    "sub": "Turn your storefront into an always-on digital shop — discoverable, contactable, ready to convert. Every plan captures WhatsApp, call &amp; form enquiries into one dashboard.",
+    "trust": [
+     {
+      "icon": "ti-map-pin",
+      "text": "Local discovery & map listing"
+     },
+     {
+      "icon": "ti-book",
+      "text": "Product & catalogue upload"
+     },
+     {
+      "icon": "ti-calendar",
+      "text": "Walk-in booking system"
+     }
+    ],
+    "headingLead": "Your storefront,",
+    "headingAccent": "found first.",
+    "headingTrail": ""
+   },
+   "tab": {
+    "label": "Shop",
+    "sub": "Showrooms & retailers",
+    "icon": "ti-building-store"
+   },
+   "durations": [
+    {
+     "label": "Monthly",
+     "saveBadge": "",
+     "cycle": "mo"
+    },
+    {
+     "label": "Quarterly",
+     "saveBadge": "",
+     "cycle": "q"
+    },
+    {
+     "label": "Annual",
+     "saveBadge": "Save 14%",
+     "cycle": "yr"
+    }
+   ],
+   "gridVariant": "grid-3"
+  },
+  "architect": {
+   "family": "architect",
+   "hero": {
+    "eyebrow": "for individual architects",
+    "eyebrowIcon": "ti-ruler-2",
+    "sub": "Showcase your design expertise. Turn your practice into a discoverable design portfolio — projects, credentials &amp; consultation booking in one profile.",
+    "trust": [
+     {
+      "icon": "ti-rosette",
+      "text": "Verified architect badge"
+     },
+     {
+      "icon": "ti-link",
+      "text": "Shareable profile URL"
+     },
+     {
+      "icon": "ti-camera",
+      "text": "Project portfolio showcase"
+     }
+    ],
+    "headingLead": "Your profile,your",
+    "headingAccent": "portfolio.",
+    "headingTrail": ""
+   },
+   "tab": {
+    "label": "Architecture",
+    "sub": "Profile & portfolio",
+    "icon": "ti-ruler-2"
+   },
+   "durations": [
+    {
+     "label": "Monthly",
+     "saveBadge": "",
+     "cycle": "mo"
+    },
+    {
+     "label": "Quarterly",
+     "saveBadge": "",
+     "cycle": "q"
+    },
+    {
+     "label": "Annual",
+     "saveBadge": "Save 17%",
+     "cycle": "yr"
+    }
+   ],
+   "gridVariant": "grid-3"
+  }
+ },
+ "compareRows": {
+  "ag-launch": {
+   "column": "Launch",
+   "popular": false,
+   "values": [
+    {
+     "feature": "Market reach",
+     "value": "2-State"
+    },
+    {
+     "feature": "Project segments",
+     "value": "2"
+    },
+    {
+     "feature": "Search rankings",
+     "value": "3"
+    },
+    {
+     "feature": "Enquiry qualification",
+     "value": "Standard"
+    },
+    {
+     "feature": "WhatsApp verification",
+     "value": "✓"
+    },
+    {
+     "feature": "Opportunity tracking",
+     "value": "✗"
+    },
+    {
+     "feature": "Priority routing",
+     "value": "✗"
+    },
+    {
+     "feature": "Competition control",
+     "value": "Standard"
+    },
+    {
+     "feature": "Account management",
+     "value": "✗"
+    },
+    {
+     "feature": "Support",
+     "value": "24/7"
+    }
+   ]
+  },
+  "ag-scale": {
+   "column": "Scale",
+   "popular": true,
+   "values": [
+    {
+     "feature": "Market reach",
+     "value": "5-State exclusive"
+    },
+    {
+     "feature": "Project segments",
+     "value": "3 high-value"
+    },
+    {
+     "feature": "Search rankings",
+     "value": "6"
+    },
+    {
+     "feature": "Enquiry qualification",
+     "value": "Advanced"
+    },
+    {
+     "feature": "WhatsApp verification",
+     "value": "✓"
+    },
+    {
+     "feature": "Opportunity tracking",
+     "value": "✓"
+    },
+    {
+     "feature": "Priority routing",
+     "value": "✗"
+    },
+    {
+     "feature": "Competition control",
+     "value": "Controlled"
+    },
+    {
+     "feature": "Account management",
+     "value": "✗"
+    },
+    {
+     "feature": "Support",
+     "value": "Dedicated"
+    }
+   ]
+  },
+  "ag-dominance": {
+   "column": "Dominance",
+   "popular": false,
+   "values": [
+    {
+     "feature": "Market reach",
+     "value": "Pan India"
+    },
+    {
+     "feature": "Project segments",
+     "value": "All"
+    },
+    {
+     "feature": "Search rankings",
+     "value": "10+"
+    },
+    {
+     "feature": "Enquiry qualification",
+     "value": "Premium"
+    },
+    {
+     "feature": "WhatsApp verification",
+     "value": "✓"
+    },
+    {
+     "feature": "Opportunity tracking",
+     "value": "✓"
+    },
+    {
+     "feature": "Priority routing",
+     "value": "✓"
+    },
+    {
+     "feature": "Competition control",
+     "value": "Category exclusive"
+    },
+    {
+     "feature": "Account management",
+     "value": "Personal manager"
+    },
+    {
+     "feature": "Support",
+     "value": "Dedicated"
+    }
+   ]
+  }
+ }
+}

@@ -24,9 +24,12 @@ from django.core.cache import cache
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from interior_billing.models import PlanBillingCycle, Subscription
+from interior_billing.models import PlanBillingCycle, PlanPageSection, Subscription
 
-DATA = Path(__file__).resolve().parent.parent.parent / "data" / "plan_catalogue.json"
+_DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
+DATA = _DATA_DIR / "plan_catalogue.json"
+# Per-family page chrome + the automation compare table columns.
+SECTIONS = _DATA_DIR / "plan_sections.json"
 
 
 class Command(BaseCommand):
@@ -41,6 +44,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **opts):
         catalogue = json.loads(DATA.read_text(encoding="utf-8"))["plans"]
+        extras = json.loads(SECTIONS.read_text(encoding="utf-8")) if SECTIONS.exists() else {}
+        sections = extras.get("sections") or {}
+        compare_rows = extras.get("compareRows") or {}
         dry, hard = opts["dry_run"], opts["hard_delete"]
         keep = {p["tag"] for p in catalogue}
 
@@ -84,6 +90,9 @@ class Command(BaseCommand):
                         "badge": p["badge"],
                         "badgeIcon": p["badgeIcon"],
                         "cardContent": p["cardContent"],
+                        # plan_templates() assembles the family compare table from
+                        # these per-plan columns (dedup'd by tag).
+                        "compareRows": compare_rows.get(p["tag"], {}),
                         "duration": "12",
                         "isActive": True,
                         "is_delete": False,
@@ -102,6 +111,17 @@ class Command(BaseCommand):
                     )
                 cy = " ".join(f"{c['durationMonths']}mo=Rs{c['price']}" for c in p["cycles"])
                 self.stdout.write(f"  seeded {p['tag']:20} {p['title']:22} {cy}")
+
+            for family, content in sections.items():
+                PlanPageSection.objects.update_or_create(
+                    family=family,
+                    defaults={"content": content, "isActive": True},
+                )
+                hero = content.get("hero", {})
+                self.stdout.write(
+                    f"  section {family:12} hero={hero.get('headingAccent', '')!r} "
+                    f"trust={len(hero.get('trust', []))} durations={len(content.get('durations', []))}"
+                )
 
         # GetSubscription caches the whole catalogue for 24h under this key; without
         # this the API keeps serving the old plans. See the legal-pages double-cache.
