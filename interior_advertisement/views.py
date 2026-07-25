@@ -424,10 +424,44 @@ async def CreateAdPersonaView(request, campaignId):
             data=final_response.data
         )
     except Exception as e:
-        pass
         return ServerResponse(
             response=RESPONSE_MESSAGES.error,
             message='Error creating ad persona',
             code=RESPONSE_CODES.error,
             data={NAMES.ERROR: str(e)}
         )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+async def BannerAdCatalogView(request):
+    """Return the 8 prototype spots with monthly rates, 4 durations with discounts,
+    and 6 status metadata entries — the data that drives the 3-step banner editor."""
+    try:
+        spots = [
+            {"id":"home", "label":"Home", "desc":"Homepage hero strip", "rate":9999, "icon":"ti-home-2"},
+            {"id":"explore", "label":"Explore", "desc":"Explore hub", "rate":7999, "icon":"ti-compass"},
+            {"id":"business", "label":"Business listing", "desc":"Business search results", "rate":6999, "icon":"ti-building-store"},
+            {"id":"products", "label":"Products", "desc":"Product listing pages", "rate":5999, "icon":"ti-box"},
+            {"id":"services", "label":"Services", "desc":"Service listing pages", "rate":5999, "icon":"ti-tools"},
+            {"id":"catalogue", "label":"Catalogue", "desc":"Catalogue listing pages", "rate":4999, "icon":"ti-book-2"},
+            {"id":"architects", "label":"Architects listing", "desc":"Architect discovery", "rate":4999, "icon":"ti-pencil-bolt"},
+            {"id":"shops", "label":"Shops listing", "desc":"Shop discovery", "rate":4499, "icon":"ti-building-warehouse"},
+        ]
+        durations = [
+            {"id":"1m", "label":"1 month", "months":1, "discount":0},
+            {"id":"3m", "label":"3 months", "months":3, "discount":0.15},
+            {"id":"6m", "label":"6 months", "months":6, "discount":0.25},
+            {"id":"12m", "label":"1 year", "months":12, "discount":0.35},
+        ]
+        statusMeta = {
+            "draft": {"label":"Not paid", "icon":"ti-file", "color":"#888"},
+            "submitted": {"label":"Submitted", "icon":"ti-clock", "color":"#185fa5"},
+            "in_review": {"label":"In review", "icon":"ti-clock", "color":"#ba7517"},
+            "live": {"label":"Live", "icon":"ti-circle-check-filled", "color":"#0d8a55"},
+            "rejected": {"label":"Needs edits", "icon":"ti-alert-triangle", "color":"#b3261e"},
+            "expired": {"label":"Expired", "icon":"ti-calendar-x", "color":"#6b6257"},
+        }
+        return ServerResponse(response=True, code=200, message="ok", data={"spots":spots,"durations":durations,"statusMeta":statusMeta})
+    except Exception as e:
+        return ServerResponse(response=False, code=500, message=str(e), data={})

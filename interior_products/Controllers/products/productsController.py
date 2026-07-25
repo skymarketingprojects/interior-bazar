@@ -197,13 +197,25 @@ class PRODUCTS_CONTROLLER:
             )
         
     @classmethod
-    def _bustBusinessCache(self, business_id):
-        """Invalidate the per-business product caches after a write so the seller's
-        listing reflects create/update/delete immediately (caches were never busted
-        before → stale lists for up to an hour)."""
+    def _bustBusinessCache(self, business_id, product_id=None):
+        """Invalidate the product caches a write just made stale.
+
+        Two layers cache the same data under different key schemes (controller
+        `product_detail_*` / `products_business_*`, view `cache:product:*`), so
+        both must go or the seller sees a stale read.
+
+        The per-item detail keys were missing here, so an edit stayed invisible
+        on the detail endpoint for the full 30-minute TTL — the dashboard looked
+        like the save had silently failed. Pass product_id on update/delete."""
+        keys = [
+            f"products_business_{business_id}",
+            f"cache:product:business:owner:{business_id}",
+            f"cache:product:business:{business_id}",
+        ]
+        if product_id is not None:
+            keys += [f"product_detail_{product_id}", f"cache:product:{product_id}"]
         try:
-            cache.delete(f"products_business_{business_id}")
-            cache.delete(f"cache:product:business:owner:{business_id}")
+            cache.delete_many(keys)
         except Exception:
             pass
 
@@ -253,7 +265,7 @@ class PRODUCTS_CONTROLLER:
                     code=RESPONSE_CODES.error,
                     data={'error':RESPONSE_MESSAGES.product_update_error}
                 )
-            self._bustBusinessCache(business.id)
+            self._bustBusinessCache(business.id, productId)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.product_update_success,
@@ -289,7 +301,7 @@ class PRODUCTS_CONTROLLER:
                     code=RESPONSE_CODES.error,
                     data={'error':RESPONSE_MESSAGES.product_delete_error}
                 )
-            self._bustBusinessCache(business.id)
+            self._bustBusinessCache(business.id, productId)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.product_delete_success,

@@ -88,22 +88,22 @@ class BusinessType(models.Model):
     imageSQUrl = models.CharField(max_length=2250,null=True,blank=True)
     imageRTUrl = models.CharField(max_length=2250,null=True,blank=True)
     value = models.CharField(max_length=250)
-    lable = models.CharField(max_length=250)
+    label = models.CharField(max_length=250)
     trending = models.BooleanField(default=False)
     def __str__(self):
-        return f'business type - {self.lable}'
+        return f'business type - {self.label}'
 
 class BusinessCategory(models.Model):
     # businessType = models.ForeignKey(BusinessType, on_delete=models.CASCADE, null=True, blank=True, related_name='business_type_category')
     imageSQUrl = models.CharField(max_length=2250,null=True,blank=True)
     imageRTUrl = models.CharField(max_length=2250,null=True,blank=True)
     value = models.CharField(max_length=250)
-    lable = models.CharField(max_length=250)
+    label = models.CharField(max_length=250)
     shortValue = models.CharField(max_length=250,null=True,blank=True)
     trending = models.BooleanField(default=False)
     index = models.IntegerField(default=0)
     def __str__(self):
-        return f'business category - {self.lable}'
+        return f'business category - {self.label}'
     def save(self, *args, **kwargs):
         if not self.index:
             self.index = self.__class__.objects.all().count()+1
@@ -116,11 +116,11 @@ class BusinessSegment(models.Model):
     imageSQUrl = models.CharField(max_length=2250,null=True,blank=True)
     imageRTUrl = models.CharField(max_length=2250,null=True,blank=True)
     value = models.CharField(max_length=250)
-    lable = models.CharField(max_length=250)
+    label = models.CharField(max_length=250)
     shortValue = models.CharField(max_length=250,null=True,blank=True)
     trending = models.BooleanField(default=False)
     def __str__(self):
-        return f'business segment - {self.lable}'
+        return f'business segment - {self.label}'
 
 class Business(models.Model):
     user= models.OneToOneField(CustomUser,on_delete=models.CASCADE, null=True, blank=True,related_name='user_business')
@@ -165,7 +165,7 @@ class Business(models.Model):
     avgResponseSeconds = models.IntegerField(null=True, blank=True)
     label = models.CharField(max_length=50, blank=True, default='')
     # Geo coordinates for radius (haversine) search on the home filter bar.
-    # Additive + nullable: legacy businesses have no coordinates and fall back to
+    # Additive + nullabel: legacy businesses have no coordinates and fall back to
     # city matching (see HomeController._apply_home_filter). Mirrors Shop.lat/lng
     # field style (max_digits=9, decimal_places=6) so the engine treats both alike.
     lat = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
@@ -349,7 +349,7 @@ class Subscription(models.Model):
     discountPercentage= models.CharField(max_length=800,null=True, blank=True)
     discountAmount= models.CharField(max_length=800,null=True, blank=True) 
     payableAmount= models.CharField(max_length=800,null=True, blank=True)
-    availableDuration = models.JSONField(
+    availabelDuration = models.JSONField(
         default=list,
         null=True,
         blank=True,
@@ -394,7 +394,7 @@ def _sync_plan_status(instance):
 
 class BusinessPlan(models.Model):
     # Buy-before-entity: a plan is bought by a USER and may exist before the
-    # Business is created (business FK stays nullable, filled later in-dashboard).
+    # Business is created (business FK stays nullabel, filled later in-dashboard).
     user= models.ForeignKey('CustomUser',on_delete=models.CASCADE, null=True, blank=True,related_name='business_plans')
     business= models.ForeignKey(Business,on_delete=models.CASCADE, null=True, blank=True,related_name='business_plan')
     services= models.TextField()
@@ -435,7 +435,7 @@ class BusinessPlan(models.Model):
 
 class ShopPlan(models.Model):
     """Per-shop subscription (shops are 1:M per user). Buy-before-entity: bought by
-    a USER, links to a Shop later (nullable shop FK). Mirrors BusinessPlan."""
+    a USER, links to a Shop later (nullabel shop FK). Mirrors BusinessPlan."""
     user= models.ForeignKey('CustomUser',on_delete=models.CASCADE, null=True, blank=True,related_name='shop_plans')
     shop= models.ForeignKey('app_ib.Shop',on_delete=models.CASCADE, null=True, blank=True,related_name='shop_plan')
     services= models.TextField(blank=True, default='')
@@ -461,7 +461,7 @@ class ShopPlan(models.Model):
 
 class ArchitectPlan(models.Model):
     """Architect subscription (1 per user). Buy-before-entity: bought by a USER, links
-    to an Architect later (nullable architect FK). Mirrors BusinessPlan."""
+    to an Architect later (nullabel architect FK). Mirrors BusinessPlan."""
     user= models.ForeignKey('CustomUser',on_delete=models.CASCADE, null=True, blank=True,related_name='architect_plans')
     architect= models.ForeignKey('app_ib.Architect',on_delete=models.CASCADE, null=True, blank=True,related_name='architect_plan')
     services= models.TextField(blank=True, default='')
@@ -488,7 +488,7 @@ class ArchitectPlan(models.Model):
 class AutomationPlan(models.Model):
     """Automation BUNDLE subscription. Unlike the single-entity plans, buying it unlocks
     ALL THREE seller tabs (business/shop/architect) — its Subscription.grantsEntityTypes
-    is the full set. It is entity-less itself, but carries one nullable FK per entity so a
+    is the full set. It is entity-less itself, but carries one nullabel FK per entity so a
     single automation purchase can be linked to the user's business + shop + architect as
     each is created. Mirrors the other plan models' lifecycle (status + isActive shim)."""
     user= models.ForeignKey('CustomUser',on_delete=models.CASCADE, null=True, blank=True,related_name='automation_plans')
@@ -581,9 +581,9 @@ class Quate(models.Model):
 
 class Feedback(models.Model):
     user= models.ForeignKey(CustomUser,on_delete=models.CASCADE, null=True, blank=True)
-    contact= models.CharField(max_length=500) # lable : Contact detail 
-    feedback= models.TextField() # lable : Feedback rating
-    status= models.TextField() # lable : [view,]
+    contact= models.CharField(max_length=500) # label : Contact detail 
+    feedback= models.TextField() # label : Feedback rating
+    status= models.TextField() # label : [view,]
     timestamp= models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
 

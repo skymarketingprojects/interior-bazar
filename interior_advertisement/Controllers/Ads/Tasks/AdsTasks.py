@@ -37,7 +37,9 @@ class ADS_TASKS:
                 startDate=Data.get(NAMES.START_DATE),
                 endDate=Data.get(NAMES.END_DATE),
                 days=Data.get(NAMES.DAYS, 0),
-                priceTotal=Decimal(PlacementIns.dailyPrice * Data.get(NAMES.DAYS, 0)),
+                # Accept explicit priceTotal from frontend (prototype monthly-rate model);
+                # fall back to dailyPrice × days when not provided.
+                priceTotal=Decimal(Data.get(NAMES.PRICE_TOTAL, 0)) if Data.get(NAMES.PRICE_TOTAL) else Decimal(PlacementIns.dailyPrice * Data.get(NAMES.DAYS, 0)),
                 status=StatusIns,
                 approvalMode=ApprovalModeIns,
             )

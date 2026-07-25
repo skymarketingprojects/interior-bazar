@@ -650,10 +650,23 @@ def _compute_dashboard_kpis(user, window_days):
         pct = round((curr - prev) / prev * 100)
         return {"pct": pct, "isImprovement": pct >= 0}
 
-    # --- Enquiries ---
-    enq_curr = _analytics_sum("leadCount", window_start, now, biz_ids)
-    enq_prev = _analytics_sum("leadCount", prev_start, window_start, biz_ids)
-    enq_spark = _daily_sparkline("leadCount", window_start, now, biz_ids)
+    # --- Enquiries (real LeadQuery rows, not the cron-only BusinessAnalytics
+    # aggregate which is empty in dev — the KPI read 0 while leads clearly exist).
+    from app_ib.models import LeadQuery
+    def _leads_in(start, end):
+        return LeadQuery.objects.filter(
+            business_id__in=biz_ids, timestamp__gte=start, timestamp__lte=end
+        ).count()
+    enq_curr = _leads_in(window_start, now)
+    enq_prev = LeadQuery.objects.filter(
+        business_id__in=biz_ids, timestamp__gte=prev_start, timestamp__lt=window_start
+    ).count()
+    enq_spark = []
+    for i in range(window_days):
+        ds = window_start + timedelta(days=i)
+        de = ds + timedelta(days=1)
+        enq_spark.append(LeadQuery.objects.filter(
+            business_id__in=biz_ids, timestamp__gte=ds, timestamp__lt=de).count())
 
     # --- New connections (conversations created in window for user's businesses) ---
     conn_curr = Conversation.objects.filter(
@@ -732,7 +745,7 @@ def _compute_dashboard_kpis(user, window_days):
 
     return {
         "enquiries": {
-            "label": "Enquiries", "value": enq_curr, "unit": None,
+            "label": "Connections", "value": enq_curr, "unit": None,
             "delta": _delta(enq_curr, enq_prev), "sparkline": enq_spark,
         },
         "connections": {
@@ -769,6 +782,7 @@ def analytics_chart(user, from_date, to_date, entity_type=None, object_id=None):
             raise PermissionError_("not the owner")
         ct = content_type_for(entity_type)
         qs = BusinessAnalytics.objects.filter(contentType=ct, objectId=object_id)
+        biz_ids = None
     else:
         # all entities owned by the user: businesses
         biz_qs = Business.objects.filter(user=user)
@@ -791,6 +805,24 @@ def analytics_chart(user, from_date, to_date, entity_type=None, object_id=None):
               ).order_by("date"))
     by_date = {r["date"]: r for r in rows}
 
+    # BusinessAnalytics is cron-only (empty in dev), so leadCount/quoteCount come
+    # back 0 and the Insights funnel shows "No connections yet" despite real leads.
+    # Overlay the true per-date counts from LeadQuery / Quotation for the
+    # all-businesses scope (the funnel never passes an entity_type).
+    lead_by_date, quote_by_date = {}, {}
+    if biz_ids:
+        from app_ib.models import LeadQuery, Quotation
+        from django.db.models import Count
+        from django.db.models.functions import TruncDate
+        for r in (LeadQuery.objects.filter(business_id__in=biz_ids,
+                                            timestamp__date__gte=from_date, timestamp__date__lte=to_date)
+                  .annotate(d=TruncDate("timestamp")).values("d").annotate(n=Count("id"))):
+            lead_by_date[r["d"]] = r["n"]
+        for r in (Quotation.objects.filter(business_id__in=biz_ids,
+                                            createdAt__date__gte=from_date, createdAt__date__lte=to_date)
+                  .annotate(d=TruncDate("createdAt")).values("d").annotate(n=Count("id"))):
+            quote_by_date[r["d"]] = r["n"]
+
     series = []
     d = from_date
     while d <= to_date:
@@ -799,8 +831,8 @@ def analytics_chart(user, from_date, to_date, entity_type=None, object_id=None):
             "date": d.isoformat(),
             "viewCount": r.get("v", 0) or 0,
             "uniqueVisitorCount": r.get("u", 0) or 0,
-            "leadCount": r.get("l", 0) or 0,
-            "quoteCount": r.get("q", 0) or 0,
+            "leadCount": lead_by_date.get(d, r.get("l", 0) or 0),
+            "quoteCount": quote_by_date.get(d, r.get("q", 0) or 0),
             "whatsappTapCount": r.get("w", 0) or 0,
             "callTapCount": r.get("c", 0) or 0,
             "saveCount": r.get("s", 0) or 0,
@@ -900,6 +932,18 @@ def _shop_full_dict(s, include_videos=True, include_details=True):
         "trendingScore": s.trendingScore,
         "hotScore": s.hotScore,
         "label": s.label,
+        "holidayMode": s.holidayMode,
+        "walkInBooking": s.walkInBooking,
+        "walkInLeadTime": s.walkInLeadTime or '',
+        "appointmentRequired": s.appointmentRequired,
+        "amenities": s.amenities or [],
+        "hours": [
+            {"day": {1:"Monday",2:"Tuesday",3:"Wednesday",4:"Thursday",5:"Friday",6:"Saturday",7:"Sunday"}.get(sc.day, ""),
+             "open": sc.openTime.strftime("%H:%M") if sc.openTime else "",
+             "close": sc.closeTime.strftime("%H:%M") if sc.closeTime else "",
+             "closed": sc.isClosed}
+            for sc in s.schedules.all().order_by("day")
+        ],
         "viewCount": s.viewCount,
         "businessId": s.business_id,
         "businessName": s.business.businessName if s.business_id and s.business else None,
@@ -1287,14 +1331,28 @@ def _business_city(b):
     return loc.city if loc else ""
 
 
+def _rating_pair(b):
+    """(rating, ratingText) — zeroed when the business has no reviews.
+
+    QA finding C: `Business.ratingValue` / `Business.rating` carry seeded defaults
+    (4.6 and "3.5" respectively) that are NOT derived from any review, so a business
+    with totalReviews=0 was serialized with a 4.6 rating. Consumers presented that as
+    social proof, and the two columns disagreed with each other in the same payload.
+    A rating with zero reviews is not derivable from anything, so emit nothing.
+    """
+    has_reviews = (b.totalReviews or 0) > 0
+    return (b.ratingValue if has_reviews else 0), ((b.rating or "") if has_reviews else "")
+
+
 def _biz_full_dict(b):
+    rating, rating_text = _rating_pair(b)
     return {
         "id": b.id,
         "slug": b.slug,
         "name": b.businessName,
         "imageUrl": b.coverImageUrl or "",
-        "rating": b.ratingValue,
-        "ratingText": b.rating,
+        "rating": rating,
+        "ratingText": rating_text,
         "totalReviews": b.totalReviews,
         "trendingScore": b.trendingScore,
         "label": b.label or (b.businessType.lable if b.businessType_id and b.businessType else ""),
@@ -1915,10 +1973,12 @@ def _business_review_summary(b):
     detail page now lazy-loads the written reviews separately via
     GET reviews/?entityType=business&objectId=, so the main payload stays light.
     `recent` is kept as an empty list to preserve the response shape."""
+    # QA finding C: no reviews → no average/ratingText (see _rating_pair).
+    average, rating_text = _rating_pair(b)
     return {
-        "average": b.ratingValue,
+        "average": average,
         "count": b.totalReviews,
-        "ratingText": b.rating or "",
+        "ratingText": rating_text,
         "ratingBreakdown": _rating_breakdown(b),
         "recent": [],
     }
@@ -1982,10 +2042,10 @@ def _business_full_dict(b):
         "bannerImageUrl": b.bannerImageUrl or "",
         "bannerLink": b.bannerLink or "",
         "bannerText": b.bannerText or "",
-        # --- ratings ---
-        "rating": b.ratingValue,
-        "ratingValue": b.ratingValue,
-        "ratingText": b.rating or "",
+        # --- ratings --- (QA finding C: zeroed when there are no reviews)
+        "rating": _rating_pair(b)[0],
+        "ratingValue": _rating_pair(b)[0],
+        "ratingText": _rating_pair(b)[1],
         "totalReviews": b.totalReviews,
         "ratingBreakdown": _rating_breakdown(b),
         # --- classification ---
@@ -2266,6 +2326,13 @@ def prioritized_leads(user, business_id=None):
             "email": lead.email or "",
             "city": lead.city or "",
             "interested": lead.interested or "",
+            # Real lead provenance + the buyer's own brief (task 212) — the seller
+            # brief hardcoded formType="contact"/source="shop" and showed the ranking
+            # `why` string under "Their words" instead of what the buyer actually wrote.
+            "formType": lead.formType or "",
+            "sourceChannel": lead.sourceChannel or "",
+            "originType": lead.originType or "",
+            "query": lead.query or "",
             "status": lead.status or "",
             "leadStatus": lead.leadStatus or "",
             "stage": lead.stage or "",
@@ -2477,7 +2544,7 @@ def create_lead(user, data):
 
     # Self-enquiry guard: a seller can't enquire on their own listing.
     if business and business.user_id and business.user_id == user.id:
-        raise Conflict_("You can't send an enquiry to your own listing")
+        raise Conflict_("You can't start a connection with your own listing")
 
     profile = getattr(user, "user_profile", None)
     name = data.get("name") or (profile.name if profile else "") or ""
@@ -2486,7 +2553,7 @@ def create_lead(user, data):
 
     enquiry_type = data.get("enquiryType") or ""
     item_name = data.get("itemName") or ""
-    interested = f"{intent.capitalize() or 'General'} enquiry"
+    interested = f"{intent.capitalize() or 'General'} connection"
     if enquiry_type:
         interested += f" — {enquiry_type}"
     if item_name:
@@ -4170,7 +4237,7 @@ def update_my_profile(user, data):
         pass
     if city:
         try:
-            loc = user.user_location
+            loc, _ = Location.objects.get_or_create(user=user)
             loc.city = city
             loc.save(update_fields=["city"])
         except Exception:

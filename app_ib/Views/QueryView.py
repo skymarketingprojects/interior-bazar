@@ -319,7 +319,7 @@ async def GetQueryBusinessView(request:HttpRequest):
 @api_view(['POST'])
 async def CreateFunnelQueryView(request):
     try:
-        
+
         # Call Funnel Query Controller to Create Funnel Query
         final_response = await FUNNEL_QUERY_CONTROLLER.CreateFunnelQuery(request=request)
 
@@ -337,3 +337,46 @@ async def CreateFunnelQueryView(request):
             data={
                 NAMES.ERROR: str(e)
             })
+
+
+# ── Lead private notes (S5; user-approved 2026-07-20) ──
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+async def GetLeadNotesView(request):
+    try:
+        lead_id = request.GET.get('lead_id')
+        if not lead_id:
+            return ServerResponse(response=False, code=400, message="lead_id required", data={})
+        from interior_leads.models import LeadQuery, LeadNote
+        lead = await sync_to_async(LeadQuery.objects.filter(id=lead_id).first)()
+        if not lead:
+            return ServerResponse(response=False, code=404, message="Lead not found", data={})
+        # Only the lead's owning business can read notes
+        if lead.business and lead.business.user_id != request.user.id and not request.user.is_staff:
+            return ServerResponse(response=False, code=403, message="Forbidden", data={})
+        notes = await sync_to_async(list)(lead.notes.all().values('id', 'note', 'createdAt'))
+        return ServerResponse(response=True, code=200, message="Notes fetched", data=notes)
+    except Exception as e:
+        return ServerResponse(response=False, code=500, message=str(e), data={})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+async def AddLeadNoteView(request):
+    try:
+        lead_id = request.data.get('lead_id')
+        note_text = request.data.get('note', '').strip()
+        if not lead_id or not note_text:
+            return ServerResponse(response=False, code=400, message="lead_id and note required", data={})
+        from interior_leads.models import LeadQuery, LeadNote
+        lead = await sync_to_async(LeadQuery.objects.filter(id=lead_id).first)()
+        if not lead:
+            return ServerResponse(response=False, code=404, message="Lead not found", data={})
+        if lead.business and lead.business.user_id != request.user.id and not request.user.is_staff:
+            return ServerResponse(response=False, code=403, message="Forbidden", data={})
+        note = await sync_to_async(LeadNote.objects.create)(lead=lead, note=note_text)
+        return ServerResponse(response=True, code=200, message="Note added",
+                              data={'id': note.id, 'note': note.note, 'createdAt': note.createdAt.isoformat()})
+    except Exception as e:
+        return ServerResponse(response=False, code=500, message=str(e), data={})

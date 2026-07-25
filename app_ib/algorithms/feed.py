@@ -177,7 +177,7 @@ def _from_leads(limit):
             continue
         city = _safe(_business_city(lq.business) or (lq.city or ""))
         where = f" in {city}" if city else ""
-        tpl = f"{_b(name)} received a new enquiry{where}"
+        tpl = f"{_b(name)} received a new connection{where}"
         out.append(_event(lq.id, FEED_EVENT_TYPE.LEAD, tpl, city, lq.timestamp))
     return out
 
@@ -279,13 +279,13 @@ def _collect_real_events(count):
 # Each builder takes (bold_name, safe_city, safe_plan) and returns a template that
 # reads as a full sentence. Names are already bold+escaped; cities/plans escaped.
 _REAL_SYNTH_TEMPLATES = [
-    lambda n, c, p: f"A homeowner in {c} enquired with {n}",
+    lambda n, c, p: f"A homeowner in {c} connected with {n}",
     lambda n, c, p: f"{n} is trending in {c}",
     lambda n, c, p: f"Someone saved a listing from {n}",
     lambda n, c, p: f"{n} upgraded to {p}",
     lambda n, c, p: f"{n} crossed new weekly views in {c}",
     lambda n, c, p: f"A designer in {c} opened {n}",
-    lambda n, c, p: f"{n} replied fast to a new enquiry",
+    lambda n, c, p: f"{n} replied fast to a new connection",
     lambda n, c, p: f"{n} climbed the {c} leaderboard",
 ]
 

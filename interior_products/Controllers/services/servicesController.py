@@ -186,13 +186,23 @@ class SERVICES_CONTROLLER:
             )
         
     @classmethod
-    def _bustBusinessCache(self, business_id):
-        """Invalidate the per-business service caches after a write so the seller's
-        listing reflects create/update/delete immediately (caches were never busted
-        before → stale lists for up to an hour)."""
+    def _bustBusinessCache(self, business_id, service_id=None):
+        """Invalidate the service caches a write just made stale.
+
+        Two layers cache the same data under different key schemes (controller
+        `service_detail_*` / `services_business_*`, view `cache:service:*`), so
+        both must go or the seller sees a stale read. The per-item detail keys
+        were missing, so an edit stayed invisible on the detail endpoint for the
+        full TTL. Pass service_id on update/delete."""
+        keys = [
+            f"services_business_{business_id}",
+            f"cache:service:business:owner:{business_id}",
+            f"cache:service:business:{business_id}",
+        ]
+        if service_id is not None:
+            keys += [f"service_detail_{service_id}", f"cache:service:{service_id}"]
         try:
-            cache.delete(f"services_business_{business_id}")
-            cache.delete(f"cache:service:business:owner:{business_id}")
+            cache.delete_many(keys)
         except Exception:
             pass
 
@@ -242,7 +252,7 @@ class SERVICES_CONTROLLER:
                     code=RESPONSE_CODES.error,
                     data={'error':RESPONSE_MESSAGES.service_update_error}
                 )
-            self._bustBusinessCache(business.id)
+            self._bustBusinessCache(business.id, serviceId)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.service_update_success,
@@ -278,7 +288,7 @@ class SERVICES_CONTROLLER:
                     code=RESPONSE_CODES.error,
                     data={'error':RESPONSE_MESSAGES.service_delete_error}
                 )
-            self._bustBusinessCache(business.id)
+            self._bustBusinessCache(business.id, serviceId)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.service_delete_success,

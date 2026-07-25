@@ -148,6 +148,12 @@ class PRODUCTS_V3_CONTROLLER:
                 'inStock': product.stockQuantity is None or product.stockQuantity > 0,
                 'stockQuantity': product.stockQuantity,
             },
+            'pricingModel': product.pricingModel or '',
+            'stockStatus': product.stockStatus or '',
+            'bulkTiers': [
+                {'id': t.id, 'minQty': t.minQty, 'price': t.price, 'tierIndex': t.tierIndex}
+                for t in product.bulkTiers.all()
+            ],
             'ratingValue': product.ratingValue,
             'totalReviews': product.totalReviews,
             'ratingBreakdown': product.ratingBreakdown or {},

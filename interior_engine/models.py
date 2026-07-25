@@ -162,6 +162,18 @@ class Shop(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
 
+    # --- Location & hours fields (additive; user-approved 2026-07-20) ---
+    holidayMode = models.BooleanField(default=False,
+        help_text="Pauses new enquiries without resetting hours.")
+    walkInBooking = models.BooleanField(default=False,
+        help_text="Allow walk-in visitors during open hours.")
+    walkInLeadTime = models.CharField(max_length=50, blank=True, default='',
+        help_text="Lead time for walk-ins, e.g. '15min'.")
+    appointmentRequired = models.BooleanField(default=False,
+        help_text="Appointment preferred for walk-ins.")
+    amenities = models.JSONField(default=list, blank=True,
+        help_text="List of amenity ids, e.g. ['parking', 'wifi'].")
+
     class Meta:
         db_table = "app_ib_shop"
         app_label = "interior_engine"
@@ -173,6 +185,30 @@ class Shop(models.Model):
 
     def __str__(self):
         return f"Shop {self.name} (pk {self.pk})"
+
+
+class ShopDaySchedule(models.Model):
+    """Per-day opening hours for a Shop (additive; user-approved 2026-07-20).
+    Parallel to interior_business.DaySchedule (which has a hard FK to Business)."""
+    DAYS_OF_WEEK = [
+        (1, 'Monday'), (2, 'Tuesday'), (3, 'Wednesday'),
+        (4, 'Thursday'), (5, 'Friday'), (6, 'Saturday'), (7, 'Sunday'),
+    ]
+    shop = models.ForeignKey(Shop, on_delete=models.CASCADE, related_name='schedules')
+    day = models.PositiveSmallIntegerField(choices=DAYS_OF_WEEK, help_text="1=Monday..7=Sunday")
+    openTime = models.TimeField(null=True, blank=True, help_text="null = closed this day")
+    closeTime = models.TimeField(null=True, blank=True)
+    isClosed = models.BooleanField(default=False, help_text="Explicit closed toggle")
+
+    class Meta:
+        db_table = "app_ib_shop_day_schedule"
+        ordering = ['day']
+        unique_together = [('shop', 'day')]
+
+    def __str__(self):
+        if self.isClosed:
+            return f"Shop {self.shop_id} — {self.get_day_display()}: Closed"
+        return f"Shop {self.shop_id} — {self.get_day_display()}: {self.openTime}–{self.closeTime}"
 
 
 class Testimonial(models.Model):

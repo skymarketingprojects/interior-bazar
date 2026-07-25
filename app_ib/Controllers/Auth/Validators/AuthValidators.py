@@ -34,6 +34,7 @@
 #                 message=msg
 #             )
 
+from typing import Optional
 from pydantic import Field, validator
 from app_ib.Utils.BaseValidator import BaseValidator
 
@@ -41,6 +42,19 @@ class SignupValidator(BaseValidator):
     username: str = Field(..., min_length=3)
     password: str = Field(..., min_length=8)
     type: str
+    # The signup wizard collects the buyer's name (+ optional phone) on its first
+    # screen; capture them so a UserProfile is seeded at signup. Without this they
+    # were silently dropped (extra=ignore) and every fresh account greeted the email
+    # local-part while outgoing leads arrived nameless.
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    countryCode: Optional[str] = None
+
+    @validator("phone")
+    def validate_phone(cls, v):
+        if v and not str(v).isdigit():
+            raise ValueError("Phone must contain digits only")
+        return v
 
     @validator("password")
     def validate_password(cls, v):

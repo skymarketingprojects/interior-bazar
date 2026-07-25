@@ -165,13 +165,23 @@ class CATELOG_CONTROLLER:
                 data={'error':str(e)})
 
     @classmethod
-    def _bustBusinessCache(self, business_id):
-        """Invalidate the per-business catalogue caches after a write so the seller's
-        listing reflects create/update/delete immediately (caches were never busted
-        before → stale lists for up to an hour)."""
+    def _bustBusinessCache(self, business_id, catelog_id=None):
+        """Invalidate the catalogue caches a write just made stale.
+
+        Two layers cache the same data under different key schemes (controller
+        `catalogue_detail_*` / `catalogues_business_*`, view `cache:catalogue:*`),
+        so both must go or the seller sees a stale read. The per-item detail keys
+        were missing, so an edit stayed invisible on the detail endpoint for the
+        full TTL. Pass catelog_id on update/delete."""
+        keys = [
+            f"catalogues_business_{business_id}",
+            f"cache:catalogue:business:owner:{business_id}",
+            f"cache:catalogue:business:{business_id}",
+        ]
+        if catelog_id is not None:
+            keys += [f"catalogue_detail_{catelog_id}", f"cache:catalogue:{catelog_id}"]
         try:
-            cache.delete(f"catalogues_business_{business_id}")
-            cache.delete(f"cache:catalogue:business:owner:{business_id}")
+            cache.delete_many(keys)
         except Exception:
             pass
 
@@ -223,7 +233,7 @@ class CATELOG_CONTROLLER:
                     code=RESPONSE_CODES.error,
                     data={}
                     )
-            self._bustBusinessCache(business.id)
+            self._bustBusinessCache(business.id, catelogId)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.catelog_update_success,
@@ -259,7 +269,7 @@ class CATELOG_CONTROLLER:
                     code=RESPONSE_CODES.error,
                     data={}
                     )
-            self._bustBusinessCache(business.id)
+            self._bustBusinessCache(business.id, catelogId)
             return LocalResponse(
                 response=RESPONSE_MESSAGES.success,
                 message=RESPONSE_MESSAGES.catelog_delete_success,

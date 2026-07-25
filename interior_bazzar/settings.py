@@ -82,6 +82,7 @@ INSTALLED_APPS = [
     'interior_business',
     'interior_products',
     'interior_advertisement',
+    'interior_forms',
     'rbac_module',
     # 'interior_notification',
 ]

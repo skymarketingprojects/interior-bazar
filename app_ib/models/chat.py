@@ -21,7 +21,7 @@ class Conversation(models.Model):
     # item 6: first-response tracking — set on first business-side reply
     firstResponseSeconds = models.PositiveIntegerField(null=True, blank=True)
     # Per-participant soft delete: hides the thread from that user's list only
-    # (task 53 — "Delete enquiry"). The conversation is never hard-deleted so the
+    # (task 53 — "Delete connection"). The conversation is never hard-deleted so the
     # other party keeps their copy.
     clientDeleted = models.BooleanField(default=False)
     businessDeleted = models.BooleanField(default=False)

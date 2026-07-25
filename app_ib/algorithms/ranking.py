@@ -112,7 +112,7 @@ def prioritize_leads(business):
 def _why(factors, lead):
     bits = []
     if factors["recency"] > factors_threshold(factors, "recency"):
-        bits.append("fresh enquiry")
+        bits.append("fresh connection")
     if factors["unanswered"]:
         bits.append("unanswered")
     if factors["high_value_tag"]:

@@ -3,6 +3,7 @@
 import random
 import re
 import logging
+from asgiref.sync import sync_to_async
 from django.conf import settings
 from app_ib.Utils.ResponseMessages import RESPONSE_MESSAGES
 from app_ib.Utils.ResponseCodes import RESPONSE_CODES
@@ -111,6 +112,24 @@ class AUTH_CONTROLLER:
                 pass
 
                 if user_ins:
+                    # Seed the UserProfile from the name/phone the signup wizard
+                    # collected (task 211). Best-effort — a profile hiccup must never
+                    # fail the signup itself. Without this the wizard's name/phone were
+                    # dropped and every new account greeted the email local-part while
+                    # its outgoing leads arrived nameless.
+                    name = (getattr(data, "name", None) or "").strip()
+                    phone = (getattr(data, "phone", None) or "").strip()
+                    country = (getattr(data, "countryCode", None) or "").strip()
+                    if name or phone:
+                        try:
+                            from app_ib.models import UserProfile
+                            await sync_to_async(UserProfile.objects.update_or_create)(
+                                user=user_ins,
+                                defaults={"name": name, "phone": phone, "countryCode": country},
+                            )
+                        except Exception:
+                            pass
+
                     # Generate Token and build final response data
                     response_data = await AUTH_TASK.GenerateUserToken(user_ins, request=request)
                     pass

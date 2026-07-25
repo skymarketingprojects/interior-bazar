@@ -59,7 +59,7 @@ class WebAnalyticsController:
         responded = await leads.filter(respondedAt__isnull=False).acount()
         won = await leads.filter(stage="won").acount()
         funnel = [
-            {"label": "Qualified enquiry", "count": total},
+            {"label": "Qualified connection", "count": total},
             {"label": "Seller responded", "count": responded},
             {"label": "Won", "count": won},
         ]

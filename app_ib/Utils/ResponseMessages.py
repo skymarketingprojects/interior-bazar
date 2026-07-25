@@ -457,6 +457,10 @@ class RESPONSE_MESSAGES:
     charts_fetch_error= 'Unable to fetch charts'
     charts_fetch_success= 'Charts fetched successfully'
 
+    # dynamic form definitions (interior_forms)
+    form_definition_fetch_error= 'Unable to fetch form definition'
+    form_definition_fetch_success= 'Form definition fetched successfully'
+
     total_users_fetch_error= 'Unable to fetch total users'
     total_users_fetch_success= 'Total users fetched successfully'
 

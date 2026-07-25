@@ -551,9 +551,9 @@ class _HomeController:
         from django.db.models import Count
         from app_ib.models import BusinessCategory
         qs = (BusinessCategory.objects.filter(isActive=True)
-              .annotate(bizCount=Count("business_category"))
+              .annotate(bizCount=Count("categories"))
               .order_by("-trending", "-bizCount", "index")[:HOME_FILTER.MAX_CATEGORY_PILLS])
-        result = [(c.id, c.lable) for c in qs]
+        result = [(c.id, c.label) for c in qs]
         cache.set(HOME_FILTER.POPULAR_CACHE_KEY, result, HOME_FILTER.POPULAR_CACHE_TTL)
         return result
 
@@ -718,10 +718,17 @@ class _HomeController:
         """Feed-card payload. The first block of keys is FROZEN (existing
         frontend consumers depend on them); everything after is ADDITIVE
         enrichment so cards can show more without breaking old callers."""
+        # QA finding C/J: a rating is only meaningful when something was actually
+        # reviewed. ratingValue/rating carry seeded defaults (4.6), so feed cards were
+        # showing "4.6" for entities with totalReviews=0 — and the home "Top-rated near
+        # you" rail was literally ranking by a score no review supports. Emit 0 instead;
+        # the card treats 0 as unrated and hides the stars.
+        _reviews = getattr(o, "totalReviews", 0) or 0
+        _raw_rating = (getattr(o, "ratingValue", None) if hasattr(o, "ratingValue")
+                       else getattr(o, "rating", 0.0))
         d = {"entityType": entity_type, "id": o.id, "name": self._name(o),
              "slug": getattr(o, "slug", "") or "", "imageUrl": self._image(o),
-             "rating": (getattr(o, "ratingValue", None) if hasattr(o, "ratingValue")
-                        else getattr(o, "rating", 0.0)),
+             "rating": (_raw_rating if _reviews > 0 else 0),
              "trendingScore": getattr(o, "trendingScore", 0.0) or 0.0,
              "label": getattr(o, "label", "") or "", "recScore": score}
         # --- additive enrichment (new keys only) ---

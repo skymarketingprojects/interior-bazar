@@ -79,18 +79,23 @@ def applyDiscount(instance: models.Model)->float:
         discount_type = str(instance.discountType or '').lower().strip()
         discount_by = float(instance.discountBy or 0)
 
-        print(f"Calculating discount for original_price: {original_price}, discount_type: {discount_type}, discount_by: {discount_by}")
+        if original_price <= 0:
+            return max(original_price, 0)
+
         if discount_type == 'percent':
-            discount_amount = (discount_by / 100) * original_price
-        else:
-            discount_amount = discount_by
+            # A garbage percent (negative or >100) is clamped to a sane 0..100.
+            pct = min(max(discount_by, 0), 100)
+            return max(original_price - (pct / 100) * original_price, 0)
 
-        calculated_price = original_price - discount_amount
-        print(f"Calculated display price: {calculated_price}")
-        # Ensure price never drops below zero
-        return max(calculated_price, 0)
+        # amount discount
+        discount_amount = max(discount_by, 0)
+        # A flat "off" amount >= the price is invalid data (e.g. a ₹5000 discount on
+        # a ₹110 item). Ignore it and show the full price rather than render a ₹0
+        # listing beside a bogus "off" badge.
+        if discount_amount >= original_price:
+            return original_price
+        return original_price - discount_amount
 
-    except Exception as e:
-        print(f"Error in applyDiscount: {str(e)}")
+    except Exception:
         # If any error occurs (missing or invalid values), fall back to original price
         return max(float(getattr(instance, 'orignalPrice', 0) or 0), 0)

@@ -1,9 +1,16 @@
 from asgiref.sync import sync_to_async
-from interior_products.models import Product,ProductImage,Catelogue,ProductSpecification,ProductCategory,ProductSubCategory
+from interior_products.models import Product,ProductImage,Catelogue,ProductSpecification,ProductCategory,ProductSubCategory,ProductBulkTier
 from app_ib.Utils.MyMethods import MY_METHODS
 from app_ib.models import Business
 import json
 from app_ib.Utils.Names import NAMES
+
+# ponytail: module-level sentinel — createProduct/updateProduct's bulkTiers block
+# references `_missing` too. It used to be a local of _applyCommercialTerms only, so
+# those methods raised NameError AFTER the row was saved; the bare except swallowed it
+# and the controller reported "Unable to create product" on a successful create.
+_missing = object()
+
 
 def _applyCommercialTerms(product, data):
     """Copy the optional MOQ/unit terms off the request object onto `product`.
@@ -13,7 +20,6 @@ def _applyCommercialTerms(product, data):
     post partial payloads). Blank/0/garbage MOQ → None ("no minimum"), never a
     fabricated default.
     """
-    _missing = object()
     moq = getattr(data, 'minOrderQty', _missing)
     if moq is not _missing:
         try:
@@ -24,6 +30,12 @@ def _applyCommercialTerms(product, data):
     unit = getattr(data, 'unit', _missing)
     if unit is not _missing:
         product.unit = str(unit or '').strip()[:30]
+    pricingModel = getattr(data, 'pricingModel', _missing)
+    if pricingModel is not _missing:
+        product.pricingModel = str(pricingModel or '').strip()[:30]
+    stockStatus = getattr(data, 'stockStatus', _missing)
+    if stockStatus is not _missing:
+        product.stockStatus = str(stockStatus or '').strip()[:30]
 
 
 class PRODUCTS_TASKS:
@@ -96,9 +108,27 @@ class PRODUCTS_TASKS:
                 pass
 
 
-            specifications = {"sizeAvailabe":data.sizeAvailabe,"userManual":data.userManual,"detail":data.detail}
-            pass
+            # ── Bulk pricing tiers (additive; user-approved 2026-07-20) ──
+            bulkTiers = getattr(data, 'bulkTiers', _missing)
+            if bulkTiers is not _missing and isinstance(bulkTiers, list):
+                await sync_to_async(product.bulkTiers.all().delete)()
+                for i, tier in enumerate(bulkTiers):
+                    min_qty = getattr(tier, 'minQty', None) or getattr(tier, 'min', None)
+                    price = getattr(tier, 'price', None)
+                    if min_qty is not None and price is not None:
+                        await sync_to_async(ProductBulkTier.objects.create)(
+                            product=product, minQty=int(min_qty), price=float(price), tierIndex=i
+                        )
 
+            # getattr defaults: the v3 seller edit form does not send these spec
+            # fields. Direct data.sizeAvailabe access raised AttributeError AFTER the
+            # row was already saved, so update reported "Unable to update product" on
+            # success — same class as the create-path _missing bug.
+            specifications = {
+                "sizeAvailabe": getattr(data, "sizeAvailabe", None),
+                "userManual": getattr(data, "userManual", None),
+                "detail": getattr(data, "detail", None),
+            }
 
             for key, value in specifications.items():
                 if not value:
@@ -168,6 +198,16 @@ class PRODUCTS_TASKS:
             except Exception as e:
                 pass
                 pass
+            # ── Bulk pricing tiers (additive; user-approved 2026-07-20) ──
+            bulkTiers = getattr(data, 'bulkTiers', _missing)
+            if bulkTiers is not _missing and isinstance(bulkTiers, list):
+                for i, tier in enumerate(bulkTiers):
+                    min_qty = getattr(tier, 'minQty', None) or getattr(tier, 'min', None)
+                    price = getattr(tier, 'price', None)
+                    if min_qty is not None and price is not None:
+                        await sync_to_async(ProductBulkTier.objects.create)(
+                            product=product, minQty=int(min_qty), price=float(price), tierIndex=i
+                        )
             # These spec fields are optional — the v3 dashboard create form does not
             # send them. Use getattr defaults so a missing key can't raise an
             # AttributeError AFTER the product is already saved (which made create
@@ -261,9 +301,17 @@ class PRODUCTS_TASKS:
                 "subCategories":prodSubCategory,
                 "minOrderQty":product.minOrderQty,
                 "unit":product.unit or '',
+                "pricingModel":product.pricingModel or '',
+                "stockStatus":product.stockStatus or '',
                 "phone": getattr(_profile, 'phone', '') if _profile else '',
                 "countryCode": getattr(_profile, 'countryCode', '') if _profile else ''
             }
+            # Bulk pricing tiers
+            bulkTiers = await sync_to_async(list)(product.bulkTiers.all())
+            productData["bulkTiers"] = [
+                {'id': t.id, 'minQty': t.minQty, 'price': t.price, 'tierIndex': t.tierIndex}
+                for t in bulkTiers
+            ]
             specifications:list[ProductSpecification] = await sync_to_async(product.productSpecifications.all)()
             for specification in specifications:
                 productData[specification.title] = specification.description

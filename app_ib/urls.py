@@ -167,6 +167,9 @@ urlpatterns = [
     # Offer text
     ##########################################################
     path('v1/query/offer-text/', OfferTextView.GetOfferText, name='GetOfferTextView'),
+    # Lead private notes (S5; user-approved 2026-07-20)
+    path('v1/query/notes/', QueryView.GetLeadNotesView, name='GetLeadNotesView'),
+    path('v1/query/notes/add/', QueryView.AddLeadNoteView, name='AddLeadNoteView'),
 
     ######################################################
     # payment gateway
@@ -187,6 +190,7 @@ urlpatterns = [
     path('v1/ads/', include('interior_advertisement.urls')),
     path('v1/bots/', include('interior_bot.urls')),
     path('v1/business/', include('interior_business.urls')),
+    path('v1/forms/', include('interior_forms.urls')),
     path('v1/market/', include('interior_products.urls')),
     path('v1/notification/', include('interior_notification.urls')),
     path('v1/rbac/', include('rbac_module.urls')),

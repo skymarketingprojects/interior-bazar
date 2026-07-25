@@ -221,27 +221,36 @@ class _ChatController:
         conv = self._get(conv_id)
         if not conv.is_participant(user.id):
             raise PermissionError_("not a participant")
+        # (timestamp, payload) — the feed is SORTED by timestamp at the end, never by
+        # the order we happen to append in: a status transition (updatedAt) can predate
+        # the last message, and the first reply can postdate an accept.
         events = []
-        if conv.createdAt:
-            events.append({"event": "Connection started", "when": _fmt(conv.createdAt), "icon": "ti-link"})
+
+        def _add(dt, event, icon):
+            if dt:
+                events.append((dt, {"event": event, "when": _fmt(dt), "icon": icon}))
+
+        _add(conv.createdAt, "Connection started", "ti-link")
         # First seller (business-side) reply — the moment they engaged.
         first_reply = (Message.objects.filter(conversation=conv, sender_id=conv.businessUser_id)
                        .order_by("id").first())
         if first_reply:
-            events.append({"event": "Seller replied", "when": _fmt(first_reply.createdAt), "icon": "ti-message-2"})
+            _add(first_reply.createdAt, "Seller replied", "ti-message-2")
         # Status transition (accepted/declined/closed) — updatedAt is the transition time.
         status_labels = {
-            CONVERSATION_STATUS.ACCEPTED: ("Enquiry accepted", "ti-check"),
-            CONVERSATION_STATUS.DECLINED: ("Enquiry declined", "ti-x"),
-            CONVERSATION_STATUS.CLOSED: ("Enquiry closed", "ti-flag-check"),
+            CONVERSATION_STATUS.ACCEPTED: ("Connection accepted", "ti-check"),
+            CONVERSATION_STATUS.DECLINED: ("Connection declined", "ti-x"),
+            CONVERSATION_STATUS.CLOSED: ("Connection closed", "ti-flag-check"),
         }
         if conv.status in status_labels:
             label, icon = status_labels[conv.status]
-            events.append({"event": label, "when": _fmt(conv.updatedAt), "icon": icon})
-        # Last message activity (only if distinct from the events above).
-        if conv.lastMessageAt:
-            events.append({"event": "Last activity", "when": _fmt(conv.lastMessageAt), "icon": "ti-clock"})
-        return {"events": events}
+            _add(conv.updatedAt, label, icon)
+        # Last message activity — only if distinct from the events above, otherwise it
+        # renders as a duplicate row at the same timestamp (e.g. the only message IS
+        # the seller's first reply).
+        if conv.lastMessageAt and all(dt != conv.lastMessageAt for dt, _ in events):
+            _add(conv.lastMessageAt, "Last activity", "ti-clock")
+        return {"events": [payload for _, payload in sorted(events, key=lambda e: e[0])]}
 
     def mark_read(self, user, conv_id):
         from app_ib.models import Message
@@ -294,6 +303,11 @@ class _ChatController:
                 "leadInterested": (lead.interested or "") if lead else "",
                 "leadCity": (lead.city or "") if lead else "",
                 "leadQuery": (lead.query or "") if lead else "",
+                # Real lead provenance so the seller brief shows the true form type /
+                # source instead of a hardcoded "Contact / Shop" (task 212).
+                "leadFormType": (lead.formType or "") if lead else "",
+                "leadSourceChannel": (lead.sourceChannel or "") if lead else "",
+                "leadOriginType": (lead.originType or "") if lead else "",
                 "labels": c.labels if isinstance(c.labels, list) else [],
                 "sellerVerified": bool(biz.isVerified) if biz else False,
                 # Contact reveal gated: only expose the seller's email once the

@@ -88,7 +88,7 @@ def generate_business_keywords(business_name, category="", bio=""):
 def generate_trend_story(business_name, rank, window_label, growth_pct):
     """Return dict with headline/eyebrow/storyTitle/storyBody/trendTags.
     Gemini (temp 0.8) first; deterministic template fallback otherwise."""
-    growth_txt = f"{growth_pct:.0f}% enquiry growth" if growth_pct else "rising engagement"
+    growth_txt = f"{growth_pct:.0f}% connection growth" if growth_pct else "rising engagement"
     prompt = (
         "Write short editorial copy for a 'Behind the Trend' card about a trending "
         "interior-design business. Return ONLY a JSON object with keys "

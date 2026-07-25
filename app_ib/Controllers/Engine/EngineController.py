@@ -96,17 +96,6 @@ class _EngineController:
             stock_qty = getattr(o, "stockQuantity", None)
             item["inStock"] = True if stock_qty is None else (stock_qty > 0)
 
-            # Product image — _image() returns "" for Products (no coverImageUrl field).
-            # Pull the first ProductImage URL when present and imageUrl is still empty.
-            if not item["imageUrl"]:
-                img_mgr = getattr(o, "productImages", None)
-                if img_mgr is not None:
-                    try:
-                        first_img = list(img_mgr.all())[:1]
-                        item["imageUrl"] = first_img[0].image if first_img else ""
-                    except Exception:
-                        pass
-
             # ── FEATURED-SHORT panel enrichment (drives the reel modal that the
             # "Hot this week" tiles open). Additive; leaderboard consumers ignore
             # keys they don't use. Joins are prefetched above to avoid N+1. ──
@@ -150,13 +139,23 @@ class _EngineController:
         # on the trending page, and on any caller when the board came back empty
         # (e.g. the cold-cache path above that offloaded the recompute).
         if (category_fallback or not board) and len(board) < min_items:
-            from app_ib.models import BusinessCategory
+            from app_ib.models import BusinessCategory, Business
+            from django.db.models import Count
             existing = {b["query"].lower() for b in board}
+            # Real per-category business count so the cards don't all read "0
+            # results" — one grouped query, keyed by category id (the old code
+            # hardcoded count:0 while /engine/trending/categories/ reports the true
+            # count for the same names).
+            count_map = dict(
+                Business.objects.filter(isActive=True)
+                .values_list("businessCategory")
+                .annotate(n=Count("id"))
+            )
             cats = BusinessCategory.objects.filter(isActive=True).order_by("-trending", "index")
             for c in cats:
                 label = (c.lable or c.value or "").strip()
                 if label and label.lower() not in existing:
-                    board.append({"query": label, "count": 0, "isCategory": True})
+                    board.append({"query": label, "count": count_map.get(c.id, 0), "isCategory": True})
                     existing.add(label.lower())
                 if len(board) >= min_items:
                     break
@@ -218,8 +217,37 @@ class _EngineController:
             "displayName": e.displayName, "slug": e.slug, "imageUrl": e.imageUrl,
             "score": e.score, "genuineViews": e.genuineViews, "clicks": e.clicks,
         } for e in rows]
+        # LeaderboardEntry is populated by a cron that never runs in dev, so the
+        # board reads empty even though TrendingScore has ranked rows. Fall back to
+        # the same national TrendingScore feed `momentum()` uses so the leaderboard
+        # is never blank when real signal exists (never fabricates — empty stays
+        # empty when there are genuinely no scores).
+        if not data:
+            data = self._leaderboard_from_trending()
         cache.set(cache_key, data, 25 * 60 * 60)  # 25h warm
         return data
+
+    def _leaderboard_from_trending(self, limit=None):
+        from app_ib.models import TrendingScore
+        from app_ib.Utils.EngineConfig import TRENDING_PERIOD
+        limit = limit or ALGO.LEADERBOARD_CACHE_TOP
+        rows = (TrendingScore.objects.filter(period=TRENDING_PERIOD.DAILY, city="", score__gt=0)
+                .select_related("contentType").order_by("-score")[:limit * 3])
+        out = []
+        for r in rows:
+            model = r.contentType.model_class()
+            obj = model.objects.filter(id=r.objectId).first() if model else None
+            if not obj:
+                continue
+            out.append({
+                "rank": len(out) + 1, "entityType": r.contentType.model, "id": obj.id,
+                "displayName": _name(obj), "slug": getattr(obj, "slug", "") or "",
+                "imageUrl": _image(obj), "score": round(r.score, 2),
+                "genuineViews": getattr(obj, "viewCount", 0) or 0, "clicks": 0,
+            })
+            if len(out) >= limit:
+                break
+        return out
 
     # ---------------- Discovery ----------------
     def most_saved(self):
@@ -229,7 +257,20 @@ class _EngineController:
             # warm returns the snapshot items directly so this works even when
             # the cache backend itself is unavailable (SafeCache degrades to miss)
             items = ensure_discovery_cache_warm() or []
+        # The DailySnapshot that feeds the warm path is cron-written and never runs
+        # in dev, so `items` comes back empty while real SavedItem rows exist. Fall
+        # back to a live aggregate so "Most saved" isn't permanently blank.
+        if not items:
+            items = self._most_saved_from_saveditems()
         return self._hydrate_saved(items)
+
+    def _most_saved_from_saveditems(self, limit=12):
+        from app_ib.models import SavedItem
+        from django.db.models import Count
+        rows = (SavedItem.objects.values("contentType", "objectId")
+                .annotate(saveCount=Count("id")).order_by("-saveCount")[:limit])
+        return [{"contentType": r["contentType"], "objectId": r["objectId"],
+                 "saveCount": r["saveCount"]} for r in rows]
 
     def _hydrate_saved(self, items):
         from django.contrib.contenttypes.models import ContentType
@@ -398,8 +439,24 @@ def _name(o):
 
 
 def _image(o):
-    return (getattr(o, "coverImageUrl", None) or getattr(o, "coverImage", None)
-            or getattr(o, "catelougeImage", None) or "")
+    url = (getattr(o, "coverImageUrl", None) or getattr(o, "coverImage", None)
+           or getattr(o, "catelougeImage", None) or "")
+    if url:
+        return url
+    # Product/Service/Catelogue carry images on related rows, not a cover field, so
+    # the cover-only lookup returned "" and every card for them rendered imageless
+    # (saved list, recently-viewed, trending, leaderboard — all seven callers).
+    # Same fallback as HomeController._image; kept in sync with it.
+    for rel in ("productImages", "serviceImages", "catelogueImages"):
+        mgr = getattr(o, rel, None)
+        if mgr is not None:
+            try:
+                first = list(mgr.all()[:1])
+                if first:
+                    return first[0].image
+            except Exception:
+                pass
+    return ""
 
 
 def _rating(o):

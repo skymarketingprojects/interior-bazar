@@ -30,4 +30,5 @@ urlpatterns = [
     path('enums/payment-status/', views.getAdPaymentStatusEnum, name="payment-status"),
     path('enums/event-type/', views.getAdEventTypeEnum, name="event-type"),
     path('enums/placement/', views.getAdPlacementEnum, name="placement"),
+    path('catalog/', views.BannerAdCatalogView, name="banner-ad-catalog"),
 ]

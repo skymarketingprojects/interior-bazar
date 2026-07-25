@@ -175,6 +175,28 @@ class Product(models.Model):
     origin = models.CharField(max_length=100, blank=True, default='',
         help_text="Country/region of origin, e.g. 'Italy'. Blank = no origin chip.")
 
+    # --- pricing & stock (additive; user-approved 2026-07-20) ---
+    PRICING_MODEL_CHOICES = [
+        ('per_piece', 'Per piece'),
+        ('per_unit', 'Per unit'),
+        ('per_sqft', 'Per sqft'),
+        ('per_meter', 'Per meter'),
+        ('per_set', 'Per set'),
+        ('custom', 'Custom quote'),
+    ]
+    pricingModel = models.CharField(max_length=30, choices=PRICING_MODEL_CHOICES,
+        blank=True, default='',
+        help_text="Pricing unit. Blank = not set (UI defaults to 'Per piece').")
+    STOCK_STATUS_CHOICES = [
+        ('in_stock', 'In stock'),
+        ('low_stock', 'Low stock'),
+        ('out_of_stock', 'Out of stock'),
+        ('made_to_order', 'Made to order'),
+    ]
+    stockStatus = models.CharField(max_length=30, choices=STOCK_STATUS_CHOICES,
+        blank=True, default='',
+        help_text="Stock availability. Blank = not set.")
+
     def __str__(self):
         return self.title
 
@@ -208,6 +230,24 @@ class ProductSpecification(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class ProductBulkTier(models.Model):
+    """Repeatable bulk-pricing tiers for a product (e.g. 50+ → ₹3850/pc).
+    Additive; user-approved 2026-07-20."""
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='bulkTiers')
+    minQty = models.PositiveIntegerField(help_text="Minimum quantity for this tier.")
+    price = models.FloatField(help_text="Unit price at this tier.")
+    tierIndex = models.PositiveIntegerField(default=0,
+        help_text="Display order (0 = first).")
+
+    class Meta:
+        ordering = ['tierIndex']
+        unique_together = ['product', 'tierIndex']
+
+    def __str__(self):
+        return f"Tier {self.tierIndex}: {self.minQty}+ → ₹{self.price}"
+
 
 # Service model
 

@@ -124,6 +124,22 @@ class LeadQuery(models.Model):
         db_table = "app_ib_leadquery"
 
 
+class LeadNote(models.Model):
+    """Private seller remark on a lead — timestamped, newest-first,
+    NEVER exposed on any buyer-facing endpoint. (User-approved 2026-07-20)"""
+    lead = models.ForeignKey('interior_leads.LeadQuery', on_delete=models.CASCADE,
+                             related_name='notes')
+    note = models.TextField(help_text="Private remark text.")
+    createdAt = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "app_ib_lead_note"
+        ordering = ['-createdAt']  # newest-first
+
+    def __str__(self):
+        return f"Note on lead {self.lead_id} ({self.createdAt}): {self.note[:40]}"
+
+
 # Plan Buy Quate related to service
 class Quate(models.Model):
     leadType = models.CharField(max_length=500,default='')

@@ -113,8 +113,9 @@ class _CrudController:
             raise NotFound_("shop not found")
         if shop.user_id != user.id:
             raise PermissionError_("not the shop owner")
-        for field in ("name", "shopType", "bio", "coverImage", "bannerImage", "bannerLink",
-                      "city", "state"):
+        for field in ("name", "shopType", "label", "bio", "coverImage", "bannerImage", "bannerLink",
+                      "city", "state", "holidayMode", "walkInBooking", "walkInLeadTime",
+                      "appointmentRequired", "amenities"):
             if field in payload:
                 setattr(shop, field, payload[field])
         # F5 "Close shop": isActive is the only real status column (see publish_shop /
@@ -139,6 +140,19 @@ class _CrudController:
             if urls and not shop.coverImage:
                 shop.coverImage = urls[0]
                 shop.save(update_fields=["coverImage"])
+        # Schedules: payload["schedules"] = full day-by-day schedule list → replace all
+        if isinstance(payload.get("schedules"), list):
+            from interior_engine.models import ShopDaySchedule
+            shop.schedules.all().delete()
+            for i, row in enumerate(payload["schedules"]):
+                day = row.get("day", i + 1)
+                is_closed = row.get("isClosed", False) or row.get("closed", False)
+                ShopDaySchedule.objects.create(
+                    shop=shop, day=day,
+                    openTime=row.get("openTime") or row.get("open") or None,
+                    closeTime=row.get("closeTime") or row.get("close") or None,
+                    isClosed=is_closed,
+                )
         return self._shop_dict(shop)
 
     def delete_shop(self, user, shop_id):
@@ -180,9 +194,21 @@ class _CrudController:
                 "completionPercent": res["percentage"]}
 
     def _shop_dict(self, s):
+        from interior_engine.models import ShopDaySchedule
+        schedules = s.schedules.all().order_by("day")
+        DAY_NAMES = {1:"Monday",2:"Tuesday",3:"Wednesday",4:"Thursday",5:"Friday",6:"Saturday",7:"Sunday"}
         return {"shopId": s.id, "name": s.name, "slug": s.slug, "shopType": s.shopType,
-                "bio": s.bio, "coverImage": s.coverImage, "isActive": s.isActive,
+                "label": s.label, "bio": s.bio, "coverImage": s.coverImage, "isActive": s.isActive,
                 "city": s.city, "state": s.state,
+                "holidayMode": s.holidayMode, "walkInBooking": s.walkInBooking,
+                "walkInLeadTime": s.walkInLeadTime, "appointmentRequired": s.appointmentRequired,
+                "amenities": s.amenities or [],
+                "hours": [
+                    {"day": DAY_NAMES.get(sc.day, ""), "open": sc.openTime.strftime("%H:%M") if sc.openTime else "",
+                     "close": sc.closeTime.strftime("%H:%M") if sc.closeTime else "",
+                     "closed": sc.isClosed}
+                    for sc in schedules
+                ],
                 "rating": s.rating, "totalReviews": s.totalReviews,
                 "completionPercent": s.completionPercent}
 
