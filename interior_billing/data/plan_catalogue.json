@@ -1,0 +1,845 @@
+{
+ "plans": [
+  {
+   "tag": "ag-launch",
+   "title": "Autogrowth Launch",
+   "planFamily": "automation",
+   "entityType": "automation",
+   "tier": 1,
+   "amount": "94399",
+   "payableAmount": "94399",
+   "services": "2-state market reach\n2 project segments\n3 high-intent search rankings\nCustomer enquiry qualification\nWhatsApp verification\nSmart proposal builder · real-time chat\nROI dashboard\n24/7 support",
+   "features": [
+    {
+     "text": "2-state market reach"
+    },
+    {
+     "text": "2 project segments"
+    },
+    {
+     "text": "3 high-intent search rankings"
+    },
+    {
+     "text": "Customer enquiry qualification",
+     "subItem": "Requirement · Intent · Urgency"
+    },
+    {
+     "text": "WhatsApp verification"
+    },
+    {
+     "text": "Smart proposal builder · real-time chat"
+    },
+    {
+     "text": "ROI dashboard"
+    },
+    {
+     "text": "24/7 support"
+    }
+   ],
+   "badge": "",
+   "badgeIcon": "",
+   "cardContent": {
+    "target": "For firms starting structured growth",
+    "targetIcon": "ti-target",
+    "outcome": "Structured, qualified growth",
+    "outcomeIcon": "ti-chart-bar",
+    "ctaLabel": "Get Launch",
+    "ctaIcon": "ti-arrow-right",
+    "note": "No hidden charges · Cancel anytime",
+    "savingNote": "₹9,999/mo · ₹24,999/quarter",
+    "popular": false,
+    "custom": false,
+    "summaryFeatures": [
+     "2-state market reach",
+     "2 project segments",
+     "3 high-intent search rankings"
+    ]
+   },
+   "cycles": [
+    {
+     "durationMonths": 1,
+     "price": 11799
+    },
+    {
+     "durationMonths": 3,
+     "price": 29499
+    },
+    {
+     "durationMonths": 12,
+     "price": 94399
+    }
+   ],
+   "_computedCycles": [
+    1,
+    3
+   ]
+  },
+  {
+   "tag": "ag-scale",
+   "title": "Autogrowth Scale",
+   "planFamily": "automation",
+   "entityType": "automation",
+   "tier": 2,
+   "amount": "250631",
+   "payableAmount": "250631",
+   "services": "5-state exclusive reach\n3 high-value project segments\n6 high-intent search rankings\nAdvanced customer qualification\nWhatsApp verification\nOpportunity tracking dashboard\nControlled competition\nDedicated support",
+   "features": [
+    {
+     "text": "5-state exclusive reach"
+    },
+    {
+     "text": "3 high-value project segments"
+    },
+    {
+     "text": "6 high-intent search rankings"
+    },
+    {
+     "text": "Advanced customer qualification",
+     "subItem": "4-level + human confirmation"
+    },
+    {
+     "text": "WhatsApp verification"
+    },
+    {
+     "text": "Opportunity tracking dashboard"
+    },
+    {
+     "text": "Controlled competition"
+    },
+    {
+     "text": "Dedicated support"
+    }
+   ],
+   "badge": "Most popular",
+   "badgeIcon": "ti-star-filled",
+   "cardContent": {
+    "target": "Scaling across states with exclusivity",
+    "targetIcon": "ti-target",
+    "outcome": "Exclusive multi-state acquisition",
+    "outcomeIcon": "ti-chart-bar",
+    "ctaLabel": "Get Scale",
+    "ctaIcon": "ti-arrow-right",
+    "note": "Most popular among growing firms",
+    "savingNote": "Billed annually only",
+    "popular": true,
+    "custom": false,
+    "summaryFeatures": [
+     "5-state exclusive reach",
+     "3 high-value project segments",
+     "6 high-intent search rankings"
+    ]
+   },
+   "cycles": [
+    {
+     "durationMonths": 12,
+     "price": 250631
+    }
+   ],
+   "_computedCycles": []
+  },
+  {
+   "tag": "ag-dominance",
+   "title": "Autogrowth Dominance",
+   "planFamily": "automation",
+   "entityType": "automation",
+   "tier": 3,
+   "amount": "589999",
+   "payableAmount": "589999",
+   "services": "Pan-India reach · maximum visibility\nAll project segments\n10+ high-intent search rankings\nPremium customer verification\nPriority opportunity routing\nCategory exclusivity\nPersonal account manager\nCustomer & enquiry dashboard + chat",
+   "features": [
+    {
+     "text": "Pan-India reach · maximum visibility"
+    },
+    {
+     "text": "All project segments"
+    },
+    {
+     "text": "10+ high-intent search rankings"
+    },
+    {
+     "text": "Premium customer verification"
+    },
+    {
+     "text": "Priority opportunity routing"
+    },
+    {
+     "text": "Category exclusivity"
+    },
+    {
+     "text": "Personal account manager"
+    },
+    {
+     "text": "Customer & enquiry dashboard + chat"
+    }
+   ],
+   "badge": "",
+   "badgeIcon": "",
+   "cardContent": {
+    "target": "Market leaders · maximum exclusivity",
+    "targetIcon": "ti-target",
+    "outcome": "Pan-India category dominance",
+    "outcomeIcon": "ti-chart-bar",
+    "ctaLabel": "Get Dominance",
+    "ctaIcon": "ti-arrow-right",
+    "note": "Maximum reach & exclusivity",
+    "savingNote": "Billed annually only",
+    "popular": false,
+    "custom": false,
+    "summaryFeatures": [
+     "Pan-India reach · maximum visibility",
+     "All project segments",
+     "10+ high-intent search rankings"
+    ]
+   },
+   "cycles": [
+    {
+     "durationMonths": 12,
+     "price": 589999
+    }
+   ],
+   "_computedCycles": []
+  },
+  {
+   "tag": "business-verified",
+   "title": "Verified Business",
+   "planFamily": "business",
+   "entityType": "business",
+   "tier": 1,
+   "amount": "17699",
+   "payableAmount": "17699",
+   "services": "3-state visibility\n1 category · 3 search keywords\n25 product · 10 service listings\nBusiness portfolio showcase\nSmart proposal builder + CRM hub\nBasic analytics dashboard\nIB Verified badge · 24/7 support",
+   "features": [
+    {
+     "text": "3-state visibility"
+    },
+    {
+     "text": "1 category · 3 search keywords"
+    },
+    {
+     "text": "25 product · 10 service listings"
+    },
+    {
+     "text": "Business portfolio showcase"
+    },
+    {
+     "text": "Smart proposal builder + CRM hub"
+    },
+    {
+     "text": "Basic analytics dashboard"
+    },
+    {
+     "text": "IB Verified badge · 24/7 support"
+    }
+   ],
+   "badge": "",
+   "badgeIcon": "",
+   "cardContent": {
+    "target": "Businesses starting their digital journey",
+    "targetIcon": "ti-target",
+    "outcome": "Get discovered across 3 states",
+    "outcomeIcon": "ti-chart-bar",
+    "ctaLabel": "Get Verified",
+    "ctaIcon": "ti-arrow-right",
+    "note": "No hidden charges · Cancel anytime",
+    "savingNote": "3-state visibility",
+    "popular": false,
+    "custom": false,
+    "summaryFeatures": [
+     "3-state visibility",
+     "1 category · 3 search keywords",
+     "25 product · 10 service listings"
+    ]
+   },
+   "cycles": [
+    {
+     "durationMonths": 1,
+     "price": 1769
+    },
+    {
+     "durationMonths": 3,
+     "price": 4719
+    },
+    {
+     "durationMonths": 12,
+     "price": 17699
+    }
+   ],
+   "_computedCycles": [
+    1,
+    3
+   ]
+  },
+  {
+   "tag": "business-trusted",
+   "title": "Trusted Business",
+   "planFamily": "business",
+   "entityType": "business",
+   "tier": 2,
+   "amount": "47199",
+   "payableAmount": "47199",
+   "services": "Pan-India · priority placement\n2 categories · 5 search keywords\n100 product · 50 service listings\nPremium network access\nAdvanced CRM + visual deal pipeline\nProfessional proposal builder\nAdvanced analytics dashboard\nTrusted Business badge · priority support",
+   "features": [
+    {
+     "text": "Pan-India · priority placement"
+    },
+    {
+     "text": "2 categories · 5 search keywords"
+    },
+    {
+     "text": "100 product · 50 service listings"
+    },
+    {
+     "text": "Premium network access"
+    },
+    {
+     "text": "Advanced CRM + visual deal pipeline"
+    },
+    {
+     "text": "Professional proposal builder"
+    },
+    {
+     "text": "Advanced analytics dashboard"
+    },
+    {
+     "text": "Trusted Business badge · priority support"
+    }
+   ],
+   "badge": "Most popular",
+   "badgeIcon": "ti-star-filled",
+   "cardContent": {
+    "target": "Growing businesses seeking more reach",
+    "targetIcon": "ti-target",
+    "outcome": "Pan-India priority visibility",
+    "outcomeIcon": "ti-chart-bar",
+    "ctaLabel": "Get Trusted Business",
+    "ctaIcon": "ti-arrow-right",
+    "note": "Best for growing studios & firms",
+    "savingNote": "Pan-India · priority placement",
+    "popular": true,
+    "custom": false,
+    "summaryFeatures": [
+     "Pan-India · priority placement",
+     "2 categories · 5 search keywords",
+     "100 product · 50 service listings"
+    ]
+   },
+   "cycles": [
+    {
+     "durationMonths": 1,
+     "price": 4719
+    },
+    {
+     "durationMonths": 3,
+     "price": 12979
+    },
+    {
+     "durationMonths": 12,
+     "price": 47199
+    }
+   ],
+   "_computedCycles": [
+    1,
+    3
+   ]
+  },
+  {
+   "tag": "business-leader",
+   "title": "Industry Leader",
+   "planFamily": "business",
+   "entityType": "business",
+   "tier": 3,
+   "amount": "106199",
+   "payableAmount": "106199",
+   "services": "Pan-India · featured placement\n3 categories · 10 search keywords\nUnlimited listings & catalogues\nFull network access\nPriority opportunity routing · limited competition\nProfessional CRM + branded proposals\nMulti-stage deal pipeline\nIndustry Leader badge · personal support",
+   "features": [
+    {
+     "text": "Pan-India · featured placement"
+    },
+    {
+     "text": "3 categories · 10 search keywords"
+    },
+    {
+     "text": "Unlimited listings & catalogues"
+    },
+    {
+     "text": "Full network access"
+    },
+    {
+     "text": "Priority opportunity routing · limited competition"
+    },
+    {
+     "text": "Professional CRM + branded proposals"
+    },
+    {
+     "text": "Multi-stage deal pipeline"
+    },
+    {
+     "text": "Industry Leader badge · personal support"
+    }
+   ],
+   "badge": "",
+   "badgeIcon": "",
+   "cardContent": {
+    "target": "Established firms · high-value projects",
+    "targetIcon": "ti-target",
+    "outcome": "High-value project pipeline",
+    "outcomeIcon": "ti-chart-bar",
+    "ctaLabel": "Get Industry Leader",
+    "ctaIcon": "ti-arrow-right",
+    "note": "For firms closing ₹1Cr+ annual projects",
+    "savingNote": "Pan-India · featured placement",
+    "popular": false,
+    "custom": false,
+    "summaryFeatures": [
+     "Pan-India · featured placement",
+     "3 categories · 10 search keywords",
+     "Unlimited listings & catalogues"
+    ]
+   },
+   "cycles": [
+    {
+     "durationMonths": 1,
+     "price": 10619
+    },
+    {
+     "durationMonths": 3,
+     "price": 29499
+    },
+    {
+     "durationMonths": 12,
+     "price": 106199
+    }
+   ],
+   "_computedCycles": [
+    1,
+    3
+   ]
+  },
+  {
+   "tag": "shop-verified",
+   "title": "Shop Verified",
+   "planFamily": "shop",
+   "entityType": "shop",
+   "tier": 1,
+   "amount": "9439",
+   "payableAmount": "9439",
+   "services": "Complete digital profile\nCustomer & enquiry dashboard\nProduct & service showcase + gallery\nSmart quotation builder\nWhatsApp enquiries · click-to-call\nOffers & promotions\nVerified Shop badge · 24/7 support",
+   "features": [
+    {
+     "text": "Complete digital profile"
+    },
+    {
+     "text": "Customer & enquiry dashboard"
+    },
+    {
+     "text": "Product & service showcase + gallery"
+    },
+    {
+     "text": "Smart quotation builder"
+    },
+    {
+     "text": "WhatsApp enquiries · click-to-call"
+    },
+    {
+     "text": "Offers & promotions"
+    },
+    {
+     "text": "Verified Shop badge · 24/7 support"
+    }
+   ],
+   "badge": "",
+   "badgeIcon": "",
+   "cardContent": {
+    "target": "Local retailers & small shops",
+    "targetIcon": "ti-target",
+    "outcome": "Local buyers find your shop first",
+    "outcomeIcon": "ti-chart-bar",
+    "ctaLabel": "Get Shop Verified",
+    "ctaIcon": "ti-arrow-right",
+    "note": "Single city · 1 shop location",
+    "savingNote": "Local reach, real footfall",
+    "popular": false,
+    "custom": false,
+    "summaryFeatures": [
+     "Complete digital profile",
+     "Customer & enquiry dashboard",
+     "Product & service showcase + gallery"
+    ]
+   },
+   "cycles": [
+    {
+     "durationMonths": 1,
+     "price": 914
+    },
+    {
+     "durationMonths": 3,
+     "price": 2359
+    },
+    {
+     "durationMonths": 12,
+     "price": 9439
+    }
+   ],
+   "_computedCycles": [
+    1,
+    3
+   ]
+  },
+  {
+   "tag": "shop-plus",
+   "title": "Shop Plus",
+   "planFamily": "shop",
+   "entityType": "shop",
+   "tier": 2,
+   "amount": "17699",
+   "payableAmount": "17699",
+   "services": "Complete digital profile\nCustomer & enquiry dashboard\nProduct & service showcase + gallery\nSmart quotation builder\nCity-wide reach · priority visibility\nFeatured product banner · IB Connect Plus\nTrusted Seller badge · priority support",
+   "features": [
+    {
+     "text": "Complete digital profile"
+    },
+    {
+     "text": "Customer & enquiry dashboard"
+    },
+    {
+     "text": "Product & service showcase + gallery"
+    },
+    {
+     "text": "Smart quotation builder"
+    },
+    {
+     "text": "City-wide reach · priority visibility"
+    },
+    {
+     "text": "Featured product banner · IB Connect Plus"
+    },
+    {
+     "text": "Trusted Seller badge · priority support"
+    }
+   ],
+   "badge": "Most popular",
+   "badgeIcon": "ti-star-filled",
+   "cardContent": {
+    "target": "Growing retailers, dealers & distributors",
+    "targetIcon": "ti-target",
+    "outcome": "City-wide buyers + priority visibility",
+    "outcomeIcon": "ti-chart-bar",
+    "ctaLabel": "Get Shop Plus",
+    "ctaIcon": "ti-arrow-right",
+    "note": "Best for tile, sanitary, furniture & lighting",
+    "savingNote": "City-wide · priority visibility",
+    "popular": true,
+    "custom": false,
+    "summaryFeatures": [
+     "Complete digital profile",
+     "Customer & enquiry dashboard",
+     "Product & service showcase + gallery"
+    ]
+   },
+   "cycles": [
+    {
+     "durationMonths": 1,
+     "price": 1769
+    },
+    {
+     "durationMonths": 3,
+     "price": 4719
+    },
+    {
+     "durationMonths": 12,
+     "price": 17699
+    }
+   ],
+   "_computedCycles": [
+    1,
+    3
+   ]
+  },
+  {
+   "tag": "shop-pro",
+   "title": "Shop Pro",
+   "planFamily": "shop",
+   "entityType": "shop",
+   "tier": 3,
+   "amount": "29499",
+   "payableAmount": "29499",
+   "services": "Complete digital profile\nCustomer & enquiry dashboard\nProduct & service showcase\nState-wide reach · featured placement\nPremium product promotion · IB Connect Elite\nCampaign manager + sales dashboard\nPremium Seller badge · personal support",
+   "features": [
+    {
+     "text": "Complete digital profile"
+    },
+    {
+     "text": "Customer & enquiry dashboard"
+    },
+    {
+     "text": "Product & service showcase"
+    },
+    {
+     "text": "State-wide reach · featured placement"
+    },
+    {
+     "text": "Premium product promotion · IB Connect Elite"
+    },
+    {
+     "text": "Campaign manager + sales dashboard"
+    },
+    {
+     "text": "Premium Seller badge · personal support"
+    }
+   ],
+   "badge": "",
+   "badgeIcon": "",
+   "cardContent": {
+    "target": "Established retailers & multi-location stores",
+    "targetIcon": "ti-target",
+    "outcome": "State-wide reach + campaign tools",
+    "outcomeIcon": "ti-chart-bar",
+    "ctaLabel": "Get Shop Pro",
+    "ctaIcon": "ti-arrow-right",
+    "note": "Wholesalers & multi-location stores",
+    "savingNote": "State-wide · featured placement",
+    "popular": false,
+    "custom": false,
+    "summaryFeatures": [
+     "Complete digital profile",
+     "Customer & enquiry dashboard",
+     "Product & service showcase"
+    ]
+   },
+   "cycles": [
+    {
+     "durationMonths": 1,
+     "price": 2949
+    },
+    {
+     "durationMonths": 3,
+     "price": 8259
+    },
+    {
+     "durationMonths": 12,
+     "price": 29499
+    }
+   ],
+   "_computedCycles": [
+    1,
+    3
+   ]
+  },
+  {
+   "tag": "arch-verified",
+   "title": "Architect Verified",
+   "planFamily": "architect",
+   "entityType": "architect",
+   "tier": 1,
+   "amount": "11799",
+   "payableAmount": "11799",
+   "services": "Complete architect profile\nProject portfolio showcase + gallery\nConsultation booking\nCustomer & project dashboard\nSmart proposal builder\nWhatsApp & call enquiries\nVerified Architect badge · 24/7 support",
+   "features": [
+    {
+     "text": "Complete architect profile"
+    },
+    {
+     "text": "Project portfolio showcase + gallery"
+    },
+    {
+     "text": "Consultation booking"
+    },
+    {
+     "text": "Customer & project dashboard"
+    },
+    {
+     "text": "Smart proposal builder"
+    },
+    {
+     "text": "WhatsApp & call enquiries"
+    },
+    {
+     "text": "Verified Architect badge · 24/7 support"
+    }
+   ],
+   "badge": "",
+   "badgeIcon": "",
+   "cardContent": {
+    "target": "Freelance architects & emerging studios",
+    "targetIcon": "ti-target",
+    "outcome": "Discovered by local buyers & studios",
+    "outcomeIcon": "ti-chart-bar",
+    "ctaLabel": "Get Verified",
+    "ctaIcon": "ti-arrow-right",
+    "note": "Solo architects & consultants",
+    "savingNote": "Local project visibility",
+    "popular": false,
+    "custom": false,
+    "summaryFeatures": [
+     "Complete architect profile",
+     "Project portfolio showcase + gallery",
+     "Consultation booking"
+    ]
+   },
+   "cycles": [
+    {
+     "durationMonths": 1,
+     "price": 1179
+    },
+    {
+     "durationMonths": 3,
+     "price": 2949
+    },
+    {
+     "durationMonths": 12,
+     "price": 11799
+    }
+   ],
+   "_computedCycles": [
+    1,
+    3
+   ]
+  },
+  {
+   "tag": "arch-plus",
+   "title": "Architect Plus",
+   "planFamily": "architect",
+   "entityType": "architect",
+   "tier": 2,
+   "amount": "23599",
+   "payableAmount": "23599",
+   "services": "Complete architect profile\nProject portfolio showcase + gallery\nConsultation booking\nCustomer & project dashboard\nCity-wide reach · priority visibility\nTeam showcase · awards & certifications\nIB Architect Network Plus\nTrusted Architect badge · priority support",
+   "features": [
+    {
+     "text": "Complete architect profile"
+    },
+    {
+     "text": "Project portfolio showcase + gallery"
+    },
+    {
+     "text": "Consultation booking"
+    },
+    {
+     "text": "Customer & project dashboard"
+    },
+    {
+     "text": "City-wide reach · priority visibility"
+    },
+    {
+     "text": "Team showcase · awards & certifications"
+    },
+    {
+     "text": "IB Architect Network Plus"
+    },
+    {
+     "text": "Trusted Architect badge · priority support"
+    }
+   ],
+   "badge": "Most popular",
+   "badgeIcon": "ti-star-filled",
+   "cardContent": {
+    "target": "Growing architecture & design studios",
+    "targetIcon": "ti-target",
+    "outcome": "City-wide reach + credibility tools",
+    "outcomeIcon": "ti-chart-bar",
+    "ctaLabel": "Get Architect Plus",
+    "ctaIcon": "ti-arrow-right",
+    "note": "For studios handling ₹50L+ projects",
+    "savingNote": "City-wide · priority visibility",
+    "popular": true,
+    "custom": false,
+    "summaryFeatures": [
+     "Complete architect profile",
+     "Project portfolio showcase + gallery",
+     "Consultation booking"
+    ]
+   },
+   "cycles": [
+    {
+     "durationMonths": 1,
+     "price": 2359
+    },
+    {
+     "durationMonths": 3,
+     "price": 6489
+    },
+    {
+     "durationMonths": 12,
+     "price": 23599
+    }
+   ],
+   "_computedCycles": [
+    1,
+    3
+   ]
+  },
+  {
+   "tag": "arch-pro",
+   "title": "Architect Pro",
+   "planFamily": "architect",
+   "entityType": "architect",
+   "tier": 3,
+   "amount": "47199",
+   "payableAmount": "47199",
+   "services": "Premium architect profile\nPremium portfolio showcase\nConsultation booking\nCustomer & project dashboard\nState-wide reach · featured placement\nAdvanced proposal builder\nProject performance insights\nIB Network Elite · personal support",
+   "features": [
+    {
+     "text": "Premium architect profile"
+    },
+    {
+     "text": "Premium portfolio showcase"
+    },
+    {
+     "text": "Consultation booking"
+    },
+    {
+     "text": "Customer & project dashboard"
+    },
+    {
+     "text": "State-wide reach · featured placement"
+    },
+    {
+     "text": "Advanced proposal builder"
+    },
+    {
+     "text": "Project performance insights"
+    },
+    {
+     "text": "IB Network Elite · personal support"
+    }
+   ],
+   "badge": "",
+   "badgeIcon": "",
+   "cardContent": {
+    "target": "Established firms · turnkey projects",
+    "targetIcon": "ti-target",
+    "outcome": "State-wide reach + performance insights",
+    "outcomeIcon": "ti-chart-bar",
+    "ctaLabel": "Get Architect Pro",
+    "ctaIcon": "ti-arrow-right",
+    "note": "Residential, commercial & turnkey firms",
+    "savingNote": "State-wide · featured placement",
+    "popular": false,
+    "custom": false,
+    "summaryFeatures": [
+     "Premium architect profile",
+     "Premium portfolio showcase",
+     "Consultation booking"
+    ]
+   },
+   "cycles": [
+    {
+     "durationMonths": 1,
+     "price": 4719
+    },
+    {
+     "durationMonths": 3,
+     "price": 12979
+    },
+    {
+     "durationMonths": 12,
+     "price": 47199
+    }
+   ],
+   "_computedCycles": [
+    1,
+    3
+   ]
+  }
+ ]
+}

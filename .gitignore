@@ -220,6 +220,7 @@ prod.json
 # ignored file does not exist at build time).
 !interior_cms/data/*.json
 !interior_forms/fixtures/*.json
+!interior_billing/data/*.json
 AIDOCS/
 CLAUDE.md
 # local-only VPS briefing, never commit
