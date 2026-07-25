@@ -12,8 +12,12 @@ Unlike app_ib.0040_full_legal_page_copy (which skips any page that already has r
 content, so prod-restored copy survives), this OVERWRITES — that migration is why dev
 and stage were still serving older, shorter copy.
 
-Idempotent: re-running writes the same bytes. Cache is cleared per page because
-GetPagesView caches each page under "cache:page:<name>" for 12h.
+Idempotent: re-running writes the same bytes.
+
+Both cache layers are cleared per page — there are two, and clearing only one
+leaves stale copy served for up to 24h:
+  * GetPagesView            -> "cache:page:<name>"   (12h)
+  * PAGE_CONTROLLER.GetPages -> "static_page_<name>"  (24h, read first)
 """
 import json
 from pathlib import Path
@@ -61,7 +65,7 @@ class Command(BaseCommand):
                     pageName=slug,
                     defaults={"title": title, "content": quill_json},
                 )
-                cache.delete(f"cache:page:{slug}")
+                cache.delete_many([f"cache:page:{slug}", f"static_page_{slug}"])
 
             self.stdout.write(
                 f"{verb} {slug:24} {before:>6} -> {len(html):<6} chars  ({title})"
