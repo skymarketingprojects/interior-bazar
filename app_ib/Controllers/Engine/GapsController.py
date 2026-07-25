@@ -3466,8 +3466,21 @@ def plan_templates(entity_type=""):
         "badgeIcon": s.badgeIcon,
         "features": s.features or [],
         "billingCycles": _plan_cycles(s),
+        # Rest of the card (target / outcome / cta / note / summaryFeatures /
+        # popular / custom) so the frontend holds no plan content of its own.
+        # Spread flat: keys mirror the frontend PlanCard type 1:1.
+        **(s.cardContent or {}),
     } for s in qs]
     out = {"items": items, "total": len(items)}
+    # Per-family page chrome (hero, tabs, sidebar promo, countdown, gridVariant).
+    # Same reason as cardContent: the plans page must render from the API alone.
+    if entity_type:
+        from interior_billing.models import PlanPageSection
+        section = PlanPageSection.objects.filter(
+            family=entity_type, isActive=True
+        ).first()
+        if section and section.content:
+            out["section"] = section.content
     # Assemble the family compare table from per-plan compareRows columns
     # (dedup by tag — a multi-cycle plan stores the same column on every row).
     cols, seen = [], set()

@@ -53,6 +53,13 @@ class Subscription(models.Model):
     # This plan's compare-table column (automation family only):
     # {"column": "Elite ⭐", "popular": true, "values": [{"feature", "value"}]}
     compareRows = models.JSONField(default=dict, blank=True)
+    # Everything else the v3 plan card renders, so the frontend holds NO plan
+    # content of its own. Keys mirror the PlanCard type 1:1:
+    #   targetIcon, target, outcome, ctaLabel, ctaIcon, note,
+    #   summaryFeatures: [str], popular: bool, custom: bool
+    # One JSON blob rather than nine columns — consistent with features/
+    # compareRows/availableDuration above, and the whole card is edited as a unit.
+    cardContent = models.JSONField(default=dict, blank=True)
 
     # cover_image= models.FileField(null=True, blank=True, upload_to='subscription/attachment')
     fallbackImageUrl= models.URLField(max_length=2250, null=True, blank=True)
@@ -85,6 +92,29 @@ class Subscription(models.Model):
     class Meta:
         db_table = "app_ib_subscription"
         app_label = "interior_billing"
+
+
+class PlanPageSection(models.Model):
+    """Per-family chrome of the plans page (hero, tabs, sidebar promo, countdown,
+    grid variant, compare table) so the frontend ships NO subscription content.
+
+    One row per planFamily (automation/business/shop/architect). `content` mirrors
+    the frontend's CategoryPlans/CategoryHero/CategorySidebarContent shape; it is a
+    single blob because the whole tab is authored and reviewed as one unit.
+    """
+    family = models.CharField(max_length=50, unique=True)
+    content = models.JSONField(default=dict, blank=True)
+    isActive = models.BooleanField(default=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    updatedAt = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "app_ib_planpagesection"
+        app_label = "interior_billing"
+        ordering = ["family"]
+
+    def __str__(self):
+        return f"plan page section: {self.family}"
 
 
 class PlanBillingCycle(models.Model):
